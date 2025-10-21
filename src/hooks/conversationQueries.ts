@@ -10,8 +10,8 @@ import {
   deleteAllConversationsFromServer,
   deleteConversationFromServer,
   fetchConversationHistory,
-  saveConversationToServer,
   fetchLastConversation,
+  saveConversationMetadata,
 } from '~/utils/app/conversation'
 
 export function useFetchConversationHistory(
@@ -70,7 +70,7 @@ export function useUpdateConversation(
   return useMutation({
     mutationKey: ['updateConversation', user_email, course_name],
     mutationFn: async (conversation: Conversation) =>
-      saveConversationToServer(conversation, course_name),
+      saveConversationMetadata(conversation, course_name),
     onMutate: async (updatedConversation: Conversation) => {
       // console.log('Mutation from useUpdateConversation: ', updatedConversation)
       // A mutation is about to happen!

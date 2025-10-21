@@ -2,7 +2,7 @@ import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, messages } from '~/db/dbClient'
 import { type NewMessages } from '~/db/schema'
-import { convertChatToDBMessage } from '@/pages/api/conversation'
+import { convertChatToDBMessage } from '@/utils/app/conversationTransformers'
 import { eq, desc, gt, asc, and, inArray } from 'drizzle-orm'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {

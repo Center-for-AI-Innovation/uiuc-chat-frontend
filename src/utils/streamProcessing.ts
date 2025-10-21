@@ -638,20 +638,18 @@ export async function updateConversationInDatabase(
   // Log conversation
   try {
     const baseUrl = await getBaseUrl()
-    const response = await fetch(`${baseUrl}/api/UIUC-api/logConversation`, {
+    await fetch(`${baseUrl}/api/UIUC-api/logConversation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         course_name: course_name,
-        conversation: conversation,
+        conversation_id: conversation.id,
       }),
     })
-    // const data = await response.json()
   } catch (error) {
     console.error('Error setting course data:', error)
-    // return false
   }
 
   posthog.capture('stream_api_conversation_updated', {

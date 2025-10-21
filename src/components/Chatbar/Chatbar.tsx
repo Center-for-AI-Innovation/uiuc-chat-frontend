@@ -24,7 +24,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 import { useDebouncedState } from '@mantine/hooks'
 import posthog from 'posthog-js'
-import { saveConversationToServer } from '~/utils/app/conversation'
+import { saveConversationMetadata } from '~/utils/app/conversation'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
 
@@ -33,10 +33,10 @@ interface DownloadResult {
 }
 
 export const Chatbar = ({
-                          current_email,
-                          courseName,
-                          courseMetadata,
-                        }: {
+  current_email,
+  courseName,
+  courseMetadata,
+}: {
   current_email: string | undefined
   courseName: string | undefined
   courseMetadata?: CourseMetadata | null
@@ -130,7 +130,10 @@ export const Chatbar = ({
           conversation.userEmail = current_email
           conversation.projectName = courseName
           try {
-            const response = await saveConversationToServer(conversation, courseName)
+            const response = await saveConversationMetadata(
+              conversation,
+              courseName,
+            )
             console.log('Response from saveConversationToServer: ', response)
           } catch (error: any) {
             if (error?.details?.includes('already exists')) {
@@ -375,18 +378,18 @@ export const Chatbar = ({
       }
     } else {
       defaultModelId &&
-      homeDispatch({
-        field: 'selectedConversation',
-        value: {
-          id: uuidv4(),
-          name: t('New Conversation'),
-          messages: [],
-          model: OpenAIModels[defaultModelId],
-          prompt: DEFAULT_SYSTEM_PROMPT,
-          temperature: DEFAULT_TEMPERATURE,
-          folderId: null,
-        },
-      })
+        homeDispatch({
+          field: 'selectedConversation',
+          value: {
+            id: uuidv4(),
+            name: t('New Conversation'),
+            messages: [],
+            model: OpenAIModels[defaultModelId],
+            prompt: DEFAULT_SYSTEM_PROMPT,
+            temperature: DEFAULT_TEMPERATURE,
+            folderId: null,
+          },
+        })
       localStorage.removeItem('selectedConversation')
     }
   }

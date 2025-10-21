@@ -50,7 +50,7 @@ import { ImagePreview } from './ImagePreview'
 import MessageActions from './MessageActions'
 import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 
-import { saveConversationToServer } from '@/utils/app/conversation'
+import { saveConversationMetadata } from '@/utils/app/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -692,7 +692,7 @@ export const ChatMessage = memo(
             msg.id === message.id ? editedMessage : msg,
           ),
         }
-        saveConversationToServer(updatedConversation, courseName).catch(
+        saveConversationMetadata(updatedConversation, courseName).catch(
           (error: Error) => {
             console.error('Error saving edited message to server:', error)
           },

@@ -1,8 +1,13 @@
 // File copy-pasted from dbUtils. This has modifications from supabase.rpc to psql functions.
 import { eq, and, sql, asc } from 'drizzle-orm'
 import { db } from './dbClient'
-import { docGroups } from './schema'
+import { conversations, docGroups, messages } from './schema'
 import { CourseDocument } from '~/types/courseMaterials'
+import {
+  convertDBToChatConversation,
+  type DBConversation,
+  type DBMessage,
+} from '@/utils/app/conversationTransformers'
 
 // Db queries
 
@@ -22,6 +27,40 @@ export async function fetchEnabledDocGroups(courseName: string) {
       `Failed to fetch enabled document groups: ${error instanceof Error ? error.message : String(error)}`,
     )
   }
+}
+
+export async function getConversationWithMessages(
+  conversationId: string,
+  userEmail?: string,
+) {
+  const convo = await db.query.conversations.findFirst({
+    where: eq(conversations.id, conversationId),
+  })
+
+  if (!convo) {
+    return null
+  }
+
+  if (userEmail && convo.user_email && convo.user_email !== userEmail) {
+    return null
+  }
+
+  const convoMessages = await db.query.messages.findMany({
+    where: eq(messages.conversation_id, conversationId),
+  })
+
+  return convertDBToChatConversation(
+    {
+      ...convo,
+      created_at: convo.created_at?.toISOString?.() ?? convo.created_at,
+      updated_at: convo.updated_at?.toISOString?.() ?? convo.updated_at,
+    } as DBConversation,
+    convoMessages.map((message) => ({
+      ...message,
+      created_at: message.created_at?.toISOString?.() ?? message.created_at,
+      updated_at: message.updated_at?.toISOString?.() ?? message.updated_at,
+    })) as DBMessage[],
+  )
 }
 
 export async function fetchDocumentGroups(courseName: string) {

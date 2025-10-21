@@ -1,7 +1,9 @@
 import { type NextApiResponse } from 'next'
 import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db } from '~/db/dbClient'
-import { type Content, type Conversation } from '~/types/chat'
+import { type Content } from '~/types/chat'
+import { getConversationWithMessages } from '~/db/dbHelpers'
+import { getUserIdentifier } from '~/pages/api/_utils/userIdentifier'
 import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
 import { llmConvoMonitor } from '~/db/schema'
@@ -20,9 +22,24 @@ const logConversation = async (
   req: AuthenticatedRequest,
   res: NextApiResponse,
 ) => {
-  const { course_name, conversation } = req.body as {
+  const { course_name, conversation_id } = req.body as {
     course_name: string
-    conversation: Conversation
+    conversation_id: string
+  }
+
+  if (!conversation_id) {
+    return res.status(400).json({
+      error: 'conversation_id is required',
+    })
+  }
+
+  const conversation = await getConversationWithMessages(
+    conversation_id,
+    getUserIdentifier(req) ?? undefined,
+  )
+
+  if (!conversation) {
+    return res.status(404).json({ error: 'Conversation not found' })
   }
 
   // Sanitize the entire conversation object
@@ -118,12 +135,12 @@ const logConversation = async (
         )?.text,
       ),
       'System message': sanitizeForLogging(
-        conversation.messages[conversation.messages.length - 2]!
-          .latestSystemMessage,
+        conversation.messages[conversation.messages.length - 2]
+          ?.latestSystemMessage || '',
       ),
       'Engineered prompt': sanitizeForLogging(
-        conversation.messages[conversation.messages.length - 2]!
-          .finalPromtEngineeredMessage,
+        conversation.messages[conversation.messages.length - 2]
+          ?.finalPromtEngineeredMessage || '',
       ),
     },
     outputs: {

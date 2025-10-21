@@ -3,6 +3,12 @@ import { type Conversation, type ConversationPage } from '@/types/chat'
 import posthog from 'posthog-js'
 import { cleanConversationHistory } from './clean'
 import { createHeaders } from '~/utils/httpHeaders'
+import {
+  type DBMessage,
+  convertDBToChatConversation,
+  convertChatToDBConversation,
+  convertChatToDBMessage,
+} from './conversationTransformers'
 
 // Helper function to create headers with PostHog ID and user email
 // removed local createHeaders; use shared from ~/utils/httpHeaders
@@ -392,40 +398,78 @@ export const saveConversations = (conversations: Conversation[]) => {
 //   }
 // }
 
-export async function saveConversationToServer(
+export async function saveConversationMetadata(
   conversation: Conversation,
   course_name: string,
 ) {
-  const MAX_RETRIES = 3
-  let retryCount = 0
+  const payload = convertChatToDBConversation(conversation)
+  const response = await fetch('/api/conversation', {
+    method: 'PATCH',
+    headers: createHeaders(conversation.userEmail),
+    body: JSON.stringify({ conversation: payload, course_name }),
+  })
 
-  while (retryCount < MAX_RETRIES) {
-    try {
-      console.debug('Saving conversation to server:', conversation)
-      const response = await fetch('/api/conversation', {
-        method: 'POST',
-        headers: createHeaders(conversation.userEmail),
-        body: JSON.stringify({ conversation, course_name }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
-        const errorMessage = errorData?.error || response.statusText
-        throw new Error(`Error saving conversation: ${errorMessage}`)
-      }
-
-      return response.json()
-    } catch (error: any) {
-      console.error(
-        `Error saving conversation (attempt ${retryCount + 1}/${MAX_RETRIES}):`,
-        error,
-      )
-      if (error.code === 'ECONNRESET' && retryCount < MAX_RETRIES - 1) {
-        retryCount++
-        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount)) // Exponential backoff
-        continue
-      }
-      throw error
-    }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    const errorMessage = errorData?.error || response.statusText
+    throw new Error(`Error saving conversation metadata: ${errorMessage}`)
   }
+
+  return true
+}
+
+export async function saveMessageToServer(
+  conversation: Conversation,
+  messageIndex: number,
+  course_name: string,
+) {
+  const message = conversation.messages[messageIndex]
+  if (!message) {
+    throw new Error('Invalid message index when saving message')
+  }
+  const payload = convertChatToDBMessage(message, conversation.id)
+
+  const response = await fetch('/api/messages/upsert', {
+    method: 'POST',
+    headers: createHeaders(conversation.userEmail),
+    body: JSON.stringify({
+      message: payload,
+      conversationId: conversation.id,
+      user_email: conversation.userEmail,
+      course_name,
+    }),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    const errorMessage = errorData?.error || response.statusText
+    throw new Error(`Error saving message: ${errorMessage}`)
+  }
+
+  return true
+}
+
+export async function fetchConversationById(
+  courseName: string,
+  conversationId: string,
+  userEmail?: string,
+) {
+  const response = await fetch(
+    `/api/conversation/${conversationId}?courseName=${courseName}`,
+    {
+      method: 'GET',
+      headers: createHeaders(userEmail),
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error('Error fetching conversation')
+  }
+
+  const { conversation, messages } = (await response.json()) as {
+    conversation: DBMessage[]
+    messages: DBMessage[]
+  }
+
+  return convertDBToChatConversation(conversation as any, messages)
 }

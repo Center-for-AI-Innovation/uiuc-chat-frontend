@@ -271,7 +271,7 @@ export const Chat = memo(
           },
           body: JSON.stringify({
             course_name: getCurrentPageName(),
-            conversation: conversation,
+            conversation_id: conversation.id,
           }),
         })
         // const data = await response.json()
@@ -960,7 +960,10 @@ export const Chat = memo(
                   headers: {
                     'Content-Type': 'application/json',
                   },
-                  body: JSON.stringify(finalChatBody),
+                  body: JSON.stringify({
+                    ...finalChatBody,
+                    conversation_id: updatedConversation.id,
+                  }),
                 })
 
                 // Check if response is ok before proceeding
@@ -1908,7 +1911,7 @@ export const Chat = memo(
             },
             body: JSON.stringify({
               course_name: getCurrentPageName(),
-              conversation: updatedConversation,
+              conversation_id: updatedConversation.id,
             }),
           })
         } catch (error) {
