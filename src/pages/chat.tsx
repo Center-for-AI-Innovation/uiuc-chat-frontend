@@ -12,7 +12,6 @@ import Home from '~/pages/api/home/home'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
-import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
 const ChatPage: NextPage = () => {
   const [metadata, setMetadata] = useState<CourseMetadata | null>()
@@ -86,14 +85,9 @@ const ChatPage: NextPage = () => {
       if (postHogUserObj) {
         const postHogUser = JSON.parse(postHogUserObj)
         setCurrentEmail(postHogUser.distinct_id)
-      } else if (!metadata?.is_private) {
-        // Generate a unique identifier for unauthenticated users on public courses
-        let anonymousId = localStorage.getItem('anonymous_user_id')
-        if (!anonymousId) {
-          anonymousId = generateAnonymousUserId()
-          localStorage.setItem('anonymous_user_id', anonymousId)
-        }
-        setCurrentEmail(anonymousId)
+      } else {
+        // Stay in loading state until PostHog ID is available for public chat
+        setCurrentEmail('')
       }
     }
   }, [auth.isLoading, email, metadata?.is_private])
@@ -192,7 +186,8 @@ const ChatPage: NextPage = () => {
       {!isLoading &&
         !auth.isLoading &&
         router.isReady &&
-        (currentEmail !== undefined || !course_metadata?.is_private) &&
+        // Only render once we have a valid identifier (email or posthog id)
+        !!currentEmail &&
         course_metadata &&
         isAuthorized && (
           <Home
