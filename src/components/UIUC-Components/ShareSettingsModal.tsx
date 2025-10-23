@@ -14,6 +14,12 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Accordion } from '@/components/shadcn/accordion'
 import { useQueryClient } from '@tanstack/react-query'
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from '@/components/Tooltip'
 
 // Props interface for the ShareSettingsModal component
 interface ShareSettingsModalProps {
@@ -57,23 +63,64 @@ export default function ShareSettingsModal({
   const allowLoggedInUsers = metadata?.allow_logged_in_users || false
   const shareUrl = `${window.location.origin}/${projectName}`
   const [isCopied, setIsCopied] = useState(false)
+  const [isAccessMenuOpen, setIsAccessMenuOpen] = useState(false)
 
-  const handlePrivacyChange = async () => {
-    const newIsPrivate = !isPrivate
-    const updatedMetadata = {
+  type AccessLevel = 'invited' | 'logged_in' | 'public'
+
+  const currentAccessLevel: AccessLevel = useMemo(() => {
+    if (!isPrivate) return 'public'
+    if (allowLoggedInUsers) return 'logged_in'
+    return 'invited'
+  }, [isPrivate, allowLoggedInUsers])
+
+  const accessOptions = useMemo(
+    () =>
+      [
+        {
+          key: 'invited' as AccessLevel,
+          label: 'Only invited members',
+          description: 'Only explicitly invited collaborators can access',
+          icon: <IconLock className="h-4 w-4" />,
+        },
+        {
+          key: 'logged_in' as AccessLevel,
+          label: 'All logged-in users',
+          description: 'Any authenticated user in the org can access',
+          icon: <IconUsers className="h-4 w-4" />,
+        },
+        // Public option will be conditionally included below
+      ].concat(
+        useIllinoisChatConfig
+          ? []
+          : [
+              {
+                key: 'public' as AccessLevel,
+                label: 'Public (anyone with the link)',
+                description: 'No login required to access',
+                icon: <IconLockOpen className="h-4 w-4" />,
+              },
+            ],
+      ),
+    [useIllinoisChatConfig],
+  )
+
+  const handleAccessSelect = async (level: AccessLevel) => {
+    const updatedMetadata: CourseMetadata = {
       ...metadata,
-      is_private: newIsPrivate,
+      ...(level === 'public'
+        ? { is_private: false, allow_logged_in_users: false }
+        : level === 'logged_in'
+          ? { is_private: true, allow_logged_in_users: true }
+          : { is_private: true, allow_logged_in_users: false }),
     }
 
-    // Update local state immediately
     setMetadata(updatedMetadata)
-
-    // Update cache immediately
     queryClient.setQueryData(['courseMetadata', projectName], updatedMetadata)
-
-    // Make API call
+    setIsAccessMenuOpen(false)
     await callSetCourseMetadata(projectName, updatedMetadata)
   }
+
+  // Removed old toggle handlers in favor of unified dropdown access control
 
   const handleEmailAddressesChange = (
     new_course_metadata: CourseMetadata,
@@ -89,25 +136,7 @@ export default function ShareSettingsModal({
     )
   }
 
-  const handleAllowLoggedInUsersChange = async () => {
-    const newValue = !allowLoggedInUsers
-    // If enabling the switch, ensure the project becomes private so the setting has effect
-    const shouldForcePrivate = newValue && !isPrivate
-    const updatedMetadata: CourseMetadata = {
-      ...metadata,
-      allow_logged_in_users: newValue,
-      ...(shouldForcePrivate ? { is_private: true } : {}),
-    }
-
-    // Update local state immediately
-    setMetadata(updatedMetadata)
-
-    // Update cache immediately
-    queryClient.setQueryData(['courseMetadata', projectName], updatedMetadata)
-
-    // Make API call
-    await callSetCourseMetadata(projectName, updatedMetadata)
-  }
+  // See handleAccessSelect for unified access updates
 
   /**
    * Handles copying the share URL to clipboard
@@ -199,92 +228,70 @@ export default function ShareSettingsModal({
               Access Control
             </h3>
 
-            {/* Privacy toggle */}
+            {/* Unified Access dropdown */}
             <div className="rounded-lg bg-[--background-faded] p-4 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {isPrivate ? (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--dashboard-button]">
-                      <IconLock className="h-5 w-5 text-[--dashboard-button-foreground]" />
-                    </div>
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--modal]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--modal]">
+                    {currentAccessLevel === 'invited' && (
+                      <IconLock className="h-5 w-5 text-[--foreground-faded]" />
+                    )}
+                    {currentAccessLevel === 'logged_in' && (
+                      <IconUsers className="h-5 w-5 text-[--foreground-faded]" />
+                    )}
+                    {currentAccessLevel === 'public' && (
                       <IconLockOpen className="h-5 w-5 text-[--foreground-faded]" />
-                    </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}>
+                      {currentAccessLevel === 'invited' && 'Only invited members'}
+                      {currentAccessLevel === 'logged_in' && 'All logged-in users'}
+                      {currentAccessLevel === 'public' && 'Public (anyone with the link)'}
+                    </p>
+                    <p className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs`}>
+                      {currentAccessLevel === 'invited' && 'Only explicitly invited collaborators can access'}
+                      {currentAccessLevel === 'logged_in' && 'Any authenticated user in the org can access'}
+                      {currentAccessLevel === 'public' && 'No login required to access'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Dropdown trigger */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsAccessMenuOpen((v) => !v)}
+                    className={`rounded-md border border-[--background-dark] bg-[--modal] px-3 py-2 text-sm transition-colors hover:bg-[--background-dark]`}
+                  >
+                    Change access
+                  </button>
+
+                  {isAccessMenuOpen && (
+                    <TooltipProvider>
+                      <div className="absolute right-0 z-20 mt-2 w-72 overflow-hidden rounded-md border border-[--background-dark] bg-[--modal] p-1 shadow-xl">
+                        {accessOptions.map((opt) => (
+                          <Tooltip key={opt.key}>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleAccessSelect(opt.key)}
+                                className={`flex w-full items-center justify-between rounded-sm px-3 py-2 text-left text-sm hover:bg-[--background-dark]`}
+                              >
+                                <span className="flex items-center gap-2">
+                                  {opt.icon}
+                                  {opt.label}
+                                </span>
+                                {currentAccessLevel === opt.key && (
+                                  <IconCheck size={16} className="text-[--foreground]" />
+                                )}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">{opt.description}</TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </div>
+                    </TooltipProvider>
                   )}
-                  <div>
-                    <p
-                      className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
-                    >
-                      {isPrivate ? 'Private Project' : 'Public Project'}
-                    </p>
-                    <p
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs`}
-                    >
-                      {isPrivate
-                        ? 'Only specified people can access'
-                        : 'Anyone with the link can access'}
-                    </p>
-                  </div>
                 </div>
-                {!useIllinoisChatConfig && (<button
-                  onClick={handlePrivacyChange}
-                  className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
-                    isPrivate
-                      ? 'bg-[--dashboard-button]'
-                      : 'bg-[--background-dark]'
-                  }`}
-                >
-                  <span
-                    className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-[--dashboard-button-foreground] shadow-md transition-transform duration-300 ${
-                      isPrivate ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>)}
-
-              </div>
-            </div>
-
-            {/* Allow logged-in users toggle */}
-            <div className="rounded-lg bg-[--background-faded] p-4 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                    allowLoggedInUsers ? 'bg-[--dashboard-button]' : 'bg-[--modal]'
-                  }`}>
-                    <IconUsers className={`h-5 w-5 ${
-                      allowLoggedInUsers
-                        ? 'text-[--dashboard-button-foreground]'
-                        : 'text-[--foreground-faded]'
-                    }`} />
-                  </div>
-                  <div>
-                    <p
-                      className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
-                    >
-                      Allow any logged in users
-                    </p>
-                    <p
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs`}
-                    >
-                      Any signed-in user can view; only admins can edit
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleAllowLoggedInUsersChange}
-                  className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
-                    allowLoggedInUsers
-                      ? 'bg-[--dashboard-button]'
-                      : 'bg-[--background-dark]'
-                  }`}
-                >
-                  <span
-                    className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full bg-[--dashboard-button-foreground] shadow-md transition-transform duration-300 ${
-                      allowLoggedInUsers ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
               </div>
             </div>
 
