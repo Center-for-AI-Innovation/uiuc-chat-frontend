@@ -1,5 +1,11 @@
 // @utils/app/conversation
-import { type Conversation, type ConversationPage } from '@/types/chat'
+import {
+  type Conversation,
+  type ConversationPage,
+  type Message,
+  type SaveConversationDelta,
+  type ConversationMeta,
+} from '@/types/chat'
 import posthog from 'posthog-js'
 import { cleanConversationHistory } from './clean'
 import { createHeaders } from '~/utils/httpHeaders'
@@ -395,23 +401,55 @@ export const saveConversations = (conversations: Conversation[]) => {
 export async function saveConversationToServer(
   conversation: Conversation,
   course_name: string,
+  message: Message | null,
 ) {
   const MAX_RETRIES = 3
   let retryCount = 0
-
+  if (!message) {
+    console.warn('Skipping saveConversationToServer: message is null')
+    return
+  }
   while (retryCount < MAX_RETRIES) {
     try {
-      console.debug('Saving conversation to server:', conversation)
+      // Build minimal delta payload to avoid large REST body
+      const meta: ConversationMeta = {
+        id: conversation.id,
+        name: conversation.name,
+        modelId: conversation.model.id,
+        prompt: conversation.prompt,
+        temperature: conversation.temperature,
+        projectName: conversation.projectName,
+        folderId: conversation.folderId || null,
+      }
+
+      // Only send the single message passed as argument
+      const messagesDelta: Message[] = [message]
+
+      const delta: SaveConversationDelta = {
+        conversation: meta,
+        messagesDelta,
+      }
+
       const response = await fetch('/api/conversation', {
         method: 'POST',
         headers: createHeaders(conversation.userEmail),
-        body: JSON.stringify({ conversation, course_name }),
+        body: JSON.stringify({ delta, course_name }), // modified to use delta
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
-        const errorMessage = errorData?.error || response.statusText
-        throw new Error(`Error saving conversation: ${errorMessage}`)
+        // Fallback to legacy full payload for backward compatibility
+        const fallback = await fetch('/api/conversation', {
+          method: 'POST',
+          headers: createHeaders(conversation.userEmail),
+          body: JSON.stringify({ conversation, course_name }),
+        })
+        if (!fallback.ok) {
+          const errorData = await fallback.json().catch(() => null)
+          const errorMessage = errorData?.error || fallback.statusText
+          throw new Error(`Error saving conversation: ${errorMessage}`)
+        }
+
+        return fallback.json()
       }
 
       return response.json()
