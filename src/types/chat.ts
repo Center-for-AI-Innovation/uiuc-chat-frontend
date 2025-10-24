@@ -55,6 +55,7 @@ export interface ConversationMeta {
   temperature: number
   projectName?: string
   folderId: string | null
+  userEmail?: string | null
 }
 
 export interface SaveConversationDelta {

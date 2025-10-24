@@ -126,7 +126,7 @@ type FileUploadStatus = {
 }
 
 interface Props {
-  onSend: (message: Message, plugin: Plugin | null) => void
+  onSend: (message: Message, plugin: Plugin | null) => Promise<void>
   onScrollDownClick: () => void
   stopConversationRef: MutableRefObject<boolean>
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>
@@ -428,7 +428,7 @@ export const ChatInput = ({
     }
 
     // Use the onSend prop to send the structured message
-    onSend(messageForChat, plugin)
+    await onSend(messageForChat, plugin)
 
     // Reset states
     setContent('')
@@ -470,7 +470,7 @@ export const ChatInput = ({
     setShowPromptList(false)
   }
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = async (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (showPromptList) {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
@@ -498,7 +498,7 @@ export const ChatInput = ({
       }
     } else if (e.key === 'Enter' && !isTyping && !isMobile() && !e.shiftKey) {
       e.preventDefault()
-      handleSend()
+      await handleSend()
     } else if (e.key === '/' && e.metaKey) {
       e.preventDefault()
       setShowPluginSelect(!showPluginSelect)
