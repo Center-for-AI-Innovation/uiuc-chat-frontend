@@ -39,6 +39,8 @@ export interface Message {
   latestSystemMessage?: string
   finalPromtEngineeredMessage?: string // after all prompt enginering, to generate final response.
   responseTimeSec?: number
+  imageDescription?: string
+  imageUrls?: string[]
   conversation_id?: string
   created_at?: string
   updated_at?: string
