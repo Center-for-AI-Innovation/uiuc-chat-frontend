@@ -427,32 +427,18 @@ export const ChatInput = ({
       contexts: allFileContexts.length > 0 ? allFileContexts : undefined,
     }
 
-    // Optimistically clear the composer so the text disappears immediately
-    const previousContentRef = { value: content }
+    // Clear the composer immediately so the text disappears
     setContent('')
     setInputContent('')
-
-    const adjustTextarea = () => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'inherit'
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-        textareaRef.current.style.overflow =
-          textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
-      }
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'inherit'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      textareaRef.current.style.overflow =
+        textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
     }
 
-    adjustTextarea()
-
-    try {
-      // Use the onSend prop to send the structured message
-      await onSend(messageForChat, plugin)
-    } catch (error) {
-      // Restore content so the user doesn't lose their message on failure
-      setContent(previousContentRef.value)
-      setInputContent(previousContentRef.value)
-      adjustTextarea()
-      throw error
-    }
+    // Send the message
+    onSend(messageForChat, plugin)
 
     // Reset states
     setPlugin(null)
@@ -521,7 +507,7 @@ export const ChatInput = ({
       }
     } else if (e.key === 'Enter' && !isTyping && !isMobile() && !e.shiftKey) {
       e.preventDefault()
-      await handleSend()
+      handleSend()
     } else if (e.key === '/' && e.metaKey) {
       e.preventDefault()
       setShowPluginSelect(!showPluginSelect)
