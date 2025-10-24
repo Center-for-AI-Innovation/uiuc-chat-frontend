@@ -6,11 +6,8 @@ import * as schema from './schema'
 const connectionString = `postgres://${process.env.POSTGRES_USERNAME}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_ENDPOINT}:${process.env.POSTGRES_PORT}/${process.env.POSTGRES_DATABASE}`
 const keycloakDBConnectionString = `postgres://${process.env.KEYCLOAK_DB_USERNAME}:${process.env.KEYCLOAK_DB_PASSWORD}@${process.env.KEYCLOAK_DB_ENDPOINT}:${process.env.KEYCLOAK_DB_PORT}/${process.env.KEYCLOAK_DB_DATABASE}`
 
-// Configure postgres client with SSL for non-local connections
 const clientOptions = {
-  // ssl: {
-  //   rejectUnauthorized: false // TODO: For production, consider using a more secure SSL configuration
-  // }
+  ssl: { rejectUnauthorized: false }
 }
 
 export const client = postgres(connectionString, clientOptions)
