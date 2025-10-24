@@ -3,7 +3,7 @@ import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
 import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
-import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   try {
@@ -61,4 +61,6 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
   }
 }
 
-export default withCourseOwnerOrAdminAccess()(handler)
+// Allow public chatbot uploads (unauthenticated) based on course metadata
+// and fall back to auth checks for private courses via the shared middleware.
+export default withCourseAccessFromRequest('any')(handler)
