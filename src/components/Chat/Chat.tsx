@@ -1463,7 +1463,7 @@ export const Chat = memo(
           }
 
           // Call handleSend with the prepared message and delete count
-          await handleSend(
+          handleSend(
             userMessageToRegenerate,
             messagesToDeleteCount,
             null,
@@ -2039,7 +2039,7 @@ export const Chat = memo(
                               message={message}
                               messageIndex={index}
                               onEdit={async (editedMessage) => {
-                                await handleSend(
+                                handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
                                     index,
@@ -2075,8 +2075,8 @@ export const Chat = memo(
               <ChatInput
                 stopConversationRef={stopConversationRef}
                 textareaRef={textareaRef}
-                onSend={async (message, plugin) => {
-                  await handleSend(
+                onSend={(message, plugin) =>
+                  handleSend(
                     message,
                     0,
                     plugin,
@@ -2084,7 +2084,7 @@ export const Chat = memo(
                     enabledDocumentGroups,
                     llmProviders,
                   )
-                }}
+                }
                 onScrollDownClick={handleScrollDown}
                 showScrollDownButton={showScrollDownButton}
                 onRegenerate={() => handleRegenerate()}
