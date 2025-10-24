@@ -5,6 +5,7 @@ import {
   type Message,
   type SaveConversationDelta,
   type ConversationMeta,
+  type ContextWithMetadata,
 } from '@/types/chat'
 import posthog from 'posthog-js'
 import { cleanConversationHistory } from './clean'
@@ -385,6 +386,47 @@ export const saveConversations = (conversations: Conversation[]) => {
   }
 }
 
+export function createSaveDeltaPayload(
+  conversation: Conversation,
+  message: Message | null,
+): SaveConversationDelta {
+  const meta: ConversationMeta = {
+    id: conversation.id,
+    name: conversation.name,
+    modelId: conversation.model.id,
+    prompt: conversation.prompt,
+    temperature: conversation.temperature,
+    projectName: conversation.projectName,
+    folderId: conversation.folderId || null,
+    userEmail: conversation.userEmail ?? null,
+  }
+
+  const messagesDelta: Message[] = message ? [message] : []
+
+  return {
+    conversation: meta,
+    messagesDelta,
+  }
+}
+
+export function createLogConversationPayload(
+  courseName: string,
+  conversation: Conversation,
+  message: Message | null,
+) {
+  if (message) {
+    return {
+      course_name: courseName,
+      delta: createSaveDeltaPayload(conversation, message),
+    }
+  }
+
+  return {
+    course_name: courseName,
+    conversation,
+  }
+}
+
 // Old method without error handling
 // export const saveConversations = (conversations: Conversation[]) => {
 //   try {
@@ -398,58 +440,68 @@ export const saveConversations = (conversations: Conversation[]) => {
 //   }
 // }
 
+type SaveConversationOptions = {
+  forceFullPayload?: boolean
+}
+
 export async function saveConversationToServer(
   conversation: Conversation,
   course_name: string,
-  message: Message | null,
+  message: Message | null = null,
+  options: SaveConversationOptions = {},
 ) {
   const MAX_RETRIES = 3
   let retryCount = 0
-  if (!message) {
-    console.warn('Skipping saveConversationToServer: message is null')
-    return
-  }
+  const useLegacyPayload = options.forceFullPayload ?? false
   while (retryCount < MAX_RETRIES) {
     try {
-      // Build minimal delta payload to avoid large REST body
-      const meta: ConversationMeta = {
-        id: conversation.id,
-        name: conversation.name,
-        modelId: conversation.model.id,
-        prompt: conversation.prompt,
-        temperature: conversation.temperature,
-        projectName: conversation.projectName,
-        folderId: conversation.folderId || null,
+      let response: Response
+
+      if (!useLegacyPayload) {
+        // Build minimal delta payload to avoid large REST body
+        const meta: ConversationMeta = {
+          id: conversation.id,
+          name: conversation.name,
+          modelId: conversation.model.id,
+          prompt: conversation.prompt,
+          temperature: conversation.temperature,
+          projectName: conversation.projectName,
+          folderId: conversation.folderId || null,
+      userEmail: conversation.userEmail ?? null,
+        }
+
+        const messagesDelta: Message[] = message ? [message] : []
+
+        const delta: SaveConversationDelta = {
+          conversation: meta,
+          messagesDelta,
+        }
+
+        response = await fetch('/api/conversation', {
+          method: 'POST',
+          headers: createHeaders(conversation.userEmail),
+          body: JSON.stringify({ delta, course_name }),
+        })
+
+        if (response.ok) {
+          return response.json()
+        }
+
+        // If the delta request failed, fall back to legacy payload
       }
 
-      // Only send the single message passed as argument
-      const messagesDelta: Message[] = [message]
-
-      const delta: SaveConversationDelta = {
-        conversation: meta,
-        messagesDelta,
-      }
-
-      const response = await fetch('/api/conversation', {
+      // Either we explicitly asked for a full payload or delta failed
+      response = await fetch('/api/conversation', {
         method: 'POST',
         headers: createHeaders(conversation.userEmail),
-        body: JSON.stringify({ delta, course_name }), // modified to use delta
+        body: JSON.stringify({ conversation, course_name }),
       })
 
       if (!response.ok) {
         // Fallback to legacy full payload for backward compatibility
-        const fallback = await fetch('/api/conversation', {
-          method: 'POST',
-          headers: createHeaders(conversation.userEmail),
-          body: JSON.stringify({ conversation, course_name }),
-        })
-        if (!fallback.ok) {
-          const errorData = await fallback.json().catch(() => null)
-          const errorMessage = errorData?.error || fallback.statusText
-          throw new Error(`Error saving conversation: ${errorMessage}`)
-        }
-
-        return fallback.json()
+        const errorData = await response.json().catch(() => null)
+        const errorMessage = errorData?.error || response.statusText
+        throw new Error(`Error saving conversation: ${errorMessage}`)
       }
 
       return response.json()
@@ -466,4 +518,44 @@ export async function saveConversationToServer(
       throw error
     }
   }
+}
+
+export function reconstructConversation(
+  conversation: Conversation | undefined | null,
+  fallback?: Conversation,
+): Conversation | undefined {
+  const source = conversation ?? fallback
+  if (!source) return undefined
+
+  const cloned = JSON.parse(JSON.stringify(source)) as Conversation
+
+  if (!Array.isArray(cloned.messages)) {
+    cloned.messages = []
+  }
+
+  cloned.messages = cloned.messages.map((message) => {
+    const normalizedMessage = { ...message }
+
+    if (normalizedMessage.contexts) {
+      normalizedMessage.contexts = normalizedMessage.contexts.filter(
+        (context): context is ContextWithMetadata => context !== null,
+      )
+    }
+
+    if (normalizedMessage.tools) {
+      normalizedMessage.tools = normalizedMessage.tools.map((tool) => {
+        const normalizedTool = { ...tool }
+        if (normalizedTool.contexts) {
+          normalizedTool.contexts = normalizedTool.contexts.filter(
+            (context): context is ContextWithMetadata => context !== null,
+          )
+        }
+        return normalizedTool
+      })
+    }
+
+    return normalizedMessage
+  })
+
+  return cloned
 }

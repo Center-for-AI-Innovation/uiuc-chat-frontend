@@ -81,6 +81,7 @@ import {
   handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
+import { createLogConversationPayload } from '@/utils/app/conversation'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -261,7 +262,10 @@ export const Chat = memo(
       )
     }, [tools])
 
-    const onMessageReceived = async (conversation: Conversation) => {
+    const onMessageReceived = async (
+      conversation: Conversation,
+      message: Message,
+    ) => {
       // Log conversation to database
       try {
         const response = await fetch(`/api/UIUC-api/logConversation`, {
@@ -269,10 +273,13 @@ export const Chat = memo(
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            course_name: getCurrentPageName(),
-            conversation: conversation,
-          }),
+          body: JSON.stringify(
+            createLogConversationPayload(
+              getCurrentPageName(),
+              conversation,
+              message,
+            ),
+          ),
         })
         // const data = await response.json()
         // return data.success
@@ -287,6 +294,28 @@ export const Chat = memo(
       homeDispatch({ field: 'isImg2TextLoading', value: undefined })
       homeDispatch({ field: 'isRetrievalLoading', value: undefined })
     }
+
+    const persistConversation = useCallback(
+      async (conversationToPersist: Conversation, latestMessage: Message | null) => {
+        try {
+          await updateConversationMutation.mutateAsync({
+            conversation: conversationToPersist,
+            message: latestMessage,
+          })
+        } catch (error) {
+          console.error('Failed to persist conversation:', error)
+          errorToast({
+            title: 'Save Failed',
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Could not save conversation. Please try again.',
+          })
+          throw error
+        }
+      },
+    [updateConversationMutation],
+    )
 
     // THIS IS WHERE MESSAGES ARE SENT.
     const handleSend = useCallback(
@@ -434,10 +463,13 @@ export const Chat = memo(
             key: 'messages',
             value: updatedConversation.messages,
           })
-          updateConversationMutation.mutate({
-            conversation: updatedConversation,
-            message: message,
-          })
+          try {
+            await persistConversation(updatedConversation, message)
+          } catch (error) {
+            homeDispatch({ field: 'loading', value: false })
+            homeDispatch({ field: 'messageIsStreaming', value: false })
+            return
+          }
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -1222,7 +1254,12 @@ export const Chat = memo(
                 updatedConversation,
               )
 
-              onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
+              if (streamedAssistantMessage) {
+                onMessageReceived(
+                  updatedConversation,
+                  streamedAssistantMessage,
+                )
+              }
 
               // } else {
               //   onMessageReceived(updatedConversation)
@@ -1457,7 +1494,7 @@ export const Chat = memo(
           }
 
           // Call handleSend with the prepared message and delete count
-          handleSend(
+          await handleSend(
             userMessageToRegenerate,
             messagesToDeleteCount,
             null,
@@ -1919,19 +1956,32 @@ export const Chat = memo(
           })
 
           // Update database
-          await updateConversationMutation.mutateAsync(updatedConversation)
+          const latestMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? null
+          await persistConversation(updatedConversation, latestMessage)
 
           // Log to database
-          await fetch('/api/UIUC-api/logConversation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              course_name: getCurrentPageName(),
-              conversation: updatedConversation,
-            }),
-          })
+          const latestAssistantMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? null
+          if (latestAssistantMessage) {
+            await fetch('/api/UIUC-api/logConversation', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(
+                createLogConversationPayload(
+                  getCurrentPageName(),
+                  updatedConversation,
+                  latestAssistantMessage,
+                ),
+              ),
+            })
+          }
         } catch (error) {
           homeDispatch({
             field: 'conversations',
@@ -2020,8 +2070,8 @@ export const Chat = memo(
                               key={index}
                               message={message}
                               messageIndex={index}
-                              onEdit={(editedMessage) => {
-                                handleSend(
+                              onEdit={async (editedMessage) => {
+                                await handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
                                     index,
@@ -2057,8 +2107,8 @@ export const Chat = memo(
               <ChatInput
                 stopConversationRef={stopConversationRef}
                 textareaRef={textareaRef}
-                onSend={(message, plugin) => {
-                  handleSend(
+                onSend={async (message, plugin) => {
+                  await handleSend(
                     message,
                     0,
                     plugin,

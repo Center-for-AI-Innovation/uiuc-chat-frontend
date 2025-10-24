@@ -1,10 +1,11 @@
 // src/app/api/allNewRoutingChat/route.ts
 
-import { type ChatBody } from '@/types/chat'
+import { type ChatBody, type Conversation } from '@/types/chat'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { withCourseAccessFromRequest } from '~/app/api/authorization'
+import { reconstructConversation } from '@/utils/app/conversation'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,10 +16,13 @@ async function handler(req: AuthenticatedRequest) {
   try {
     const body = await req.json()
     const { conversation, course_name, courseMetadata, mode } = body as ChatBody
+    const hydratedConversation: Conversation | undefined = reconstructConversation(
+      conversation,
+    )
 
     // Build the prompt
     const newConversation = await buildPrompt({
-      conversation,
+      conversation: hydratedConversation,
       projectName: course_name,
       courseMetadata,
       mode,
