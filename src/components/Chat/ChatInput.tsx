@@ -427,11 +427,34 @@ export const ChatInput = ({
       contexts: allFileContexts.length > 0 ? allFileContexts : undefined,
     }
 
-    // Use the onSend prop to send the structured message
-    await onSend(messageForChat, plugin)
+    // Optimistically clear the composer so the text disappears immediately
+    const previousContentRef = { value: content }
+    setContent('')
+    setInputContent('')
+
+    const adjustTextarea = () => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'inherit'
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+        textareaRef.current.style.overflow =
+          textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
+      }
+    }
+
+    adjustTextarea()
+
+    try {
+      // Use the onSend prop to send the structured message
+      await onSend(messageForChat, plugin)
+    } catch (error) {
+      // Restore content so the user doesn't lose their message on failure
+      setContent(previousContentRef.value)
+      setInputContent(previousContentRef.value)
+      adjustTextarea()
+      throw error
+    }
 
     // Reset states
-    setContent('')
     setPlugin(null)
     setFileUploads([]) // Clear file uploads after sending message
 

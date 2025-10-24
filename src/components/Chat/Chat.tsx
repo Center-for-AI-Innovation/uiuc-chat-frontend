@@ -295,28 +295,6 @@ export const Chat = memo(
       homeDispatch({ field: 'isRetrievalLoading', value: undefined })
     }
 
-    const persistConversation = useCallback(
-      async (conversationToPersist: Conversation, latestMessage: Message | null) => {
-        try {
-          await updateConversationMutation.mutateAsync({
-            conversation: conversationToPersist,
-            message: latestMessage,
-          })
-        } catch (error) {
-          console.error('Failed to persist conversation:', error)
-          errorToast({
-            title: 'Save Failed',
-            message:
-              error instanceof Error
-                ? error.message
-                : 'Could not save conversation. Please try again.',
-          })
-          throw error
-        }
-      },
-    [updateConversationMutation],
-    )
-
     // THIS IS WHERE MESSAGES ARE SENT.
     const handleSend = useCallback(
       async (
@@ -463,13 +441,6 @@ export const Chat = memo(
             key: 'messages',
             value: updatedConversation.messages,
           })
-          try {
-            await persistConversation(updatedConversation, message)
-          } catch (error) {
-            homeDispatch({ field: 'loading', value: false })
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-            return
-          }
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -1145,7 +1116,6 @@ export const Chat = memo(
                       id: uuidv4(),
                       role: 'assistant',
                       content: chunkValue,
-                      contexts: message.contexts,
                       feedback: message.feedback,
                       wasQueryRewritten: message.wasQueryRewritten,
                       queryRewriteText: message.queryRewriteText,
@@ -1238,7 +1208,7 @@ export const Chat = memo(
                 ] ?? message
 
               if (streamedAssistantMessage.role === 'assistant') {
-                updateConversationMutation.mutate({
+                await updateConversationMutation.mutateAsync({
                   conversation: updatedConversation,
                   message: streamedAssistantMessage,
                 })
@@ -1307,7 +1277,6 @@ export const Chat = memo(
                   id: uuidv4(),
                   role: 'assistant',
                   content: answer,
-                  contexts: message.contexts,
                   feedback: message.feedback,
                   wasQueryRewritten: message.wasQueryRewritten,
                   queryRewriteText: message.queryRewriteText,
@@ -1960,7 +1929,6 @@ export const Chat = memo(
             updatedConversation.messages?.[
               updatedConversation.messages.length - 1
             ] ?? null
-          await persistConversation(updatedConversation, latestMessage)
 
           // Log to database
           const latestAssistantMessage =

@@ -54,6 +54,118 @@ export function convertChatToDBConversation(
   }
 }
 
+export interface PersistMessageServerArgs {
+  conversation: ChatConversation
+  message: ChatMessage
+  courseName: string
+  userIdentifier: string
+}
+
+export async function persistMessageServer({
+  conversation,
+  message,
+  courseName,
+  userIdentifier,
+}: PersistMessageServerArgs) {
+  if (!userIdentifier || userIdentifier.trim() === '') {
+    throw new Error('User identifier is required to persist conversation messages')
+  }
+
+  const conversationData: NewConversations = {
+    id: conversation.id,
+    name: conversation.name,
+    model: conversation.model.id,
+    prompt: conversation.prompt,
+    temperature: conversation.temperature,
+    user_email: userIdentifier,
+    project_name: conversation.projectName || courseName,
+    folder_id: isUUID(conversation.folderId ?? '') ? conversation.folderId : null,
+    created_at: conversation.createdAt
+      ? new Date(conversation.createdAt)
+      : new Date(),
+    updated_at: new Date(),
+  }
+
+  await db
+    .insert(conversationsTable)
+    .values(conversationData)
+    .onConflictDoUpdate({
+      target: conversationsTable.id,
+      set: {
+        name: conversationData.name,
+        model: conversationData.model,
+        prompt: conversationData.prompt,
+        temperature: conversationData.temperature,
+        user_email: conversationData.user_email,
+        project_name: conversationData.project_name,
+        folder_id: conversationData.folder_id,
+        updated_at: new Date(),
+      },
+    })
+
+  const existingMessages = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.conversation_id, conversation.id))
+
+  const newDbMessage = convertChatToDBMessage(message, conversation.id)
+
+  const existingMessage = existingMessages.find(
+    (m) => m.id.toString() === newDbMessage.id,
+  )
+
+  let earliestEditTime: Date | null = null
+  if (existingMessage) {
+    const contentChanged =
+      existingMessage.content_text !== newDbMessage.content_text ||
+      JSON.stringify(existingMessage.contexts) !==
+        JSON.stringify(newDbMessage.contexts) ||
+      JSON.stringify(existingMessage.tools) !==
+        JSON.stringify(newDbMessage.tools) ||
+      existingMessage.latest_system_message !==
+        newDbMessage.latest_system_message ||
+      existingMessage.final_prompt_engineered_message !==
+        newDbMessage.final_prompt_engineered_message
+
+    if (contentChanged) {
+      earliestEditTime = existingMessage.created_at
+        ? new Date(existingMessage.created_at)
+        : new Date()
+    }
+  }
+
+  if (earliestEditTime) {
+    await db
+      .delete(messages)
+      .where(
+        and(
+          eq(sql`${messages.conversation_id}::text`, conversation.id),
+          gt(messages.created_at, earliestEditTime),
+        ),
+      )
+  }
+
+  const baseTime = Date.now()
+  const messageForInsert = {
+    ...newDbMessage,
+    id: newDbMessage.id,
+    created_at: newDbMessage.created_at
+      ? new Date(newDbMessage.created_at)
+      : existingMessage?.created_at
+        ? new Date(existingMessage.created_at)
+        : new Date(baseTime),
+    updated_at: new Date(),
+  }
+
+  await db
+    .insert(messages)
+    .values(messageForInsert as any)
+    .onConflictDoUpdate({
+      target: messages.id,
+      set: messageForInsert as any,
+    })
+}
+
 export function convertDBToChatConversation(
   dbConversation: DBConversation,
   dbMessages: DBMessage[],

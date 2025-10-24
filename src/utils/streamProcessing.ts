@@ -20,10 +20,7 @@ import {
 } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { getBaseUrl } from '~/utils/apiUtils'
-import {
-  createLogConversationPayload,
-  createSaveDeltaPayload,
-} from '~/utils/app/conversation'
+import { createLogConversationPayload } from '~/utils/app/conversation'
 import {
   type AllLLMProviders,
   AllSupportedModels,
