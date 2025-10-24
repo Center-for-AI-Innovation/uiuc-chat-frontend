@@ -1,6 +1,6 @@
 // src/pages/api/chat-api/keys/validate.ts
 import { AuthContextProps } from 'react-oidc-context'
-import { db, keycloakDB, apiKeys } from '~/db/dbClient'
+import { db, apiKeys, client } from '~/db/dbClient'
 import { keycloakUsers } from '~/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
 import posthog from 'posthog-js'
@@ -42,19 +42,30 @@ export async function validateApiKeyAndRetrieveData(apiKey: string) {
     }
 
     // Get user data from email from keycloak
-    const userData = await keycloakDB
-      .select()
-      .from(keycloakUsers)
-      .where(eq(keycloakUsers.email, email))
-      .limit(1)
-
-    if (!userData || userData.length === 0) {
-      throw new Error('User not found')
+    let keycloakDB: any = null
+    let userData: any = null;
+    if (process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True') {
+      const mod = await import('~/db/dbClient')
+      keycloakDB = mod.keycloakDB
+      const rows = await keycloakDB
+        .select()
+        .from(keycloakUsers)
+        .where(eq(keycloakUsers.email, email))
+        .limit(1)
+      userData = rows.length > 0 ? rows[0] : null;
+    } else {
+      // raw SQL to avoid schema issues
+      const result = await client`
+        SELECT *
+        FROM keycloak.user_entity
+        WHERE email = ${email}
+        LIMIT 1
+      `;
+      userData = result.length > 0 ? result[0] : null;
     }
 
-    const user = userData[0]
-    if (!user) {
-      throw new Error('User data is invalid')
+    if (!userData) {
+      throw new Error('User not found');
     }
 
     // Construct auth context
@@ -62,8 +73,8 @@ export async function validateApiKeyAndRetrieveData(apiKey: string) {
       isAuthenticated: true,
       user: {
         profile: {
-          sub: user.id,
-          email: user.email,
+          sub: String(userData.id),
+          email: String(userData.email),
         },
       },
     } as AuthContextProps
@@ -71,7 +82,10 @@ export async function validateApiKeyAndRetrieveData(apiKey: string) {
     // Update API key usage count
     await db
       .update(apiKeys)
-      .set({ usage_count: sql`${apiKeys.usage_count} + 1` })
+      .set({
+        usage_count: sql`${apiKeys.usage_count}
+        + 1`,
+      })
       .where(eq(apiKeys.key, apiKey))
 
     posthog.capture('api_key_validated', {
