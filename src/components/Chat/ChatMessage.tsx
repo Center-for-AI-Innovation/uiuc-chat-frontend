@@ -50,7 +50,10 @@ import { ImagePreview } from './ImagePreview'
 import MessageActions from './MessageActions'
 import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 
-import { saveConversationToServer } from '@/utils/app/conversation'
+import {
+  saveConversationToServer,
+  createLogConversationPayload,
+} from '@/utils/app/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -692,11 +695,36 @@ export const ChatMessage = memo(
             msg.id === message.id ? editedMessage : msg,
           ),
         }
-        saveConversationToServer(updatedConversation, courseName).catch(
-          (error: Error) => {
-            console.error('Error saving edited message to server:', error)
-          },
-        )
+        const latestMessage =
+          updatedConversation.messages?.[
+            updatedConversation.messages.length - 1
+          ] ?? null
+
+        saveConversationToServer(
+          updatedConversation,
+          courseName,
+          latestMessage,
+        ).catch((error: Error) => {
+          console.error('Error saving edited message to server:', error)
+        })
+
+        if (latestMessage) {
+          fetch('/api/UIUC-api/logConversation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+              createLogConversationPayload(
+                courseName,
+                updatedConversation,
+                latestMessage,
+              ),
+            ),
+          }).catch((error) => {
+            console.error('Error logging conversation delta:', error)
+          })
+        }
       }
       setIsEditing(false)
     }
