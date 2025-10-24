@@ -44,7 +44,8 @@ export async function validateApiKeyAndRetrieveData(apiKey: string) {
     // Get user data from email from keycloak
     let keycloakDB: any = null
     let userData: any = null;
-    if (process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True') {
+    if (process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG?.toLowerCase() === 'true'){
+      console.log('Using Illinois Chat config: connect to keycloakDB to fetch user data.')
       const mod = await import('~/db/dbClient')
       keycloakDB = mod.keycloakDB
       const rows = await keycloakDB
@@ -54,6 +55,7 @@ export async function validateApiKeyAndRetrieveData(apiKey: string) {
         .limit(1)
       userData = rows.length > 0 ? rows[0] : null;
     } else {
+      console.log('Using UIUC Chat config: use raw SQL to fetch user data from keycloak.user_entity.')
       // raw SQL to avoid schema issues
       const result = await client`
         SELECT *
