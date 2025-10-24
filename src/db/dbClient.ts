@@ -13,7 +13,7 @@ const clientOptions = {
   // }
 }
 
-const client = postgres(connectionString, clientOptions)
+export const client = postgres(connectionString, clientOptions)
 const keycloakClient = postgres(keycloakDBConnectionString, clientOptions)
 
 // Create drizzle ORM instance for postgresDB with proper typing
