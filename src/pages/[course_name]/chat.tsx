@@ -13,7 +13,6 @@ import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
-import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()
@@ -137,18 +136,12 @@ const ChatPage: NextPage = () => {
               const postHogUserObj = localStorage.getItem(
                 'ph_' + key + '_posthog',
               )
-
               if (postHogUserObj) {
                 const postHogUser = JSON.parse(postHogUserObj)
                 setCurrentEmail(postHogUser.distinct_id)
               } else {
-                // Generate a unique identifier for unauthenticated users
-                let anonymousId = localStorage.getItem('anonymous_user_id')
-                if (!anonymousId) {
-                  anonymousId = generateAnonymousUserId()
-                  localStorage.setItem('anonymous_user_id', anonymousId)
-                }
-                setCurrentEmail(anonymousId)
+                // Stay in loading state until PostHog ID is available
+                setCurrentEmail('')
               }
             }
             return
@@ -215,7 +208,8 @@ const ChatPage: NextPage = () => {
       {!isLoading &&
         !auth.isLoading &&
         router.isReady &&
-        currentEmail !== undefined &&
+        // Only render once we have a valid identifier (email or posthog id)
+        !!currentEmail &&
         courseMetadata && (
           <Home
             current_email={currentEmail || ''}
