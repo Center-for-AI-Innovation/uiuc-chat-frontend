@@ -319,9 +319,7 @@ export async function saveConversationToServer(
 
     const response = await fetch('/api/conversation', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createHeaders(conversation.userEmail),
       body: JSON.stringify(payload),
     })
 
