@@ -18,7 +18,7 @@ import { montserrat_heading } from 'fonts'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import GlobalHeader from '~/components/UIUC-Components/navbars/GlobalHeader'
 
 interface NavbarProps {
@@ -347,6 +347,9 @@ export default function Navbar({
   const { classes } = useStyles()
   const router = useRouter()
   const [activeLink, setActiveLink] = useState<string>('')
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
 
   useEffect(() => {
     if (!router.isReady) return
@@ -365,11 +368,15 @@ export default function Navbar({
     //   icon: <IconCompass />,
     //   link: '/explore',
     // },
-    {
-      name: <NavText>Create Your Own Bot</NavText>,
-      icon: <IconSparkles />,
-      link: '/new',
-    },
+    ...(useIllinoisChatConfig
+      ? [
+          {
+            name: <NavText>Create Your Own Bot</NavText>,
+            icon: <IconSparkles />,
+            link: '/new',
+          } as NavItem,
+        ]
+      : []),
   ]
 
   return (

@@ -67,7 +67,7 @@ import { createStyles, rem } from '@mantine/core'
 import { montserrat_heading } from 'fonts'
 import Link from 'next/link'
 import { usePostHog } from 'posthog-js/react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 export function LandingPageHeader({
   forGeneralPurposeNotLandingpage = false,
@@ -100,6 +100,9 @@ export function LandingPageHeader({
   const [menuVisible, setMenuVisible] = useState(false)
   const menuButtonRef = useRef<HTMLDivElement>(null)
   const [menuPosition, setMenuPosition] = useState({ right: '20px' })
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
 
   // Determine which elements should be visible based on screen width
   const showMyChatbotsInNav = windowWidth >= 580 // New: My Chatbots button
@@ -241,20 +244,22 @@ export function LandingPageHeader({
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           {forGeneralPurposeNotLandingpage === false && (
             <>
-              <Link href="/new" className={classes.link}>
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <IconSparkles
-                    size={20}
-                    strokeWidth={2}
-                    style={{ marginRight: '5px' }}
-                  />
-                  <span
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    Create Your Own Bot
+              {useIllinoisChatConfig && (
+                <Link href="/new" className={classes.link}>
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <IconSparkles
+                      size={20}
+                      strokeWidth={2}
+                      style={{ marginRight: '5px' }}
+                    />
+                    <span
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      Create Your Own Bot
+                    </span>
                   </span>
-                </span>
-              </Link>
+                </Link>
+              )}
               <Link
                 href="https://docs.uiuc.chat/"
                 className={classes.link}
@@ -387,7 +392,7 @@ export function LandingPageHeader({
                 </Link>
               )}
 
-              {showNewProjectInNav && (
+              {showNewProjectInNav && useIllinoisChatConfig && (
                 <Link href="/new" className={classes.link}>
                   <span className="flex items-center">
                     <IconSparkles
@@ -528,7 +533,7 @@ export function LandingPageHeader({
                     </Link>
                   )}
 
-                  {!showNewProjectInNav && (
+                  {!showNewProjectInNav && useIllinoisChatConfig && (
                     <Link
                       href="/new"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
