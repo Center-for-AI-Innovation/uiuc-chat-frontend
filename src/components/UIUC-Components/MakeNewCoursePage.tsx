@@ -110,6 +110,63 @@ const MakeNewCoursePage = ({
     }
   }
 
+  // If Illinois Chat config is NOT enabled, disable UI-based project creation
+  if (!useIllinoisChatConfig) {
+    return (
+      <>
+        <Navbar isPlain={false} />
+        <Head>
+          <title>{project_name}</title>
+          <meta name="description" content="Create a new project on UIUC.chat." />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+          <div className="flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
+            <Card
+              shadow="xs"
+              padding="none"
+              withBorder={false}
+              radius="xl"
+              className="w-[96%] md:w-[90%] lg:max-w-[750px]"
+              style={{ backgroundColor: 'var(--background-faded)' }}
+            >
+              <Flex direction="column" className="p-6 sm:p-10">
+                <Title
+                  order={3}
+                  className={`${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
+                >
+                  New project creation is currently disabled
+                </Title>
+                <div
+                  className={`mt-3 text-sm sm:text-base ${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground]`}
+                >
+                  We’re getting ready to transition to{' '}
+                  <a
+                    href="https://chat.illinois.edu"
+                    className="underline text-[--illinois-orange]"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    chat.illinois.edu
+                  </a>
+                  . You can create new chatbots there. If you have any questions, please email us at{' '}
+                  <a
+                    href="mailto:genaisupport@mx.uillinois.edu"
+                    className="underline text-[--illinois-orange]"
+                  >
+                    genaisupport@mx.uillinois.edu
+                  </a>
+                  .
+                </div>
+              </Flex>
+            </Card>
+          </div>
+          <GlobalFooter />
+        </main>
+      </>
+    )
+  }
+
   return (
     <>
       <Navbar isPlain={false} />
@@ -120,12 +177,6 @@ const MakeNewCoursePage = ({
       </Head>
       <main
         className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
-        // style={{
-        //   justifyContent: 'center',
-        //   alignItems: 'center',
-        //   minHeight: '100vh',
-        //   padding: '1rem',
-        // }}
       >
         <div className="flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
           <Card

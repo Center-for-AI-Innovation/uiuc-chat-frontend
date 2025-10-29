@@ -7,7 +7,7 @@ import { DataTable } from 'mantine-datatable'
 import styled from 'styled-components'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import Link from 'next/link'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import {
   IconChevronUp,
@@ -85,6 +85,9 @@ const ListProjectTable: React.FC = () => {
   const [rows, setRows] = useState<JSX.Element[]>([])
   const [isFullyLoaded, setIsFullyLoaded] = useState<boolean>(false)
   const isMobile = useMediaQuery('(max-width: 768px)')
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
   const [sortColumn, setSortColumn] = useState<SortableColumn>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>(
@@ -311,7 +314,7 @@ const ListProjectTable: React.FC = () => {
                 </StyledTable>
               </div>
             </>
-          ) : (
+          ) : useIllinoisChatConfig ? (
             <Text
               size="md"
               className={`pt-2 ${montserrat_heading.variable} font-montserratHeading`}
@@ -332,6 +335,33 @@ const ListProjectTable: React.FC = () => {
               </Link>
               , don&apos;t worry it&apos;s easy.
             </Text>
+          ) : (
+            <div className="mx-auto max-w-2xl rounded-lg border border-[--illinois-orange] bg-[--background] p-4 text-center">
+              <div
+                className={`text-base font-semibold ${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
+              >
+                New project creation is currently disabled
+              </div>
+              <div className={`mt-2 text-sm ${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground]`}>
+                We’re getting ready to transition to{' '}
+                <a
+                  href="https://chat.illinois.edu"
+                  className="underline text-[--illinois-orange]"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  chat.illinois.edu
+                </a>
+                . You can create new chatbots there. Questions? Email{' '}
+                <a
+                  href="mailto:genaisupport@mx.uillinois.edu"
+                  className="underline text-[--illinois-orange]"
+                >
+                  genaisupport@mx.uillinois.edu
+                </a>
+                .
+              </div>
+            </div>
           )}
         </div>
       </>
