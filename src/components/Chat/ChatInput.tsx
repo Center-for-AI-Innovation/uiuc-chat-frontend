@@ -804,9 +804,12 @@ export const ChatInput = ({
     if (textareaRef && textareaRef.current) {
       textareaRef.current.style.height = 'inherit'
       textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`
-      textareaRef.current.style.overflow = `${
-        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-      }`
+      if (textareaRef?.current?.scrollHeight > 400) {
+        textareaRef.current.style.overflowY = 'auto'
+        textareaRef.current.style.overflowX = 'hidden'
+      } else {
+        textareaRef.current.style.overflow = 'hidden'
+      }
     }
   }, [content])
 
@@ -872,8 +875,12 @@ export const ChatInput = ({
       // Set new height based on scrollHeight
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
       // Update overflow if needed
-      textareaRef.current.style.overflow =
-        textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
+      if (textareaRef.current.scrollHeight > 400) {
+        textareaRef.current.style.overflowY = 'auto'
+        textareaRef.current.style.overflowX = 'hidden'
+      } else {
+        textareaRef.current.style.overflow = 'hidden'
+      }
     }
   }, [])
 
@@ -1210,6 +1217,7 @@ export const ChatInput = ({
                   height: 'auto',
                   maxHeight: '400px',
                   overflow: 'hidden',
+                  overflowX: 'hidden',
                   pointerEvents: 'auto',
                 }}
                 placeholder={'Message Illinois.chat'}
