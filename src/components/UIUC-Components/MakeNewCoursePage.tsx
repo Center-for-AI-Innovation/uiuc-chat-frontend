@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import {
   Button,
@@ -12,7 +12,8 @@ import {
   Title,
   Tooltip,
 } from '@mantine/core'
-import { useMediaQuery } from '@mantine/hooks'
+import { useDebouncedValue, useMediaQuery } from '@mantine/hooks'
+import { useQuery } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import router from 'next/router'
 import { createProject } from '~/pages/api/UIUC-api/createProject'
@@ -35,54 +36,51 @@ const MakeNewCoursePage = ({
   const [projectDescription, setProjectDescription] = useState(
     project_description || '',
   )
-  const [isCourseAvailable, setIsCourseAvailable] = useState<
-    boolean | undefined
-  >(undefined)
   const [isLoading, setIsLoading] = useState(false)
-  const [allExistingCourseNames, setAllExistingCourseNames] = useState<
-    string[]
-  >([])
 
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
 
-  const checkCourseAvailability = () => {
-    const courseExists =
-      projectName != '' &&
-      allExistingCourseNames &&
-      allExistingCourseNames.includes(projectName)
-    setIsCourseAvailable(!courseExists)
-  }
-  const checkIfNewCoursePage = () => {
-    // `/new` --> `new`
-    // `/new?course_name=mycourse` --> `new`
-    return router.asPath.split('/')[1]?.split('?')[0] as string
-  }
+  // Debounce project name input to avoid excessive API calls
+  const [debouncedProjectName] = useDebouncedValue(projectName, 500)
 
-  useEffect(() => {
-    // only run when creating new courses.. otherwise VERY wasteful on DB.
-    if (checkIfNewCoursePage() == 'new') {
-      async function fetchGetAllCourseNames() {
-        const response = await fetch(`/api/UIUC-api/getAllCourseNames`)
-
-        if (response.ok) {
-          const data = await response.json()
-          setAllExistingCourseNames(data.all_course_names)
-        } else {
-          console.error(`Error fetching course metadata: ${response.status}`)
-        }
+  // Check project name availability using React Query
+  const {
+    data: courseExists,
+    isLoading: isCheckingAvailability,
+    isError: isAvailabilityError,
+  } = useQuery<boolean>({
+    queryKey: ['projectNameAvailability', debouncedProjectName],
+    queryFn: async () => {
+      if (!debouncedProjectName || debouncedProjectName.length === 0) {
+        return false
       }
+      const response = await fetch(
+        `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(debouncedProjectName)}`,
+      )
+      if (!response.ok) {
+        throw new Error('Failed to check project name availability')
+      }
+      return response.json() as Promise<boolean>
+    },
+    enabled: debouncedProjectName.length > 0 && is_new_course,
+    retry: 1,
+  })
 
-      fetchGetAllCourseNames().catch((error) => {
-        console.error(error)
-      })
-    }
-  }, [])
+  // Calculate availability: course exists = not available
+  const isCourseAvailable =
+    debouncedProjectName.length === 0
+      ? undefined
+      : courseExists === false
+        ? true
+        : courseExists === true
+          ? false
+          : undefined
 
-  useEffect(() => {
-    checkCourseAvailability()
-  }, [projectName, allExistingCourseNames])
+  // Check if we're waiting for debounce (user typed but debounce hasn't completed)
+  const isWaitingForDebounce =
+    projectName.length > 0 && debouncedProjectName.length === 0
 
   const handleSubmit = async (
     project_name: string,
@@ -186,14 +184,21 @@ const MakeNewCoursePage = ({
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           color:
-                            isCourseAvailable && projectName != ''
+                            isCheckingAvailability
                               ? 'var(--foreground)'
-                              : 'red',
+                              : isCourseAvailable && projectName != ''
+                                ? 'var(--foreground)'
+                                : projectName !== '' && isCourseAvailable === false
+                                  ? 'red'
+                                  : 'var(--foreground)',
                           '&:focus-within': {
-                            borderColor:
-                              isCourseAvailable && projectName !== ''
+                            borderColor: isCheckingAvailability
+                              ? 'var(--foreground)'
+                              : isCourseAvailable && projectName !== ''
                                 ? 'green'
-                                : 'red',
+                                : projectName !== '' && isCourseAvailable === false
+                                  ? 'red'
+                                  : 'var(--foreground)',
                           },
                           fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
                           font: `${montserrat_paragraph.variable} font-montserratParagraph`,
@@ -219,6 +224,11 @@ const MakeNewCoursePage = ({
                       withAsterisk
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                      rightSection={
+                        isCheckingAvailability && projectName.length > 0 ? (
+                          <Loader size="xs" />
+                        ) : null
+                      }
                     />
 
                     <div className="text-sm text-[--foreground-faded]">
@@ -274,12 +284,19 @@ const MakeNewCoursePage = ({
                         label={
                           projectName === ''
                             ? 'Add a project name above :)'
-                            : !isCourseAvailable
-                              ? 'This project name is already taken!'
-                              : ''
+                            : isWaitingForDebounce || isCheckingAvailability
+                              ? 'Checking availability...'
+                              : !isCourseAvailable
+                                ? 'This project name is already taken!'
+                                : ''
                         }
                         withArrow
-                        disabled={projectName !== '' && isCourseAvailable}
+                        disabled={
+                          projectName !== '' &&
+                          !isWaitingForDebounce &&
+                          !isCheckingAvailability &&
+                          isCourseAvailable
+                        }
                         styles={{
                           tooltip: {
                             color: 'var(--tooltip)',
@@ -299,7 +316,7 @@ const MakeNewCoursePage = ({
                             }}
                             size="sm"
                             radius={'sm'}
-                            className={`${isCourseAvailable && projectName !== '' ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'}
+                            className={`${isCourseAvailable && projectName !== '' && !isCheckingAvailability && !isWaitingForDebounce ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'}
                         mt-2 min-w-[5-rem] transform overflow-ellipsis text-ellipsis p-2 focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
                             // w={`${isSmallScreen ? '5rem' : '50%'}`}
                             style={{
@@ -308,6 +325,8 @@ const MakeNewCoursePage = ({
                             disabled={
                               projectName === '' ||
                               isLoading ||
+                              isWaitingForDebounce ||
+                              isCheckingAvailability ||
                               !isCourseAvailable
                             }
                             leftIcon={
