@@ -20,6 +20,9 @@ import HomeContext from '~/pages/api/home/home.context'
 
 import SidebarActionButton from '@/components/Buttons/SidebarActionButton'
 
+import { Tooltip } from '@mantine/core'
+
+
 interface Props {
   currentFolder: FolderInterface
   searchTerm: string
@@ -28,11 +31,11 @@ interface Props {
 }
 
 const Folder = ({
-  currentFolder,
-  searchTerm,
-  handleDrop,
-  folderComponent,
-}: Props) => {
+                  currentFolder,
+                  searchTerm,
+                  handleDrop,
+                  folderComponent,
+                }: Props) => {
   const { handleDeleteFolder, handleUpdateFolder } = useContext(HomeContext)
 
   const [isDeleting, setIsDeleting] = useState(false)
@@ -124,10 +127,17 @@ const Folder = ({
             ) : (
               <IconCaretRight size={18} />
             )}
-
-            <div className="relative max-h-5 min-w-0 flex-1 truncate text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3">
-              {currentFolder.name}
-            </div>
+            <Tooltip
+              label={currentFolder.name}
+              position="top-end"
+              withArrow
+              multiline
+            >
+              <div
+                className="relative max-h-5 min-w-0 flex-1 truncate text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3">
+                {currentFolder.name}
+              </div>
+            </Tooltip>
           </button>
         )}
 
