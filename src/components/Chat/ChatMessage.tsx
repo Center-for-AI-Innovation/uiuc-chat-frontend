@@ -501,6 +501,51 @@ export const ChatMessage = memo(
     // Remove the local state for sources sidebar and use only context
     const isSourcesSidebarOpen = activeSidebarMessageId === message.id
 
+    // State to hold the contexts to display (either from this message or previous user message)
+    const [displayContexts, setDisplayContexts] = useState<
+      ContextWithMetadata[]
+    >([])
+
+    // Check if we should use the previous user message's context
+    useEffect(() => {
+      // Only run this logic if:
+      // 1. Current message is an assistant message
+      // 2. Current message has no contexts or empty contexts array
+      if (
+        message.role === 'assistant' &&
+        (!message.contexts ||
+          !Array.isArray(message.contexts) ||
+          message.contexts.length === 0)
+      ) {
+        // Check if there's a previous message
+        if (
+          selectedConversation &&
+          selectedConversation.messages &&
+          messageIndex > 0
+        ) {
+          const previousMessage =
+            selectedConversation.messages[messageIndex - 1]
+
+          // Check if previous message is a user message and has contexts
+          if (
+            previousMessage &&
+            previousMessage.role === 'user' &&
+            Array.isArray(previousMessage.contexts) &&
+            previousMessage.contexts.length > 0
+          ) {
+            // Use the previous user message's contexts
+            setDisplayContexts(previousMessage.contexts)
+            return
+          }
+        }
+      }
+
+      // Otherwise, use the current message's contexts (or empty array)
+      setDisplayContexts(
+        Array.isArray(message.contexts) ? message.contexts : [],
+      )
+    }, [message.role, message.contexts, messageIndex, selectedConversation])
+
     useEffect(() => {
       // Close Sources sidebar if right sidebar is opened
       if (isRightSideVisible) {
@@ -927,12 +972,12 @@ export const ChatMessage = memo(
 
       const loadThumbnails = async () => {
         // Early return if contexts is undefined, null, or not an array
-        if (!Array.isArray(message.contexts) || message.contexts.length === 0)
+        if (!Array.isArray(displayContexts) || displayContexts.length === 0)
           return
 
         // Track unique sources to avoid duplicates
         const seenSources = new Set<string>()
-        const uniqueContexts = message.contexts.filter((context) => {
+        const uniqueContexts = displayContexts.filter((context) => {
           const sourceKey = context.s3_path || context.url
           if (!sourceKey || seenSources.has(sourceKey)) return false
           seenSources.add(sourceKey)
@@ -984,7 +1029,7 @@ export const ChatMessage = memo(
       return () => {
         isMounted = false
       }
-    }, [message.contexts, courseName])
+    }, [displayContexts, courseName])
 
     // Add new function to replace expired links in text
     async function replaceExpiredLinksInText(
@@ -1620,6 +1665,31 @@ export const ChatMessage = memo(
         fileName: '',
       })
     }
+    const condArrayIsArray = Array.isArray(displayContexts)
+    const condHasContexts = condArrayIsArray && displayContexts.length > 0
+
+    const condIsStreamingAndLastMsg =
+      messageIsStreaming &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
+    const condLoadingAndLastMsg =
+      loading &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
+    const shouldShowSources =
+      condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
+
+    console.log(
+      {
+        condArrayIsArray,
+        condHasContexts,
+        condIsStreamingAndLastMsg,
+        condLoadingAndLastMsg,
+        shouldShowSources,
+      },
+      displayContexts.length,
+      message,
+    )
 
     return (
       <>
@@ -2200,8 +2270,8 @@ export const ChatMessage = memo(
                   {/* Action Buttons Container */}
                   <div className="flex flex-col gap-2">
                     {/* Sources button */}
-                    {Array.isArray(message.contexts) &&
-                      message.contexts.length > 0 &&
+                    {Array.isArray(displayContexts) &&
+                      displayContexts.length > 0 &&
                       !(
                         messageIsStreaming &&
                         messageIndex ===
@@ -2222,7 +2292,7 @@ export const ChatMessage = memo(
                             >
                               Sources
                               <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
-                                {getContextsLength(message.contexts)}
+                                {getContextsLength(displayContexts)}
                               </span>
                             </span>
 
@@ -2299,7 +2369,7 @@ export const ChatMessage = memo(
         {isSourcesSidebarOpen && (
           <SourcesSidebar
             isOpen={isSourcesSidebarOpen}
-            contexts={Array.isArray(message.contexts) ? message.contexts : []}
+            contexts={Array.isArray(displayContexts) ? displayContexts : []}
             onClose={handleSourcesSidebarClose}
             hideRightSidebarIcon={isAnySidebarOpen}
             courseName={courseName}
