@@ -81,8 +81,9 @@ const MakeNewCoursePage = ({
           : undefined
 
   // Check if we're waiting for debounce (user typed but debounce hasn't completed)
+  // This handles cases where user types, backspaces, or changes the input while debounce is in progress
   const isWaitingForDebounce =
-    projectName.length > 0 && debouncedProjectName.length === 0
+    projectName !== debouncedProjectName
 
   const handleSubmit = async (
     project_name: string,
