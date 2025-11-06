@@ -5,7 +5,7 @@ import { Card, Title } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import router from 'next/router'
-import { createProject } from '~/pages/api/UIUC-api/createProject'
+import { createProject } from '~/utils/apiUtils'
 import Navbar from './navbars/Navbar'
 
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
