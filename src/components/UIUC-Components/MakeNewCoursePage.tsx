@@ -13,10 +13,11 @@ import {
   Tooltip,
 } from '@mantine/core'
 import { useDebouncedValue, useMediaQuery } from '@mantine/hooks'
-import { useQuery } from '@tanstack/react-query'
+import { notifications } from '@mantine/notifications'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import router from 'next/router'
-import { createProject } from '~/pages/api/UIUC-api/createProject'
+import { createProject } from '~/utils/apiUtils'
 import Navbar from './navbars/Navbar'
 import GlobalFooter from './GlobalFooter'
 
@@ -37,6 +38,7 @@ const MakeNewCoursePage = ({
     project_description || '',
   )
   const [isLoading, setIsLoading] = useState(false)
+  const queryClient = useQueryClient()
 
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
@@ -103,6 +105,33 @@ const MakeNewCoursePage = ({
       }
     } catch (error) {
       console.error('Error creating project:', error)
+      // Handle specific error cases
+      const err = error as Error & { status?: number; error?: string }
+      if (err.status === 409) {
+        // Project name already exists - race condition caught by server
+        notifications.show({
+          title: 'Project name already taken',
+          message:
+            err.message ||
+            `A project with the name "${project_name}" already exists. Please choose a different name.`,
+          color: 'red',
+          autoClose: 5000,
+        })
+        // Invalidate the query to refresh availability check
+        // This will trigger a re-check of the project name
+        queryClient.invalidateQueries({
+          queryKey: ['projectNameAvailability', project_name],
+        })
+      } else {
+        // Other errors
+        notifications.show({
+          title: 'Failed to create project',
+          message:
+            err.message || 'An error occurred while creating the project. Please try again.',
+          color: 'red',
+          autoClose: 5000,
+        })
+      }
     } finally {
       setIsLoading(false)
     }
