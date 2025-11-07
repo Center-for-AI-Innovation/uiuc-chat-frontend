@@ -81,6 +81,7 @@ import {
   handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
+import { createLogConversationPayload } from '@/utils/app/conversation'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -261,7 +262,10 @@ export const Chat = memo(
       )
     }, [tools])
 
-    const onMessageReceived = async (conversation: Conversation) => {
+    const onMessageReceived = async (
+      conversation: Conversation,
+      message: Message,
+    ) => {
       // Log conversation to database
       try {
         const response = await fetch(`/api/UIUC-api/logConversation`, {
@@ -269,10 +273,13 @@ export const Chat = memo(
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            course_name: getCurrentPageName(),
-            conversation: conversation,
-          }),
+          body: JSON.stringify(
+            createLogConversationPayload(
+              getCurrentPageName(),
+              conversation,
+              message,
+            ),
+          ),
         })
         // const data = await response.json()
         // return data.success
@@ -434,7 +441,6 @@ export const Chat = memo(
             key: 'messages',
             value: updatedConversation.messages,
           })
-          updateConversationMutation.mutate(updatedConversation)
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -1110,7 +1116,6 @@ export const Chat = memo(
                       id: uuidv4(),
                       role: 'assistant',
                       content: chunkValue,
-                      contexts: message.contexts,
                       feedback: message.feedback,
                       wasQueryRewritten: message.wasQueryRewritten,
                       queryRewriteText: message.queryRewriteText,
@@ -1195,13 +1200,36 @@ export const Chat = memo(
                 key: 'messages',
                 value: updatedConversation.messages,
               })
-              updateConversationMutation.mutate(updatedConversation)
+              // Here, we want to persist the full streamed assistant message, not the initial user message.
+              // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
+              const streamedAssistantMessage =
+                updatedConversation.messages?.[
+                  updatedConversation.messages.length - 1
+                ] ?? message
+
+              if (streamedAssistantMessage.role === 'assistant') {
+                await updateConversationMutation.mutateAsync({
+                  conversation: updatedConversation,
+                  message: streamedAssistantMessage,
+                })
+              } else {
+                // Fallback: do not trigger mutation if it's not an assistant message
+                console.warn(
+                  'Attempted to persist a non-assistant message after stream:',
+                  streamedAssistantMessage,
+                )
+              }
               console.debug(
                 'updatedConversation after mutation:',
                 updatedConversation,
               )
 
-              onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
+              if (streamedAssistantMessage) {
+                onMessageReceived(
+                  updatedConversation,
+                  streamedAssistantMessage,
+                )
+              }
 
               // } else {
               //   onMessageReceived(updatedConversation)
@@ -1249,7 +1277,6 @@ export const Chat = memo(
                   id: uuidv4(),
                   role: 'assistant',
                   content: answer,
-                  contexts: message.contexts,
                   feedback: message.feedback,
                   wasQueryRewritten: message.wasQueryRewritten,
                   queryRewriteText: message.queryRewriteText,
@@ -1898,19 +1925,31 @@ export const Chat = memo(
           })
 
           // Update database
-          await updateConversationMutation.mutateAsync(updatedConversation)
+          const latestMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? null
 
           // Log to database
-          await fetch('/api/UIUC-api/logConversation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              course_name: getCurrentPageName(),
-              conversation: updatedConversation,
-            }),
-          })
+          const latestAssistantMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? null
+          if (latestAssistantMessage) {
+            await fetch('/api/UIUC-api/logConversation', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(
+                createLogConversationPayload(
+                  getCurrentPageName(),
+                  updatedConversation,
+                  latestAssistantMessage,
+                ),
+              ),
+            })
+          }
         } catch (error) {
           homeDispatch({
             field: 'conversations',
@@ -1999,7 +2038,7 @@ export const Chat = memo(
                               key={index}
                               message={message}
                               messageIndex={index}
-                              onEdit={(editedMessage) => {
+                              onEdit={async (editedMessage) => {
                                 handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
@@ -2036,7 +2075,7 @@ export const Chat = memo(
               <ChatInput
                 stopConversationRef={stopConversationRef}
                 textareaRef={textareaRef}
-                onSend={(message, plugin) => {
+                onSend={(message, plugin) =>
                   handleSend(
                     message,
                     0,
@@ -2045,7 +2084,7 @@ export const Chat = memo(
                     enabledDocumentGroups,
                     llmProviders,
                   )
-                }}
+                }
                 onScrollDownClick={handleScrollDown}
                 showScrollDownButton={showScrollDownButton}
                 onRegenerate={() => handleRegenerate()}
