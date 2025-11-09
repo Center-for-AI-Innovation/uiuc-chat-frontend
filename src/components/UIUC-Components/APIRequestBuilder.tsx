@@ -33,7 +33,7 @@ export default function APIRequestBuilder({
   courseMetadata,
 }: APIRequestBuilderProps) {
   const [selectedLanguage, setSelectedLanguage] = useState<
-    'curl' | 'python' | 'node'
+    'curl' | 'python' | 'node' | 'mcp'
   >('curl')
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false)
   const [userQuery, setUserQuery] = useState('What is in these documents?')
@@ -69,6 +69,7 @@ export default function APIRequestBuilder({
     { value: 'curl', label: 'cURL' },
     { value: 'python', label: 'Python' },
     { value: 'node', label: 'Node.js' },
+    { value: 'mcp', label: 'MCP (FastMCP)' },
   ]
 
   const modelOptions = llmProviders
@@ -92,6 +93,163 @@ export default function APIRequestBuilder({
   }
 
   const baseUrl = process.env.VERCEL_URL || window.location.origin
+
+  // Generate MCP server configuration JSON
+  const generateMCPConfig = () => {
+    const mcpConfig = {
+      mcpServers: {
+        [`uiuc-chat-${course_name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`]:
+          {
+            command: 'python',
+            args: ['-m', 'uiuc_chat_mcp_server'],
+            env: {
+              UIUC_CHAT_API_KEY: apiKey || 'YOUR-API-KEY',
+              UIUC_CHAT_COURSE_NAME: course_name,
+              UIUC_CHAT_BASE_URL: baseUrl,
+              UIUC_CHAT_MODEL: selectedModel,
+              UIUC_CHAT_TEMPERATURE: temperature.toString(),
+              UIUC_CHAT_SYSTEM_PROMPT: systemPrompt,
+              UIUC_CHAT_RETRIEVAL_ONLY: retrievalOnly.toString(),
+              UIUC_CHAT_STREAM: streamEnabled.toString(),
+            },
+          },
+      },
+    }
+
+    const configString = JSON.stringify(mcpConfig, null, 2)
+    const serverScript = generateFastMCPServerScript()
+
+    return `// MCP Server Configuration for ${course_name}
+// Add this to your MCP client's configuration file
+// The location depends on your MCP client (e.g., Claude Desktop: ~/.config/claude_desktop_config.json)
+
+${configString}
+
+// ============================================
+// FastMCP Server Python Script
+// ============================================
+// Save this as: uiuc_chat_mcp_server.py
+// Install dependencies: pip install fastmcp requests
+// The MCP server will be started by your MCP client using the configuration above
+
+${serverScript}`
+  }
+
+  // Generate FastMCP server Python script
+  const generateFastMCPServerScript = () => {
+    return `# FastMCP Server for ${course_name}
+# Install: pip install fastmcp requests
+
+from fastmcp import FastMCP
+import requests
+import os
+import json
+
+mcp = FastMCP("UIUC Chat - ${course_name}")
+
+# Configuration from environment variables
+API_KEY = os.getenv("UIUC_CHAT_API_KEY", "${apiKey || 'YOUR-API-KEY'}")
+COURSE_NAME = os.getenv("UIUC_CHAT_COURSE_NAME", "${course_name}")
+BASE_URL = os.getenv("UIUC_CHAT_BASE_URL", "${baseUrl}")
+MODEL = os.getenv("UIUC_CHAT_MODEL", "${selectedModel}")
+TEMPERATURE = float(os.getenv("UIUC_CHAT_TEMPERATURE", "${temperature.toFixed(1)}"))
+SYSTEM_PROMPT = os.getenv("UIUC_CHAT_SYSTEM_PROMPT", ${JSON.stringify(systemPrompt)})
+RETRIEVAL_ONLY = os.getenv("UIUC_CHAT_RETRIEVAL_ONLY", "${retrievalOnly}").lower() == "true"
+STREAM = os.getenv("UIUC_CHAT_STREAM", "${streamEnabled}").lower() == "true"
+
+@mcp.tool()
+def chat(
+    message: str,
+    model: str = MODEL,
+    temperature: float = TEMPERATURE,
+    system_prompt: str = SYSTEM_PROMPT,
+    retrieval_only: bool = RETRIEVAL_ONLY,
+    stream: bool = STREAM
+) -> str:
+    """
+    Send a chat message to the UIUC Chat API.
+    
+    Args:
+        message: The user message to send
+        model: Model to use (default: ${selectedModel})
+        temperature: Temperature setting (default: ${temperature.toFixed(1)})
+        system_prompt: System prompt to use (default: project system prompt)
+        retrieval_only: If true, only retrieve documents without LLM call (default: ${retrievalOnly})
+        stream: Whether to stream the response (default: ${streamEnabled})
+    
+    Returns:
+        The assistant's response
+    """
+    url = f"{BASE_URL}/api/chat-api/chat"
+    headers = {"Content-Type": "application/json"}
+    
+    data = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": message}
+        ],
+        "api_key": API_KEY,
+        "course_name": COURSE_NAME,
+        "stream": stream,
+        "temperature": temperature,
+        "retrieval_only": retrieval_only
+    }
+    
+    try:
+        if stream:
+            response = requests.post(url, headers=headers, json=data, stream=True)
+            full_response = ""
+            for chunk in response.iter_lines():
+                if chunk:
+                    full_response += chunk.decode('utf-8')
+            return full_response
+        else:
+            response = requests.post(url, headers=headers, json=data)
+            result = response.json()
+            return result.get('message', str(result))
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+@mcp.tool()
+def retrieve_documents(query: str) -> str:
+    """
+    Retrieve relevant documents from the project without calling the LLM.
+    This is a free operation that only returns matching documents.
+    
+    Args:
+        query: The search query to find relevant documents
+    
+    Returns:
+        JSON string containing relevant document contexts
+    """
+    url = f"{BASE_URL}/api/chat-api/chat"
+    headers = {"Content-Type": "application/json"}
+    
+    data = {
+        "model": MODEL,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": query}
+        ],
+        "api_key": API_KEY,
+        "course_name": COURSE_NAME,
+        "stream": False,
+        "temperature": 0.0,
+        "retrieval_only": True
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        result = response.json()
+        contexts = result.get('contexts', [])
+        return json.dumps(contexts, indent=2)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+if __name__ == "__main__":
+    mcp.run()`
+  }
 
   const codeSnippets = {
     curl: `curl -X POST ${baseUrl}/api/chat-api/chat \\
@@ -188,6 +346,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
 .catch(error => {
   console.error('Error:', error);
 });`,
+    mcp: generateMCPConfig(),
   }
 
   const styles = {
@@ -231,8 +390,8 @@ fetch('${baseUrl}/api/chat-api/chat', {
             data={languageOptions}
             value={selectedLanguage}
             radius={'md'}
-            onChange={(value: 'curl' | 'python' | 'node') =>
-              setSelectedLanguage(value)
+            onChange={(value: 'curl' | 'python' | 'node' | 'mcp') =>
+              setSelectedLanguage(value || 'curl')
             }
             styles={(theme) => ({
               input: {
@@ -509,14 +668,45 @@ fetch('${baseUrl}/api/chat-api/chat', {
         </div>
 
         <div className="text-sm text-gray-400">
-          <a
-            href="https://docs.uiuc.chat/api/endpoints#image-input-example"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
-          >
-            Using image inputs (docs) →
-          </a>
+          {selectedLanguage === 'mcp' ? (
+            <div className="space-y-1">
+              <p>
+                This MCP configuration includes the MCP server config JSON and
+                the FastMCP server Python script.
+              </p>
+              <p>
+                <strong>Setup Instructions:</strong>
+              </p>
+              <ol className="ml-2 list-inside list-decimal space-y-1">
+                <li>
+                  Copy the Python script and save it as{' '}
+                  <code className="rounded bg-[--background-faded] px-1">
+                    uiuc_chat_mcp_server.py
+                  </code>
+                </li>
+                <li>
+                  Install dependencies:{' '}
+                  <code className="rounded bg-[--background-faded] px-1">
+                    pip install fastmcp requests
+                  </code>
+                </li>
+                <li>
+                  Add the JSON config to your MCP client's configuration file
+                  (location depends on your client)
+                </li>
+                <li>Restart your MCP client to use the server</li>
+              </ol>
+            </div>
+          ) : (
+            <a
+              href="https://docs.uiuc.chat/api/endpoints#image-input-example"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
+            >
+              Using image inputs (docs) →
+            </a>
+          )}
         </div>
 
         <Textarea
