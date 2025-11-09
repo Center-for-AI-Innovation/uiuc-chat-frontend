@@ -11,13 +11,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '18'
+          bun-version: '1.3.0'
       - name: Install dependencies
-        run: npm install
+        run: bun install --frozen-lockfile
       - name: Set up Chrome
         id: setup_chrome
         uses: browser-actions/setup-chrome@latest
@@ -27,4 +27,4 @@ jobs:
       - name: Run Nightwatch e2e tests on Prod
         env:
           CHROME_BIN: ${{ steps.setup_chrome.outputs.chrome-path }}
-        run: npx nightwatch nightwatch/e2e-test-of-uiucchat-prod.js
+        run: bunx nightwatch nightwatch/e2e-test-of-uiucchat-prod.js

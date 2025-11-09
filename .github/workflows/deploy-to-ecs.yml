@@ -11,7 +11,7 @@ on:
       - 'public/**'
       - 'styles/**'
       - 'package.json'
-      - 'package-lock.json'
+      - 'bun.lock'
       - 'next.config.mjs'
       - 'next-i18next.config.mjs'
       - 'tailwind.config.ts'
