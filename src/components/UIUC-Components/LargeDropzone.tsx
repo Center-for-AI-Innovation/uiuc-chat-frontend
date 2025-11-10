@@ -59,15 +59,15 @@ const useStyles = createStyles((theme) => ({
 }))
 
 export function LargeDropzone({
-  courseName,
-  current_user_email,
-  redirect_to_gpt_4 = true,
-  isDisabled = false,
-  courseMetadata,
-  is_new_course,
-  setUploadFiles,
-  auth,
-}: {
+                                courseName,
+                                current_user_email,
+                                redirect_to_gpt_4 = true,
+                                isDisabled = false,
+                                courseMetadata,
+                                is_new_course,
+                                setUploadFiles,
+                                auth,
+                              }: {
   courseName: string
   current_user_email: string
   redirect_to_gpt_4?: boolean
@@ -374,6 +374,14 @@ export function LargeDropzone({
               // },
             }}
             onDrop={async (files) => {
+              const hasRejected = files.some(
+                (f) => f.type.startsWith('audio/') || f.type.startsWith('video/'),
+              )
+              if (hasRejected) {
+                alert("Audio and video files are not supported at this time.")
+                return
+              }
+
               ingestFiles(files, is_new_course).catch((error) => {
                 console.error('Error during file upload:', error)
               })
