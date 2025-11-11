@@ -139,6 +139,12 @@ export default function WebsiteIngestForm({
           maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
           scrapeStrategy,
         )
+        // Transition to 'ingesting' status after API call succeeds
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'ingesting' } : file,
+          ),
+        )
       } catch (error: unknown) {
         console.error('Error while scraping web:', error)
         setUploadFiles((prevFiles) =>
