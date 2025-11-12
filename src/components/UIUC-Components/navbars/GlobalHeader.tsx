@@ -302,7 +302,7 @@ export function LandingPageHeader({
               height="100%"
             ></img>
           </div>
-          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
+          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange-branding] sm:ml-2 sm:text-[1.8rem]">
             Illinois
           </div>
           <br />
