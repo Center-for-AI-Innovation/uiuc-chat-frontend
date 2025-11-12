@@ -7,7 +7,7 @@ import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 // This is for "Documents in Progress" table, docs that are still being ingested.
 
 type DocsInProgressResponse = {
-  documents?: { readable_filename: string }[]
+  documents?: { readable_filename: string; base_url: string; url: string }[]
   apiKey?: null
   error?: string
 }
@@ -24,7 +24,11 @@ async function docsInProgress(
 
   try {
     const data = await db
-      .select()
+      .select({
+        readable_filename: documentsInProgress.readable_filename,
+        base_url: documentsInProgress.base_url,
+        url: documentsInProgress.url,
+      })
       .from(documentsInProgress)
       .where(eq(documentsInProgress.course_name, course_name))
 
@@ -39,6 +43,8 @@ async function docsInProgress(
       return res.status(200).json({
         documents: data.map((doc) => ({
           readable_filename: doc.readable_filename || 'Untitled Document',
+          base_url: doc.base_url || '',
+          url: doc.url || '',
         })),
       })
     }
