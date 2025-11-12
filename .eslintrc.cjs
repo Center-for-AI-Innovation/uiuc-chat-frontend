@@ -15,9 +15,6 @@ const config = {
     },
   ],
   parser: '@typescript-eslint/parser',
-  parserOptions: {
-    project: path.join(__dirname, 'tsconfig.json'),
-  },
   plugins: ['@typescript-eslint', 'tailwindcss'],
   extends: [
     'next/core-web-vitals',
