@@ -204,15 +204,23 @@ export default function WebsiteIngestForm({
           if (file.type !== 'webscrape') return file
 
           const isStillIngesting = docsInProgress.some(
-            (doc) => doc.base_url === file.name,
+            (doc) =>
+              doc.base_url === file.name ||
+              (file.isBaseUrl && doc.base_url === file.url),
           )
+
+          // Once complete, don't revert back
+          if (file.status === 'complete') return {...file, status: "complete" as const }
 
           if (file.status === 'uploading' && isStillIngesting) {
             return { ...file, status: 'ingesting' as const }
-          } else if (file.status === 'ingesting') {
+          }
+          else if (file.status === 'ingesting') {
             if (!isStillIngesting) {
               const isInCompletedDocs = docsData?.documents?.some(
-                (doc: { url: string }) => doc.url === file.url,
+                (doc: { url: string; base_url?: string }) =>
+                  doc.url === file.url ||
+                  (file.isBaseUrl && doc.base_url === file.url),
               )
 
               if (isInCompletedDocs) {
@@ -378,7 +386,8 @@ export default function WebsiteIngestForm({
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <IconWorldDownload className="h-8 w-8" />
                 </div>
                 <Text className="text-xl font-semibold text-[--dashboard-foreground]">
@@ -402,7 +411,8 @@ export default function WebsiteIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
+        <DialogContent
+          className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-2 text-left text-xl font-bold">
               Ingest Website
