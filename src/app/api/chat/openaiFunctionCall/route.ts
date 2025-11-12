@@ -71,21 +71,21 @@ const conversationToMessages = (
         contentParts.some((p) => p.type === 'image_url')
       ) {
         transformedData.push({
-          role: message.role,
+          role: message.role as 'user' | 'assistant' | 'system',
           content: contentParts,
-        })
+        } as ChatCompletionMessageParam)
       } else if (contentParts.length === 1 && contentParts[0].type === 'text') {
         transformedData.push({
-          role: message.role,
+          role: message.role as 'user' | 'assistant' | 'system',
           content: contentParts[0].text,
-        })
+        } as ChatCompletionMessageParam)
       }
     } else {
       // Handle string content
       transformedData.push({
-        role: message.role,
+        role: message.role as 'user' | 'assistant' | 'system',
         content: message.content as string,
-      })
+      } as ChatCompletionMessageParam)
     }
   })
 
