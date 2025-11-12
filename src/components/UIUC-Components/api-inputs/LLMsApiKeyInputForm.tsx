@@ -40,6 +40,7 @@ import {
   type NCSAHostedVLMProvider,
   type OllamaProvider,
   type OpenAIProvider,
+  type OpenAICompatibleProvider,
   type ProviderNames,
   type SambaNovaProvider,
   type WebLLMProvider,
@@ -55,6 +56,7 @@ import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
 import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
 import OllamaProviderInput from './providers/OllamaProviderInput'
 import OpenAIProviderInput from './providers/OpenAIProviderInput'
+import OpenAICompatibleProviderInput from './providers/OpenAICompatibleProviderInput'
 import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
 import WebLLMProviderInput from './providers/WebLLMProviderInput'
 
@@ -705,6 +707,13 @@ export default function APIKeyInputForm() {
                               <OpenAIProviderInput
                                 provider={
                                   llmProviders?.OpenAI as OpenAIProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <OpenAICompatibleProviderInput
+                                provider={
+                                  llmProviders?.OpenAICompatible as OpenAICompatibleProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
