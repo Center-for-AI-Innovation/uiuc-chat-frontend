@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type {
   ChatCompletionMessageParam,
   ChatCompletionTool,
+  ChatCompletionContentPart,
 } from 'openai/resources/chat/completions'
 import { type Conversation } from '~/types/chat'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
@@ -22,19 +23,24 @@ const conversationToMessages = (
   inputData.messages.forEach((message) => {
     if (Array.isArray(message.content)) {
       // Handle array content (text, images, files)
-      const contentParts: Array<
-        | string
-        | { type: 'image_url'; image_url: { url: string } }
-        | { type: 'text'; text: string }
-      > = []
+      const contentParts: ChatCompletionContentPart[] = []
+      let textParts: string[] = []
 
       message.content.forEach((c) => {
         if (c.type === 'text') {
           const text = c.text || ''
           if (text) {
-            contentParts.push(text)
+            textParts.push(text)
           }
         } else if (c.type === 'image_url' || c.type === 'tool_image_url') {
+          // If we have accumulated text, add it as a text part first
+          if (textParts.length > 0) {
+            contentParts.push({
+              type: 'text',
+              text: textParts.join(' '),
+            })
+            textParts = []
+          }
           const imageUrl = c.image_url?.url || ''
           if (imageUrl) {
             contentParts.push({
@@ -44,35 +50,35 @@ const conversationToMessages = (
           }
         } else if (c.type === 'file') {
           // Convert file content to text representation
-          contentParts.push(
+          textParts.push(
             `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
           )
         }
       })
 
-      // If we have mixed content (text + images), use array format
-      // Otherwise, use string format for text-only
-      const hasImages = contentParts.some(
-        (part) =>
-          typeof part === 'object' &&
-          'type' in part &&
-          part.type === 'image_url',
-      )
+      // Add any remaining text parts
+      if (textParts.length > 0) {
+        contentParts.push({
+          type: 'text',
+          text: textParts.join(' '),
+        })
+      }
 
-      if (hasImages || contentParts.length > 1) {
+      // If we have content parts (images or multiple text parts), use array format
+      // Otherwise, use string format for single text content
+      if (
+        contentParts.length > 1 ||
+        contentParts.some((p) => p.type === 'image_url')
+      ) {
         transformedData.push({
           role: message.role,
           content: contentParts,
         })
-      } else {
-        // Single text content
-        const textContent = contentParts[0] as string
-        if (textContent) {
-          transformedData.push({
-            role: message.role,
-            content: textContent,
-          })
-        }
+      } else if (contentParts.length === 1 && contentParts[0].type === 'text') {
+        transformedData.push({
+          role: message.role,
+          content: contentParts[0].text,
+        })
       }
     } else {
       // Handle string content
@@ -114,7 +120,13 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   // Get API key - prefer OpenAI-compatible if provided, otherwise use OpenAI key
   let decryptedKey: string
   if (isOpenAICompatible) {
-    decryptedKey = await decryptKeyIfNeeded(apiKey!)
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'Missing required parameter: apiKey' },
+        { status: 400 },
+      )
+    }
+    decryptedKey = await decryptKeyIfNeeded(apiKey)
   } else {
     decryptedKey = openaiKey
       ? await decryptKeyIfNeeded(openaiKey)
@@ -156,10 +168,16 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   }
 
   // Determine API URL and model
+  if (isOpenAICompatible && (!providerBaseUrl || !modelId)) {
+    return NextResponse.json(
+      { error: 'Missing required parameters: providerBaseUrl or modelId' },
+      { status: 400 },
+    )
+  }
   const apiUrl = isOpenAICompatible
     ? `${providerBaseUrl}/chat/completions`
     : 'https://api.openai.com/v1/chat/completions'
-  const model = isOpenAICompatible ? modelId! : 'gpt-4.1'
+  const model = isOpenAICompatible ? modelId : 'gpt-4.1'
 
   try {
     const response = await fetch(apiUrl, {
