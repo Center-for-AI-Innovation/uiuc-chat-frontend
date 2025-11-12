@@ -202,6 +202,7 @@ export default function WebsiteIngestForm({
       ) => {
         return currentFiles.map((file) => {
           if (file.type !== 'webscrape') return file
+          const fileUrl = file.url ?? ''
 
           const isStillIngesting = docsInProgress.some(
             (doc) =>
@@ -209,21 +210,33 @@ export default function WebsiteIngestForm({
               (file.isBaseUrl && doc.base_url === file.url),
           )
 
-          // Once complete, don't revert back
-          if (file.status === 'complete') return {...file, status: "complete" as const }
-
           if (file.status === 'uploading' && isStillIngesting) {
             return { ...file, status: 'ingesting' as const }
-          }
-          else if (file.status === 'ingesting') {
+          } else if (file.status === 'ingesting') {
             if (!isStillIngesting) {
+              // Check if any child URLs are still in progress
+              const childFiles = currentFiles.filter(
+                (f) =>
+                  f.url &&
+                  f.url !== fileUrl &&
+                  f.url.startsWith(fileUrl),
+              )
+              const allChildrenDone =
+                childFiles.length === 0 ||
+                childFiles.every(
+                  (f) => f.status === 'complete' || f.status === 'error',
+                )
+
               const isInCompletedDocs = docsData?.documents?.some(
                 (doc: { url: string; base_url?: string }) =>
                   doc.url === file.url ||
                   (file.isBaseUrl && doc.base_url === file.url),
               )
 
-              if (isInCompletedDocs) {
+              if (file.isBaseUrl && allChildrenDone && isInCompletedDocs) {
+                // Base URL can only complete if all children done
+                return { ...file, status: 'complete' as const }
+              } else if (!file.isBaseUrl && isInCompletedDocs) {
                 return { ...file, status: 'complete' as const }
               }
 
