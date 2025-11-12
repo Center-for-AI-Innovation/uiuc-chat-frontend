@@ -680,7 +680,7 @@ export default function APIKeyInputForm() {
                               Closed source LLMs
                             </Title>
                             <Text
-                              className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                              className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground-faded]`}
                               size="md"
                             >
                               The best performers, but you gotta pay their
@@ -743,7 +743,7 @@ export default function APIKeyInputForm() {
                               Open source LLMs
                             </Title>
                             <Text
-                              className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                              className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground-faded]`}
                               size="md"
                             >
                               Your weights, your rules.
