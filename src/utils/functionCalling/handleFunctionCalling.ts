@@ -37,36 +37,27 @@ export async function handleFunctionCall(
         (m) => m.enabled && m.id === selectedConversation.model.id,
       )
 
-    let url: string
-    let body: any
+    // Use the unified OpenAI function call route for both OpenAI and OpenAI-compatible
+    const url = base_url
+      ? `${base_url}/api/chat/openaiFunctionCall`
+      : '/api/chat/openaiFunctionCall'
+
+    const body: any = {
+      conversation: selectedConversation,
+      tools: openAITools,
+      imageUrls: imageUrls,
+      imageDescription: imageDescription,
+    }
 
     if (isOpenAICompatible) {
-      // Use the compatible function call route
-      url = base_url
-        ? `${base_url}/api/chat/compatibleFunctionCall`
-        : '/api/chat/compatibleFunctionCall'
-      body = {
-        conversation: selectedConversation,
-        tools: openAITools,
-        imageUrls: imageUrls,
-        imageDescription: imageDescription,
-        providerBaseUrl: llmProviders!.OpenAICompatible.baseUrl,
-        apiKey: llmProviders!.OpenAICompatible.apiKey,
-        modelId: selectedConversation.model.id,
-      }
+      // Add OpenAI-compatible specific parameters
+      body.providerBaseUrl = llmProviders!.OpenAICompatible.baseUrl
+      body.apiKey = llmProviders!.OpenAICompatible.apiKey
+      body.modelId = selectedConversation.model.id
     } else {
-      // Use the standard OpenAI function call route
-      url = base_url
-        ? `${base_url}/api/chat/openaiFunctionCall`
-        : '/api/chat/openaiFunctionCall'
-      body = {
-        conversation: selectedConversation,
-        tools: openAITools,
-        imageUrls: imageUrls,
-        imageDescription: imageDescription,
-        openaiKey: openaiKey,
-        course_name: course_name,
-      }
+      // Add OpenAI specific parameters
+      body.openaiKey = openaiKey
+      body.course_name = course_name
     }
 
     const response = await fetch(url, {
