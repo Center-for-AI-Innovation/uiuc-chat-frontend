@@ -1,25 +1,27 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useDebouncedState } from '@mantine/hooks'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   IconLock,
   IconLockOpen,
   IconCopy,
   IconCheck,
   IconUsers,
+  IconChevronDown,
 } from '@tabler/icons-react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import EmailListAccordion from './EmailListAccordion'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Accordion } from '@/components/shadcn/accordion'
 import { useQueryClient } from '@tanstack/react-query'
 import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from '@/components/Tooltip'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+  DropdownMenuShortcut,
+} from '@/components/shadcn/ui/dropdown-menu'
 
 // Props interface for the ShareSettingsModal component
 interface ShareSettingsModalProps {
@@ -27,6 +29,21 @@ interface ShareSettingsModalProps {
   onClose: () => void // Handler for closing the modal
   projectName: string // Name of the current project
   metadata: CourseMetadata // Project metadata containing sharing settings
+}
+
+type AccessLevel = 'invited' | 'logged_in' | 'public'
+
+// Access level labels and descriptions constants
+const ACCESS_LABELS: Record<AccessLevel, string> = {
+  invited: 'Private (only invited members)',
+  logged_in: 'All logged-in users',
+  public: 'Public (anyone with the link)',
+}
+
+const ACCESS_DESCRIPTIONS: Record<AccessLevel, string> = {
+  invited: 'Only explicitly invited collaborators can access',
+  logged_in: 'Any authenticated user can access',
+  public: 'No login required to access',
 }
 
 /**
@@ -63,9 +80,6 @@ export default function ShareSettingsModal({
   const allowLoggedInUsers = metadata?.allow_logged_in_users || false
   const shareUrl = `${window.location.origin}/${projectName}`
   const [isCopied, setIsCopied] = useState(false)
-  const [isAccessMenuOpen, setIsAccessMenuOpen] = useState(false)
-
-  type AccessLevel = 'invited' | 'logged_in' | 'public'
 
   const currentAccessLevel: AccessLevel = useMemo(() => {
     if (!isPrivate) return 'public'
@@ -73,19 +87,54 @@ export default function ShareSettingsModal({
     return 'invited'
   }, [isPrivate, allowLoggedInUsers])
 
+  // Use a ref to track previous access level without causing re-renders
+  const prevAccessLevelRef = React.useRef<AccessLevel | null>(null)
+  const transitionKeyRef = React.useRef(0)
+  const isAnimatingRef = React.useRef(false)
+
+  // Check if we're transitioning from non-invited to invited
+  const isTransitioningToInvited = React.useMemo(() => {
+    const prev = prevAccessLevelRef.current
+
+    // First render - no animation
+    if (prev === null) {
+      prevAccessLevelRef.current = currentAccessLevel
+      return false
+    }
+
+    // Transitioning from non-invited to invited
+    if (
+      prev !== 'invited' &&
+      currentAccessLevel === 'invited' &&
+      !isAnimatingRef.current
+    ) {
+      transitionKeyRef.current += 1 // Force remount with new key
+      isAnimatingRef.current = true
+      // Reset animation flag after animation duration
+      setTimeout(() => {
+        isAnimatingRef.current = false
+      }, 300)
+      prevAccessLevelRef.current = currentAccessLevel
+      return true
+    }
+
+    prevAccessLevelRef.current = currentAccessLevel
+    return isAnimatingRef.current
+  }, [currentAccessLevel])
+
   const accessOptions = useMemo(
     () =>
       [
         {
           key: 'invited' as AccessLevel,
-          label: 'Only invited members',
-          description: 'Only explicitly invited collaborators can access',
+          label: ACCESS_LABELS.invited,
+          description: ACCESS_DESCRIPTIONS.invited,
           icon: <IconLock className="h-4 w-4" />,
         },
         {
           key: 'logged_in' as AccessLevel,
-          label: 'All logged-in users',
-          description: 'Any authenticated user in the org can access',
+          label: ACCESS_LABELS.logged_in,
+          description: ACCESS_DESCRIPTIONS.logged_in,
           icon: <IconUsers className="h-4 w-4" />,
         },
         // Public option will be conditionally included below
@@ -95,8 +144,8 @@ export default function ShareSettingsModal({
           : [
               {
                 key: 'public' as AccessLevel,
-                label: 'Public (anyone with the link)',
-                description: 'No login required to access',
+                label: ACCESS_LABELS.public,
+                description: ACCESS_DESCRIPTIONS.public,
                 icon: <IconLockOpen className="h-4 w-4" />,
               },
             ],
@@ -116,7 +165,6 @@ export default function ShareSettingsModal({
 
     setMetadata(updatedMetadata)
     queryClient.setQueryData(['courseMetadata', projectName], updatedMetadata)
-    setIsAccessMenuOpen(false)
     await callSetCourseMetadata(projectName, updatedMetadata)
   }
 
@@ -163,6 +211,7 @@ export default function ShareSettingsModal({
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
         className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[--modal] text-[--modal-text] shadow-2xl ring-1 ring-white/10"
+        style={{ scrollbarGutter: 'stable' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Add subtle gradient border */}
@@ -244,70 +293,93 @@ export default function ShareSettingsModal({
                     )}
                   </div>
                   <div>
-                    <p className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}>
-                      {currentAccessLevel === 'invited' && 'Only invited members'}
-                      {currentAccessLevel === 'logged_in' && 'All logged-in users'}
-                      {currentAccessLevel === 'public' && 'Public (anyone with the link)'}
+                    <p
+                      className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
+                    >
+                      {ACCESS_LABELS[currentAccessLevel]}
                     </p>
-                    <p className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs`}>
-                      {currentAccessLevel === 'invited' && 'Only explicitly invited collaborators can access'}
-                      {currentAccessLevel === 'logged_in' && 'Any authenticated user in the org can access'}
-                      {currentAccessLevel === 'public' && 'No login required to access'}
+                    <p
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs`}
+                    >
+                      {ACCESS_DESCRIPTIONS[currentAccessLevel]}
                     </p>
                   </div>
                 </div>
 
                 {/* Dropdown trigger */}
-                <div className="relative">
-                  <button
-                    onClick={() => setIsAccessMenuOpen((v) => !v)}
-                    className={`rounded-md border border-[--background-dark] bg-[--modal] px-3 py-2 text-sm transition-colors hover:bg-[--background-dark]`}
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 rounded-lg border border-[--background-dark] bg-[--modal] px-3 py-2 text-sm transition-colors hover:bg-[--background-dark]">
+                      <span className="hidden sm:inline">Change access</span>
+                      <span className="sm:hidden">Access</span>
+                      <IconChevronDown className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    side="bottom"
+                    sideOffset={8}
+                    className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 w-72 rounded-lg border-[--background-dark] bg-[--modal] p-1.5 text-[--foreground] sm:w-80"
+                    style={{
+                      animationDuration: '100ms',
+                      willChange: 'transform, opacity',
+                    }}
                   >
-                    Change access
-                  </button>
-
-                  {isAccessMenuOpen && (
-                    <TooltipProvider>
-                      <div className="absolute right-0 z-20 mt-2 w-72 overflow-hidden rounded-md border border-[--background-dark] bg-[--modal] p-1 shadow-xl">
-                        {accessOptions.map((opt) => (
-                          <Tooltip key={opt.key}>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() => handleAccessSelect(opt.key)}
-                                className={`flex w-full items-center justify-between rounded-sm px-3 py-2 text-left text-sm hover:bg-[--background-dark]`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  {opt.icon}
-                                  {opt.label}
-                                </span>
-                                {currentAccessLevel === opt.key && (
-                                  <IconCheck size={16} className="text-[--foreground]" />
-                                )}
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right">{opt.description}</TooltipContent>
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </TooltipProvider>
-                  )}
-                </div>
+                    <DropdownMenuRadioGroup
+                      value={currentAccessLevel}
+                      onValueChange={(value) =>
+                        handleAccessSelect(value as AccessLevel)
+                      }
+                    >
+                      {accessOptions.map((opt) => (
+                        <DropdownMenuRadioItem
+                          key={opt.key}
+                          value={opt.key}
+                          className="my-1 cursor-pointer gap-3 rounded-md !pl-2 !pr-2 hover:rounded-md hover:bg-[--background-dark] focus:rounded-md focus:bg-[--background-dark] focus:text-[--foreground] [&>span:first-child]:hidden"
+                        >
+                          {opt.icon}
+                          <div className="flex flex-col">
+                            <span>{opt.label}</span>
+                            <span className="text-xs text-[--foreground-faded]">
+                              {opt.description}
+                            </span>
+                          </div>
+                          <DropdownMenuShortcut className="ml-auto">
+                            {currentAccessLevel === opt.key && (
+                              <IconCheck size={16} className="h-4 w-4" />
+                            )}
+                          </DropdownMenuShortcut>
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
             {/* Members & Administrators sections */}
             <div className="space-y-3">
-              <AnimatePresence>
-                {isPrivate && (
+              <motion.div
+                animate={{
+                  opacity: currentAccessLevel === 'invited' ? 1 : 0.5,
+                }}
+                transition={{ duration: 0.2 }}
+                className="relative"
+              >
+                {currentAccessLevel === 'invited' ? (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    key={`members-transition-${transitionKeyRef.current}`}
+                    initial={
+                      isTransitioningToInvited ? { opacity: 0, y: -10 } : false
+                    }
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
                   >
                     <Accordion
                       type="single"
-                      defaultValue="members"
+                      defaultValue={
+                        isTransitioningToInvited ? undefined : 'members'
+                      }
                       className="w-full bg-[--dashboard-background]"
                     >
                       <EmailListAccordion
@@ -319,8 +391,34 @@ export default function ShareSettingsModal({
                       />
                     </Accordion>
                   </motion.div>
+                ) : (
+                  <div className="pointer-events-none w-full rounded-lg bg-[--background-faded]">
+                    <Accordion type="single" className="w-full" value="">
+                      <div className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--modal]">
+                            <IconUsers className="h-5 w-5 text-[--foreground-faded]" />
+                          </div>
+                          <div className="flex flex-col items-start">
+                            <span
+                              className={`${montserrat_heading.variable} font-montserratHeading text-sm`}
+                            >
+                              Members
+                            </span>
+                            <span
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph text-xs text-[--foreground-faded]`}
+                            >
+                              {currentAccessLevel === 'logged_in'
+                                ? 'Member management is only available for private chatbots'
+                                : 'Member management is only available for private chatbots'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Accordion>
+                  </div>
                 )}
-              </AnimatePresence>
+              </motion.div>
 
               <Accordion type="single" defaultValue="admins" className="w-full">
                 <EmailListAccordion
