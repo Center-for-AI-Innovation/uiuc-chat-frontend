@@ -12,7 +12,9 @@ export async function getCourseMetadata(
   try {
     const redisClient = await ensureRedisConnected()
     const rawMetadata = await redisClient.hGet('course_metadatas', courseName)
-    return rawMetadata ? (JSON.parse(rawMetadata) as CourseMetadata) : null
+    if (!rawMetadata) return null
+    const parsed = JSON.parse(rawMetadata) as CourseMetadata
+    return parsed
   } catch (error) {
     console.error('Error fetching course metadata:', error)
     return null
