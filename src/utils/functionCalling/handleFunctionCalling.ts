@@ -10,6 +10,10 @@ import {
   type OpenAICompatibleTool,
 } from '~/types/tools'
 import { getBackendUrl } from '~/utils/apiUtils'
+import {
+  type AllLLMProviders,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
 
 export async function handleFunctionCall(
   message: Message,
@@ -20,27 +24,57 @@ export async function handleFunctionCall(
   openaiKey: string,
   course_name: string,
   base_url?: string,
+  llmProviders?: AllLLMProviders,
 ): Promise<UIUCTool[]> {
   try {
     // Convert UIUCTool to OpenAICompatibleTool
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
-    // console.log('OpenAI compatible tools (handle tools): ', openaiKey)
-    const url = base_url
-      ? `${base_url}/api/chat/openaiFunctionCall`
-      : '/api/chat/openaiFunctionCall'
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+
+    // Check if the selected model is from OpenAICompatible provider
+    const isOpenAICompatible =
+      llmProviders?.OpenAICompatible?.enabled &&
+      (llmProviders.OpenAICompatible.models || []).some(
+        (m) => m.enabled && m.id === selectedConversation.model.id,
+      )
+
+    let url: string
+    let body: any
+
+    if (isOpenAICompatible) {
+      // Use the compatible function call route
+      url = base_url
+        ? `${base_url}/api/chat/compatibleFunctionCall`
+        : '/api/chat/compatibleFunctionCall'
+      body = {
+        conversation: selectedConversation,
+        tools: openAITools,
+        imageUrls: imageUrls,
+        imageDescription: imageDescription,
+        providerBaseUrl: llmProviders!.OpenAICompatible.baseUrl,
+        apiKey: llmProviders!.OpenAICompatible.apiKey,
+        modelId: selectedConversation.model.id,
+      }
+    } else {
+      // Use the standard OpenAI function call route
+      url = base_url
+        ? `${base_url}/api/chat/openaiFunctionCall`
+        : '/api/chat/openaiFunctionCall'
+      body = {
         conversation: selectedConversation,
         tools: openAITools,
         imageUrls: imageUrls,
         imageDescription: imageDescription,
         openaiKey: openaiKey,
         course_name: course_name,
-      }),
+      }
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {
@@ -200,6 +234,7 @@ export async function handleToolsServer(
   openaiKey: string,
   projectName: string,
   base_url?: string,
+  llmProviders?: AllLLMProviders,
 ): Promise<Conversation> {
   try {
     const uiucToolsToRun = await handleFunctionCall(
@@ -211,6 +246,7 @@ export async function handleToolsServer(
       openaiKey,
       projectName,
       base_url,
+      llmProviders,
     )
 
     if (uiucToolsToRun.length > 0) {
