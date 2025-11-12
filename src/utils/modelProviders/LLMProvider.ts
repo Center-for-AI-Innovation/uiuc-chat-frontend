@@ -38,6 +38,12 @@ import {
   SambaNovaModelID,
   SambaNovaModels,
 } from '~/utils/modelProviders/types/SambaNova'
+import {
+  type OpenAICompatibleModel,
+  type OpenAICompatibleProvider,
+  OpenAICompatibleModelID,
+  OpenAICompatibleModels,
+} from '~/utils/modelProviders/types/openaiCompatible'
 import { type WebllmModel } from '~/utils/modelProviders/WebLLM'
 
 export enum ProviderNames {
@@ -51,6 +57,7 @@ export enum ProviderNames {
   Bedrock = 'Bedrock',
   Gemini = 'Gemini',
   SambaNova = 'SambaNova',
+  OpenAICompatible = 'OpenAICompatible',
 }
 
 // Define the preferred order of providers, like in modelSelect dropdown
@@ -59,6 +66,7 @@ export const LLM_PROVIDER_ORDER: ProviderNames[] = [
   ProviderNames.NCSAHosted,
   ProviderNames.Anthropic,
   ProviderNames.OpenAI,
+  ProviderNames.OpenAICompatible,
   ProviderNames.Azure,
   ProviderNames.Gemini,
   ProviderNames.Bedrock,
@@ -77,6 +85,7 @@ export type AnySupportedModel =
   | BedrockModel
   | GeminiModel
   | SambaNovaModel
+  | OpenAICompatibleModel
 // Add other vision capable models as needed
 export const VisionCapableModels: Set<
   | OpenAIModelID
@@ -86,7 +95,9 @@ export const VisionCapableModels: Set<
   | GeminiModelID
   | BedrockModelID
   | SambaNovaModelID
+  | OpenAICompatibleModelID
 > = new Set([
+  // OpenAI models
   OpenAIModelID.o3,
   OpenAIModelID.o4_mini,
   OpenAIModelID.GPT_4_Turbo,
@@ -101,6 +112,7 @@ export const VisionCapableModels: Set<
   OpenAIModelID.GPT_5_nano,
   OpenAIModelID.GPT_5_thinking,
 
+  // Azure models
   AzureModelID.o3,
   AzureModelID.o4_mini,
   AzureModelID.GPT_4_Turbo,
@@ -144,6 +156,21 @@ export const VisionCapableModels: Set<
   // SambaNova
   SambaNovaModelID.Llama_3_2_11B_Vision_Instruct,
   SambaNovaModelID.Llama_3_2_90B_Vision_Instruct,
+
+  // OpenAI-compatible vision-capable models
+  OpenAICompatibleModelID.Claude_Haiku_4_5,
+  OpenAICompatibleModelID.Claude_Opus_4_1,
+  OpenAICompatibleModelID.Gemini_2_5_Flash_Lite,
+  OpenAICompatibleModelID.Llama_4_Maverick,
+  OpenAICompatibleModelID.GPT_4_1,
+  OpenAICompatibleModelID.GPT_4o,
+  OpenAICompatibleModelID.GPT_5,
+  OpenAICompatibleModelID.o3_Pro,
+  OpenAICompatibleModelID.o4_Mini,
+  OpenAICompatibleModelID.Qwen3_VL_235B_A22B_Thinking,
+  OpenAICompatibleModelID.GLM_4_1V_9B_Thinking,
+  OpenAICompatibleModelID.Grok_4_Fast,
+  OpenAICompatibleModelID.GLM_4_5V,
 ])
 
 /**
@@ -173,6 +200,7 @@ export const AllSupportedModels: Set<GenericSupportedModel> = new Set([
   ...Object.values(BedrockModels),
   ...Object.values(GeminiModels),
   ...Object.values(SambaNovaModels),
+  ...Object.values(OpenAICompatibleModels),
   // ...webLLMModels,
 ])
 // e.g. Easily validate ALL POSSIBLE models that we support. They may be offline or disabled, but they are supported.
@@ -278,6 +306,7 @@ export type LLMProvider =
   | BedrockProvider
   | GeminiProvider
   | SambaNovaProvider
+  | OpenAICompatibleProvider
 
 // export type AllLLMProviders = {
 //   [P in ProviderNames]?: LLMProvider & { provider: P }
