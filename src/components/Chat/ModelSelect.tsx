@@ -77,6 +77,8 @@ export const getModelLogo = (modelType: string) => {
       return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png'
     case ProviderNames.SambaNova:
       return 'https://sambanova.ai/hubfs/logotype_sambanova_orange.png'
+    case ProviderNames.OpenAICompatible:
+      return '/media/llm_icons/OpenAI.png' // Reuse OpenAI icon for OpenAI-compatible models
     default:
       throw new Error(`Unknown model type: ${modelType}`)
   }
