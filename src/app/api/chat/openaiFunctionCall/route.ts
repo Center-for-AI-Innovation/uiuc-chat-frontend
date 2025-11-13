@@ -74,11 +74,17 @@ const conversationToMessages = (
           role: message.role as 'user' | 'assistant' | 'system',
           content: contentParts,
         } as ChatCompletionMessageParam)
-      } else if (contentParts.length === 1 && contentParts[0].type === 'text') {
-        transformedData.push({
-          role: message.role as 'user' | 'assistant' | 'system',
-          content: contentParts[0].text,
-        } as ChatCompletionMessageParam)
+      } else if (
+        contentParts.length === 1 &&
+        contentParts[0]?.type === 'text'
+      ) {
+        const firstPart = contentParts[0]
+        if (firstPart) {
+          transformedData.push({
+            role: message.role as 'user' | 'assistant' | 'system',
+            content: firstPart.text,
+          } as ChatCompletionMessageParam)
+        }
       }
     } else {
       // Handle string content
