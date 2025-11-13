@@ -23,6 +23,7 @@ export interface Conversation {
   projectName?: string
   createdAt?: string
   updatedAt?: string
+  agentModeEnabled?: boolean
   linkParameters?: {
     guidedLearning: boolean
     documentsOnly: boolean
@@ -47,6 +48,8 @@ export interface Message {
   feedback?: MessageFeedback
   wasQueryRewritten?: boolean
   queryRewriteText?: string
+  agentStepNumber?: number // Track which agent iteration this message belongs to
+  agentEvents?: AgentEvent[]
 }
 
 export interface ConversationMeta {
@@ -58,6 +61,7 @@ export interface ConversationMeta {
   projectName?: string
   folderId: string | null
   userEmail?: string | null
+  agentModeEnabled?: boolean
 }
 
 export interface SaveConversationDelta {
@@ -70,6 +74,40 @@ export type MessageFeedback = {
   isPositive: boolean | null
   category: string | null
   details: string | null
+}
+
+export type AgentEventStatus = 'pending' | 'running' | 'done' | 'error'
+
+export type AgentEventType =
+  | 'action_selection'
+  | 'retrieval'
+  | 'tool'
+  | 'final_response'
+
+export interface AgentEventMetadata {
+  toolName?: string
+  readableToolName?: string
+  arguments?: Record<string, unknown>
+  outputText?: string
+  outputData?: Record<string, unknown>
+  outputImageUrls?: string[]
+  contextQuery?: string
+  contextsRetrieved?: number
+  selectedToolNames?: string[]
+  info?: string
+  errorMessage?: string
+}
+
+export interface AgentEvent {
+  id: string
+  stepNumber: number
+  type: AgentEventType
+  status: AgentEventStatus
+  title: string
+  description?: string
+  createdAt: string
+  updatedAt?: string
+  metadata?: AgentEventMetadata
 }
 
 export interface UIUCTool {

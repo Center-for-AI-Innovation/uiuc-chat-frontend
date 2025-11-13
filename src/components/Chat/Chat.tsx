@@ -17,6 +17,9 @@ import {
 } from 'react'
 
 import {
+  type AgentEvent,
+  type AgentEventMetadata,
+  type AgentEventStatus,
   type ChatBody,
   type Content,
   type Conversation,
@@ -164,6 +167,7 @@ export const Chat = memo(
         tools,
         llmProviders,
         selectedModel,
+        agentModeEnabled,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
@@ -437,6 +441,11 @@ export const Chat = memo(
               }
             }
           }
+          updatedConversation = {
+            ...updatedConversation,
+            agentModeEnabled,
+          }
+
           handleUpdateConversation(updatedConversation, {
             key: 'messages',
             value: updatedConversation.messages,
@@ -844,46 +853,372 @@ export const Chat = memo(
               }
             }
 
-            homeDispatch({ field: 'isRetrievalLoading', value: true })
+            // In agent mode, skip retrieval here - let the agent decide if/when to search
+            if (!agentModeEnabled) {
+              homeDispatch({ field: 'isRetrievalLoading', value: true })
 
-            // Use enhanced query for context search
-            await handleContextSearch(
-              message,
-              courseName,
-              selectedConversation,
-              rewrittenQuery,
-              enabledDocumentGroups,
-            )
+              // Use enhanced query for context search
+              await handleContextSearch(
+                message,
+                courseName,
+                selectedConversation,
+                rewrittenQuery,
+                enabledDocumentGroups,
+              )
 
-            homeDispatch({ field: 'isRetrievalLoading', value: false })
+              homeDispatch({ field: 'isRetrievalLoading', value: false })
+            } else {
+              console.log('[Agent Mode] Skipping hard-coded retrieval, agent will decide')
+            }
           }
 
-          // Action 3: Tool Execution
-          if (tools.length > 0) {
-            try {
-              homeDispatch({ field: 'isRouting', value: true })
-              // Check if any tools need to be run
-              const uiucToolsToRun = await handleFunctionCall(
-                message,
-                tools,
-                imageUrls,
-                imgDesc,
-                updatedConversation,
-                getOpenAIKey(llmProviders, courseMetadata, apiKey),
-                courseName,
+          const agentMessageIndex =
+            updatedConversation.messages.length > 0
+              ? updatedConversation.messages.length - 1
+              : -1
+
+          const syncAgentMessage = () => {
+            if (
+              agentMessageIndex < 0 ||
+              agentMessageIndex >= updatedConversation.messages.length
+            ) {
+              return
+            }
+
+            const updatedMessages = [...updatedConversation.messages]
+            updatedMessages[agentMessageIndex] = { ...message }
+
+            updatedConversation = {
+              ...updatedConversation,
+              messages: updatedMessages,
+              agentModeEnabled,
+            }
+
+            homeDispatch({
+              field: 'selectedConversation',
+              value: updatedConversation,
+            })
+
+            if (conversations && conversations.length > 0) {
+              const exists = conversations.some(
+                (c) => c.id === updatedConversation.id,
               )
-              homeDispatch({ field: 'isRouting', value: false })
-              if (uiucToolsToRun.length > 0) {
-                homeDispatch({ field: 'isRunningTool', value: true })
-                // Run the tools
-                await handleToolCall(
-                  uiucToolsToRun,
-                  updatedConversation,
-                  courseName,
-                )
+              const updatedConversationList = exists
+                ? conversations.map((c) =>
+                    c.id === updatedConversation.id ? updatedConversation : c,
+                  )
+                : [updatedConversation, ...conversations]
+
+              homeDispatch({
+                field: 'conversations',
+                value: updatedConversationList,
+              })
+            }
+          }
+
+          // Action 3: Tool Execution (with Agent Mode support)
+          if (tools.length > 0 || agentModeEnabled) {
+            try {
+              // Log which pipeline is being used
+              console.log(
+                `[Agent Mode] Pipeline: ${agentModeEnabled ? 'AGENT MODE (iterative)' : 'REGULAR (single-pass)'}`,
+              )
+
+              // If agent mode enabled, add retrieval as a synthetic tool
+              const toolsForAgent = agentModeEnabled
+                ? [
+                    ...tools,
+                    {
+                      id: 'synthetic-retrieval-tool',
+                      name: 'search_documents',
+                      readableName: 'Search Documents',
+                      description: `Primary grounding tool for Agent Mode. Invoke this before any other tool unless the immediately previous step already yielded fresh, highly relevant context for the user's latest request. Provide a concise natural-language query summarizing the user goal or follow-up. The tool returns ranked course passages with citation indices; rely on them when forming your answer and cite sources with <cite>n</cite> tags. Additional specialized tools may appear later, but treat them as complementary steps after retrieval.`,
+                      inputParameters: {
+                        type: 'object' as const,
+                        properties: {
+                          query: {
+                            type: 'string',
+                            description:
+                              "Short natural-language query that captures the user's current need",
+                          },
+                        },
+                        required: ['query'],
+                      },
+                      courseName: courseName,
+                      enabled: true,
+                    } as UIUCTool,
+                  ]
+                : tools
+
+              // If agent mode enabled, loop up to 20 steps, otherwise single pass
+              const maxSteps = agentModeEnabled ? 20 : 1
+              const seen = new Set<string>()
+
+              const ensureAgentEvents = () => {
+                if (!message.agentEvents) {
+                  message.agentEvents = []
+                  syncAgentMessage()
+                }
               }
 
-              homeDispatch({ field: 'isRunningTool', value: false })
+              const appendAgentEvent = (event: AgentEvent) => {
+                ensureAgentEvents()
+                message.agentEvents = [...(message.agentEvents ?? []), event]
+                syncAgentMessage()
+              }
+
+              const updateAgentEvent = (
+                eventId: string,
+                updates: Partial<AgentEvent> & {
+                  metadata?: AgentEventMetadata
+                },
+              ) => {
+                if (!message.agentEvents) return
+                const nextEvents = message.agentEvents.map((event) => {
+                  if (event.id !== eventId) {
+                    return event
+                  }
+
+                  const mergedMetadata =
+                    updates.metadata || event.metadata
+                      ? { ...event.metadata, ...updates.metadata }
+                      : event.metadata
+
+                  return {
+                    ...event,
+                    ...updates,
+                    ...(mergedMetadata ? { metadata: mergedMetadata } : {}),
+                    updatedAt: new Date().toISOString(),
+                  }
+                })
+
+                message.agentEvents = nextEvents
+                syncAgentMessage()
+              }
+
+              for (let step = 0; step < maxSteps; step++) {
+                homeDispatch({ field: 'isRouting', value: true })
+
+                // Tag message with step number for UI rendering
+                const stepNumber = step + 1
+                message.agentStepNumber = stepNumber
+                syncAgentMessage()
+
+                const selectionEventId = `agent-step-${stepNumber}-selection`
+                if (agentModeEnabled) {
+                  appendAgentEvent({
+                    id: selectionEventId,
+                    stepNumber,
+                    type: 'action_selection',
+                    status: 'running',
+                    title: `Step ${stepNumber}: Selecting next action`,
+                    createdAt: new Date().toISOString(),
+                  })
+                }
+
+                // Call tool selection API
+                const uiucToolsToRun = await handleFunctionCall(
+                  message,
+                  toolsForAgent,
+                  imageUrls,
+                  imgDesc,
+                  updatedConversation,
+                  getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                  courseName,
+                )
+                homeDispatch({ field: 'isRouting', value: false })
+
+                const selectionMetadata: AgentEventMetadata = {
+                  selectedToolNames: uiucToolsToRun.map(
+                    (tool) => tool.readableName,
+                  ),
+                }
+
+                if (agentModeEnabled) {
+                  updateAgentEvent(selectionEventId, {
+                    status: 'done',
+                    metadata:
+                      uiucToolsToRun.length === 0
+                        ? {
+                            ...selectionMetadata,
+                            info: 'Agent will now generate a response.',
+                          }
+                        : selectionMetadata,
+                  })
+                }
+
+                if (uiucToolsToRun.length === 0) break
+
+                // dedupe based on tool name + args
+                const signatures = uiucToolsToRun.map((t) =>
+                  `${t.name}:${JSON.stringify(
+                    t.aiGeneratedArgumentValues || {},
+                  )}`,
+                )
+                const allSeen = signatures.every((s) => seen.has(s))
+                signatures.forEach((s) => seen.add(s))
+                if (allSeen) {
+                  if (agentModeEnabled) {
+                    updateAgentEvent(selectionEventId, {
+                      metadata: {
+                        ...selectionMetadata,
+                        info: 'Skipping repeated tool request.',
+                      },
+                    })
+                  }
+                  break
+                }
+
+                homeDispatch({ field: 'isRunningTool', value: true })
+
+                // Separate synthetic retrieval tool from N8N tools
+                const retrievalTools = uiucToolsToRun.filter(
+                  (t) => t.id === 'synthetic-retrieval-tool',
+                )
+                const n8nTools = uiucToolsToRun.filter(
+                  (t) => t.id !== 'synthetic-retrieval-tool',
+                )
+
+                // Execute retrieval tool if requested
+                for (const [retrievalIndex, retrievalTool] of retrievalTools.entries()) {
+                  const searchQuery =
+                    retrievalTool.aiGeneratedArgumentValues?.query || ''
+                  console.log(
+                    `[Agent Mode] Executing retrieval with query: ${searchQuery}`,
+                  )
+
+                  let retrievalEventId = ''
+                  if (agentModeEnabled) {
+                    retrievalEventId = `agent-step-${stepNumber}-retrieval-${retrievalIndex}`
+                    appendAgentEvent({
+                      id: retrievalEventId,
+                      stepNumber,
+                      type: 'retrieval',
+                      status: 'running',
+                      title: `Step ${stepNumber}: Searching documents`,
+                      createdAt: new Date().toISOString(),
+                      metadata: {
+                        contextQuery: searchQuery,
+                      },
+                    })
+                  }
+
+                  try {
+                    homeDispatch({ field: 'isRetrievalLoading', value: true })
+                    await handleContextSearch(
+                      message,
+                      courseName,
+                      selectedConversation,
+                      searchQuery,
+                      enabledDocumentGroups,
+                    )
+                    homeDispatch({ field: 'isRetrievalLoading', value: false })
+
+                    // Mark tool as executed with contexts
+                    const contextsFound = message.contexts?.length || 0
+                    retrievalTool.output = {
+                      text: `Retrieved ${contextsFound} document chunks`,
+                      data: { contexts: message.contexts },
+                    }
+
+                    if (agentModeEnabled && retrievalEventId) {
+                      updateAgentEvent(retrievalEventId, {
+                        status: 'done',
+                        metadata: {
+                          contextQuery: searchQuery,
+                          contextsRetrieved: contextsFound,
+                        },
+                      })
+                    }
+                  } catch (retrievalError) {
+                    if (agentModeEnabled && retrievalEventId) {
+                      updateAgentEvent(retrievalEventId, {
+                        status: 'error',
+                        metadata: {
+                          contextQuery: searchQuery,
+                          errorMessage: (retrievalError as Error).message,
+                        },
+                      })
+                    }
+                    homeDispatch({ field: 'isRetrievalLoading', value: false })
+                    throw retrievalError
+                  }
+                }
+
+                // Execute N8N tools via normal flow
+                const toolEventIds: Record<string, string> = {}
+                if (agentModeEnabled) {
+                  n8nTools.forEach((tool, index) => {
+                    const eventId = `agent-step-${stepNumber}-tool-${
+                      tool.invocationId || `${tool.id}-${index}`
+                    }`
+                    toolEventIds[tool.invocationId || `${tool.id}-${index}`] = eventId
+                    appendAgentEvent({
+                      id: eventId,
+                      stepNumber,
+                      type: 'tool',
+                      status: 'running',
+                      title: `Step ${stepNumber}: ${tool.readableName}`,
+                      createdAt: new Date().toISOString(),
+                      metadata: {
+                        toolName: tool.name,
+                        readableToolName: tool.readableName,
+                        arguments: tool.aiGeneratedArgumentValues,
+                      },
+                    })
+                  })
+                }
+
+                if (n8nTools.length > 0) {
+                  await handleToolCall(
+                    n8nTools,
+                    updatedConversation,
+                    courseName,
+                  )
+                  syncAgentMessage()
+                }
+
+                if (agentModeEnabled) {
+                  n8nTools.forEach((tool, index) => {
+                    const key = tool.invocationId || `${tool.id}-${index}`
+                    const eventId = toolEventIds[key]
+                    if (!eventId) return
+
+                    const targetTool = message.tools?.find((t) =>
+                      tool.invocationId
+                        ? t.invocationId === tool.invocationId
+                        : t.id === tool.id,
+                    )
+
+                    const status: AgentEventStatus = targetTool?.error
+                      ? 'error'
+                      : 'done'
+
+                    const metadata: AgentEventMetadata = {
+                      toolName: targetTool?.name || tool.name,
+                      readableToolName:
+                        targetTool?.readableName || tool.readableName,
+                      arguments:
+                        targetTool?.aiGeneratedArgumentValues ||
+                        tool.aiGeneratedArgumentValues,
+                      outputText: targetTool?.output?.text,
+                      outputData: targetTool?.output?.data,
+                      outputImageUrls: targetTool?.output?.imageUrls,
+                      errorMessage: targetTool?.error,
+                    }
+
+                    updateAgentEvent(eventId, {
+                      status,
+                      metadata,
+                    })
+                  })
+                }
+
+                homeDispatch({ field: 'isRunningTool', value: false })
+
+                // Single pass mode: exit after first iteration
+                if (!agentModeEnabled) break
+              }
             } catch (error) {
               console.error(
                 'Error in chat.tsx running handleFunctionCall():',
@@ -1066,6 +1401,59 @@ export const Chat = memo(
               })
             }
 
+            let finalResponseEventId: string | null = null
+
+            const updateAgentEventsForFinal = (
+              producer: (events: AgentEvent[]) => AgentEvent[],
+            ) => {
+              const currentEvents = message.agentEvents ?? []
+              const nextEvents = producer(currentEvents)
+              message.agentEvents = nextEvents
+              syncAgentMessage()
+            }
+
+            if (agentModeEnabled) {
+              const existingEvents = message.agentEvents ?? []
+              const maxExistingStep = existingEvents.reduce(
+                (acc, event) => Math.max(acc, event.stepNumber),
+                0,
+              )
+              const finalStepNumber = maxExistingStep + 1
+              finalResponseEventId = `agent-final-response-${message.id}`
+              const finalEvent: AgentEvent = {
+                id: finalResponseEventId,
+                stepNumber: finalStepNumber,
+                type: 'final_response',
+                status: 'running',
+                title: `Step ${finalStepNumber}: Crafting final response`,
+                createdAt: new Date().toISOString(),
+              }
+              updateAgentEventsForFinal((events) => [...events, finalEvent])
+            }
+
+            const updateFinalEventStatus = (
+              status: AgentEventStatus,
+              metadata?: AgentEventMetadata,
+            ) => {
+              if (!agentModeEnabled || !finalResponseEventId) return
+              updateAgentEventsForFinal((events) =>
+                events.map((event) => {
+                  if (event.id !== finalResponseEventId) return event
+                  const mergedMetadata =
+                    metadata || event.metadata
+                      ? { ...event.metadata, ...metadata }
+                      : event.metadata
+                  return {
+                    ...event,
+                    status,
+                    ...(mergedMetadata ? { metadata: mergedMetadata } : {}),
+                    updatedAt: new Date().toISOString(),
+                  }
+                }),
+              )
+              syncAgentMessage()
+            }
+
             const decoder = new TextDecoder()
             let done = false
             let isFirst = true
@@ -1074,6 +1462,12 @@ export const Chat = memo(
             let finalAssistantRespose = ''
             const citationLinkCache = new Map<number, string>()
             const stateMachineContext = { state: State.Normal, buffer: '' }
+            if (agentModeEnabled) {
+              posthog.capture('agent_mode_run', {
+                course_name: finalChatBody.course_name,
+                model_id: finalChatBody.model?.id,
+              })
+            }
             try {
               // Action 6: Stream the LLM response, based on model provider.
               while (!done) {
@@ -1181,6 +1575,10 @@ export const Chat = memo(
               }
             } catch (error) {
               console.error('Error reading from stream:', error)
+              updateFinalEventStatus('error', {
+                errorMessage:
+                  error instanceof Error ? error.message : 'Streaming error',
+              })
               homeDispatch({ field: 'loading', value: false })
               homeDispatch({ field: 'messageIsStreaming', value: false })
               return
@@ -1189,6 +1587,10 @@ export const Chat = memo(
             if (!done) {
               throw new Error('LLM response stream ended before it was done.')
             }
+
+            updateFinalEventStatus('done', {
+              info: 'Assistant response generated.',
+            })
 
             try {
               // This is after the response is done streaming
@@ -1206,6 +1608,23 @@ export const Chat = memo(
                 updatedConversation.messages?.[
                   updatedConversation.messages.length - 1
                 ] ?? message
+
+              const precedingUserMessage =
+                updatedConversation.messages?.[
+                  updatedConversation.messages.length - 2
+                ]
+
+              if (
+                precedingUserMessage &&
+                precedingUserMessage.role === 'user' &&
+                Array.isArray(precedingUserMessage.agentEvents) &&
+                precedingUserMessage.agentEvents.length > 0
+              ) {
+                await updateConversationMutation.mutateAsync({
+                  conversation: updatedConversation,
+                  message: precedingUserMessage,
+                })
+              }
 
               if (streamedAssistantMessage.role === 'assistant') {
                 await updateConversationMutation.mutateAsync({
@@ -1266,6 +1685,12 @@ export const Chat = memo(
               homeDispatch({ field: 'messageIsStreaming', value: false })
             } catch (error) {
               console.error('An error occurred: ', error)
+              updateFinalEventStatus('error', {
+                errorMessage:
+                  error instanceof Error
+                    ? error.message
+                    : 'Unable to finalize response',
+              })
               controller.abort()
             }
           } else {
@@ -1334,6 +1759,7 @@ export const Chat = memo(
         selectedConversation,
         stopConversationRef,
         chat_ui,
+        agentModeEnabled,
       ],
     )
 
