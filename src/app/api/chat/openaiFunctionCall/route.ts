@@ -74,10 +74,7 @@ const conversationToMessages = (
           role: message.role as 'user' | 'assistant' | 'system',
           content: contentParts,
         } as ChatCompletionMessageParam)
-      } else if (
-        contentParts.length === 1 &&
-        contentParts[0]?.type === 'text'
-      ) {
+      } else if (contentParts.length === 1 && contentParts[0]?.type === 'text') {
         const firstPart = contentParts[0]
         if (firstPart) {
           transformedData.push({
