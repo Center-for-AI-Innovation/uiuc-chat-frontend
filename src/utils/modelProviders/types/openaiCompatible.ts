@@ -1,13 +1,4 @@
-import { type ProviderNames } from '../LLMProvider'
-
-export interface OpenAICompatibleProvider {
-  provider: ProviderNames.OpenAICompatible
-  enabled: boolean
-  baseUrl: string
-  apiKey?: string
-  error?: string
-  models?: OpenAICompatibleModel[]
-}
+// OpenAICompatibleProvider is defined in LLMProvider.ts following the same pattern as other providers
 
 export interface OpenAICompatibleModel {
   id: string

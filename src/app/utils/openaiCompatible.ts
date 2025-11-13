@@ -1,6 +1,6 @@
 import { type CoreMessage, generateText, streamText } from 'ai'
 import { type Conversation } from '~/types/chat'
-import { type OpenAICompatibleProvider } from '~/utils/modelProviders/types/openaiCompatible'
+import { type OpenAICompatibleProvider } from '~/utils/modelProviders/LLMProvider'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { createOpenAI } from '@ai-sdk/openai'
 export const dynamic = 'force-dynamic'
