@@ -33,6 +33,7 @@ import {
 } from '~/utils/functionCalling/handleFunctionCalling'
 import {
   type AllLLMProviders,
+  type AnySupportedModel,
   type GenericSupportedModel,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
@@ -301,7 +302,7 @@ export default async function chat(
     const isOpenAICompatible =
       llmProviders?.OpenAICompatible?.enabled &&
       (llmProviders.OpenAICompatible.models || []).some(
-        (m) => m.enabled && m.id === selectedModel.id,
+        (m: AnySupportedModel) => m.enabled && m.id === selectedModel.id,
       )
 
     if (isOpenAICompatible) {

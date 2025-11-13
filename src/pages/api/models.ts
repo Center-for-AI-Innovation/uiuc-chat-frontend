@@ -46,11 +46,12 @@ export async function getModels(
   // Define a function to create a placeholder provider with default values
   const createPlaceholderProvider = (
     providerName: ProviderNames,
-  ): LLMProvider => ({
-    provider: providerName,
-    enabled: true,
-    models: [],
-  })
+  ): LLMProvider =>
+    ({
+      provider: providerName,
+      enabled: true,
+      models: [],
+    }) as LLMProvider
 
   // Ensure all providers are defined
   const allProviderNames = Object.values(ProviderNames)

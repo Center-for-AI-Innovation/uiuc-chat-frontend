@@ -10,7 +10,11 @@ import {
   type OpenAICompatibleTool,
 } from '~/types/tools'
 import { getBackendUrl } from '~/utils/apiUtils'
-import { type AllLLMProviders, ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import {
+  type AllLLMProviders,
+  type AnySupportedModel,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
 
 export async function handleFunctionCall(
   message: Message,
@@ -26,35 +30,37 @@ export async function handleFunctionCall(
   try {
     // Convert UIUCTool to OpenAICompatibleTool
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
-    
+
     // Check if the selected model is from OpenAICompatible provider
-        const isOpenAICompatible =
-          llmProviders?.OpenAICompatible?.enabled &&
-          (llmProviders.OpenAICompatible.models || [])
-            .some((m) => m.enabled && m.id === selectedConversation.model.id)
+    const isOpenAICompatible =
+      llmProviders?.OpenAICompatible?.enabled &&
+      (llmProviders.OpenAICompatible.models || []).some(
+        (m: AnySupportedModel) =>
+          m.enabled && m.id === selectedConversation.model.id,
+      )
 
-        // Use the unified OpenAI function call route for both OpenAI and OpenAI-compatible
-        const url = base_url
-          ? `${base_url}/api/chat/openaiFunctionCall`
-          : '/api/chat/openaiFunctionCall'
+    // Use the unified OpenAI function call route for both OpenAI and OpenAI-compatible
+    const url = base_url
+      ? `${base_url}/api/chat/openaiFunctionCall`
+      : '/api/chat/openaiFunctionCall'
 
-        const body: any = {
-          conversation: selectedConversation,
-          tools: openAITools,
-          imageUrls: imageUrls,
-          imageDescription: imageDescription,
-        }
+    const body: any = {
+      conversation: selectedConversation,
+      tools: openAITools,
+      imageUrls: imageUrls,
+      imageDescription: imageDescription,
+    }
 
-        if (isOpenAICompatible) {
-          // Add OpenAI-compatible specific parameters
-          body.providerBaseUrl = llmProviders!.OpenAICompatible.baseUrl
-          body.apiKey = llmProviders!.OpenAICompatible.apiKey
-          body.modelId = selectedConversation.model.id
-        } else {
-          // Add OpenAI specific parameters
-          body.openaiKey = openaiKey
-          body.course_name = course_name
-        }
+    if (isOpenAICompatible) {
+      // Add OpenAI-compatible specific parameters
+      body.providerBaseUrl = llmProviders!.OpenAICompatible.baseUrl
+      body.apiKey = llmProviders!.OpenAICompatible.apiKey
+      body.modelId = selectedConversation.model.id
+    } else {
+      // Add OpenAI specific parameters
+      body.openaiKey = openaiKey
+      body.course_name = course_name
+    }
 
     const response = await fetch(url, {
       method: 'POST',
