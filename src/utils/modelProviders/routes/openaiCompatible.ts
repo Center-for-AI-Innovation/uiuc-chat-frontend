@@ -1,8 +1,8 @@
-import { ProviderNames } from '../LLMProvider'
 import {
+  ProviderNames,
   type OpenAICompatibleProvider,
-  OpenAICompatibleModels,
-} from '../types/openaiCompatible'
+} from '../LLMProvider'
+import { OpenAICompatibleModels } from '../types/openaiCompatible'
 
 export const getOpenAICompatibleModels = async (
   openAICompatibleProvider: OpenAICompatibleProvider,

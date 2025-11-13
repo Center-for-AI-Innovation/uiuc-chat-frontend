@@ -295,6 +295,12 @@ export interface SambaNovaProvider extends BaseLLMProvider {
   models?: SambaNovaModel[]
 }
 
+export interface OpenAICompatibleProvider extends BaseLLMProvider {
+  provider: ProviderNames.OpenAICompatible
+  baseUrl: string
+  models?: OpenAICompatibleModel[]
+}
+
 export type LLMProvider =
   | OllamaProvider
   | OpenAIProvider
