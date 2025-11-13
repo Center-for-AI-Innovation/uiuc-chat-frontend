@@ -64,6 +64,8 @@ import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { ContextWithMetadata } from '~/types/chat'
+import { modelSupportsTools } from '~/utils/modelProviders/capabilities'
+import posthog from 'posthog-js'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -159,9 +161,11 @@ async function createNewConversation(
     temperature: 0.5,
     folderId: null,
     createdAt: new Date().toISOString(),
+    agentModeEnabled: false,
   }
 
   homeDispatch({ field: 'selectedConversation', value: newConversation })
+  homeDispatch({ field: 'agentModeEnabled', value: false })
   homeDispatch({
     field: 'conversations',
     value: (prev: Conversation[]) => [newConversation, ...prev],
@@ -237,9 +241,12 @@ export const ChatInput = ({
       prompts,
       showModelSettings,
       llmProviders,
+      agentModeEnabled,
+      tools,
     },
 
     dispatch: homeDispatch,
+    handleUpdateConversation,
   } = useContext(HomeContext)
 
   const [content, setContent] = useState<string>(() => inputContent)
@@ -1326,6 +1333,42 @@ export const ChatInput = ({
               '  Please wait while the model is loading...'}
             <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
           </Text>
+          {/* Agent Mode pill */}
+          <div className="absolute bottom-[.35rem] right-5 flex items-center gap-2">
+            {/* Render pill only if model supports tools */}
+            {selectedConversation?.model &&
+            llmProviders &&
+            modelSupportsTools(selectedConversation.model, llmProviders) ? (
+              <button
+                className={`rounded-full px-3 py-1 text-xs md:text-sm transition-colors ${
+                  agentModeEnabled
+                    ? 'bg-[--primary] text-[--background]'
+                    : 'bg-[--background-faded] text-[--foreground]'
+                }`}
+                disabled={messageIsStreaming || (tools?.length ?? 0) === 0}
+                onClick={() => {
+                  const next = !agentModeEnabled
+                  posthog.capture('agent_mode_toggled', {
+                    enabled: next,
+                    model_id: selectedConversation?.model?.id,
+                  })
+                  homeDispatch({
+                    field: 'agentModeEnabled',
+                    value: next,
+                  })
+                  if (selectedConversation) {
+                    handleUpdateConversation(selectedConversation, {
+                      key: 'agentModeEnabled',
+                      value: next,
+                    })
+                  }
+                }}
+                style={{ pointerEvents: 'auto' }}
+              >
+                Agent Mode
+              </button>
+            ) : null}
+          </div>
           {showModelSettings && (
             <div
               ref={modelSelectContainerRef}

@@ -53,6 +53,7 @@ export interface HomeInitialState {
     id: string | undefined
     isLoading: boolean | undefined
   }
+  agentModeEnabled?: boolean
 }
 
 export const initialState: HomeInitialState = {
@@ -88,4 +89,5 @@ export const initialState: HomeInitialState = {
   documentGroups: [],
   tools: [],
   webLLMModelIdLoading: { id: undefined, isLoading: undefined },
+  agentModeEnabled: false,
 }
