@@ -1,6 +1,6 @@
 import { type CoreMessage, generateText, streamText } from 'ai'
 import { type Conversation } from '~/types/chat'
-import { type OpenAICompatibleProvider } from '~/utils/modelProviders/LLMProvider'
+import { type OpenAICompatibleProvider } from '~/utils/modelProviders/types/openaiCompatible'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { createOpenAI } from '@ai-sdk/openai'
 export const dynamic = 'force-dynamic'
@@ -148,13 +148,29 @@ function convertConversationToVercelAISDKv3(
       )
 
       if (hasImages || contentParts.length > 1) {
+        // For OpenAI compatible mode, convert to proper format
+        // Filter strings and convert to text objects, keep image objects as-is
+        const formattedContent: Array<{ type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }> = []
+        contentParts.forEach((part) => {
+          if (typeof part === 'string') {
+            formattedContent.push({ type: 'text', text: part })
+          } else if (part.type === 'image_url') {
+            formattedContent.push(part)
+          } else if (part.type === 'text') {
+            formattedContent.push(part)
+          }
+        })
         coreMessages.push({
           role: message.role as 'user' | 'assistant',
-          content: contentParts,
-        })
+          content: formattedContent,
+        } as CoreMessage)
       } else {
-        // Single text content
-        const textContent = contentParts[0] as string
+        // Single text content - use string format
+        const textContent = typeof contentParts[0] === 'string' 
+          ? contentParts[0] 
+          : contentParts[0]?.type === 'text' 
+            ? contentParts[0].text 
+            : ''
         if (textContent) {
           coreMessages.push({
             role: message.role as 'user' | 'assistant',
