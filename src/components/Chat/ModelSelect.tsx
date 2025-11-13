@@ -313,7 +313,7 @@ const ModelDropdown: React.FC<
             models: enabledModels,
           }
           acc.allModels.push(
-            ...enabledModels.map((model) => ({
+            ...enabledModels.map((model: AnySupportedModel) => ({
               ...model,
               provider: provider.provider,
             })),
@@ -377,7 +377,7 @@ const ModelDropdown: React.FC<
             })
             .flatMap(
               ([_, provider]) =>
-                provider.models?.map((model) => ({
+                provider.models?.map((model: AnySupportedModel) => ({
                   value: model.id,
                   label: model.name,
                   // @ts-ignore -- this being missing is fine

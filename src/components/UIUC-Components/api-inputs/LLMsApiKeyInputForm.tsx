@@ -246,7 +246,7 @@ const NewModelDropdown: React.FC<{
           })
           .flatMap(
             ([_, provider]) =>
-              provider.models?.map((model) => ({
+              provider.models?.map((model: AnySupportedModel) => ({
                 value: model.id,
                 label: model.name,
                 // @ts-ignore -- this being missing is fine
@@ -404,7 +404,7 @@ export function findDefaultModel(
     const provider = providers[providerKey as keyof typeof providers]
     if (provider && provider.models) {
       const currentDefaultModel = provider.models.find(
-        (model) => model.default === true,
+        (model: AnySupportedModel) => model.default === true,
       )
       if (currentDefaultModel) {
         return {
@@ -471,7 +471,7 @@ export default function APIKeyInputForm() {
           const provider =
             updatedProviders[providerKey as keyof AllLLMProviders]
           if (provider && provider.models) {
-            provider.models = provider.models.map((model) => ({
+            provider.models = provider.models.map((model: AnySupportedModel) => ({
               ...model,
               default: false,
             }))
