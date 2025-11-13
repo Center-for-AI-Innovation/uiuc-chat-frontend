@@ -13,8 +13,8 @@ import {
   type ContextWithMetadata,
   type Role,
   type UIUCTool,
+  type AgentEvent,
 } from '@/types/chat'
-import { Database } from 'database.types'
 import { v4 as uuidv4, validate as isUUID } from 'uuid'
 import {
   AllSupportedModels,
@@ -22,7 +22,12 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { sanitizeText } from '@/utils/sanitization'
 import { inArray, eq, and, isNull, sql, gt } from 'drizzle-orm'
-import { NewConversations } from '~/db/schema'
+import {
+  NewConversations,
+  type Conversations as SchemaConversation,
+  type Messages as SchemaMessage,
+  type NewMessages,
+} from '~/db/schema'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { getUserIdentifier } from '~/pages/api/_utils/userIdentifier'
 
@@ -33,9 +38,8 @@ export const config = {
     },
   },
 }
-export type DBConversation =
-  Database['public']['Tables']['conversations']['Row']
-export type DBMessage = Database['public']['Tables']['messages']['Row']
+export type DBConversation = SchemaConversation
+export type DBMessage = SchemaMessage
 
 export function convertChatToDBConversation(
   chatConversation: ChatConversation,
@@ -49,8 +53,10 @@ export function convertChatToDBConversation(
     user_email: chatConversation.userEmail || null,
     project_name: chatConversation.projectName || '',
     folder_id: chatConversation.folderId || null,
-    created_at: chatConversation.createdAt || new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: chatConversation.createdAt
+      ? new Date(chatConversation.createdAt)
+      : new Date(),
+    updated_at: new Date(),
   }
 }
 
@@ -146,7 +152,7 @@ export async function persistMessageServer({
   }
 
   const baseTime = Date.now()
-  const messageForInsert = {
+  const messageForInsert: NewMessages = {
     ...newDbMessage,
     id: newDbMessage.id,
     created_at: newDbMessage.created_at
@@ -252,6 +258,30 @@ export function convertDBToChatConversation(
           }
         }) || []
 
+      let parsedProcessedContent: any = null
+      if (msg.processed_content) {
+        try {
+          parsedProcessedContent = JSON.parse(msg.processed_content)
+        } catch (error) {
+          console.debug(
+            'Failed to parse processed_content for message:',
+            msg.id,
+            error,
+          )
+        }
+      }
+
+      const agentEventsFromProcessed = Array.isArray(
+        parsedProcessedContent?.agentEvents,
+      )
+        ? (parsedProcessedContent.agentEvents as AgentEvent[])
+        : undefined
+
+      const agentStepNumberFromProcessed =
+        typeof parsedProcessedContent?.agentStepNumber === 'number'
+          ? (parsedProcessedContent.agentStepNumber as number)
+          : undefined
+
       const messageObj = {
         id: msg.id,
         role: msg.role as Role,
@@ -267,19 +297,29 @@ export function convertDBToChatConversation(
         feedback: feedbackObj,
         wasQueryRewritten: msg.was_query_rewritten ?? null,
         queryRewriteText: msg.query_rewrite_text ?? null,
+        ...(agentStepNumberFromProcessed !== undefined
+          ? { agentStepNumber: agentStepNumberFromProcessed }
+          : {}),
+        ...(agentEventsFromProcessed && agentEventsFromProcessed.length > 0
+          ? { agentEvents: agentEventsFromProcessed }
+          : {}),
       }
 
       return messageObj
     }),
-    createdAt: dbConversation.created_at || undefined,
-    updatedAt: dbConversation.updated_at || undefined,
+    createdAt: dbConversation.created_at
+      ? dbConversation.created_at.toISOString()
+      : undefined,
+    updatedAt: dbConversation.updated_at
+      ? dbConversation.updated_at.toISOString()
+      : undefined,
   }
 }
 
 export function convertChatToDBMessage(
   chatMessage: ChatMessage,
   conversationId: string,
-): DBMessage {
+): NewMessages {
   let content_text = ''
   let content_image_urls: string[] = []
   let image_description = ''
@@ -314,7 +354,22 @@ export function convertChatToDBMessage(
       ? [chatMessage.contexts]
       : []
 
-  return {
+  const processedContentPayload =
+    (Array.isArray(chatMessage.agentEvents) &&
+      chatMessage.agentEvents.length > 0) ||
+    typeof chatMessage.agentStepNumber === 'number'
+      ? JSON.stringify({
+          ...(Array.isArray(chatMessage.agentEvents) &&
+          chatMessage.agentEvents.length > 0
+            ? { agentEvents: chatMessage.agentEvents }
+            : {}),
+          ...(typeof chatMessage.agentStepNumber === 'number'
+            ? { agentStepNumber: chatMessage.agentStepNumber }
+            : {}),
+        })
+      : null
+
+  const dbMessage: NewMessages = {
     id: chatMessage.id || uuidv4(),
     role: chatMessage.role,
     content_text: content_text,
@@ -362,8 +417,12 @@ export function convertChatToDBMessage(
       : null,
     response_time_sec: chatMessage.responseTimeSec || null,
     conversation_id: conversationId,
-    created_at: chatMessage.created_at || new Date().toISOString(),
-    updated_at: chatMessage.updated_at || new Date().toISOString(),
+    created_at: chatMessage.created_at
+      ? new Date(chatMessage.created_at)
+      : new Date(),
+    updated_at: chatMessage.updated_at
+      ? new Date(chatMessage.updated_at)
+      : new Date(),
     feedback_is_positive: chatMessage.feedback?.isPositive ?? null,
     feedback_category: chatMessage.feedback?.category
       ? sanitizeText(chatMessage.feedback.category)
@@ -375,7 +434,10 @@ export function convertChatToDBMessage(
     query_rewrite_text: chatMessage.queryRewriteText
       ? sanitizeText(chatMessage.queryRewriteText)
       : null,
+    processed_content: processedContentPayload,
   }
+
+  return dbMessage
 }
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -483,23 +545,23 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
           // Upsert delta messages
           const baseTime = new Date().getTime()
-          const toInsert = messagesDelta.map((m, index) => {
+          const toInsert: NewMessages[] = messagesDelta.map((m, index) => {
             const existing = existingMessages.find(
               (em) => em.id.toString() === m.id,
             )
-            const created_at =
-              existing?.created_at ||
-              new Date(baseTime + index * 1000).toISOString()
+            const created_at = existing?.created_at
+              ? new Date(existing.created_at)
+              : new Date(baseTime + index * 1000)
             return {
               ...convertChatToDBMessage(m as ChatMessage, meta.id),
               created_at,
-              updated_at: new Date().toISOString(),
+              updated_at: new Date(),
             }
           })
 
           toInsert.sort((a, b) => {
-            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0
-            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0
+            const aTime = a.created_at ? a.created_at.getTime() : 0
+            const bTime = b.created_at ? b.created_at.getTime() : 0
             return aTime - bTime
           })
 
@@ -507,7 +569,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             if (!isUUID(message.id)) {
               throw new Error(`Invalid UUID for message.id: ${message.id}`)
             }
-            const messageForInsert = {
+            const messageForInsert: NewMessages = {
               ...message,
               id: message.id,
               created_at: message.created_at
@@ -649,33 +711,35 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
         // Ensure messages have sequential timestamps based on their order
         const baseTime = new Date().getTime()
-        const dbMessages = conversation.messages.map((message, index) => {
-          // If the message wasn't edited, preserve its original timestamp
-          const existingMessage = existingMessages?.find(
-            (m) => m.id.toString() === message.id,
-          )
-          const wasEdited = editedMessages?.some(
-            (m) => m.id.toString() === message.id,
-          )
+        const dbMessages: NewMessages[] = conversation.messages.map(
+          (message, index) => {
+            // If the message wasn't edited, preserve its original timestamp
+            const existingMessage = existingMessages?.find(
+              (m) => m.id.toString() === message.id,
+            )
+            const wasEdited = editedMessages?.some(
+              (m) => m.id.toString() === message.id,
+            )
 
-          let created_at
-          if (existingMessage && !wasEdited) {
-            created_at = existingMessage.created_at
-          } else {
-            created_at = new Date(baseTime + index * 1000).toISOString()
-          }
+            let created_at: Date
+            if (existingMessage && !wasEdited && existingMessage.created_at) {
+              created_at = new Date(existingMessage.created_at)
+            } else {
+              created_at = new Date(baseTime + index * 1000)
+            }
 
-          return {
-            ...convertChatToDBMessage(message, conversation.id),
-            created_at,
-            updated_at: new Date().toISOString(),
-          }
-        })
+            return {
+              ...convertChatToDBMessage(message, conversation.id),
+              created_at,
+              updated_at: new Date(),
+            }
+          },
+        )
 
         // Sort messages by created_at before upserting to ensure consistent order
         dbMessages.sort((a, b) => {
-          const aTime = a.created_at ? new Date(a.created_at).getTime() : 0
-          const bTime = b.created_at ? new Date(b.created_at).getTime() : 0
+          const aTime = a.created_at ? a.created_at.getTime() : 0
+          const bTime = b.created_at ? b.created_at.getTime() : 0
           return aTime - bTime
         })
 
@@ -686,7 +750,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           }
 
           // Convert string dates to Date objects for DrizzleORM and ensure ID is a number
-          const messageForInsert = {
+          const messageForInsert: NewMessages = {
             ...message,
             id: message.id,
             created_at: message.created_at
@@ -771,9 +835,35 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
         const count = parsedData?.total_count || 0
         const conversations = parsedData?.conversations || []
+        const conversationIds = conversations
+          .map((conv: any) => conv?.id)
+          .filter((id: unknown): id is string => typeof id === 'string')
+
+        let messagesByConversation = new Map<string, DBMessage[]>()
+
+        if (conversationIds.length > 0) {
+          const dbMessagesForConversations = await db
+            .select()
+            .from(messages)
+            .where(inArray(messages.conversation_id, conversationIds))
+
+          messagesByConversation = dbMessagesForConversations.reduce(
+            (acc, msg) => {
+              const key = msg.conversation_id as string
+              const existing = acc.get(key)
+              if (existing) {
+                existing.push(msg as unknown as DBMessage)
+              } else {
+                acc.set(key, [msg as unknown as DBMessage])
+              }
+              return acc
+            },
+            new Map<string, DBMessage[]>(),
+          )
+        }
 
         const fetchedConversations = conversations.map((conv: any) => {
-          const convMessages = conv.messages || []
+          const convMessages = messagesByConversation.get(conv.id) ?? []
           return convertDBToChatConversation(conv, convMessages)
         })
 
