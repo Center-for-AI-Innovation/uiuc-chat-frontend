@@ -40,7 +40,6 @@ import {
 } from '~/utils/modelProviders/types/SambaNova'
 import {
   type OpenAICompatibleModel,
-  type OpenAICompatibleProvider,
   OpenAICompatibleModelID,
   OpenAICompatibleModels,
 } from '~/utils/modelProviders/types/openaiCompatible'
