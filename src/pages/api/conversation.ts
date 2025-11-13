@@ -172,6 +172,13 @@ export async function persistMessageServer({
     })
 }
 
+const formatDbTimestamp = (
+  value: Date | string | null | undefined,
+): string | undefined => {
+  if (!value) return undefined
+  return value instanceof Date ? value.toISOString() : value
+}
+
 export function convertDBToChatConversation(
   dbConversation: DBConversation,
   dbMessages: DBMessage[],
@@ -307,12 +314,8 @@ export function convertDBToChatConversation(
 
       return messageObj
     }),
-    createdAt: dbConversation.created_at
-      ? dbConversation.created_at.toISOString()
-      : undefined,
-    updatedAt: dbConversation.updated_at
-      ? dbConversation.updated_at.toISOString()
-      : undefined,
+    createdAt: formatDbTimestamp(dbConversation.created_at),
+    updatedAt: formatDbTimestamp(dbConversation.updated_at),
   }
 }
 
