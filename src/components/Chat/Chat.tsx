@@ -22,6 +22,7 @@ import {
   type AgentEventStatus,
   type ChatBody,
   type Content,
+  type ContextWithMetadata,
   type Conversation,
   type Message,
   type UIUCTool,
@@ -310,6 +311,9 @@ export const Chat = memo(
         llmProviders: AllLLMProviders,
       ) => {
         const startOfHandleSend = performance.now()
+        // TEMP_REMOVE: Clear agent events at the start of a new generation
+        // message.agentEvents = undefined
+        // message.agentStepNumber = undefined
         setCurrentMessage(message)
         resetMessageStates()
 
@@ -386,6 +390,10 @@ export const Chat = memo(
             if (!isFileUploadMessage) {
               message.contexts = []
             }
+
+            // TEMP_REMOVE: Clear agent events when regenerating
+            // message.agentEvents = undefined
+            // message.agentStepNumber = undefined
 
             // Remove tools from message to clear old tools
             message.tools = []
@@ -953,6 +961,13 @@ export const Chat = memo(
               // If agent mode enabled, loop up to 20 steps, otherwise single pass
               const maxSteps = agentModeEnabled ? 20 : 1
               const seen = new Set<string>()
+              // Preserve file upload contexts separately (if any)
+              const fileUploadContexts: ContextWithMetadata[] = 
+                agentModeEnabled && message.contexts && Array.isArray(message.contexts)
+                  ? [...message.contexts]
+                  : []
+              // Accumulate contexts from all searches in agent mode
+              const accumulatedContexts: ContextWithMetadata[] = []
 
               const ensureAgentEvents = () => {
                 if (!message.agentEvents) {
@@ -1105,6 +1120,11 @@ export const Chat = memo(
 
                   try {
                     homeDispatch({ field: 'isRetrievalLoading', value: true })
+                    // Clear contexts before each search in agent mode to ensure fresh results
+                    // We'll accumulate them separately
+                    if (agentModeEnabled) {
+                      message.contexts = []
+                    }
                     await handleContextSearch(
                       message,
                       courseName,
@@ -1116,6 +1136,13 @@ export const Chat = memo(
 
                     // Mark tool as executed with contexts
                     const contextsFound = message.contexts?.length || 0
+                    const currentSearchContexts = message.contexts || []
+                    
+                    // Accumulate contexts from this search
+                    if (agentModeEnabled) {
+                      accumulatedContexts.push(...currentSearchContexts)
+                    }
+                    
                     retrievalTool.output = {
                       text: `Retrieved ${contextsFound} document chunks`,
                       data: { contexts: message.contexts },
@@ -1218,6 +1245,16 @@ export const Chat = memo(
 
                 // Single pass mode: exit after first iteration
                 if (!agentModeEnabled) break
+              }
+              
+              // After agent loop completes, merge file upload contexts with accumulated search contexts
+              if (agentModeEnabled) {
+                // Combine file upload contexts (if any) with accumulated search contexts
+                const allContexts = [...fileUploadContexts, ...accumulatedContexts]
+                if (allContexts.length > 0) {
+                  message.contexts = allContexts
+                  syncAgentMessage()
+                }
               }
             } catch (error) {
               console.error(
@@ -1814,6 +1851,8 @@ export const Chat = memo(
             messageToRegenerate.contexts = []
             messageToRegenerate.wasQueryRewritten = undefined
             messageToRegenerate.queryRewriteText = undefined
+            // TEMP_REMOVE: messageToRegenerate.agentEvents = undefined
+            // TEMP_REMOVE: messageToRegenerate.agentStepNumber = undefined
 
             userMessageToRegenerate = {
               ...prevUserMessage,
@@ -1823,6 +1862,8 @@ export const Chat = memo(
               contexts: [], // Clear contexts for fresh search
               wasQueryRewritten: undefined, // Clear previous query rewrite information
               queryRewriteText: undefined, // Clear previous query rewrite text
+              // TEMP_REMOVE: agentEvents: undefined, // Clear agent events for fresh generation
+              // TEMP_REMOVE: agentStepNumber: undefined, // Clear agent step number
             } as Message
           } else {
             // If regenerating a user message
@@ -1834,6 +1875,8 @@ export const Chat = memo(
               contexts: [], // Clear contexts for fresh search
               wasQueryRewritten: undefined, // Clear previous query rewrite information
               queryRewriteText: undefined, // Clear previous query rewrite text
+              agentEvents: undefined, // Clear agent events for fresh generation
+              agentStepNumber: undefined, // Clear agent step number
             } as Message
           }
 
