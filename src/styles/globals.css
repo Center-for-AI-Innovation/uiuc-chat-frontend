@@ -98,7 +98,7 @@
 
   --border: var(--illinois-storm-light);
   --input: var(--illinois-storm-light);
-  
+
   /* Font Variables */
   --font-montserrat-heading: 'Montserrat', sans-serif;
   --ring: var(--illinois-blue);
@@ -1300,7 +1300,9 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   background-color: var(--modal);
   color: var(--modal-text);
   border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .modal-header-common {
@@ -1442,4 +1444,105 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   color: var(--foreground);
   margin: 0;
   line-height: 1.5;
+}
+
+@layer base {
+  :root {
+    /* HSL versions for Tailwind - WARNING: These override the hex values above */
+    /* Existing components using var(--background) etc. will break if they expect hex values */
+    /* Consider migrating to Tailwind classes or using separate HSL variable names */
+    /* Illinois Blue (#13294b) -> hsl(214, 58%, 19%) */
+    --foreground: 214 58% 19%;
+    /* Illinois White (#ffffff) -> hsl(0, 0%, 100%) */
+    --background: 0 0% 100%;
+    /* Illinois Orange (#ff5f05) -> hsl(18, 100%, 51%) */
+    --primary: 18 100% 51%;
+    --primary-foreground: 0 0% 100%;
+    /* Using foreground for secondary */
+    --secondary: 214 58% 19%;
+    --secondary-foreground: 0 0% 100%;
+    /* Illinois Berry (#5c0e41) -> hsl(323, 75%, 21%) */
+    --destructive: 323 75% 21%;
+    --destructive-foreground: 0 0% 100%;
+    /* Illinois Storm 95 (#f4f4f4) -> hsl(0, 0%, 96%) */
+    --muted: 0 0% 96%;
+    /* Illinois Storm Dark (#707372) -> hsl(150, 1%, 44%) */
+    --muted-foreground: 150 1% 44%;
+    /* Illinois Industrial (#1d58a7) -> hsl(214, 71%, 37%) */
+    --accent: 214 71% 37%;
+    --accent-foreground: 0 0% 100%;
+    /* Illinois Storm Light (#c8c6c7) -> hsl(300, 2%, 78%) */
+    --border: 300 2% 78%;
+    --input: 300 2% 78%;
+    /* Illinois Blue (#13294b) -> hsl(214, 58%, 19%) */
+    --ring: 214 58% 19%;
+    --ring-offset-background: 0 0% 100%;
+
+    /* Card colors - typically same as background */
+    --card: 0 0% 100%;
+    --card-foreground: 214 58% 19%;
+
+    /* Popover colors - typically same as card */
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 58% 19%;
+
+    /* Sidebar colors */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .dark {
+    /* Dark mode HSL values */
+    /* Illinois White -> hsl(0, 0%, 100%) */
+    --foreground: 0 0% 100%;
+    /* Illinois Blue -> hsl(214, 58%, 19%) */
+    --background: 214 58% 19%;
+    /* Illinois Orange -> hsl(18, 100%, 51%) */
+    --primary: 18 100% 51%;
+    --primary-foreground: 214 58% 19%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 214 58% 19%;
+    --destructive: 323 75% 21%;
+    --destructive-foreground: 0 0% 100%;
+    --muted: 214 58% 25%;
+    --muted-foreground: 0 0% 96%;
+    --accent: 214 71% 37%;
+    --accent-foreground: 0 0% 100%;
+    --border: 214 58% 30%;
+    --input: 214 58% 30%;
+    --ring: 214 58% 19%;
+    --ring-offset-background: 214 58% 19%;
+
+    /* Card colors - dark mode */
+    --card: 214 58% 19%;
+    --card-foreground: 0 0% 100%;
+
+    /* Popover colors - dark mode */
+    --popover: 214 58% 19%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Sidebar dark mode */
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
