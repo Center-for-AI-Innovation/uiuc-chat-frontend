@@ -5,18 +5,17 @@ const path = require('path')
 const config = {
   overrides: [
     {
-      extends: [
-        // 'plugin:@typescript-eslint/recommended-requiring-type-checking',
-      ],
       files: ['*.ts', '*.tsx'],
       parserOptions: {
-        project: path.join(__dirname, 'tsconfig.json'),
+        project: true,
+        tsconfigRootDir: __dirname,
       },
     },
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: path.join(__dirname, 'tsconfig.json'),
+    project: true,
+    tsconfigRootDir: __dirname,
   },
   plugins: ['@typescript-eslint', 'tailwindcss'],
   extends: [
