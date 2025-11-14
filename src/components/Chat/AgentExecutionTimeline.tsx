@@ -1,330 +1,226 @@
-import React from 'react'
-import { IconAlertTriangle, IconCircleCheck } from '@tabler/icons-react'
+'use client'
 
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  type AgentEvent,
-  type AgentEventMetadata,
-  type AgentEventStatus,
-  type AgentEventType,
-} from '@/types/chat'
+  ChainOfThought,
+  ChainOfThoughtContent,
+  ChainOfThoughtHeader,
+  ChainOfThoughtStep,
+  ChainOfThoughtSearchResults,
+  ChainOfThoughtSearchResult,
+} from '@/components/ai-elements/chain-of-thought'
+import { cn } from '@/lib/utils'
+import { Search } from 'lucide-react'
+import type { AgentEvent } from '@/types/chat'
 
 interface AgentExecutionTimelineProps {
   events?: AgentEvent[]
 }
 
-interface StepGroup {
-  stepNumber: number
-  events: AgentEvent[]
+const getEventTimestamp = (event: AgentEvent) =>
+  new Date(event.updatedAt ?? event.createdAt ?? 0).getTime()
+
+const summariseEvent = (event: AgentEvent) => {
+  const meta = event.metadata
+
+  if (event.type === 'retrieval') {
+    const query = meta?.contextQuery || 'documents'
+    const count =
+      typeof meta?.contextsRetrieved === 'number'
+        ? meta.contextsRetrieved
+        : undefined
+
+    return {
+      title: `Searching for ${query}`,
+      count: count,
+      detail: '',
+      show: true,
+    }
+  }
+
+  if (event.type === 'final_response') {
+    return {
+      title: 'Response generated',
+      count: undefined,
+      detail: '',
+      show: true,
+    }
+  }
+
+  if (event.type === 'tool') {
+    const tool =
+      meta?.readableToolName ?? meta?.toolName ?? meta?.selectedToolNames?.[0]
+    const output = meta?.outputText
+    return {
+      title: tool || 'Tool executed',
+      count: undefined,
+      detail: output || meta?.info || '',
+      show: true,
+    }
+  }
+
+  // Skip action_selection - redundant
+  return {
+    title: '',
+    count: undefined,
+    detail: '',
+    show: false,
+  }
 }
 
-const typePriority: Record<AgentEventType, number> = {
-  final_response: 0,
-  tool: 1,
-  retrieval: 2,
-  action_selection: 3,
-}
-
-const formatTimestamp = (value?: string) => {
-  if (!value) return null
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
-  return date.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
+// Only filter out action_selection, keep all other events
+const getFilteredEvents = (events: AgentEvent[]): AgentEvent[] => {
+  return events.filter((e) => {
+    const summary = summariseEvent(e)
+    return summary.show
   })
 }
 
-const cleanTitle = (title?: string) => {
-  if (!title) return ''
-  return title.replace(/^Step\s+\d+:\s*/i, '').trim()
-}
-
-const groupEventsByStep = (events: AgentEvent[]): StepGroup[] => {
-  const grouped = new Map<number, AgentEvent[]>()
-
-  events.forEach((event) => {
-    const entry = grouped.get(event.stepNumber) ?? []
-    entry.push(event)
-    grouped.set(event.stepNumber, entry)
-  })
-
-  return Array.from(grouped.entries())
-    .sort(([stepA], [stepB]) => stepA - stepB)
-    .map(([stepNumber, stepEvents]) => ({
-      stepNumber,
-      events: [...stepEvents].sort((a, b) => {
-        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
-        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
-        return timeA - timeB
-      }),
-    }))
-}
-
-const getPrimaryEvent = (events: AgentEvent[]) =>
-  [...events].sort((a, b) => {
-    const priorityDiff = typePriority[a.type] - typePriority[b.type]
-    if (priorityDiff !== 0) return priorityDiff
-
-    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0
-    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0
-    return timeA - timeB
-  })[0]
-
-const truncate = (value: string, max: number) =>
-  value.length > max ? `${value.slice(0, max)}…` : value
-
-const buildMetadataLines = (events: AgentEvent[]) => {
-  const lines: React.ReactNode[] = []
-  const added = new Set<string>()
-
-  const addLine = (key: string, content: React.ReactNode) => {
-    if (added.has(key)) return
-    lines.push(
-      <div key={key} className="leading-relaxed">
-        {content}
-      </div>,
-    )
-    added.add(key)
-  }
-
-  events.forEach((event) => {
-    const metadata = event.metadata
-    if (!metadata) return
-
-    if (metadata.info) {
-      addLine(`info-${event.id}`, metadata.info)
-    }
-
-    if (metadata.selectedToolNames && metadata.selectedToolNames.length > 0) {
-      addLine(
-        `tools-${event.id}`,
-        <>
-          Tools: <span className="font-medium">{metadata.selectedToolNames.join(', ')}</span>
-        </>,
-      )
-    }
-
-    if (event.type === 'retrieval') {
-      const query = metadata.contextQuery
-      const contexts =
-        typeof metadata.contextsRetrieved === 'number'
-          ? `${metadata.contextsRetrieved} document${metadata.contextsRetrieved === 1 ? '' : 's'}`
-          : null
-
-      if (query || contexts) {
-        addLine(
-          `retrieval-${event.id}`,
-          <>
-            Search query: {query ? <span className="font-medium">&ldquo;{truncate(query, 80)}&rdquo;</span> : '—'}
-            {contexts ? <span className="text-[--message]"> · {contexts}</span> : null}
-          </>,
-        )
-      }
-    }
-
-    if (event.type === 'tool') {
-      const toolName = metadata.readableToolName ?? metadata.toolName
-      if (toolName) {
-        addLine(
-          `tool-name-${event.id}`,
-          <>
-            Tool: <span className="font-medium">{toolName}</span>
-          </>,
-        )
-      }
-
-      if (metadata.arguments && Object.keys(metadata.arguments).length > 0) {
-        addLine(
-          `tool-args-${event.id}`,
-          <>
-            Inputs: {truncate(JSON.stringify(metadata.arguments), 100)}
-          </>,
-        )
-      }
-
-      if (metadata.outputText) {
-        addLine(
-          `tool-output-${event.id}`,
-          <>
-            Output: {truncate(metadata.outputText, 120)}
-          </>,
-        )
-      }
-
-      if (metadata.errorMessage) {
-        addLine(
-          `tool-error-${event.id}`,
-          <span className="text-[--badge-error]">Error: {metadata.errorMessage}</span>,
-        )
-      }
-    }
-
-    if (event.type === 'final_response' && metadata.outputText) {
-      addLine(
-        `final-response-${event.id}`,
-        <>
-          Summary: {truncate(metadata.outputText, 140)}
-        </>,
-      )
-    }
-
-    if (metadata.errorMessage && event.type !== 'tool') {
-      addLine(
-        `error-${event.id}`,
-        <span className="text-[--badge-error]">Error: {metadata.errorMessage}</span>,
-      )
-    }
-  })
-
-  return lines
-}
-
-const getGroupStatus = (events: AgentEvent[]): AgentEventStatus => {
-  let hasRunning = false
-  let hasPending = false
-  let hasDone = false
-
-  for (const event of events) {
-    if (event.status === 'error') return 'error'
-    if (event.status === 'running') {
-      hasRunning = true
-      continue
-    }
-    if (event.status === 'pending') {
-      hasPending = true
-      continue
-    }
-    if (event.status === 'done') {
-      hasDone = true
-    }
-  }
-
-  if (hasRunning) return 'running'
-  if (hasPending) return 'pending'
-  if (hasDone) return 'done'
-  return 'pending'
-}
-
-const getGroupTimestamp = (events: AgentEvent[]) => {
-  const latest = events.reduce((acc, event) => {
-    const value = event.updatedAt ?? event.createdAt
-    if (!value) return acc
-    const time = new Date(value).getTime()
-    return time > acc ? time : acc
-  }, 0)
-
-  if (latest === 0) return null
-  return formatTimestamp(new Date(latest).toISOString())
-}
-
-const getGroupLabel = (stepNumber: number, events: AgentEvent[]) => {
-  const primary = getPrimaryEvent(events)
-  if (!primary) return `Step ${stepNumber}`
-
-  if (primary.type === 'action_selection') {
-    return 'Preparing next step'
-  }
-
-  const cleaned = cleanTitle(primary.title)
-  if (cleaned.length > 0) {
-    return cleaned
-  }
-
-  if (primary.type === 'retrieval') return 'Searching documents'
-  if (primary.type === 'tool') return primary.metadata?.readableToolName ?? 'Running tool'
-  if (primary.type === 'final_response') return 'Crafting final response'
-
-  return `Step ${stepNumber}`
-}
-
-const AnimatedDots: React.FC = () => (
-  <span className="agent-thinking-dots" aria-hidden>
-    <span className="agent-thinking-dot" />
-    <span className="agent-thinking-dot" />
-    <span className="agent-thinking-dot" />
-  </span>
-)
-
-const renderStatusBadge = (status: AgentEventStatus) => {
-  switch (status) {
-    case 'running':
-      return (
-        <span className="flex items-center gap-2 rounded-full bg-[--illinois-orange]/10 px-2.5 py-1 text-[11px] font-semibold text-[--illinois-orange]">
-          Thinking
-          <AnimatedDots />
-        </span>
-      )
-    case 'done':
-      return (
-        <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-500">
-          <IconCircleCheck size={14} /> Done
-        </span>
-      )
-    case 'error':
-      return (
-        <span className="flex items-center gap-1 rounded-full bg-[--badge-error]/10 px-2.5 py-1 text-[11px] font-semibold text-[--badge-error]">
-          <IconAlertTriangle size={14} /> Error
-        </span>
-      )
-    case 'pending':
-    default:
-      return (
-        <span className="flex items-center gap-1 rounded-full bg-slate-500/10 px-2.5 py-1 text-[11px] font-semibold text-slate-500">
-          Awaiting
-        </span>
-      )
-  }
-}
-
-export const AgentExecutionTimeline: React.FC<AgentExecutionTimelineProps> = ({
+export const AgentExecutionTimeline = ({
   events,
-}) => {
-  if (!events || events.length === 0) return null
-
-  const groupedSteps = groupEventsByStep(events)
-    // Filter out steps that only contain action_selection events
-    .filter(({ events: stepEvents }) => 
-      stepEvents.some(event => event.type !== 'action_selection')
+}: AgentExecutionTimelineProps) => {
+  const sortedEvents = useMemo(() => {
+    if (!events) return []
+    return [...events].sort(
+      (a, b) => getEventTimestamp(a) - getEventTimestamp(b),
     )
-  if (groupedSteps.length === 0) return null
+  }, [events])
+
+  const filteredEvents = useMemo(
+    () => getFilteredEvents(sortedEvents),
+    [sortedEvents],
+  )
+
+  const previewEvents = useMemo(
+    () => filteredEvents.slice(-5),
+    [filteredEvents],
+  )
+
+  const streaming = useMemo(
+    () =>
+      sortedEvents.some(
+        (event) => event.status === 'running' || event.status === 'pending',
+      ),
+    [sortedEvents],
+  )
+
+  const [isOpen, setIsOpen] = useState(false)
+  const previewRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!streaming || !previewRef.current) return
+    previewRef.current.scrollTo({
+      top: previewRef.current.scrollHeight,
+      behavior: 'smooth',
+    })
+  }, [previewEvents, streaming])
+
+  if (sortedEvents.length === 0) {
+    return null
+  }
+
+  const getStatus = (event: AgentEvent): 'complete' | 'active' | 'pending' => {
+    if (event.status === 'error') return 'complete'
+    if (event.status === 'running') return 'active'
+    if (event.status === 'pending') return 'pending'
+    return 'complete'
+  }
 
   return (
-    <div className="w-full rounded-lg border border-[--border] bg-[--background] px-3 py-3 text-sm shadow-sm sm:px-4">
-      <div className="flex flex-col gap-3">
-        {groupedSteps.map(({ stepNumber, events: stepEvents }) => {
-          const status = getGroupStatus(stepEvents)
-          const label = getGroupLabel(stepNumber, stepEvents)
-          const timestamp = getGroupTimestamp(stepEvents)
-          const metadataLines = buildMetadataLines(stepEvents)
+    <div className="rounded-lg overflow-hidden bg-[--background] shadow-md w-[95%]">
+      <ChainOfThought open={isOpen} onOpenChange={setIsOpen} className="w-full max-w-none [&_.bg-border]:bg-[--foreground-faded]">
+        <ChainOfThoughtHeader className="p-3 pb-0">
+          <div className="flex items-center justify-between w-full">
+            <span>Agent reasoning</span>
+            {streaming && (
+              <span className="flex items-center gap-1.5 text-xs text-[--foreground-faded]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[--primary] animate-pulse" />
+                Active
+              </span>
+            )}
+          </div>
+        </ChainOfThoughtHeader>
+
+        {!isOpen && (
+          <div className="p-3 pt-2 px-3">
+            <div
+              ref={previewRef}
+              className="max-h-20 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,rgba(0,0,0,0.15),rgba(0,0,0,0.6),rgba(0,0,0,1))]"
+            >
+              <div className="space-y-1">
+                {previewEvents.map((event) => {
+                  const { title, count } = summariseEvent(event)
+                  const isRunning = event.status === 'running'
+                  return (
+                    <div
+                      key={event.id}
+                      className="flex items-start gap-2 text-xs"
+                    >
+                      <span
+                        className={cn(
+                          'mt-1.5 h-1 w-1 shrink-0 rounded-full',
+                          isRunning
+                            ? 'bg-[--primary] animate-pulse'
+                            : 'bg-[--foreground-faded]',
+                        )}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[--foreground]">{title}</span>
+                        {count !== undefined && (
+                          <span className="text-[--foreground-faded]">
+                            {' '}
+                            · {count} doc{count === 1 ? '' : 's'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <ChainOfThoughtContent className="p-4">
+        {filteredEvents.map((event) => {
+          const { title, count, detail } = summariseEvent(event)
+          const status = getStatus(event)
+          const icon = event.type === 'retrieval' ? Search : undefined
 
           return (
-            <div key={stepNumber} className="flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-xs font-semibold text-[--message]">
-                    {stepNumber}
-                  </div>
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="truncate font-medium text-[--foreground]">{label}</span>
-                    {timestamp ? (
-                      <span className="text-[11px] text-[--message-faded]">{timestamp}</span>
-                    ) : null}
-                  </div>
+            <ChainOfThoughtStep
+              key={event.id}
+              status={status}
+              icon={icon}
+              label={
+                <div className="space-y-1">
+                  <div className="text-[--foreground]">{title}</div>
+                  {count !== undefined && (
+                    <ChainOfThoughtSearchResults>
+                      <ChainOfThoughtSearchResult
+                        className="bg-[--primary] text-[--primary-foreground] border-0 hover:bg-[--primary]"
+                      >
+                        Found {count} document chunk{count === 1 ? '' : 's'}
+                      </ChainOfThoughtSearchResult>
+                    </ChainOfThoughtSearchResults>
+                  )}
+                  {detail && (
+                    <div className="text-sm text-[--foreground-faded]">
+                      {detail}
+                    </div>
+                  )}
+                  {event.metadata?.errorMessage && (
+                    <div className="text-sm text-red-500">
+                      {event.metadata.errorMessage}
+                    </div>
+                  )}
                 </div>
-                {renderStatusBadge(status)}
-              </div>
-              {metadataLines.length > 0 ? (
-                <div className="pl-10 text-xs text-[--message-faded]">
-                  {metadataLines}
-                </div>
-              ) : null}
-            </div>
+              }
+            />
           )
         })}
-      </div>
+      </ChainOfThoughtContent>
+      </ChainOfThought>
     </div>
   )
 }
-
-export default AgentExecutionTimeline
-
