@@ -1450,7 +1450,7 @@ export const Chat = memo(
             }
 
             if (agentModeEnabled) {
-              const existingEvents = message.agentEvents ?? []
+              const existingEvents: AgentEvent[] = message.agentEvents ?? []
               const maxExistingStep = existingEvents.reduce(
                 (acc, event) => Math.max(acc, event.stepNumber),
                 0,
