@@ -28,7 +28,7 @@ export async function handleFunctionCall(
   try {
     // Convert UIUCTool to OpenAICompatibleTool
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
-    // console.log('OpenAI compatible tools (handle tools): ', openaiKey)
+    
     const url = base_url
       ? `${base_url}/api/chat/openaiFunctionCall`
       : '/api/chat/openaiFunctionCall'
@@ -100,7 +100,8 @@ export async function handleFunctionCall(
     )
 
     // Update the message object with the array of tool invocations
-    message.tools = [...validUiucToolsToRun]
+    // In agent mode (iterative), append to existing tools; otherwise replace
+    message.tools = message.tools ? [...message.tools, ...validUiucToolsToRun] : [...validUiucToolsToRun]
     selectedConversation.messages[selectedConversation.messages.length - 1] =
       message
     console.log(
