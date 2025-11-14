@@ -19,7 +19,9 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/components/ui/*": ["./src/components/shadcn/ui/*"],
+      "@/components/ai-elements/*": ["./src/components/ai-elements/*"]
     },
     "plugins": [
       {
