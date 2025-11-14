@@ -311,9 +311,9 @@ export const Chat = memo(
         llmProviders: AllLLMProviders,
       ) => {
         const startOfHandleSend = performance.now()
-        // TEMP_REMOVE: Clear agent events at the start of a new generation
-        // message.agentEvents = undefined
-        // message.agentStepNumber = undefined
+        // Clear agent events at the start of a new generation
+        message.agentEvents = undefined
+        message.agentStepNumber = undefined
         setCurrentMessage(message)
         resetMessageStates()
 
@@ -391,9 +391,9 @@ export const Chat = memo(
               message.contexts = []
             }
 
-            // TEMP_REMOVE: Clear agent events when regenerating
-            // message.agentEvents = undefined
-            // message.agentStepNumber = undefined
+            // Clear agent events when regenerating
+            message.agentEvents = undefined
+            message.agentStepNumber = undefined
 
             // Remove tools from message to clear old tools
             message.tools = []
@@ -1851,8 +1851,8 @@ export const Chat = memo(
             messageToRegenerate.contexts = []
             messageToRegenerate.wasQueryRewritten = undefined
             messageToRegenerate.queryRewriteText = undefined
-            // TEMP_REMOVE: messageToRegenerate.agentEvents = undefined
-            // TEMP_REMOVE: messageToRegenerate.agentStepNumber = undefined
+            messageToRegenerate.agentEvents = undefined
+            messageToRegenerate.agentStepNumber = undefined
 
             userMessageToRegenerate = {
               ...prevUserMessage,
@@ -1862,8 +1862,8 @@ export const Chat = memo(
               contexts: [], // Clear contexts for fresh search
               wasQueryRewritten: undefined, // Clear previous query rewrite information
               queryRewriteText: undefined, // Clear previous query rewrite text
-              // TEMP_REMOVE: agentEvents: undefined, // Clear agent events for fresh generation
-              // TEMP_REMOVE: agentStepNumber: undefined, // Clear agent step number
+              agentEvents: undefined, // Clear agent events for fresh generation
+              agentStepNumber: undefined, // Clear agent step number
             } as Message
           } else {
             // If regenerating a user message
