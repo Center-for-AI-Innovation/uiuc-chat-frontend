@@ -169,6 +169,9 @@ const ListProjectTable: React.FC = () => {
 
         return (
           <StyledRow
+            role="button"
+            tabindex="0"
+            aria-label={courseName}
             key={courseName}
             onClick={(e) => {
               // Check if cmd (Mac) or ctrl (Windows/Linux) key is pressed
@@ -311,6 +314,8 @@ const ListProjectTable: React.FC = () => {
             >
               You haven&apos;t created any projects yet. Let&apos;s{' '}
               <Link
+                role="button"
+                tabindex="0"
                 className="underline"
                 href="/new"
                 style={{ color: 'var(--illinois-orange)' }}
