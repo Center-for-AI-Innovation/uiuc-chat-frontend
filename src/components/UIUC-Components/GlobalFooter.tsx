@@ -4,7 +4,7 @@ import { ThemeToggle } from './ThemeToggle'
 
 export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
   return (
-    <footer className="footer footer-center rounded p-10 text-base-content">
+    <footer className="footer footer-center rounded bg-[--background] p-10 text-[--foreground] text-base-content">
       {/*       <div className="grid grid-flow-col gap-4"> */}
       <div className="flex flex-col flex-wrap items-center justify-center gap-4 text-[--footer-foreground] sm:flex-row">
         <ThemeToggle />

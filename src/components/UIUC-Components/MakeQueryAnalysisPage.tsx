@@ -1165,8 +1165,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           </div>
 
           {/*<NomicDocumentMap course_name={course_name as string} />*/}
-          <GlobalFooter />
         </main>
+
+        <GlobalFooter />
       </SettingsLayout>
     </>
   )
