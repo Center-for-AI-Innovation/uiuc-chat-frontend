@@ -112,7 +112,7 @@ export function LandingPageHeader({
   const showHamburgerMenu =
     (!showMyChatbotsInNav ||
       !showDocsInNav ||
-      !showNewsInNav ||
+      // !showNewsInNav || // News button hidden
       !showNewProjectInNav) &&
     forGeneralPurposeNotLandingpage === false
 
@@ -189,7 +189,7 @@ export function LandingPageHeader({
     if (
       showMyChatbotsInNav &&
       showDocsInNav &&
-      showNewsInNav &&
+      // showNewsInNav && // News button hidden
       showNewProjectInNav
     ) {
       setIsMenuOpen(false)
@@ -199,7 +199,7 @@ export function LandingPageHeader({
     windowWidth,
     showMyChatbotsInNav,
     showDocsInNav,
-    showNewsInNav,
+    // showNewsInNav, // News button hidden
     showNewProjectInNav,
   ])
 
