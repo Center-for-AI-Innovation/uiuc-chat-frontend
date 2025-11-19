@@ -60,6 +60,7 @@ export const FancyRetrieval = () => {
               Fancy Retrieval
             </Title>
             <Switch
+              tabindex="0"
               disabled={true}
               // checked={useMQRetrieval}
               checked={false}
@@ -90,6 +91,7 @@ export const FancyRetrieval = () => {
             className={`text-right ${isSmallScreen ? 'text-xs' : 'text-sm'} ${montserrat_paragraph.variable} font-montserratParagraph`}
           >
             <Link
+              tabIndex="0"
               href="https://platform.openai.com/account/usage"
               target="_blank"
               className="hover:underline"
