@@ -112,6 +112,8 @@ const Folder = ({
           </div>
         ) : (
           <button
+            tabindex="0"
+            aria-label={isOpen ? 'Close Folder' : 'Open Folder'}
             className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm text-[--foreground] transition-colors duration-200 hover:bg-[--background-faded]`}
             onClick={() => setIsOpen(!isOpen)}
             onDrop={(e) => dropHandler(e)}
@@ -134,6 +136,7 @@ const Folder = ({
         {(isDeleting || isRenaming) && (
           <div className="absolute right-1 z-10 flex">
             <SidebarActionButton
+              ariaLabel={isDeleting ? 'Confirm Delete' : 'Confirm Rename'}
               handleClick={(e) => {
                 e.stopPropagation()
 
@@ -153,6 +156,7 @@ const Folder = ({
               />
             </SidebarActionButton>
             <SidebarActionButton
+              ariaLabel="Cancel"
               handleClick={(e) => {
                 e.stopPropagation()
                 setIsDeleting(false)
@@ -170,6 +174,7 @@ const Folder = ({
         {!isDeleting && !isRenaming && (
           <div className="absolute right-1 z-10 flex">
             <SidebarActionButton
+              ariaLabel="Edit Folder"
               handleClick={(e) => {
                 e.stopPropagation()
                 setIsRenaming(true)
@@ -179,6 +184,7 @@ const Folder = ({
               <IconPencil size={18} />
             </SidebarActionButton>
             <SidebarActionButton
+              ariaLabel="Delete Folder"
               handleClick={(e) => {
                 e.stopPropagation()
                 setIsDeleting(true)

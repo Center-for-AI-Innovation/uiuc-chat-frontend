@@ -194,9 +194,9 @@ const styles = {
 function Logo() {
   return (
     <div className="flex-1">
-      <Link href="/">
+      <Link href="/" tabindex="0" aria-label="Home Page">
         <div
-          className={`ms-4 flex items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
+          className={`ms-4 flex items-center gap-0 font-bold ${montserrat_heading.variable} font-montserratHeading`}
         >
           <div style={{ width: '2.5rem', height: '2.5rem' }}>
             <img
@@ -206,12 +206,9 @@ function Logo() {
               alt="Illinois Logo"
             />
           </div>
+
           <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange-branding] sm:ml-2 sm:text-[1.8rem]">
-            Illinois
-          </div>
-          <br />
-          <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[1.8rem]">
-            Chat
+            Illinois <span className="text-[--foreground]">Chat</span>
           </div>
         </div>
       </Link>
@@ -269,6 +266,8 @@ function NavigationContent({
           <Paper className={classes.dropdown} style={styles}>
             {items.map((item, index) => (
               <Link
+                role="button"
+                tabindex="0"
                 key={index}
                 href={item.link}
                 onClick={() => onLinkClick()}
@@ -287,6 +286,8 @@ function NavigationContent({
         <div className={classes.links}>
           {items.map((item, index) => (
             <Link
+              role="button"
+              tabindex="0"
               key={index}
               href={item.link}
               onClick={() => onLinkClick()}
