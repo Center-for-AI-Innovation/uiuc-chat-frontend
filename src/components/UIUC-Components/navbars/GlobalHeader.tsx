@@ -104,7 +104,8 @@ export function LandingPageHeader({
   // Determine which elements should be visible based on screen width
   const showMyChatbotsInNav = windowWidth >= 580 // New: My Chatbots button
   const showDocsInNav = windowWidth >= 680 // Adjusted to make room for My Chatbots
-  const showNewsInNav = windowWidth >= 740 // Adjusted to make room for My Chatbots
+  // const showNewsInNav = windowWidth >= 740 // Adjusted to make room for My Chatbots
+  const showNewsInNav = false // News button temporarily hidden
   const showNewProjectInNav = windowWidth >= 864 // Adjusted to make room for My Chatbots
 
   // Fix for hamburger menu logic to ensure menu is shown until all items are visible in nav
@@ -475,7 +476,7 @@ export function LandingPageHeader({
                     </Link>
                   )}
 
-                  {!showNewsInNav && (
+                  {/* {!showNewsInNav && (
                     <Link
                       href="http://news.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
@@ -500,7 +501,7 @@ export function LandingPageHeader({
                         </span>
                       </div>
                     </Link>
-                  )}
+                  )} */}
 
                   {/* Show My Chatbots in dropdown whenever not visible in main nav */}
                   {!showMyChatbotsInNav && (
