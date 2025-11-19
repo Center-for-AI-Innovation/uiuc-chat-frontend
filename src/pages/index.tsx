@@ -235,10 +235,10 @@ const Home: NextPage = () => {
                 <h2>
                   Create a chatbot with{' '}
                   <span className="whitespace-nowrap">your content.</span>
-                </h2>
-                <h2 className="mt-4">
-                  Share it with{' '}
-                  <span className="whitespace-nowrap">a click.</span>
+                  <p className="mt-4">
+                    Share it with{' '}
+                    <span className="whitespace-nowrap">a click.</span>
+                  </p>
                 </h2>
               </div>
 

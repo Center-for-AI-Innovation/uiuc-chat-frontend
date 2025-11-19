@@ -316,7 +316,11 @@ export function LandingPageHeader({
         </div>
 
         {/* Navigation links on desktop */}
-        <div className="hidden sm:flex sm:flex-row sm:items-center sm:gap-3">
+        <div
+          role="navigation"
+          aria-label="Main"
+          className="hidden sm:flex sm:flex-row sm:items-center sm:gap-3"
+        >
           {forGeneralPurposeNotLandingpage === false && (
             <>
               {showDocsInNav && (
