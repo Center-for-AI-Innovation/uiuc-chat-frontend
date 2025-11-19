@@ -105,8 +105,9 @@ const ApiPage: NextPage = () => {
             />
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }

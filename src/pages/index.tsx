@@ -901,8 +901,9 @@ const Home: NextPage = () => {
             </div>
           </div>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </>
   )
 }

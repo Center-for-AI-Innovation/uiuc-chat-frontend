@@ -973,8 +973,9 @@ export default function APIKeyInputForm() {
             </div> */}
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }
