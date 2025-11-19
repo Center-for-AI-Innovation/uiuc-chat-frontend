@@ -263,7 +263,12 @@ function NavigationContent({
     <>
       <Transition transition="pop-top-right" duration={200} mounted={opened}>
         {(styles) => (
-          <Paper className={classes.dropdown} style={styles}>
+          <Paper
+            className={classes.dropdown}
+            style={styles}
+            role="navigation"
+            aria-label="Main"
+          >
             {items.map((item, index) => (
               <Link
                 role="button"
@@ -282,7 +287,12 @@ function NavigationContent({
         )}
       </Transition>
 
-      <Container className={classes.inner} style={{ paddingLeft: '0px' }}>
+      <Container
+        className={classes.inner}
+        style={{ paddingLeft: '0px' }}
+        role="navigation"
+        aria-label="Main"
+      >
         <div className={classes.links}>
           {items.map((item, index) => (
             <Link
@@ -302,6 +312,9 @@ function NavigationContent({
       </Container>
 
       <Burger
+        role="button"
+        tabindex="0"
+        aria-label="Toggle Menu"
         opened={opened}
         onClick={onToggle}
         className={classes.burger}
