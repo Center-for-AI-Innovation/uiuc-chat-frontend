@@ -123,15 +123,15 @@ export const APIKeyInput = ({
             }}
           />
           <ActionIcon
+            aria-label="Clear"
             size="xs"
-            color="red"
             onClick={(e) => {
               e.preventDefault()
               field.handleChange('')
               field.form.handleSubmit()
             }}
             type="submit"
-            className="hover:bg-[red] hover:text-[white]"
+            className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] hover:text-[white]"
             style={{ marginLeft: '8px' }}
           >
             <IconX size={12} />
@@ -372,6 +372,7 @@ export const ModelItem = forwardRef<
             <div>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <Image
+                  aria-hidden="true"
                   src={getModelLogo(modelType) || ''}
                   alt={`${modelType} logo`}
                   width={20}
