@@ -7,12 +7,15 @@ import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
 const DisclaimerPage: NextPage = () => {
   return (
-    <MainPageBackground>
-      <p style={{ whiteSpace: 'pre-line' }} className="text-[--foreground]">
-        {disclaimer_string}
-      </p>
+    <>
+      <MainPageBackground>
+        <p style={{ whiteSpace: 'pre-line' }} className="text-[--foreground]">
+          {disclaimer_string}
+        </p>
+      </MainPageBackground>
+
       <GlobalFooter />
-    </MainPageBackground>
+    </>
   )
 }
 

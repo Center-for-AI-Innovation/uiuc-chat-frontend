@@ -2109,8 +2109,9 @@ CRITICAL: The optimized prompt must:
             </Card>
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }
