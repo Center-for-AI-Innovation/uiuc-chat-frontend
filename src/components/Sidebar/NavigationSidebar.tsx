@@ -546,6 +546,8 @@ export default function NavigationSidebar({
           <div className={classes.navSection}>
             {navItems.map((item, index) => (
               <Link
+                tabindex="0"
+                role="button"
                 key={index}
                 href={item.link}
                 prefetch={false}
