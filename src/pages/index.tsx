@@ -249,6 +249,7 @@ const Home: NextPage = () => {
               </div>
 
               <Button
+                tabindex="0"
                 variant="light"
                 style={{
                   backgroundColor: 'var(--illinois-orange)',
@@ -679,11 +680,10 @@ const Home: NextPage = () => {
 
               <Button
                 tabindex="0"
-                className="mt-8 bg-neutral-400"
+                className="mt-8 bg-none focus:bg-[--dashboard-button]"
                 variant="light"
                 style={{
                   color: 'var(--illinois-white)',
-                  backgroundColor: 'transparent',
                   border: '1px solid var(--illinois-white)',
                 }}
                 radius="sm"
