@@ -9,7 +9,8 @@ const keycloakDBConnectionString = `postgres://${process.env.KEYCLOAK_DB_USERNAM
 // Only enable SSL if not connecting to localhost
 const isLocal =
   process.env.POSTGRES_ENDPOINT === "localhost" ||
-  process.env.POSTGRES_ENDPOINT === "127.0.0.1"
+  process.env.POSTGRES_ENDPOINT === "127.0.0.1" ||
+  process.env.POSTGRES_ENDPOINT === "postgres-illinois-chat"
 const clientOptions = isLocal
   ? {}
   : {
