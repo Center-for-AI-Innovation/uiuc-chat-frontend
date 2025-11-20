@@ -118,14 +118,20 @@ export async function getOpenIdConfig(keycloakBaseUrl: string): Promise<any> {
 /**
  * Verify token using JWKS (recommended approach)
  */
-export function createTokenVerifier(keycloakBaseUrl?: string) {
+export function createTokenVerifier(
+  keycloakBaseUrl?: string,
+  issuerUrl?: string
+) {
   if (!keycloakBaseUrl) throw new Error('keycloakBaseUrl is required');
+  
+  // Use provided issuer URL, or derive from keycloakBaseUrl as fallback
+  const issuer = issuerUrl || `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}`;
 
   return {
     // Bind baseUrl so signature becomes (header, callback)
     getKey: getSigningKey.bind(null, keycloakBaseUrl),
     options: {
-      issuer: `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}`,
+      issuer: issuer,
       algorithms: ['RS256'] as jwt.Algorithm[],
     },
   }
@@ -134,9 +140,13 @@ export function createTokenVerifier(keycloakBaseUrl?: string) {
 /**
  * Async wrapper for JWT verification
  */
-export function verifyTokenAsync(token: string, keycloakBaseUrl: string): Promise<any> {
+export function verifyTokenAsync(
+  token: string, 
+  keycloakBaseUrl: string,
+  issuerUrl?: string
+): Promise<any> {
   return new Promise((resolve, reject) => {
-    const verifier = createTokenVerifier(keycloakBaseUrl)
+    const verifier = createTokenVerifier(keycloakBaseUrl, issuerUrl)
     jwt.verify(
       token,
       verifier.getKey,
