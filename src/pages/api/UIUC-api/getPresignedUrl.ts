@@ -3,7 +3,7 @@ import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { getPresignedUrlClient, getPresignedUrlMinioClient } from '~/utils/s3Client'
+import { getPresignedUrlClient, getPresignedUrlVyriadClient } from '~/utils/s3Client'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -20,7 +20,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       let presignedUrl
       if (course_name === 'vyriad' || course_name === 'pubmed') {
         console.log('In the vyriad if statement')
-        const presignedClient = getPresignedUrlMinioClient()
+        const presignedClient = getPresignedUrlVyriadClient()
         if (!presignedClient) {
           throw new Error(
             'MinIO client not configured - missing required environment variables',
