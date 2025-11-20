@@ -89,6 +89,10 @@ const useStyles = createStyles((theme) => ({
       textDecoration: 'none',
     },
 
+    '&:focus': {
+      outline: '2px solid var(--dashboard-button)',
+    },
+
     '&[data-active="true"]': {
       color: 'var(--navbar-active)',
       /*      borderBottom: '2px solid var(--navbar-hover)',*/

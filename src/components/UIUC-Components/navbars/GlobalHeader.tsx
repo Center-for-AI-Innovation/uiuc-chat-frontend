@@ -820,6 +820,9 @@ const useStyles = createStyles((theme) => ({
     '&:hover': {
       backgroundColor: 'rgba(255, 95, 5, 0.05)',
     },
+    '&:focus': {
+      outline: '2px solid var(--dashboard-button)',
+    },
   },
   userAvatar: {
     cursor: 'pointer',
