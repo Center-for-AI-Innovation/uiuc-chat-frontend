@@ -241,7 +241,12 @@ export function LandingPageHeader({
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           {forGeneralPurposeNotLandingpage === false && (
             <>
-              <Link href="/new" className={classes.link}>
+              <Link
+                href="/new"
+                className={classes.link}
+                role="button"
+                tabindex="0"
+              >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconSparkles
                     size={20}
@@ -256,6 +261,8 @@ export function LandingPageHeader({
                 </span>
               </Link>
               <Link
+                role="button"
+                tabindex="0"
                 href="https://docs.uiuc.chat/"
                 className={classes.link}
                 target="_blank"
@@ -293,7 +300,7 @@ export function LandingPageHeader({
         style={{ paddingTop: '16px' }}
       >
         <div
-          className={`relative flex grow items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
+          className={`relative flex grow items-center gap-0 font-bold ${montserrat_heading.variable} font-montserratHeading`}
         >
           <div style={{ width: '2.5rem', height: '2.5rem' }}>
             <img
@@ -302,21 +309,24 @@ export function LandingPageHeader({
               height="100%"
             ></img>
           </div>
-          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
-            Illinois
-          </div>
-          <br />
-          <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[1.8rem]">
-            Chat
+
+          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange-branding] sm:ml-2 sm:text-[1.8rem]">
+            Illinois <span className="text-[--foreground]">Chat</span>
           </div>
         </div>
 
         {/* Navigation links on desktop */}
-        <div className="hidden sm:flex sm:flex-row sm:items-center sm:gap-3">
+        <div
+          role="navigation"
+          aria-label="Main"
+          className="hidden sm:flex sm:flex-row sm:items-center sm:gap-3"
+        >
           {forGeneralPurposeNotLandingpage === false && (
             <>
               {showDocsInNav && (
                 <Link
+                  role="button"
+                  tabindex="0"
                   href="https://docs.uiuc.chat/"
                   className={classes.link}
                   target="_blank"
@@ -343,6 +353,8 @@ export function LandingPageHeader({
 
               {showNewsInNav && (
                 <Link
+                  role="button"
+                  tabindex="0"
                   href="http://news.uiuc.chat/"
                   target="_blank"
                   className={classes.link}
@@ -367,7 +379,12 @@ export function LandingPageHeader({
               )}
 
               {showMyChatbotsInNav && (
-                <Link href="/chatbots" className={classes.link}>
+                <Link
+                  href="/chatbots"
+                  className={classes.link}
+                  role="button"
+                  tabindex="0"
+                >
                   <span className="flex items-center">
                     <IconHome
                       size={18}
@@ -388,7 +405,12 @@ export function LandingPageHeader({
               )}
 
               {showNewProjectInNav && (
-                <Link href="/new" className={classes.link}>
+                <Link
+                  href="/new"
+                  className={classes.link}
+                  role="button"
+                  tabindex="0"
+                >
                   <span className="flex items-center">
                     <IconSparkles
                       size={18}
@@ -421,6 +443,9 @@ export function LandingPageHeader({
           {/* Hamburger menu for small screens */}
           {showHamburgerMenu && (
             <div
+              role="button"
+              tabindex="0"
+              aria-label="Toggle Menu"
               className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
               onClick={(e) => toggleMenu(e)}
               ref={menuButtonRef}
@@ -450,6 +475,8 @@ export function LandingPageHeader({
                   {/* Show Docs in dropdown whenever not visible in main nav */}
                   {!showDocsInNav && (
                     <Link
+                      role="button"
+                      tabindex="0"
                       href="https://docs.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       target="_blank"
@@ -477,6 +504,8 @@ export function LandingPageHeader({
 
                   {!showNewsInNav && (
                     <Link
+                      role="button"
+                      tabindex="0"
                       href="http://news.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       target="_blank"
@@ -505,6 +534,8 @@ export function LandingPageHeader({
                   {/* Show My Chatbots in dropdown whenever not visible in main nav */}
                   {!showMyChatbotsInNav && (
                     <Link
+                      role="button"
+                      tabindex="0"
                       href="/chatbots"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}
@@ -530,6 +561,8 @@ export function LandingPageHeader({
 
                   {!showNewProjectInNav && (
                     <Link
+                      role="button"
+                      tabindex="0"
                       href="/new"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}
@@ -786,6 +819,9 @@ const useStyles = createStyles((theme) => ({
 
     '&:hover': {
       backgroundColor: 'rgba(255, 95, 5, 0.05)',
+    },
+    '&:focus': {
+      outline: '2px solid var(--dashboard-button)',
     },
   },
   userAvatar: {

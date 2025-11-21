@@ -297,6 +297,7 @@ export const UploadCard = memo(function UploadCard({
                 className={`${montserrat_paragraph.variable} font-montserratParagraph`}
               />
               <Button
+                tabindex="0"
                 className="mt-3 w-24 self-end bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
                 onClick={async () => {
                   if (metadata) {
@@ -361,6 +362,7 @@ export const UploadCard = memo(function UploadCard({
                 {isIntroMessageUpdated && (
                   <>
                     <Button
+                      tabindex="0"
                       className="relative m-1 w-[30%] self-end bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
                       type="submit"
                       onClick={async () => {
@@ -420,8 +422,9 @@ export const UploadCard = memo(function UploadCard({
                   This logo will appear in the header of the chat page.
                 </Text>
                 <input
+                  tabindex="0"
                   type="file"
-                  className={`file-input-bordered file-input w-full cursor-pointer border-[--foreground] bg-[--background] text-sm text-[--foreground] shadow-inner hover:border-[--dashboard-button] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                  className={`file-input file-input-bordered w-full cursor-pointer border-2 border-[--foreground] bg-[--background] text-sm text-[--foreground] shadow-inner hover:border-[--dashboard-button] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] focus:border-[--dashboard-button] ${montserrat_paragraph.variable} font-montserratParagraph`}
                   onChange={async (e) => {
                     // Assuming the file is converted to a URL somewhere else
                     if (e.target.files?.length) {

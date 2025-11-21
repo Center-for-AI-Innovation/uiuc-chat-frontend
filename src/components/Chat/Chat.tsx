@@ -208,10 +208,7 @@ export const Chat = memo(
       courseName,
     )
 
-    const deleteMessagesMutation = useDeleteMessages(
-      currentEmail,
-      courseName,
-    )
+    const deleteMessagesMutation = useDeleteMessages(currentEmail, courseName)
 
     // Document Groups
     useEffect(() => {
@@ -1957,6 +1954,7 @@ export const Chat = memo(
             {permission == 'edit' ? (
               <div className="group absolute right-4 top-4 z-20">
                 <button
+                  aria-label="Open Admin Dashboard"
                   className="rounded-md border border-[--dashboard-border] bg-transparent p-[.35rem] text-[--foreground] hover:border-[--dashboard-button] hover:bg-transparent hover:text-[--dashboard-button]"
                   onClick={() => {
                     if (courseName) router.push(`/${courseName}/dashboard`)

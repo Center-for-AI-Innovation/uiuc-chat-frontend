@@ -76,13 +76,13 @@ const CredentialInput = ({
             }}
           />
           <ActionIcon
+            aria-label="Clear"
             size="xs"
-            color="red"
             onClick={(e) => {
               e.preventDefault()
               field.handleChange('')
             }}
-            className="hover:bg-[red] hover:text-[white]"
+            className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground]"
             style={{ marginLeft: '8px' }}
           >
             <IconX size={12} />

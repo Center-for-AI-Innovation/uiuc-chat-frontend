@@ -41,6 +41,7 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
       onClick={handleToggle}
     >
       <Switch
+        aria-label={label}
         checked={checked}
         onClick={handleToggle}
         size="lg"

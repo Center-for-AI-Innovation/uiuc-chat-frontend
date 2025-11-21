@@ -82,8 +82,7 @@ const MakeNewCoursePage = ({
 
   // Check if we're waiting for debounce (user typed but debounce hasn't completed)
   // This handles cases where user types, backspaces, or changes the input while debounce is in progress
-  const isWaitingForDebounce =
-    projectName !== debouncedProjectName
+  const isWaitingForDebounce = projectName !== debouncedProjectName
 
   const handleSubmit = async (
     project_name: string,
@@ -128,7 +127,8 @@ const MakeNewCoursePage = ({
         notifications.show({
           title: 'Failed to create project',
           message:
-            err.message || 'An error occurred while creating the project. Please try again.',
+            err.message ||
+            'An error occurred while creating the project. Please try again.',
           color: 'red',
           autoClose: 5000,
         })
@@ -213,20 +213,21 @@ const MakeNewCoursePage = ({
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
-                          color:
-                            isCheckingAvailability
+                          color: isCheckingAvailability
+                            ? 'var(--foreground)'
+                            : isCourseAvailable && projectName != ''
                               ? 'var(--foreground)'
-                              : isCourseAvailable && projectName != ''
-                                ? 'var(--foreground)'
-                                : projectName !== '' && isCourseAvailable === false
-                                  ? 'red'
-                                  : 'var(--foreground)',
+                              : projectName !== '' &&
+                                  isCourseAvailable === false
+                                ? 'red'
+                                : 'var(--foreground)',
                           '&:focus-within': {
                             borderColor: isCheckingAvailability
                               ? 'var(--foreground)'
                               : isCourseAvailable && projectName !== ''
                                 ? 'green'
-                                : projectName !== '' && isCourseAvailable === false
+                                : projectName !== '' &&
+                                    isCourseAvailable === false
                                   ? 'red'
                                   : 'var(--foreground)',
                           },
@@ -376,8 +377,9 @@ const MakeNewCoursePage = ({
             </Flex>
           </Card>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </>
   )
 }

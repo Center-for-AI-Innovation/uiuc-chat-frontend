@@ -128,9 +128,9 @@ const Dashboard = ({
             </div>
           </div>
         </Card>
-
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </>
   )
 }

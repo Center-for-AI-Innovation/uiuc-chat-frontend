@@ -155,6 +155,7 @@ export const ModelItem = forwardRef<
           <div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Image
+                aria-hidden="true"
                 src={getModelLogo(modelType)}
                 alt={`${modelType} logo`}
                 width={20}

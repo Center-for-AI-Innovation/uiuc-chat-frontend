@@ -182,7 +182,12 @@ export const CitationCard = ({
         }
       }
 
-      const presignedUrl = await fetchPresignedUrl(s3_path, course_name, undefined, downloadFilename)
+      const presignedUrl = await fetchPresignedUrl(
+        s3_path,
+        course_name,
+        undefined,
+        downloadFilename,
+      )
 
       // For PDFs, open in new tab for inline viewing with page number if available
       if (s3_path.toLowerCase().endsWith('.pdf')) {
@@ -258,6 +263,7 @@ export const CitationCard = ({
                 <div className="absolute bottom-0 left-0 right-0">
                   <div className="absolute bottom-2 left-2">
                     <Badge
+                      aria-label={'Citation ' + (index + 1)}
                       color="gray"
                       variant="filled"
                       radius="sm"
@@ -300,6 +306,7 @@ export const CitationCard = ({
                 <div className="absolute bottom-0 left-0 right-0 h-12">
                   <div className="absolute bottom-2 left-2">
                     <Badge
+                      aria-label={'Citation ' + (index + 1)}
                       color="gray"
                       variant="filled"
                       radius="sm"
