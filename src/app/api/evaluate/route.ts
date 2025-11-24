@@ -4,7 +4,6 @@ import { AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { getModels } from '~/pages/api/models'
 import { getChatResponse } from '~/utils/evaluationChatHelper'
 import { fetchContexts } from '~/utils/fetchContexts'
-import { fetchEnabledDocGroups } from '~/db/dbHelpers'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { getBackendUrl } from '~/utils/apiUtils'
 import type {
@@ -141,6 +140,8 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     // Get document groups (default to enabled if not provided)
     let docGroups = body.doc_groups
     if (!docGroups || docGroups.length === 0) {
+      // Dynamic import to avoid database initialization during build
+      const { fetchEnabledDocGroups } = await import('~/db/dbHelpers')
       const enabledGroups = await fetchEnabledDocGroups(body.course_name)
       docGroups = enabledGroups
         .filter((group) => group.enabled)
