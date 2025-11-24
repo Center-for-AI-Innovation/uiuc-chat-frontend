@@ -6,6 +6,7 @@ import { getChatResponse } from '~/utils/evaluationChatHelper'
 import { fetchContexts } from '~/utils/fetchContexts'
 import { fetchEnabledDocGroups } from '~/db/dbHelpers'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
+import { getBackendUrl } from '~/utils/apiUtils'
 import type {
   EvaluationRequest,
   EvaluationResponse,
@@ -207,8 +208,8 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     }
 
     // Call Flask endpoint for ragas evaluation
-    const flaskUrl = process.env.FLASK_EVALUATION_URL || 'http://localhost:5000'
-    const flaskResponse = await fetch(`${flaskUrl}/evaluate`, {
+    const backendUrl = getBackendUrl()
+    const flaskResponse = await fetch(`${backendUrl}/evaluate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
