@@ -8,6 +8,7 @@ import {
   IconMenu2,
   IconMoon,
   IconSun,
+  IconChartBar,
 } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import Link from 'next/link'
@@ -352,6 +353,16 @@ export function ChartDots3Icon() {
   )
 }
 
+export function EvaluationIcon() {
+  return (
+    <IconChartBar
+      size={18}
+      strokeWidth={2}
+      style={{ marginRight: '3px', marginLeft: '3px' }}
+    />
+  )
+}
+
 export function CollapsedThemeToggle() {
   const { theme, setTheme } = useTheme()
 
@@ -444,6 +455,11 @@ export default function NavigationSidebar({
       name: <NavText>API</NavText>,
       icon: <ApiIcon />,
       link: course_name ? `/${course_name}/api` : '/api',
+    },
+    {
+      name: <NavText>Evaluation</NavText>,
+      icon: <EvaluationIcon />,
+      link: course_name ? `/${course_name}/evaluate` : '/evaluate',
     },
   ]
 
