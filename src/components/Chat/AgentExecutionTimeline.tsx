@@ -342,7 +342,7 @@ export const AgentExecutionTimeline = ({
                               r.status === 'error' ? 'bg-red-500' : 'bg-[--foreground-faded]'
                             )} />
                             <span className="flex-1" title={r.query}>
-                              "{r.query}"
+                              {`"${r.query}"`}
                             </span>
                             {r.count !== undefined && r.status === 'done' && (
                               <span className="text-[--foreground-faded]/60 shrink-0">
