@@ -940,7 +940,7 @@ export const Chat = memo(
                       id: 'synthetic-retrieval-tool',
                       name: 'search_documents',
                       readableName: 'Search Documents',
-                      description: `Primary grounding tool for Agent Mode. Invoke this before any other tool unless the immediately previous step already yielded fresh, highly relevant context for the user's latest request. Provide a concise natural-language query summarizing the user goal or follow-up. The tool returns ranked course passages with citation indices; rely on them when forming your answer and cite sources with <cite>n</cite> tags. Additional specialized tools may appear later, but treat them as complementary steps after retrieval.`,
+                      description: `Primary grounding tool for Agent Mode. Invoke this tool to search course documents. For deep research tasks, call this tool multiple times with different queries to explore different aspects, angles, or facets of the topic. Each call should use a distinct, focused query that targets a specific aspect of the research question. The tool returns ranked course passages with citation indices; rely on them when forming your answer and cite sources with <cite>n</cite> tags. Continue calling with varied queries until you have comprehensive coverage of the topic. Additional specialized tools may appear later, but treat them as complementary steps after retrieval.`,
                       inputParameters: {
                         type: 'object' as const,
                         properties: {

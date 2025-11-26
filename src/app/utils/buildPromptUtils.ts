@@ -122,9 +122,10 @@ const getAgentModeSystemPrompt = (): string =>
     backgroundData: `Primary knowledge source: the synthetic "${AGENT_SYNTHETIC_TOOL_NAME}" retrieval tool (call id "synthetic-retrieval-tool"). It delivers curated course passages with citation indices. Additional tools may appear in a session, but treat them as complementary to retrieval, never replacements.`,
     detailedTaskInstructions: `Operating loop:
 1. Parse the latest user intent or follow-up.
-2. Unless the immediately preceding step already retrieved fresh, directly relevant context for this exact question, invoke "${AGENT_SYNTHETIC_TOOL_NAME}" right away with a focused natural-language query that captures the user's need.
-3. Study the returned passages, extract the strongest evidence, and decide whether any other available tools are required. Only call additional tools if they add value beyond the retrieved context, and chain them after retrieval.
-4. Synthesize findings, plan your response, and keep thinking critically between iterations.`,
+2. For research tasks, invoke "${AGENT_SYNTHETIC_TOOL_NAME}" multiple times with different queries to comprehensively explore the topic. Each query should target a distinct aspect, angle, or facet of the research question. Use varied terminology and perspectives to ensure thorough coverage.
+3. After each retrieval, analyze the returned passages and identify gaps or areas needing deeper exploration. Continue calling "${AGENT_SYNTHETIC_TOOL_NAME}" with new queries until you have comprehensive information covering all relevant aspects.
+4. Study all retrieved passages, extract the strongest evidence, and decide whether any other available tools are required. Only call additional tools if they add value beyond the retrieved context, and chain them after retrieval.
+5. Synthesize findings from all retrieval steps, plan your response, and keep thinking critically between iterations.`,
     finalRequest:
       'Always surface the best evidence, cite sources, and state clearly when information is unavailable. Be transparent about every tool result you leverage.',
     chainOfThought:
