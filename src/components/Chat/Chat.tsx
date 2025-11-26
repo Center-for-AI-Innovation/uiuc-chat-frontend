@@ -86,6 +86,9 @@ import {
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
 import { createLogConversationPayload } from '@/utils/app/conversation'
+import { runAgentStream } from '~/hooks/useAgentStream'
+import { type AgentRunRequest, type ClientUIUCTool, type ContextMetadata } from '~/types/agentStream'
+import { type ClientMessage, toClientMessage, toClientConversation } from '~/types/clientConversation'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -926,335 +929,311 @@ export const Chat = memo(
 
           // Action 3: Tool Execution (with Agent Mode support)
           if (tools.length > 0 || agentModeEnabled) {
+            // ========================================
+            // SERVER-SIDE AGENT MODE
+            // ========================================
+            if (agentModeEnabled) {
+              console.log('[Agent Mode] Using SERVER-SIDE agent pipeline')
+              
+              // Prepare the agent request
+              const agentRequest: AgentRunRequest = {
+                conversationId: updatedConversation.id,
+                courseName,
+                userMessage: {
+                  id: message.id,
+                  content: message.content,
+                  imageUrls: message.imageUrls,
+                },
+                documentGroups: enabledDocumentGroups,
+                model: {
+                  id: selectedConversation.model.id,
+                  name: selectedConversation.model.name,
+                },
+                temperature: selectedConversation.temperature,
+                systemPrompt: selectedConversation.prompt,
+                // Pass file upload contexts if any
+                fileUploadContexts: message.contexts?.map((ctx, idx) => ({
+                  id: ctx.id ?? idx,
+                  text: ctx.text,
+                  readable_filename: ctx.readable_filename,
+                  s3_path: ctx.s3_path,
+                  url: ctx.url,
+                })),
+              }
+
+              // Track assistant response building
+              // Note: Citations are processed server-side, so we just accumulate the already-processed content
+              let assistantContent = ''
+              let assistantMessageId: string | null = null
+              let totalContextsRetrieved = 0
+              const toolsExecuted: Array<{ name: string; readableName: string; hasOutput: boolean; hasError: boolean }> = []
+              
+              // Helper to save conversation to localStorage (using lightweight ClientConversation)
+              const saveToLocalStorage = () => {
+                try {
+                  // Convert to ClientConversation to strip heavy context data
+                  const clientConversation = toClientConversation(updatedConversation)
+                  localStorage.setItem('selectedConversation', JSON.stringify(clientConversation))
+                } catch (error) {
+                  // Handle localStorage quota exceeded
+                  if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+                    console.warn('[Agent Mode] localStorage quota exceeded, saving minimal data')
+                    // Save minimal version
+                    const minimalConversation = {
+                      id: updatedConversation.id,
+                      name: updatedConversation.name,
+                      model: updatedConversation.model,
+                      agentModeEnabled: true,
+                    }
+                    localStorage.setItem('selectedConversation', JSON.stringify(minimalConversation))
+                  }
+                }
+              }
+
+              // Helper to update the assistant message in the conversation
+              const updateAssistantMessage = (content: string) => {
+                if (!assistantMessageId) {
+                  // Create new assistant message
+                  assistantMessageId = uuidv4()
+                  const newAssistantMessage: Message = {
+                    id: assistantMessageId,
+                    role: 'assistant',
+                    content: content,
+                    created_at: new Date().toISOString(),
+                  }
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: [...updatedConversation.messages, newAssistantMessage],
+                  }
+                } else {
+                  // Update existing assistant message
+                  const messageIndex = updatedConversation.messages.findIndex(
+                    m => m.id === assistantMessageId
+                  )
+                  if (messageIndex >= 0) {
+                    const updatedMessages = [...updatedConversation.messages]
+                    updatedMessages[messageIndex] = {
+                      ...updatedMessages[messageIndex]!,
+                      content: content,
+                    }
+                    updatedConversation = {
+                      ...updatedConversation,
+                      messages: updatedMessages,
+                    }
+                  }
+                }
+                homeDispatch({
+                  field: 'selectedConversation',
+                  value: updatedConversation,
+                })
+              }
+
+              try {
+                // Initialize agentEvents array on the message before starting
+                // This ensures the UI has something to render immediately
+                message.agentEvents = []
+                syncAgentMessage()
+                
+                posthog.capture('agent_mode_server_run', {
+                  course_name: courseName,
+                  model_id: selectedConversation.model.id,
+                })
+
+                await runAgentStream(agentRequest, {
+                  onAgentEventsUpdate: (agentEvents, messageId) => {
+                    // Update the user message with agent events - this drives the agent timeline UI
+                    message.agentEvents = agentEvents
+                    syncAgentMessage()
+                    // Save to localStorage so timeline state persists across page refreshes
+                    saveToLocalStorage()
+                  },
+                  
+                  onToolsUpdate: (clientTools, messageId) => {
+                    // Update tools on the message (lightweight version without full contexts)
+                    message.tools = clientTools.map((ct): UIUCTool => ({
+                      id: ct.id,
+                      invocationId: ct.invocationId,
+                      name: ct.name,
+                      readableName: ct.readableName,
+                      description: ct.description,
+                      aiGeneratedArgumentValues: ct.aiGeneratedArgumentValues,
+                      output: ct.output ? {
+                        text: ct.output.text,
+                        imageUrls: ct.output.imageUrls,
+                      } : undefined,
+                      error: ct.error,
+                    }))
+                    syncAgentMessage()
+                  },
+                  
+                  onContextsMetadata: (messageId, contextsMetadata, totalContexts) => {
+                    // Create lightweight context objects for citation processing
+                    // These have the metadata needed for citations but not full text
+                    message.contexts = contextsMetadata.map((meta, idx) => ({
+                      id: idx,
+                      text: '', // Not needed for citation links, just metadata
+                      readable_filename: meta.readable_filename,
+                      course_name: courseName,
+                      'course_name ': courseName,
+                      s3_path: meta.s3_path,
+                      pagenumber: String(meta.pagenumber || ''),
+                      url: meta.url || '',
+                      base_url: meta.base_url || '',
+                    }))
+                    syncAgentMessage()
+                  },
+                  
+                  onSelectionStart: (stepNumber) => {
+                    // Agent timeline shows selection running via agentEvents
+                    // No need for isRouting flag for agent mode
+                  },
+                  
+                  onSelectionDone: (stepNumber, event) => {
+                    // Agent timeline shows selection done via agentEvents
+                  },
+                  
+                  onRetrievalStart: (stepNumber, query) => {
+                    homeDispatch({ field: 'isRetrievalLoading', value: true })
+                  },
+                  
+                  onRetrievalDone: (stepNumber, query, contextsRetrieved) => {
+                    homeDispatch({ field: 'isRetrievalLoading', value: false })
+                    totalContextsRetrieved += contextsRetrieved
+                  },
+                  
+                  onToolStart: (stepNumber, toolName, readableToolName) => {
+                    homeDispatch({ field: 'isRunningTool', value: true })
+                  },
+                  
+                  onToolDone: (stepNumber, toolName, output, error) => {
+                    homeDispatch({ field: 'isRunningTool', value: false })
+                    toolsExecuted.push({
+                      name: toolName,
+                      readableName: toolName,
+                      hasOutput: !!output,
+                      hasError: !!error,
+                    })
+                  },
+                  
+                  onFinalTokens: (delta, done) => {
+                    // Citations are already processed server-side
+                    if (done) {
+                      homeDispatch({ field: 'loading', value: false })
+                      homeDispatch({ field: 'messageIsStreaming', value: false })
+                    } else {
+                      homeDispatch({ field: 'loading', value: false })
+                      assistantContent += delta
+                      updateAssistantMessage(assistantContent)
+                    }
+                  },
+                  
+                  onDone: (conversationId, finalMessageId, summary) => {
+                    console.log('[Agent Mode] Server-side agent completed', {
+                      conversationId,
+                      finalMessageId,
+                      totalContextsRetrieved: summary.totalContextsRetrieved,
+                      toolsExecuted: summary.toolsExecuted.length,
+                    })
+                    
+                    homeDispatch({ field: 'loading', value: false })
+                    homeDispatch({ field: 'messageIsStreaming', value: false })
+                    homeDispatch({ field: 'isRouting', value: false })
+                    homeDispatch({ field: 'isRunningTool', value: false })
+                    homeDispatch({ field: 'isRetrievalLoading', value: false })
+                    
+                    // Save final conversation state to localStorage
+                    saveToLocalStorage()
+                    
+                    // Update conversation in query client cache
+                    queryClient.invalidateQueries({
+                      queryKey: ['conversations'],
+                    })
+                    
+                    // Log conversation to server
+                    fetch('/api/conversation', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(createLogConversationPayload(
+                        courseName,
+                        updatedConversation,
+                        null, // Full conversation update
+                      )),
+                    }).catch(err => console.error('Error logging conversation:', err))
+                  },
+                  
+                  onError: (errorMessage, stepNumber, recoverable) => {
+                    console.error('[Agent Mode] Server-side agent error:', errorMessage)
+                    
+                    homeDispatch({ field: 'loading', value: false })
+                    homeDispatch({ field: 'messageIsStreaming', value: false })
+                    homeDispatch({ field: 'isRouting', value: false })
+                    homeDispatch({ field: 'isRunningTool', value: false })
+                    homeDispatch({ field: 'isRetrievalLoading', value: false })
+                    
+                    errorToast({
+                      title: 'Agent Error',
+                      message: errorMessage,
+                    })
+                  },
+                }, controller.signal)
+                
+              } catch (error) {
+                console.error('[Agent Mode] Error running server-side agent:', error)
+                homeDispatch({ field: 'loading', value: false })
+                homeDispatch({ field: 'messageIsStreaming', value: false })
+                
+                errorToast({
+                  title: 'Agent Error',
+                  message: error instanceof Error ? error.message : 'Unknown error',
+                })
+              } finally {
+                homeDispatch({ field: 'isRouting', value: false })
+                homeDispatch({ field: 'isRunningTool', value: false })
+                homeDispatch({ field: 'isRetrievalLoading', value: false })
+              }
+              
+              // Return early - server-side agent handles everything
+              return
+            }
+            
+            // ========================================
+            // CLIENT-SIDE NON-AGENT MODE (single-pass tool execution)
+            // ========================================
             try {
               // Log which pipeline is being used
               console.log(
-                `[Agent Mode] Pipeline: ${agentModeEnabled ? 'AGENT MODE (iterative)' : 'REGULAR (single-pass)'}`,
+                `[Non-Agent Mode] Pipeline: REGULAR (single-pass tool execution)`,
               )
 
-              // If agent mode enabled, add retrieval as a synthetic tool
-              const toolsForAgent = agentModeEnabled
-                ? [
-                    ...tools,
-                    {
-                      id: 'synthetic-retrieval-tool',
-                      name: 'search_documents',
-                      readableName: 'Search Documents',
-                      description: `Primary grounding tool for Agent Mode. Invoke this tool to search course documents. For deep research tasks, call this tool multiple times with different queries to explore different aspects, angles, or facets of the topic. Each call should use a distinct, focused query that targets a specific aspect of the research question. The tool returns ranked course passages with citation indices; rely on them when forming your answer and cite sources with <cite>n</cite> tags. Continue calling with varied queries until you have comprehensive coverage of the topic. Additional specialized tools may appear later, but treat them as complementary steps after retrieval.`,
-                      inputParameters: {
-                        type: 'object' as const,
-                        properties: {
-                          query: {
-                            type: 'string',
-                            description:
-                              "Short natural-language query that captures the user's current need",
-                          },
-                        },
-                        required: ['query'],
-                      },
-                      courseName: courseName,
-                      enabled: true,
-                    } as UIUCTool,
-                  ]
-                : tools
+              // Non-agent mode: just use the provided tools directly
+              const toolsToUse = tools
 
-              // If agent mode enabled, loop up to 20 steps, otherwise single pass
-              const maxSteps = agentModeEnabled ? 20 : 1
-              const seen = new Set<string>()
-              // Preserve file upload contexts separately (if any)
-              const fileUploadContexts: ContextWithMetadata[] = 
-                agentModeEnabled && message.contexts && Array.isArray(message.contexts)
-                  ? [...message.contexts]
-                  : []
-              // Accumulate contexts from all searches in agent mode
-              const accumulatedContexts: ContextWithMetadata[] = []
+              homeDispatch({ field: 'isRouting', value: true })
 
-              const ensureAgentEvents = () => {
-                if (!message.agentEvents) {
-                  message.agentEvents = []
-                  syncAgentMessage()
-                }
-              }
+              // Call tool selection API (single pass)
+              const uiucToolsToRun = await handleFunctionCall(
+                message,
+                toolsToUse,
+                imageUrls,
+                imgDesc,
+                updatedConversation,
+                getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                courseName,
+              )
+              homeDispatch({ field: 'isRouting', value: false })
 
-              const appendAgentEvent = (event: AgentEvent) => {
-                ensureAgentEvents()
-                message.agentEvents = [...(message.agentEvents ?? []), event]
-                syncAgentMessage()
-              }
-
-              const updateAgentEvent = (
-                eventId: string,
-                updates: Partial<AgentEvent> & {
-                  metadata?: AgentEventMetadata
-                },
-              ) => {
-                if (!message.agentEvents) return
-                const nextEvents = message.agentEvents.map((event) => {
-                  if (event.id !== eventId) {
-                    return event
-                  }
-
-                  const mergedMetadata =
-                    updates.metadata || event.metadata
-                      ? { ...event.metadata, ...updates.metadata }
-                      : event.metadata
-
-                  return {
-                    ...event,
-                    ...updates,
-                    ...(mergedMetadata ? { metadata: mergedMetadata } : {}),
-                    updatedAt: new Date().toISOString(),
-                  }
-                })
-
-                message.agentEvents = nextEvents
-                syncAgentMessage()
-              }
-
-              for (let step = 0; step < maxSteps; step++) {
-                homeDispatch({ field: 'isRouting', value: true })
-
-                // Tag message with step number for UI rendering
-                const stepNumber = step + 1
-                message.agentStepNumber = stepNumber
-                syncAgentMessage()
-
-                const selectionEventId = `agent-step-${stepNumber}-selection`
-                if (agentModeEnabled) {
-                  appendAgentEvent({
-                    id: selectionEventId,
-                    stepNumber,
-                    type: 'action_selection',
-                    status: 'running',
-                    title: `Step ${stepNumber}: Selecting next action`,
-                    createdAt: new Date().toISOString(),
-                  })
-                }
-
-                // Call tool selection API
-                const uiucToolsToRun = await handleFunctionCall(
-                  message,
-                  toolsForAgent,
-                  imageUrls,
-                  imgDesc,
-                  updatedConversation,
-                  getOpenAIKey(llmProviders, courseMetadata, apiKey),
-                  courseName,
-                )
-                homeDispatch({ field: 'isRouting', value: false })
-
-                const selectionMetadata: AgentEventMetadata = {
-                  selectedToolNames: uiucToolsToRun.map(
-                    (tool) => tool.readableName,
-                  ),
-                }
-
-                if (agentModeEnabled) {
-                  updateAgentEvent(selectionEventId, {
-                    status: 'done',
-                    metadata:
-                      uiucToolsToRun.length === 0
-                        ? {
-                            ...selectionMetadata,
-                            info: 'Agent will now generate a response.',
-                          }
-                        : selectionMetadata,
-                  })
-                }
-
-                if (uiucToolsToRun.length === 0) break
-
-                // dedupe based on tool name + args
-                const signatures = uiucToolsToRun.map((t) =>
-                  `${t.name}:${JSON.stringify(
-                    t.aiGeneratedArgumentValues || {},
-                  )}`,
-                )
-                const allSeen = signatures.every((s) => seen.has(s))
-                signatures.forEach((s) => seen.add(s))
-                if (allSeen) {
-                  if (agentModeEnabled) {
-                    updateAgentEvent(selectionEventId, {
-                      metadata: {
-                        ...selectionMetadata,
-                        info: 'Skipping repeated tool request.',
-                      },
-                    })
-                  }
-                  break
-                }
-
+              if (uiucToolsToRun.length > 0) {
                 homeDispatch({ field: 'isRunningTool', value: true })
 
-                // Separate synthetic retrieval tool from N8N tools
-                const retrievalTools = uiucToolsToRun.filter(
-                  (t) => t.id === 'synthetic-retrieval-tool',
+                // Execute N8N tools
+                await handleToolCall(
+                  uiucToolsToRun,
+                  updatedConversation,
+                  courseName,
                 )
-                const n8nTools = uiucToolsToRun.filter(
-                  (t) => t.id !== 'synthetic-retrieval-tool',
-                )
-
-                // Execute retrieval tool if requested
-                for (const [retrievalIndex, retrievalTool] of retrievalTools.entries()) {
-                  const searchQuery =
-                    retrievalTool.aiGeneratedArgumentValues?.query || ''
-                  console.log(
-                    `[Agent Mode] Executing retrieval with query: ${searchQuery}`,
-                  )
-
-                  let retrievalEventId = ''
-                  if (agentModeEnabled) {
-                    retrievalEventId = `agent-step-${stepNumber}-retrieval-${retrievalIndex}`
-                    appendAgentEvent({
-                      id: retrievalEventId,
-                      stepNumber,
-                      type: 'retrieval',
-                      status: 'running',
-                      title: `Step ${stepNumber}: Searching documents`,
-                      createdAt: new Date().toISOString(),
-                      metadata: {
-                        contextQuery: searchQuery,
-                      },
-                    })
-                  }
-
-                  try {
-                    homeDispatch({ field: 'isRetrievalLoading', value: true })
-                    // Clear contexts before each search in agent mode to ensure fresh results
-                    // We'll accumulate them separately
-                    if (agentModeEnabled) {
-                      message.contexts = []
-                    }
-                    await handleContextSearch(
-                      message,
-                      courseName,
-                      selectedConversation,
-                      searchQuery,
-                      enabledDocumentGroups,
-                    )
-                    homeDispatch({ field: 'isRetrievalLoading', value: false })
-
-                    // Mark tool as executed with contexts
-                    const contextsFound = message.contexts?.length || 0
-                    const currentSearchContexts = message.contexts || []
-                    
-                    // Accumulate contexts from this search
-                    if (agentModeEnabled) {
-                      accumulatedContexts.push(...currentSearchContexts)
-                    }
-                    
-                    retrievalTool.output = {
-                      text: `Retrieved ${contextsFound} document chunks`,
-                      data: { contexts: message.contexts },
-                    }
-
-                    if (agentModeEnabled && retrievalEventId) {
-                      updateAgentEvent(retrievalEventId, {
-                        status: 'done',
-                        metadata: {
-                          contextQuery: searchQuery,
-                          contextsRetrieved: contextsFound,
-                        },
-                      })
-                    }
-                  } catch (retrievalError) {
-                    if (agentModeEnabled && retrievalEventId) {
-                      updateAgentEvent(retrievalEventId, {
-                        status: 'error',
-                        metadata: {
-                          contextQuery: searchQuery,
-                          errorMessage: (retrievalError as Error).message,
-                        },
-                      })
-                    }
-                    homeDispatch({ field: 'isRetrievalLoading', value: false })
-                    throw retrievalError
-                  }
-                }
-
-                // Execute N8N tools via normal flow
-                const toolEventIds: Record<string, string> = {}
-                if (agentModeEnabled) {
-                  n8nTools.forEach((tool, index) => {
-                    const eventId = `agent-step-${stepNumber}-tool-${
-                      tool.invocationId || `${tool.id}-${index}`
-                    }`
-                    toolEventIds[tool.invocationId || `${tool.id}-${index}`] = eventId
-                    appendAgentEvent({
-                      id: eventId,
-                      stepNumber,
-                      type: 'tool',
-                      status: 'running',
-                      title: `Step ${stepNumber}: ${tool.readableName}`,
-                      createdAt: new Date().toISOString(),
-                      metadata: {
-                        toolName: tool.name,
-                        readableToolName: tool.readableName,
-                        arguments: tool.aiGeneratedArgumentValues,
-                      },
-                    })
-                  })
-                }
-
-                if (n8nTools.length > 0) {
-                  await handleToolCall(
-                    n8nTools,
-                    updatedConversation,
-                    courseName,
-                  )
-                  syncAgentMessage()
-                }
-
-                if (agentModeEnabled) {
-                  n8nTools.forEach((tool, index) => {
-                    const key = tool.invocationId || `${tool.id}-${index}`
-                    const eventId = toolEventIds[key]
-                    if (!eventId) return
-
-                    const targetTool = message.tools?.find((t) =>
-                      tool.invocationId
-                        ? t.invocationId === tool.invocationId
-                        : t.id === tool.id,
-                    )
-
-                    const status: AgentEventStatus = targetTool?.error
-                      ? 'error'
-                      : 'done'
-
-                    const metadata: AgentEventMetadata = {
-                      toolName: targetTool?.name || tool.name,
-                      readableToolName:
-                        targetTool?.readableName || tool.readableName,
-                      arguments:
-                        targetTool?.aiGeneratedArgumentValues ||
-                        tool.aiGeneratedArgumentValues,
-                      outputText: targetTool?.output?.text,
-                      outputData: targetTool?.output?.data,
-                      outputImageUrls: targetTool?.output?.imageUrls,
-                      errorMessage: targetTool?.error,
-                    }
-
-                    updateAgentEvent(eventId, {
-                      status,
-                      metadata,
-                    })
-                  })
-                }
+                syncAgentMessage()
 
                 homeDispatch({ field: 'isRunningTool', value: false })
-
-                // Single pass mode: exit after first iteration
-                if (!agentModeEnabled) break
-              }
-              
-              // After agent loop completes, merge file upload contexts with accumulated search contexts
-              if (agentModeEnabled) {
-                // Combine file upload contexts (if any) with accumulated search contexts
-                const allContexts = [...fileUploadContexts, ...accumulatedContexts]
-                if (allContexts.length > 0) {
-                  message.contexts = allContexts
-                  syncAgentMessage()
-                }
               }
             } catch (error) {
               console.error(
