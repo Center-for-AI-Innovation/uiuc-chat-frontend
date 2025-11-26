@@ -20,7 +20,7 @@ export const runN8nFlowBackend = async (
       data: data,
     })
 
-    const response = await fetch(`${backendUrl}/run_flow`, {
+    const response = await fetch(`http://localhost:8000/run_flow`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
