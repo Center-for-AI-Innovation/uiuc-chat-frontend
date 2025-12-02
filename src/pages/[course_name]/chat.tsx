@@ -90,11 +90,12 @@ const ChatPage: NextPage = () => {
     if (!courseName) return
     const fetchDocumentCount = async () => {
       try {
-        const documentsResponse = await fetch(
-          `/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${courseName}`,
+        const docCountResponse = await fetch(
+          `/api/materialsTable/fetchDocumentCount?course_name=${courseName}`,
         )
-        const documentsData = await documentsResponse.json()
-        setDocumentCount(documentsData.total_count || 0)
+
+        const docCountData = await docCountResponse.json()
+        setDocumentCount(docCountData.total_count || 0)
       } catch (error) {
         console.error('Error fetching document count:', error)
         setDocumentCount(0)
