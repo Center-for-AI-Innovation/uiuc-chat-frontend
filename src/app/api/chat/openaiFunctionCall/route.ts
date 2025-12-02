@@ -3,35 +3,18 @@ import type {
   ChatCompletionMessageParam,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
-import { type Conversation } from '~/types/chat'
+import { type Conversation, type UIUCTool } from '~/types/chat'
 import { persistMessageServer } from '~/pages/api/conversation'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { withCourseAccessFromRequest } from '~/app/api/authorization'
+import { conversationToMessages } from '~/utils/functionCalling/conversationToMessages'
 
 // Change runtime to edge
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 export const revalidate = 0
-
-const conversationToMessages = (
-  inputData: Conversation,
-): ChatCompletionMessageParam[] => {
-  const transformedData: ChatCompletionMessageParam[] = []
-
-  inputData.messages.forEach((message) => {
-    const simpleMessage: ChatCompletionMessageParam = {
-      role: message.role,
-      content: Array.isArray(message.content)
-        ? (message.content[0]?.text ?? '')
-        : message.content,
-    }
-    transformedData.push(simpleMessage)
-  })
-
-  return transformedData
-}
 
 async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   const {
@@ -155,7 +138,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
 
     const toolCalls = data.choices[0].message.tool_calls
 
-    lastMessage.tools = toolCalls as any
+    lastMessage.tools = toolCalls as unknown as UIUCTool[]
     await persistMessageServer({
       conversation,
       message: lastMessage,

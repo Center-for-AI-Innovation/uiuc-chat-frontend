@@ -70,20 +70,23 @@ export async function replaceCitationLinks(
   lastMessage: Message,
   citationLinkCache: Map<number, string>,
   courseName: string,
+  /** Optional server-side presigned URL generator (bypasses API auth) */
+  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
 ): Promise<string> {
   if (!lastMessage.contexts) {
+    console.log('[Citations] No contexts on message, returning sanitized content:', content.substring(0, 100))
     return safeText(content)
   }
 
   // Process citations first - this is the most common case
   // Updated pattern to match multiple citation indices separated by commas
-  // Using bounded whitespace to prevent catastrophic backtracking
-  // Removed extra whitespace from the pattern to prevent capturing it
+  // Using bounded whitespace AND newlines to handle multi-line citations
   const citationPattern =
-    /(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g
+    /(?:&lt;cite|<cite)[\s]{0,100}>([0-9,\s]+)(?:[\s]{0,100},[\s]{0,100}p\.[\s]{0,100}(\d+))?[\s]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g
 
   // Fast path - if no citations, skip the replacement
   if (!citationPattern.test(content)) {
+    console.log('[Citations] Pattern did not match. Content:', content, 'Contexts count:', lastMessage.contexts?.length)
     return safeText(content)
   }
 
@@ -124,6 +127,7 @@ export async function replaceCitationLinks(
           citationLinkCache,
           citationIndex,
           courseName,
+          serverPresignedUrlFn,
         )
 
         // Sanitize all text content and validate URL
@@ -232,6 +236,7 @@ export async function replaceCitationLinks(
         citationLinkCache,
         filenameIndex,
         courseName,
+        serverPresignedUrlFn,
       )
 
       // Sanitize all text content and validate URL
@@ -300,12 +305,13 @@ const getCitationLink = async (
   citationLinkCache: Map<number, string>,
   citationIndex: number,
   courseName: string,
+  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
 ): Promise<string> => {
   const cachedLink = citationLinkCache.get(citationIndex)
   if (cachedLink) {
     return safeUrl(cachedLink) // Validate cached URLs too
   } else {
-    const link = (await generateCitationLink(context, courseName)) as string
+    const link = (await generateCitationLink(context, courseName, serverPresignedUrlFn)) as string
     const safeLink = safeUrl(link)
     if (safeLink) {
       citationLinkCache.set(citationIndex, safeLink)
@@ -317,16 +323,22 @@ const getCitationLink = async (
 /**
  * Generates a citation link based on the context provided.
  * @param {ContextWithMetadata} context - The context containing citation information.
+ * @param {string} courseName - The course name.
+ * @param {Function} serverPresignedUrlFn - Optional server-side presigned URL generator.
  * @returns {Promise<string>} A promise that resolves to the citation link.
  */
 const generateCitationLink = async (
   context: ContextWithMetadata,
   courseName: string,
+  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
 ): Promise<string> => {
   if (context.url) {
     return safeUrl(context.url)
   } else if (context.s3_path) {
-    const presignedUrl = await fetchPresignedUrl(context.s3_path, courseName)
+    // Use server-side function if provided (avoids API auth requirement)
+    const presignedUrl = serverPresignedUrlFn
+      ? await serverPresignedUrlFn(context.s3_path, courseName)
+      : await fetchPresignedUrl(context.s3_path, courseName)
     return safeUrl(presignedUrl || '') // Handle null case by providing empty string fallback
   }
   return ''

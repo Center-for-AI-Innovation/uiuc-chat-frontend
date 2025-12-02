@@ -2105,11 +2105,14 @@ export const ChatMessage = memo(
                                 </>
                               )}
 
+                              {/* Only show "Generating final response" for NON-agent mode.
+                                  Agent mode shows status via AgentExecutionTimeline instead. */}
                               {!isRouting &&
                                 !isRetrievalLoading &&
                                 !isImg2TextLoading &&
                                 !isQueryRewriting &&
                                 loading &&
+                                !selectedConversation?.agentModeEnabled && // Don't show for agent mode
                                 (messageIndex ===
                                   (selectedConversation?.messages.length ?? 0) -
                                     1 ||
