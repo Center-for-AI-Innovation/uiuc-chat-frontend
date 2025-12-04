@@ -7,6 +7,7 @@ import {
 import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import {
   type Conversation as ChatConversation,
+  type SaveConversationDelta,
   type Message as ChatMessage,
   type Content,
   type ContextWithMetadata,
@@ -51,6 +52,118 @@ export function convertChatToDBConversation(
     created_at: chatConversation.createdAt || new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }
+}
+
+export interface PersistMessageServerArgs {
+  conversation: ChatConversation
+  message: ChatMessage
+  courseName: string
+  userIdentifier: string
+}
+
+export async function persistMessageServer({
+  conversation,
+  message,
+  courseName,
+  userIdentifier,
+}: PersistMessageServerArgs) {
+  if (!userIdentifier || userIdentifier.trim() === '') {
+    throw new Error('User identifier is required to persist conversation messages')
+  }
+
+  const conversationData: NewConversations = {
+    id: conversation.id,
+    name: conversation.name,
+    model: conversation.model.id,
+    prompt: conversation.prompt,
+    temperature: conversation.temperature,
+    user_email: userIdentifier,
+    project_name: conversation.projectName || courseName,
+    folder_id: isUUID(conversation.folderId ?? '') ? conversation.folderId : null,
+    created_at: conversation.createdAt
+      ? new Date(conversation.createdAt)
+      : new Date(),
+    updated_at: new Date(),
+  }
+
+  await db
+    .insert(conversationsTable)
+    .values(conversationData)
+    .onConflictDoUpdate({
+      target: conversationsTable.id,
+      set: {
+        name: conversationData.name,
+        model: conversationData.model,
+        prompt: conversationData.prompt,
+        temperature: conversationData.temperature,
+        user_email: conversationData.user_email,
+        project_name: conversationData.project_name,
+        folder_id: conversationData.folder_id,
+        updated_at: new Date(),
+      },
+    })
+
+  const existingMessages = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.conversation_id, conversation.id))
+
+  const newDbMessage = convertChatToDBMessage(message, conversation.id)
+
+  const existingMessage = existingMessages.find(
+    (m) => m.id.toString() === newDbMessage.id,
+  )
+
+  let earliestEditTime: Date | null = null
+  if (existingMessage) {
+    const contentChanged =
+      existingMessage.content_text !== newDbMessage.content_text ||
+      JSON.stringify(existingMessage.contexts) !==
+        JSON.stringify(newDbMessage.contexts) ||
+      JSON.stringify(existingMessage.tools) !==
+        JSON.stringify(newDbMessage.tools) ||
+      existingMessage.latest_system_message !==
+        newDbMessage.latest_system_message ||
+      existingMessage.final_prompt_engineered_message !==
+        newDbMessage.final_prompt_engineered_message
+
+    if (contentChanged) {
+      earliestEditTime = existingMessage.created_at
+        ? new Date(existingMessage.created_at)
+        : new Date()
+    }
+  }
+
+  if (earliestEditTime) {
+    await db
+      .delete(messages)
+      .where(
+        and(
+          eq(sql`${messages.conversation_id}::text`, conversation.id),
+          gt(messages.created_at, earliestEditTime),
+        ),
+      )
+  }
+
+  const baseTime = Date.now()
+  const messageForInsert = {
+    ...newDbMessage,
+    id: newDbMessage.id,
+    created_at: newDbMessage.created_at
+      ? new Date(newDbMessage.created_at)
+      : existingMessage?.created_at
+        ? new Date(existingMessage.created_at)
+        : new Date(baseTime),
+    updated_at: new Date(),
+  }
+
+  await db
+    .insert(messages)
+    .values(messageForInsert as any)
+    .onConflictDoUpdate({
+      target: messages.id,
+      set: messageForInsert as any,
+    })
 }
 
 export function convertDBToChatConversation(
@@ -271,7 +384,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
   switch (method) {
     case 'POST':
-      const { conversation }: { conversation: ChatConversation } = req.body
+      const { conversation }: { conversation?: ChatConversation } = req.body
+      const { delta }: { delta?: SaveConversationDelta } = req.body
       try {
         // Validate user identifier is available
         if (!user_identifier) {
@@ -280,8 +394,154 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             message: 'Cannot save conversation without a valid user identifier',
           })
         }
+        // Branch 1: New delta-based payload
+        if (delta) {
+          const { conversation: meta, messagesDelta } = delta
 
-        // Convert conversation to DB type
+          // Upsert conversation using meta
+          const conversationData: NewConversations = {
+            id: meta.id,
+            name: meta.name,
+            model: meta.modelId,
+            prompt: meta.prompt,
+            temperature: meta.temperature,
+            user_email: user_identifier || null,
+            project_name: meta.projectName,
+            folder_id: isUUID(meta.folderId ?? '') ? meta.folderId : null,
+            created_at: new Date(),
+            updated_at: new Date(),
+          }
+
+          try {
+            await db
+              .insert(conversationsTable)
+              .values(conversationData)
+              .onConflictDoUpdate({
+                target: conversationsTable.id,
+                set: {
+                  name: conversationData.name,
+                  model: conversationData.model,
+                  prompt: conversationData.prompt,
+                  temperature: conversationData.temperature,
+                  user_email: conversationData.user_email,
+                  project_name: conversationData.project_name,
+                  folder_id: conversationData.folder_id,
+                  updated_at: new Date(),
+                },
+              })
+          } catch (error) {
+            console.error('Error upserting conversation (delta) to db:', error)
+            throw error
+          }
+
+          // Fetch existing messages for this conversation
+          const existingMessages = await db
+            .select()
+            .from(messages)
+            .where(eq(messages.conversation_id, meta.id))
+
+          // Detect earliest edited message among the delta set
+          let earliestEditTime: number | null = null
+          for (const newMsg of messagesDelta) {
+            const existing = existingMessages.find(
+              (m) => m.id.toString() === newMsg.id,
+            )
+            if (!existing) continue
+            const newDbMsg = convertChatToDBMessage(newMsg as any, meta.id)
+            const isEdited =
+              existing.content_text !== newDbMsg.content_text ||
+              JSON.stringify(existing.contexts) !==
+                JSON.stringify(newDbMsg.contexts)
+            if (isEdited) {
+              const t = existing.created_at
+                ? new Date(existing.created_at).getTime()
+                : Date.now()
+              earliestEditTime =
+                earliestEditTime == null ? t : Math.min(earliestEditTime, t)
+            }
+          }
+
+          // If edits detected, delete all messages after earliest edited timestamp
+          if (earliestEditTime != null) {
+            try {
+              await db
+                .delete(messages)
+                .where(
+                  and(
+                    eq(sql`${messages.conversation_id}::text`, meta.id),
+                    gt(messages.created_at, new Date(earliestEditTime)),
+                  ),
+                )
+            } catch (error) {
+              console.error(
+                'Error deleting subsequent messages (delta):',
+                error,
+              )
+              throw error
+            }
+          }
+
+          // Upsert delta messages
+          const baseTime = new Date().getTime()
+          const toInsert = messagesDelta.map((m, index) => {
+            const existing = existingMessages.find(
+              (em) => em.id.toString() === m.id,
+            )
+            const created_at =
+              existing?.created_at ||
+              new Date(baseTime + index * 1000).toISOString()
+            return {
+              ...convertChatToDBMessage(m as ChatMessage, meta.id),
+              created_at,
+              updated_at: new Date().toISOString(),
+            }
+          })
+
+          toInsert.sort((a, b) => {
+            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0
+            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0
+            return aTime - bTime
+          })
+
+          for (const message of toInsert) {
+            if (!isUUID(message.id)) {
+              throw new Error(`Invalid UUID for message.id: ${message.id}`)
+            }
+            const messageForInsert = {
+              ...message,
+              id: message.id,
+              created_at: message.created_at
+                ? new Date(message.created_at)
+                : new Date(),
+              updated_at: message.updated_at
+                ? new Date(message.updated_at)
+                : new Date(),
+            }
+            try {
+              await db
+                .insert(messages)
+                .values(messageForInsert as any)
+                .onConflictDoUpdate({
+                  target: messages.id,
+                  set: messageForInsert as any,
+                })
+            } catch (error) {
+              console.error('Error inserting delta message to db:', error)
+              throw error
+            }
+          }
+
+          res
+            .status(200)
+            .json({ message: 'Conversation saved successfully (delta)' })
+          break
+        }
+
+        // Branch 2: Legacy full conversation path (backward compatible)
+        if (!conversation) {
+          return res.status(400).json({ error: 'Invalid request body' })
+        }
+
         const dbConversation = convertChatToDBConversation(conversation)
 
         if (conversation.messages.length === 0) {
@@ -450,7 +710,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           }
         }
 
-        res.status(200).json({ message: 'Conversation saved successfully' })
+        res.status(200).json({
+          message: 'Conversation saved successfully',
+        })
       } catch (error) {
         res
           .status(500)
