@@ -345,6 +345,7 @@ export const saveConversations = (conversations: Conversation[]) => {
 export function createSaveDeltaPayload(
   conversation: Conversation,
   message: Message | null,
+  earliestEditedMessageId?: string,
 ): SaveConversationDelta {
   const meta: ConversationMeta = {
     id: conversation.id,
@@ -362,6 +363,7 @@ export function createSaveDeltaPayload(
   return {
     conversation: meta,
     messagesDelta,
+    earliestEditedMessageId,
   }
 }
 
@@ -369,11 +371,58 @@ export function createLogConversationPayload(
   courseName: string,
   conversation: Conversation,
   message: Message | null,
+  earliestEditedMessageId?: string,
 ) {
   if (message) {
+    let messagesToInclude: Message[] = []
+
+    if (earliestEditedMessageId && conversation.messages) {
+      // Edit case: include all messages from edit point onwards
+      const editIndex = conversation.messages.findIndex(
+        (m) => m.id === earliestEditedMessageId,
+      )
+      if (editIndex >= 0) {
+        messagesToInclude = conversation.messages.slice(editIndex)
+      } else {
+        messagesToInclude = [message]
+      }
+    } else if (conversation.messages && conversation.messages.length >= 2) {
+      // Normal case: include the user message that triggered this response + the assistant response
+      // The user message is the second-to-last, assistant is last
+      const lastIndex = conversation.messages.length - 1
+      const userMessage = conversation.messages[lastIndex - 1]
+      const assistantMessage = conversation.messages[lastIndex]
+      
+      // Only include both if we have a user->assistant pair
+      if (userMessage?.role === 'user' && assistantMessage?.role === 'assistant') {
+        messagesToInclude = [userMessage, assistantMessage]
+      } else {
+        // Fallback: just include the provided message
+        messagesToInclude = [message]
+      }
+    } else {
+      // Single message or fallback
+      messagesToInclude = [message]
+    }
+
+    const meta: ConversationMeta = {
+      id: conversation.id,
+      name: conversation.name,
+      modelId: conversation.model.id,
+      prompt: conversation.prompt,
+      temperature: conversation.temperature,
+      projectName: conversation.projectName,
+      folderId: conversation.folderId || null,
+      userEmail: conversation.userEmail ?? null,
+    }
+
     return {
       course_name: courseName,
-      delta: createSaveDeltaPayload(conversation, message),
+      delta: {
+        conversation: meta,
+        messagesDelta: messagesToInclude,
+        earliestEditedMessageId,
+      } as SaveConversationDelta,
     }
   }
 
