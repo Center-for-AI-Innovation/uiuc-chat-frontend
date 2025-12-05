@@ -206,8 +206,6 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     ? (isOpenRouter ? modelId!.toLowerCase() : modelId) 
     : 'gpt-4.1'
 
-  console.log('[openaiFunctionCall] Using API URL:', apiUrl, 'Model:', model)
-
   try {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -242,10 +240,9 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     }
 
     const data = await response.json()
-    console.log('[openaiFunctionCall] Response:', JSON.stringify(data, null, 2).slice(0, 1000))
+    const apiName = isOpenAICompatible ? 'OpenAI-compatible API' : 'OpenAI'
 
     if (!data.choices) {
-      const apiName = isOpenAICompatible ? 'OpenAI-compatible API' : 'OpenAI'
       console.error(`No response from ${apiName}`)
       return NextResponse.json(
         { error: `No response from ${apiName}` },
@@ -254,9 +251,6 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     }
 
     if (!data.choices[0]?.message.tool_calls) {
-      const apiName = isOpenAICompatible ? 'OpenAI-compatible API' : 'OpenAI'
-      console.log(`No tool calls from ${apiName}, returning model response`)
-      // Return the model's actual response (e.g., asking for clarification)
       const modelContent = data.choices[0]?.message?.content || ''
       return NextResponse.json({
         choices: [

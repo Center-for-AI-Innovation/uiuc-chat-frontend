@@ -27,9 +27,6 @@ export async function handleFunctionCall(
   base_url?: string,
   llmProviders?: AllLLMProviders,
 ): Promise<UIUCTool[]> {
-  if (!course_name) {
-    console.warn('handleFunctionCall: course_name is empty, tools may fail')
-  }
   try {
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
 
