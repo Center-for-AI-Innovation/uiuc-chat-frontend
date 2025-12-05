@@ -93,6 +93,11 @@ export async function runOpenAICompatibleChat(
     const baseUrl = openAICompatibleProvider.baseUrl
 
     const reasoningPattern = detectReasoningRequestPattern(baseUrl)
+    const isOpenRouter = reasoningPattern === 'openrouter'
+    // OpenRouter requires lowercase model IDs
+    const modelId = isOpenRouter 
+      ? conversation.model.id.toLowerCase() 
+      : conversation.model.id
 
     const provider = createOpenAICompatible({
       name: PROVIDER_NAME,
@@ -103,7 +108,7 @@ export async function runOpenAICompatibleChat(
         : undefined,
     })
 
-    const model = provider(conversation.model.id)
+    const model = provider(modelId)
 
     const commonParams = {
       model: model,
@@ -355,9 +360,13 @@ async function handleNonStreamingResponse(
   isReasoningModel: boolean,
 ): Promise<Response> {
   const reasoningPattern = detectReasoningRequestPattern(baseUrl)
+  // OpenRouter requires lowercase model IDs
+  const modelId = reasoningPattern === 'openrouter'
+    ? conversation.model.id.toLowerCase()
+    : conversation.model.id
   
   let requestBody: Record<string, unknown> = {
-    model: conversation.model.id,
+    model: modelId,
     messages: convertConversationToVercelAISDKv3(conversation).map((msg) => ({
       role: msg.role,
       content: msg.content,
