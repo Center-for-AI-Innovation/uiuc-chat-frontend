@@ -160,6 +160,15 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
       if (lastMessage) {
         if (typeof lastMessage.content === 'string') {
           lastMessage.content += `\n\n${imageInfo}`
+        } else if (Array.isArray(lastMessage.content)) {
+          const lastTextPart = [...lastMessage.content]
+            .reverse()
+            .find((p): p is ChatCompletionContentPart & { type: 'text' } => p.type === 'text')
+          if (lastTextPart) {
+            lastTextPart.text += `\n\n${imageInfo}`
+          } else {
+            lastMessage.content.push({ type: 'text', text: imageInfo })
+          }
         }
       }
     } else {
@@ -177,18 +186,32 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
       { status: 400 },
     )
   }
-  const apiUrl = isOpenAICompatible
-    ? `${providerBaseUrl}/chat/completions`
-    : 'https://api.openai.com/v1/chat/completions'
+  let apiUrl: string
+  if (isOpenAICompatible) {
+    // Remove trailing slash if present, then append /chat/completions
+    const baseUrl = providerBaseUrl!.replace(/\/$/, '')
+    apiUrl = `${baseUrl}/chat/completions`
+  } else {
+    apiUrl = 'https://api.openai.com/v1/chat/completions'
+  }
   const model = isOpenAICompatible ? modelId : 'gpt-4.1'
 
+  console.log('[openaiFunctionCall] Using API URL:', apiUrl, 'Model:', model)
+
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${decryptedKey}`,
+    }
+    // OpenRouter requires these headers
+    if (isOpenAICompatible && apiUrl.includes('openrouter')) {
+      headers['HTTP-Referer'] = 'https://uiuc.chat'
+      headers['X-Title'] = 'UIUC.chat'
+    }
+
     const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${decryptedKey}`,
-      },
+      headers,
       body: JSON.stringify({
         model: model,
         messages: message_to_send,
@@ -209,6 +232,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     }
 
     const data = await response.json()
+    console.log('[openaiFunctionCall] Response:', JSON.stringify(data, null, 2).slice(0, 1000))
 
     if (!data.choices) {
       const apiName = isOpenAICompatible ? 'OpenAI-compatible API' : 'OpenAI'
@@ -221,12 +245,14 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
 
     if (!data.choices[0]?.message.tool_calls) {
       const apiName = isOpenAICompatible ? 'OpenAI-compatible API' : 'OpenAI'
-      console.error(`No tool calls from ${apiName}`)
+      console.log(`No tool calls from ${apiName}, returning model response`)
+      // Return the model's actual response (e.g., asking for clarification)
+      const modelContent = data.choices[0]?.message?.content || ''
       return NextResponse.json({
         choices: [
           {
             message: {
-              content: `No tools invoked by ${apiName}`,
+              content: modelContent,
               role: 'assistant',
             },
           },
