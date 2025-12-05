@@ -380,44 +380,29 @@ async function handleStreamingResponse(commonParams: any): Promise<Response> {
     experimental_transform: [smoothStream({ chunking: 'word' })],
   })
   
-  // Use fullStream to catch errors before returning
-  const reader = result.fullStream.getReader()
-  const firstPart = await reader.read()
-  
-  // Check if first part is an error
-  if (!firstPart.done && firstPart.value.type === 'error') {
-    throw firstPart.value.error
-  }
-  
-  // Create a stream that includes the first part
-  const { readable, writable } = new TransformStream()
-  const writer = writable.getWriter()
   const encoder = new TextEncoder()
+  const iterator = result.fullStream[Symbol.asyncIterator]()
   
-  // Write first part if it has text
-  if (!firstPart.done && firstPart.value.type === 'text-delta') {
-    await writer.write(encoder.encode(firstPart.value.textDelta))
+  // Read first part to catch errors before returning
+  const first = await iterator.next()
+  if (!first.done && first.value.type === 'error') {
+    throw first.value.error
   }
   
-  // Pipe rest of stream
-  ;(async () => {
-    try {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        if (value.type === 'text-delta') {
-          await writer.write(encoder.encode(value.textDelta))
-        } else if (value.type === 'error') {
-          throw value.error
-        }
+  const stream = new ReadableStream({
+    async start(controller) {
+      if (!first.done && first.value.type === 'text-delta') {
+        controller.enqueue(encoder.encode(first.value.textDelta))
       }
-      await writer.close()
-    } catch (e) {
-      await writer.abort(e)
-    }
-  })()
+      for await (const part of { [Symbol.asyncIterator]: () => iterator }) {
+        if (part.type === 'error') throw part.error
+        if (part.type === 'text-delta') controller.enqueue(encoder.encode(part.textDelta))
+      }
+      controller.close()
+    },
+  })
   
-  return new Response(readable, {
+  return new Response(stream, {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
   })
 }
