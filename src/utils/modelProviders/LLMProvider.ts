@@ -159,16 +159,26 @@ export const VisionCapableModels: Set<
   // OpenAI-compatible vision-capable models
   OpenAICompatibleModelID.Claude_Haiku_4_5,
   OpenAICompatibleModelID.Claude_Opus_4_1,
+  OpenAICompatibleModelID.Claude_Opus_4_5,
   OpenAICompatibleModelID.Gemini_2_5_Flash_Lite,
+  OpenAICompatibleModelID.Gemini_3_Pro_Preview,
   OpenAICompatibleModelID.Llama_4_Maverick,
   OpenAICompatibleModelID.GPT_4_1,
   OpenAICompatibleModelID.GPT_4o,
   OpenAICompatibleModelID.GPT_5,
+  OpenAICompatibleModelID.GPT_5_1,
+  OpenAICompatibleModelID.GPT_5_1_Chat,
+  OpenAICompatibleModelID.GPT_5_1_Codex,
+  OpenAICompatibleModelID.GPT_5_1_Codex_Mini,
   OpenAICompatibleModelID.o3_Pro,
   OpenAICompatibleModelID.o4_Mini,
   OpenAICompatibleModelID.Qwen3_VL_235B_A22B_Thinking,
+  OpenAICompatibleModelID.Qwen3_VL_32B_Instruct,
+  OpenAICompatibleModelID.Qwen2_5_VL_32B_Instruct,
+  OpenAICompatibleModelID.Qwen2_5_VL_72B_Instruct,
   OpenAICompatibleModelID.GLM_4_1V_9B_Thinking,
   OpenAICompatibleModelID.Grok_4_Fast,
+  OpenAICompatibleModelID.Grok_4_1_Fast,
   OpenAICompatibleModelID.GLM_4_5V,
 ])
 
@@ -177,7 +187,7 @@ export const VisionCapableModels: Set<
  * These models can process <think> tags and have extended thinking enabled
  */
 export const ReasoningCapableModels: Set<
-  AnthropicModelID | OpenAIModelID | OllamaModelIDs
+  AnthropicModelID | OpenAIModelID | OllamaModelIDs | OpenAICompatibleModelID
 > = new Set([
   AnthropicModelID.Claude_3_7_Sonnet_Thinking,
   OpenAIModelID.o3,
@@ -187,6 +197,56 @@ export const ReasoningCapableModels: Set<
   // Add GPT-5 family
   OpenAIModelID.GPT_5_thinking,
   OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
+  // OpenAI-compatible reasoning models
+  // GPT-5 family (all have reasoning capabilities)
+  OpenAICompatibleModelID.GPT_5,
+  OpenAICompatibleModelID.GPT_5_1,
+  OpenAICompatibleModelID.GPT_5_1_Chat,
+  OpenAICompatibleModelID.GPT_5_1_Codex,
+  OpenAICompatibleModelID.GPT_5_1_Codex_Mini,
+  // o3/o4 reasoning models
+  OpenAICompatibleModelID.o3_Pro,
+  OpenAICompatibleModelID.o3_Mini,
+  OpenAICompatibleModelID.o4_Mini,
+  // Claude Opus models (with extended thinking)
+  OpenAICompatibleModelID.Claude_Opus_4_1,
+  OpenAICompatibleModelID.Claude_Opus_4_5,
+  // DeepSeek reasoning models
+  OpenAICompatibleModelID.DeepSeek_R1_Zero,
+  OpenAICompatibleModelID.DeepSeek_R1_0528_Qwen3_8B,
+  OpenAICompatibleModelID.DeepSeek_V3_2,
+  OpenAICompatibleModelID.DeepSeek_V3_2_Speciale,
+  // Qwen reasoning models
+  OpenAICompatibleModelID.Qwen3_32B,
+  OpenAICompatibleModelID.Qwen3_235B_A22B,
+  OpenAICompatibleModelID.Qwen3_VL_235B_A22B_Thinking,
+  // GLM reasoning models
+  OpenAICompatibleModelID.GLM_4_5,
+  OpenAICompatibleModelID.GLM_4_1V_9B_Thinking,
+  // OLMO reasoning models
+  OpenAICompatibleModelID.OLMO_3_7B_Think,
+  OpenAICompatibleModelID.OLMO_3_32B_Think_Free,
+  // Mistral Large (has reasoning capabilities)
+  OpenAICompatibleModelID.Mistral_Large_2512,
+  // Groq reasoning models (use delta.reasoning field)
+  OpenAICompatibleModelID.GPT_OSS_120B,
+  OpenAICompatibleModelID.GPT_OSS_20B,
+  // Cerebras reasoning models (use delta.reasoning field, same as Groq)
+  OpenAICompatibleModelID.Cerebras_GPT_OSS_120B,
+  // Mistral Magistral reasoning models (use content[].type="thinking" format)
+  // Via OpenRouter (mistralai/ prefix)
+  OpenAICompatibleModelID.Magistral_Medium_Latest,
+  OpenAICompatibleModelID.Magistral_Small_Latest,
+  // Via Direct Mistral API (no prefix)
+  OpenAICompatibleModelID.Mistral_Direct_Magistral_Medium,
+  OpenAICompatibleModelID.Mistral_Direct_Magistral_Small,
+  // Ollama reasoning models (self-hosted, use <think> tags natively)
+  OpenAICompatibleModelID.Ollama_GPT_OSS_120B,
+  OpenAICompatibleModelID.Ollama_GPT_OSS_20B,
+  OpenAICompatibleModelID.Ollama_DeepSeek_R1_70B,
+  OpenAICompatibleModelID.Ollama_DeepSeek_R1_32B,
+  OpenAICompatibleModelID.Ollama_DeepSeek_R1_14B,
+  OpenAICompatibleModelID.Ollama_Qwen3_32B,
   // Add other reasoning-capable models as they become available
 ])
 
