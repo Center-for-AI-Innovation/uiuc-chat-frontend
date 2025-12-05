@@ -24,11 +24,20 @@ type ReasoningRequestPattern = 'reasoning_effort' | 'openrouter' | 'none'
  * Only Groq requires special request parameters, others output reasoning by default
  */
 function detectReasoningRequestPattern(baseUrl: string): ReasoningRequestPattern {
-  const url = baseUrl.toLowerCase()
-  // Groq requires reasoning_effort parameter for gpt-oss models
-  if (url.includes('groq.com')) return 'reasoning_effort'
-  // OpenRouter uses providerOptions (handled separately in AI SDK)
-  if (url.includes('openrouter')) return 'openrouter'
+  try {
+    const parsedUrl = new URL(baseUrl)
+    const hostname = parsedUrl.hostname.toLowerCase()
+    // Groq requires reasoning_effort parameter for gpt-oss models
+    if (hostname === 'api.groq.com' || hostname.endsWith('.groq.com')) {
+      return 'reasoning_effort'
+    }
+    // OpenRouter uses providerOptions (handled separately in AI SDK)
+    if (hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')) {
+      return 'openrouter'
+    }
+  } catch {
+    // Invalid URL, fall through to default
+  }
   // All other providers output reasoning by default without special params
   return 'none'
 }
