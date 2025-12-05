@@ -165,10 +165,39 @@ function createReasoningFetchMiddleware(reasoningPattern: ReasoningRequestPatter
     }
     
     const response = await fetch(input, modifiedInit)
-    if (!response.ok || !response.body) return response
+    
+    // For error responses, throw an error that will propagate to the caller
+    if (!response.ok) {
+      const errorBody = await response.text()
+      let errorMessage = `API error ${response.status}`
+      try {
+        const json = JSON.parse(errorBody)
+        errorMessage = json.error?.message || errorMessage
+      } catch { /* not JSON */ }
+      const error = new Error(errorMessage)
+      ;(error as any).status = response.status
+      throw error
+    }
+    
+    if (!response.body) {
+      throw new Error('No response body from API')
+    }
 
     const contentType = response.headers.get('content-type') || ''
-    if (!contentType.includes('text/event-stream')) return response
+    if (!contentType.includes('text/event-stream')) {
+      // Check if it's a JSON error
+      const text = await response.text()
+      try {
+        const json = JSON.parse(text)
+        if (json.error) {
+          throw new Error(json.error.message || JSON.stringify(json.error))
+        }
+      } catch (e) {
+        if (e instanceof Error && e.message !== text) throw e
+      }
+      // Return as response
+      return new Response(text, { status: response.status, headers: response.headers })
+    }
     // Transform stream to extract reasoning
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
@@ -350,7 +379,47 @@ async function handleStreamingResponse(commonParams: any): Promise<Response> {
     ...commonParams,
     experimental_transform: [smoothStream({ chunking: 'word' })],
   })
-  return result.toTextStreamResponse()
+  
+  // Use fullStream to catch errors before returning
+  const reader = result.fullStream.getReader()
+  const firstPart = await reader.read()
+  
+  // Check if first part is an error
+  if (!firstPart.done && firstPart.value.type === 'error') {
+    throw firstPart.value.error
+  }
+  
+  // Create a stream that includes the first part
+  const { readable, writable } = new TransformStream()
+  const writer = writable.getWriter()
+  const encoder = new TextEncoder()
+  
+  // Write first part if it has text
+  if (!firstPart.done && firstPart.value.type === 'text-delta') {
+    await writer.write(encoder.encode(firstPart.value.textDelta))
+  }
+  
+  // Pipe rest of stream
+  ;(async () => {
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        if (value.type === 'text-delta') {
+          await writer.write(encoder.encode(value.textDelta))
+        } else if (value.type === 'error') {
+          throw value.error
+        }
+      }
+      await writer.close()
+    } catch (e) {
+      await writer.abort(e)
+    }
+  })()
+  
+  return new Response(readable, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  })
 }
 
 async function handleNonStreamingResponse(
@@ -519,10 +588,10 @@ function convertConversationToVercelAISDKv3(conversation: Conversation): CoreMes
       } else {
         const textContent =
           typeof contentParts[0] === 'string'
-            ? contentParts[0]
-            : contentParts[0]?.type === 'text'
-              ? contentParts[0].text
-              : ''
+          ? contentParts[0] 
+          : contentParts[0]?.type === 'text' 
+            ? contentParts[0].text 
+            : ''
         if (textContent) {
           coreMessages.push({
             role: message.role as 'user' | 'assistant',
