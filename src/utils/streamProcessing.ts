@@ -821,6 +821,19 @@ export const routeModelRequest = async (
   })
 
   if (
+    chatBody?.llmProviders?.OpenAICompatible?.enabled &&
+    (chatBody.llmProviders.OpenAICompatible.models || []).some(
+      (m) =>
+        m.enabled &&
+        m.id.toLowerCase() === selectedConversation.model.id.toLowerCase(),
+    )
+  ) {
+    return await runOpenAICompatibleChat(
+      selectedConversation,
+      chatBody.llmProviders.OpenAICompatible as OpenAICompatibleProvider,
+      chatBody.stream,
+    )
+  } else if (
     Object.values(NCSAHostedVLMModelID).includes(
       selectedConversation.model.id as any,
     )
@@ -848,17 +861,6 @@ export const routeModelRequest = async (
     return await runAnthropicChat(
       selectedConversation,
       chatBody.llmProviders?.Anthropic as AnthropicProvider,
-      chatBody.stream,
-    )
-  } else if (
-    chatBody?.llmProviders?.OpenAICompatible?.enabled &&
-    (chatBody.llmProviders.OpenAICompatible.models || []).some(
-      (m) => m.enabled && m.id === selectedConversation.model.id,
-    )
-  ) {
-    return await runOpenAICompatibleChat(
-      selectedConversation,
-      chatBody.llmProviders.OpenAICompatible as OpenAICompatibleProvider,
       chatBody.stream,
     )
   } else if (
