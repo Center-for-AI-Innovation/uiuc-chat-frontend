@@ -187,14 +187,24 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     )
   }
   let apiUrl: string
+  let isOpenRouter = false
   if (isOpenAICompatible) {
     // Remove trailing slash if present, then append /chat/completions
     const baseUrl = providerBaseUrl!.replace(/\/$/, '')
     apiUrl = `${baseUrl}/chat/completions`
+    // Check if this is OpenRouter using proper hostname parsing
+    try {
+      const parsedUrl = new URL(providerBaseUrl!)
+      const hostname = parsedUrl.hostname.toLowerCase()
+      isOpenRouter = hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
+    } catch { /* invalid URL */ }
   } else {
     apiUrl = 'https://api.openai.com/v1/chat/completions'
   }
-  const model = isOpenAICompatible ? modelId : 'gpt-4.1'
+  // OpenRouter requires lowercase model IDs
+  const model = isOpenAICompatible 
+    ? (isOpenRouter ? modelId!.toLowerCase() : modelId) 
+    : 'gpt-4.1'
 
   console.log('[openaiFunctionCall] Using API URL:', apiUrl, 'Model:', model)
 
@@ -204,7 +214,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
       Authorization: `Bearer ${decryptedKey}`,
     }
     // OpenRouter requires these headers
-    if (isOpenAICompatible && apiUrl.includes('openrouter')) {
+    if (isOpenRouter) {
       headers['HTTP-Referer'] = 'https://uiuc.chat'
       headers['X-Title'] = 'UIUC.chat'
     }
