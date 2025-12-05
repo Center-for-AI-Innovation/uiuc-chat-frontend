@@ -302,7 +302,8 @@ export default async function chat(
     const isOpenAICompatible =
       llmProviders?.OpenAICompatible?.enabled &&
       (llmProviders.OpenAICompatible.models || []).some(
-        (m: AnySupportedModel) => m.enabled && m.id === selectedModel.id,
+        (m: AnySupportedModel) =>
+          m.enabled && m.id.toLowerCase() === selectedModel.id.toLowerCase(),
       )
 
     if (isOpenAICompatible) {
@@ -324,7 +325,7 @@ export default async function chat(
   }
 
   const chatBody: ChatBody = {
-    conversation,
+    conversation: updatedConversation,
     key: llmProviders[ProviderNames.OpenAI]?.apiKey as string,
     course_name,
     stream,
