@@ -99,15 +99,22 @@ export async function runGeminiChat(
 
   const model = gemini(conversation.model.id)
 
+  // Cap output tokens to a safe maximum (many Gemini endpoints cap at 8k)
+  const safeMaxTokens = Math.min(8192, conversation.model.tokenLimit || 4096)
+
   const commonParams = {
     model: model as any,
     messages: convertConversationToVercelAISDKv3(conversation),
     temperature: conversation.temperature || 0.1,
-    maxTokens: conversation.model.tokenLimit || 4096,
+    maxTokens: safeMaxTokens,
   }
 
+  // Disable streaming for models that don't support it (405 Method Not Allowed)
+  const modelId = conversation.model.id
+  const supportsStreaming = modelId !== 'gemini-2.5-pro-exp-03-25'
+
   try {
-    if (stream) {
+    if (stream && supportsStreaming) {
       const result = await streamText(commonParams)
       return result.toTextStreamResponse()
     } else {
@@ -116,7 +123,7 @@ export async function runGeminiChat(
         choices: [{ message: { content: result.text } }],
       })
     }
-  } catch (error) {
+  } catch (error: any) {
     if (
       error instanceof Error &&
       error.message.includes('Developer instruction is not enabled')
@@ -124,6 +131,14 @@ export async function runGeminiChat(
       throw new Error(
         'This Gemini API key does not have access to the requested model. Please verify your API key permissions in the Google AI Studio.',
       )
+    }
+    // Fallback: if 405 occurs during streaming, retry without streaming
+    const message = (error && (error.message || '')) as string
+    if (stream && message && /405|Method Not Allowed/i.test(message)) {
+      const result = await generateText(commonParams)
+      return NextResponse.json({
+        choices: [{ message: { content: result.text } }],
+      })
     }
     throw error
   }
@@ -147,21 +162,36 @@ function convertConversationToVercelAISDKv3(
   conversation.messages.forEach((message, index) => {
     if (message.role === 'system') return
 
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
+    const isLastUserMessage =
+      index === conversation.messages.length - 1 && message.role === 'user'
+
+    let content: any
+    if (isLastUserMessage && message.finalPromtEngineeredMessage) {
+      content = [{ type: 'text', text: message.finalPromtEngineeredMessage }]
     } else if (Array.isArray(message.content)) {
       content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
+        .map((c) => {
+          if (c.type === 'text') {
+            return { type: 'text', text: c.text }
+          } else if (c.type === 'image_url' && c.image_url?.url) {
+            return { type: 'image', image: c.image_url.url }
+          } else if (c.type === 'tool_image_url' && c.image_url?.url) {
+            return { type: 'image', image: c.image_url.url }
+          }
+          return undefined
+        })
+        .filter(Boolean)
+
+      if (content.length === 0) {
+        content = [{ type: 'text', text: '' }]
+      }
     } else {
-      content = message.content as string
+      content = [{ type: 'text', text: (message.content as string) || '' }]
     }
 
     coreMessages.push({
       role: message.role as 'user' | 'assistant',
-      content: content,
+      content,
     })
   })
 
