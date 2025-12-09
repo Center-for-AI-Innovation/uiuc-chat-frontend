@@ -29,9 +29,6 @@ const tsconfigPath = path.join(projectRoot, 'tsconfig.json')
 const config = {
   overrides: [
     {
-      extends: [
-        // 'plugin:@typescript-eslint/recommended-requiring-type-checking',
-      ],
       files: ['*.ts', '*.tsx'],
       parserOptions: {
         project: [tsconfigPath],
