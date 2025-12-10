@@ -97,6 +97,17 @@ export function withCourseAccess(courseName: string) {
         )
       }
 
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return NextResponse.json(
+          {
+            error: 'Course is temporarily frozen by the administrator',
+            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
+          },
+          { status: 403 },
+        )
+      }
+
       if (!hasCourseAccess(req.user, courseMetadata)) {
         return NextResponse.json(
           {
@@ -138,6 +149,17 @@ export function withCourseAdminAccess(courseName: string) {
             message: `Course '${courseName}' does not exist`,
           },
           { status: 404 },
+        )
+      }
+
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return NextResponse.json(
+          {
+            error: 'Course is temporarily frozen by the administrator',
+            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
+          },
+          { status: 403 },
         )
       }
 
@@ -187,6 +209,17 @@ export function withCourseOwnerAccess(courseName: string) {
             message: `Course '${courseName}' does not exist`,
           },
           { status: 404 },
+        )
+      }
+
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return NextResponse.json(
+          {
+            error: 'Course is temporarily frozen by the administrator',
+            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
+          },
+          { status: 403 },
         )
       }
 
@@ -288,6 +321,17 @@ export function withCourseAccessFromRequest(
             message: `Course '${courseName}' does not exist`,
           },
           { status: 404 },
+        )
+      }
+
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return NextResponse.json(
+          {
+            error: 'Course is temporarily frozen by the administrator',
+            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
+          },
+          { status: 403 },
         )
       }
 
