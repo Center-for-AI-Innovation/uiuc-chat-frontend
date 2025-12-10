@@ -96,7 +96,7 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
           dropdown: classes.userMenu,
         }}
       >
-        <Menu.Target aria-label="User Menu">
+        <Menu.Target>
           <Avatar
             size={size}
             radius="xl"
@@ -107,6 +107,8 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
               deg: 135,
             }}
             className={classes.userAvatar}
+            tabIndex={0}
+            aria-label="User Menu"
           >
             {getInitials(auth.user?.profile.name || '')}
           </Avatar>
