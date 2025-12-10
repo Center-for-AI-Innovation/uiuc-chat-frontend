@@ -95,6 +95,14 @@ export function withCourseAccess(courseName: string) {
         })
       }
 
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return res.status(403).json({
+          error: 'Course is archived',
+          message: `Course '${courseName}' has been archived and is no longer accessible`,
+        })
+      }
+
       // Check if user has access to the course
       if (!hasCourseAccess(req.user, courseMetadata)) {
         return res.status(403).json({
@@ -127,6 +135,14 @@ export function withCourseAdminAccess(courseName: string) {
         return res.status(404).json({
           error: 'Course not found',
           message: `Course '${courseName}' does not exist`,
+        })
+      }
+
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return res.status(403).json({
+          error: 'Course is archived',
+          message: `Course '${courseName}' has been archived and is no longer accessible`,
         })
       }
 
@@ -165,6 +181,14 @@ export function withCourseOwnerAccess(courseName: string) {
         return res.status(404).json({
           error: 'Course not found',
           message: `Course '${courseName}' does not exist`,
+        })
+      }
+
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return res.status(403).json({
+          error: 'Course is archived',
+          message: `Course '${courseName}' has been archived and is no longer accessible`,
         })
       }
 
@@ -209,6 +233,14 @@ export function withCourseOwnerOrAdminAccess() {
         return res.status(404).json({
           error: 'Course not found',
           message: `Course '${courseName}' does not exist`,
+        })
+      }
+
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return res.status(403).json({
+          error: 'Course is archived',
+          message: `Course '${courseName}' has been archived and is no longer accessible`,
         })
       }
 
@@ -310,6 +342,14 @@ export function withCourseAccessFromRequest(
         return res.status(404).json({
           error: 'Course not found',
           message: `Course '${courseName}' does not exist`,
+        })
+      }
+
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return res.status(403).json({
+          error: 'Course is archived',
+          message: `Course '${courseName}' has been archived and is no longer accessible`,
         })
       }
 
