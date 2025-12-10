@@ -98,8 +98,8 @@ export function withCourseAccess(courseName: string) {
       // Check if course is frozen/archived
       if (courseMetadata.is_frozen === true) {
         return res.status(403).json({
-          error: 'Course is archived',
-          message: `Course '${courseName}' has been archived and is no longer accessible`,
+          error: 'Course is temporarily frozen by the administrator',
+          message: `Course '${courseName}' has been temporarily frozen by the administrator`,
         })
       }
 
@@ -141,8 +141,8 @@ export function withCourseAdminAccess(courseName: string) {
       // Check if course is frozen/archived
       if (courseMetadata.is_frozen === true) {
         return res.status(403).json({
-          error: 'Course is archived',
-          message: `Course '${courseName}' has been archived and is no longer accessible`,
+          error: 'Course is temporarily frozen by the administrator',
+          message: `Course '${courseName}' has been temporarily frozen by the administrator`,
         })
       }
 
@@ -187,8 +187,8 @@ export function withCourseOwnerAccess(courseName: string) {
       // Check if course is frozen/archived
       if (courseMetadata.is_frozen === true) {
         return res.status(403).json({
-          error: 'Course is archived',
-          message: `Course '${courseName}' has been archived and is no longer accessible`,
+          error: 'Course is temporarily frozen by the administrator',
+          message: `Course '${courseName}' has been temporarily frozen by the administrator`,
         })
       }
 
@@ -239,8 +239,8 @@ export function withCourseOwnerOrAdminAccess() {
       // Check if course is frozen/archived
       if (courseMetadata.is_frozen === true) {
         return res.status(403).json({
-          error: 'Course is archived',
-          message: `Course '${courseName}' has been archived and is no longer accessible`,
+          error: 'Course is temporarily frozen by the administrator',
+          message: `Course '${courseName}' has been temporarily frozen by the administrator`,
         })
       }
 
@@ -348,8 +348,8 @@ export function withCourseAccessFromRequest(
       // Check if course is frozen/archived
       if (courseMetadata.is_frozen === true) {
         return res.status(403).json({
-          error: 'Course is archived',
-          message: `Course '${courseName}' has been archived and is no longer accessible`,
+          error: 'Course is temporarily frozen by the administrator',
+          message: `Course '${courseName}' has been temporarily frozen by the administrator`,
         })
       }
 

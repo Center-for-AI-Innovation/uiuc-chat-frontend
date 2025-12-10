@@ -101,8 +101,8 @@ export function withCourseAccess(courseName: string) {
       if (courseMetadata.is_frozen === true) {
         return NextResponse.json(
           {
-            error: 'Course is archived',
-            message: `Course '${courseName}' has been archived and is no longer accessible`,
+            error: 'Course is temporarily frozen by the administrator',
+            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
           },
           { status: 403 },
         )
@@ -156,8 +156,8 @@ export function withCourseAdminAccess(courseName: string) {
       if (courseMetadata.is_frozen === true) {
         return NextResponse.json(
           {
-            error: 'Course is archived',
-            message: `Course '${courseName}' has been archived and is no longer accessible`,
+            error: 'Course is temporarily frozen by the administrator',
+            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
           },
           { status: 403 },
         )
@@ -216,8 +216,8 @@ export function withCourseOwnerAccess(courseName: string) {
       if (courseMetadata.is_frozen === true) {
         return NextResponse.json(
           {
-            error: 'Course is archived',
-            message: `Course '${courseName}' has been archived and is no longer accessible`,
+            error: 'Course is temporarily frozen by the administrator',
+            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
           },
           { status: 403 },
         )
@@ -328,8 +328,8 @@ export function withCourseAccessFromRequest(
       if (courseMetadata.is_frozen === true) {
         return NextResponse.json(
           {
-            error: 'Course is archived',
-            message: `Course '${courseName}' has been archived and is no longer accessible`,
+            error: 'Course is temporarily frozen by the administrator',
+            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
           },
           { status: 403 },
         )
