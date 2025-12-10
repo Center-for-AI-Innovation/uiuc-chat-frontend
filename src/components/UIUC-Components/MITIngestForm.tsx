@@ -106,7 +106,7 @@ export default function MITIngestForm({
       >
         <DialogTrigger
           asChild
-          tabindex="0"
+          tabIndex={0}
           className="focus:bg-[--dashboard-background-dark]"
         >
           <Card
