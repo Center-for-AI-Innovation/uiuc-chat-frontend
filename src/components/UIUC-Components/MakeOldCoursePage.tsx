@@ -112,8 +112,9 @@ const MakeOldCoursePage = ({
             {/* <NomicDocumentsCard course_name={course_name} metadata={metadata} /> */}
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }
