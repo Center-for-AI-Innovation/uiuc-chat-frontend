@@ -149,7 +149,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         }}
       >
         <button
-          tabindex="0"
+          tabIndex={0}
           aria-label="Copy"
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
@@ -184,7 +184,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         }}
       >
         <button
-          tabindex="0"
+          tabIndex={0}
           aria-label={isThumbsUp ? 'Remove Good Response' : 'Good Response'}
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
@@ -224,7 +224,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         }}
       >
         <button
-          tabindex="0"
+          tabIndex={0}
           aria-label={isThumbsDown ? 'Remove Bad Response' : 'Bad Response'}
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
@@ -256,7 +256,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         }}
       >
         <button
-          tabindex="0"
+          tabIndex={0}
           aria-label="Regenerate Response"
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage

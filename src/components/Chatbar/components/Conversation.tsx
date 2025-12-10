@@ -116,6 +116,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
         >
           <IconMessage size={16} className="text-[--sidebar]" />
           <input
+            aria-label="Rename Chat Input"
             className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar] outline-none"
             type="text"
             value={renameValue}
@@ -126,7 +127,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
         </div>
       ) : (
         <button
-          tabindex="0"
+          tabIndex={0}
           aria-label={'Select Chat, ' + conversation.name}
           className={`flex w-full cursor-pointer items-start gap-3 rounded-lg p-3 text-[.75rem] transition-colors duration-200 ${
             messageIsStreaming ? 'disabled:cursor-not-allowed' : ''
