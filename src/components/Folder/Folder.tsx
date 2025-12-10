@@ -20,6 +20,9 @@ import HomeContext from '~/pages/api/home/home.context'
 
 import SidebarActionButton from '@/components/Buttons/SidebarActionButton'
 
+import { Tooltip } from '@mantine/core'
+
+
 interface Props {
   currentFolder: FolderInterface
   searchTerm: string
@@ -28,11 +31,11 @@ interface Props {
 }
 
 const Folder = ({
-  currentFolder,
-  searchTerm,
-  handleDrop,
-  folderComponent,
-}: Props) => {
+                  currentFolder,
+                  searchTerm,
+                  handleDrop,
+                  folderComponent,
+                }: Props) => {
   const { handleDeleteFolder, handleUpdateFolder } = useContext(HomeContext)
 
   const [isDeleting, setIsDeleting] = useState(false)
@@ -114,7 +117,7 @@ const Folder = ({
           <button
             tabindex="0"
             aria-label={isOpen ? 'Close Folder' : 'Open Folder'}
-            className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm text-[--foreground] transition-colors duration-200 hover:bg-[--background-faded]`}
+            className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 pr-14 text-sm text-[--foreground] transition-colors duration-200 hover:bg-[--background-faded]`}
             onClick={() => setIsOpen(!isOpen)}
             onDrop={(e) => dropHandler(e)}
             onDragOver={allowDrop}
@@ -126,10 +129,17 @@ const Folder = ({
             ) : (
               <IconCaretRight size={18} />
             )}
-
-            <div className="relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3">
-              {currentFolder.name}
-            </div>
+            <Tooltip
+              label={currentFolder.name}
+              position="top-end"
+              withArrow
+              multiline
+            >
+              <div
+                className="relative max-h-5 min-w-0 flex-1 truncate text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3">
+                {currentFolder.name}
+              </div>
+            </Tooltip>
           </button>
         )}
 
