@@ -245,7 +245,7 @@ export function LandingPageHeader({
                 href="/new"
                 className={classes.link}
                 role="button"
-                tabindex="0"
+                tabIndex={0}
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconSparkles
@@ -262,7 +262,7 @@ export function LandingPageHeader({
               </Link>
               <Link
                 role="button"
-                tabindex="0"
+                tabIndex={0}
                 href="https://docs.uiuc.chat/"
                 className={classes.link}
                 target="_blank"
@@ -304,6 +304,7 @@ export function LandingPageHeader({
         >
           <div style={{ width: '2.5rem', height: '2.5rem' }}>
             <img
+              alt="Illinois Logo"
               src="/media/logo_illinois.png"
               width="auto"
               height="100%"
@@ -326,7 +327,7 @@ export function LandingPageHeader({
               {showDocsInNav && (
                 <Link
                   role="button"
-                  tabindex="0"
+                  tabIndex={0}
                   href="https://docs.uiuc.chat/"
                   className={classes.link}
                   target="_blank"
@@ -354,7 +355,7 @@ export function LandingPageHeader({
               {showNewsInNav && (
                 <Link
                   role="button"
-                  tabindex="0"
+                  tabIndex={0}
                   href="http://news.uiuc.chat/"
                   target="_blank"
                   className={classes.link}
@@ -383,7 +384,7 @@ export function LandingPageHeader({
                   href="/chatbots"
                   className={classes.link}
                   role="button"
-                  tabindex="0"
+                  tabIndex={0}
                 >
                   <span className="flex items-center">
                     <IconHome
@@ -409,7 +410,7 @@ export function LandingPageHeader({
                   href="/new"
                   className={classes.link}
                   role="button"
-                  tabindex="0"
+                  tabIndex={0}
                 >
                   <span className="flex items-center">
                     <IconSparkles
@@ -444,7 +445,7 @@ export function LandingPageHeader({
           {showHamburgerMenu && (
             <div
               role="button"
-              tabindex="0"
+              tabIndex={0}
               aria-label="Toggle Menu"
               className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
               onClick={(e) => toggleMenu(e)}
@@ -476,7 +477,7 @@ export function LandingPageHeader({
                   {!showDocsInNav && (
                     <Link
                       role="button"
-                      tabindex="0"
+                      tabIndex={0}
                       href="https://docs.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       target="_blank"
@@ -505,7 +506,7 @@ export function LandingPageHeader({
                   {!showNewsInNav && (
                     <Link
                       role="button"
-                      tabindex="0"
+                      tabIndex={0}
                       href="http://news.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       target="_blank"
@@ -535,7 +536,7 @@ export function LandingPageHeader({
                   {!showMyChatbotsInNav && (
                     <Link
                       role="button"
-                      tabindex="0"
+                      tabIndex={0}
                       href="/chatbots"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}
@@ -562,7 +563,7 @@ export function LandingPageHeader({
                   {!showNewProjectInNav && (
                     <Link
                       role="button"
-                      tabindex="0"
+                      tabIndex={0}
                       href="/new"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}

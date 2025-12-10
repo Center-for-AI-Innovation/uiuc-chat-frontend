@@ -138,7 +138,7 @@ export default function CanvasIngestForm({
       >
         <DialogTrigger
           asChild
-          tabindex="0"
+          tabIndex={0}
           className="focus:bg-[--dashboard-background-dark]"
         >
           <Card

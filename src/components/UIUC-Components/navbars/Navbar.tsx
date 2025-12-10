@@ -198,7 +198,7 @@ const styles = {
 function Logo() {
   return (
     <div className="flex-1">
-      <Link href="/" tabindex="0" aria-label="Home Page">
+      <Link href="/" tabIndex={0} aria-label="Home Page">
         <div
           className={`ms-4 flex items-center gap-0 font-bold ${montserrat_heading.variable} font-montserratHeading`}
         >
@@ -276,7 +276,7 @@ function NavigationContent({
             {items.map((item, index) => (
               <Link
                 role="button"
-                tabindex="0"
+                tabIndex={0}
                 key={index}
                 href={item.link}
                 onClick={() => onLinkClick()}
@@ -301,7 +301,7 @@ function NavigationContent({
           {items.map((item, index) => (
             <Link
               role="button"
-              tabindex="0"
+              tabIndex={0}
               key={index}
               href={item.link}
               onClick={() => onLinkClick()}
@@ -317,7 +317,7 @@ function NavigationContent({
 
       <Burger
         role="button"
-        tabindex="0"
+        tabIndex={0}
         aria-label="Toggle Menu"
         opened={opened}
         onClick={onToggle}

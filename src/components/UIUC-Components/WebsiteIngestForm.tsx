@@ -216,10 +216,7 @@ export default function WebsiteIngestForm({
             if (!isStillIngesting) {
               // Check if any child URLs are still in progress
               const childFiles = currentFiles.filter(
-                (f) =>
-                  f.url &&
-                  f.url !== fileUrl &&
-                  f.url.startsWith(fileUrl),
+                (f) => f.url && f.url !== fileUrl && f.url.startsWith(fileUrl),
               )
               const allChildrenDone =
                 childFiles.length === 0 ||
@@ -395,7 +392,7 @@ export default function WebsiteIngestForm({
         <DialogTrigger
           asChild
           role="link"
-          tabindex="0"
+          tabIndex={0}
           className="focus:bg-[--dashboard-background-dark]"
         >
           <Card
@@ -404,8 +401,7 @@ export default function WebsiteIngestForm({
           >
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div
-                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
                   <IconWorldDownload className="h-8 w-8" />
                 </div>
                 <Text className="text-xl font-semibold text-[--dashboard-foreground]">
@@ -429,8 +425,7 @@ export default function WebsiteIngestForm({
           </Card>
         </DialogTrigger>
 
-        <DialogContent
-          className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
+        <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-2 text-left text-xl font-bold">
               Ingest Website
