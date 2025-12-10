@@ -43,10 +43,10 @@ const montserrat_med = Montserrat({
   subsets: ['latin'],
 })
 export default function WebsiteIngestForm({
-                                            project_name,
-                                            setUploadFiles,
-                                            queryClient,
-                                          }: {
+  project_name,
+  setUploadFiles,
+  queryClient,
+}: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
@@ -392,7 +392,12 @@ export default function WebsiteIngestForm({
           }
         }}
       >
-        <DialogTrigger asChild>
+        <DialogTrigger
+          asChild
+          role="link"
+          tabindex="0"
+          className="focus:bg-[--dashboard-background-dark]"
+        >
           <Card
             className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}

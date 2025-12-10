@@ -194,8 +194,9 @@ export const CannotViewCourse = ({
             </Title>
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </>
   )
 }

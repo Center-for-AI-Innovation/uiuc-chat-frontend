@@ -10,7 +10,8 @@
 
 :root {
   /* Primary Colors */
-  --illinois-orange: #ff5f05;
+  --illinois-orange: #ff5f05; /* will override below to be accessible orange, left here for reference */
+  --illinois-orange-branding: #ff5f05; /* official logo color for branding ONLY - used for illinois chat logo / branding to match I logo */
   --illinois-blue: #13294b;
 
   /* Secondary Colors (Storm) */
@@ -32,6 +33,9 @@
   /* Accessibility Colors */
   --illinois-altgeld: #c84113;
 
+  /* change illinois-orange to accessibility orange */
+  --illinois-orange: var(--illinois-altgeld);
+
   /* Background Colors */
   --illinois-storm-95: #f4f4f4;
   --illinois-storm-10: #252525;
@@ -48,7 +52,11 @@
 
   /* Gradients */
   --illinois-blue-gradient: linear-gradient(135deg, #1d58a7, #13294b);
-  --illinois-orange-gradient: linear-gradient(-135deg, #fcb316, #ff5f05);
+  --illinois-orange-gradient: linear-gradient(
+    -135deg,
+    #fcb316,
+    var(--illinois-orange)
+  );
 
   /* Scrollbar Colors */
   --illinois-scrollbar-track: transparent;
@@ -71,7 +79,7 @@
   --foreground-faded: color-mix(
     in srgb,
     var(--foreground),
-    var(--background) 50%
+    var(--background) 40%
   );
 
   --background-dark: color-mix(in srgb, var(--background), black 25%);
@@ -98,7 +106,7 @@
 
   --border: var(--illinois-storm-light);
   --input: var(--illinois-storm-light);
-  
+
   /* Font Variables */
   --font-montserrat-heading: 'Montserrat', sans-serif;
   --ring: var(--illinois-blue);
@@ -1300,7 +1308,9 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   background-color: var(--modal);
   color: var(--modal-text);
   border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .modal-header-common {

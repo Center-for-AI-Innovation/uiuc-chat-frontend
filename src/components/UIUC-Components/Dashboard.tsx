@@ -147,9 +147,9 @@ const Dashboard = ({
             <ProjectTable />
           </Card>
         </div>
-
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </>
   )
 }

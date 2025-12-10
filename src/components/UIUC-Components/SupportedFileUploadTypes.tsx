@@ -135,7 +135,7 @@ const SupportedFileUploadTypes = () => {
 
             return (
               <Tooltip key={index}>
-                <TooltipTrigger>
+                <TooltipTrigger tabindex="-1">
                   <motion.div
                     whileHover={{ scale: 1.1 }}
                     className="flex flex-col items-center"
