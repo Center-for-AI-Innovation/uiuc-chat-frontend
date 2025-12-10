@@ -187,6 +187,11 @@ const useStyles = createStyles((theme) => ({
 
     fontWeight: 500,
 
+    '&:focus': {
+      outline: '2px solid var(--background)',
+      outlineOffset: '-3px',
+    },
+
     '&:hover': {
       backgroundColor: 'var(--dashboard-button-hover)',
       transform: 'translateY(-1px)',
@@ -238,7 +243,12 @@ const useStyles = createStyles((theme) => ({
     '&:hover': {
       backgroundColor: 'var(--navbar-hover-background)',
       color: 'var(--navbar-hover)',
-      transform: 'translateX(4px)',
+      transform: 'translateX(0px)' /* 4px */,
+    },
+
+    '&:focus': {
+      outline: '2px solid var(--foreground-faded)',
+      outlineOffset: '-3px',
     },
 
     '&[data-active="true"]': {
@@ -249,6 +259,10 @@ const useStyles = createStyles((theme) => ({
       '&:hover': {
         backgroundColor: 'var(--dashboard-button-hover)',
         color: 'var(--dashboard-button-foreground)',
+      },
+
+      '&:focus': {
+        outline: '2px solid var(--background)',
       },
     },
 
@@ -523,6 +537,7 @@ export default function NavigationSidebar({
 
           {/* Chat Button */}
           <button
+            tabindex="0"
             className={`${classes.chatButton} ${isCollapsed ? 'collapsed' : ''}`}
             onClick={handleChatNavigation}
             onMouseEnter={() => {
@@ -546,6 +561,8 @@ export default function NavigationSidebar({
           <div className={classes.navSection}>
             {navItems.map((item, index) => (
               <Link
+                tabindex="0"
+                role="button"
                 key={index}
                 href={item.link}
                 prefetch={false}

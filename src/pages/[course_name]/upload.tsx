@@ -101,8 +101,9 @@ const CourseMain: NextPage = () => {
             className="mt-8 lg:mt-4"
           ></Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }

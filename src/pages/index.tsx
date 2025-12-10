@@ -193,7 +193,11 @@ const Home: NextPage = () => {
               ) : !useIllinoisChatConfig ? (
                 <>
                   Heads up: we’ve rebranded to Illinois Chat — please visit{' '}
-                  <a href="https://chat.illinois.edu" className="underline">
+                  <a
+                    href="https://chat.illinois.edu"
+                    className="underline"
+                    tabindex="0"
+                  >
                     chat.illinois.edu
                   </a>
                 </>
@@ -219,6 +223,8 @@ const Home: NextPage = () => {
           >
             <div className="sm:w-1/2 ">
               <div
+                role="region"
+                aria-labelledby="Create a chatbot with your content. Share it with a click."
                 style={{ color: 'var(--foreground)', lineHeight: '110%' }}
                 className={`
                   text-3xl font-bold sm:mt-4
@@ -229,10 +235,10 @@ const Home: NextPage = () => {
                 <h2>
                   Create a chatbot with{' '}
                   <span className="whitespace-nowrap">your content.</span>
-                </h2>
-                <h2 className="mt-4">
-                  Share it with{' '}
-                  <span className="whitespace-nowrap">a click.</span>
+                  <p className="mt-4">
+                    Share it with{' '}
+                    <span className="whitespace-nowrap">a click.</span>
+                  </p>
                 </h2>
               </div>
 
@@ -243,6 +249,7 @@ const Home: NextPage = () => {
               </div>
 
               <Button
+                tabindex="0"
                 variant="light"
                 style={{
                   backgroundColor: 'var(--illinois-orange)',
@@ -672,11 +679,11 @@ const Home: NextPage = () => {
               </div>
 
               <Button
-                className="mt-8 bg-neutral-400"
+                tabindex="0"
+                className="mt-8 bg-none focus:bg-[--dashboard-button]"
                 variant="light"
                 style={{
                   color: 'var(--illinois-white)',
-                  backgroundColor: 'transparent',
                   border: '1px solid var(--illinois-white)',
                 }}
                 radius="sm"
@@ -797,6 +804,7 @@ const Home: NextPage = () => {
                 custom features on this platform. For inquiries, please contact
                 us at{' '}
                 <a
+                  tabindex="0"
                   style={{ color: 'var(--illinois-orange)' }}
                   href="mailto:caii_ai@lists.illinois.edu"
                 >
@@ -831,6 +839,7 @@ const Home: NextPage = () => {
               <div className="text-md">
                 If you have any questions or would like to submit a bug please{' '}
                 <a
+                  tabindex="0"
                   style={{ color: 'var(--illinois-orange)' }}
                   href="mailto:genaisupport@mx.uillinois.edu"
                 >
@@ -852,6 +861,7 @@ const Home: NextPage = () => {
               <div className="text-md">
                 All code is open source. Join us on{' '}
                 <a
+                  tabindex="0"
                   style={{ color: 'var(--illinois-orange)' }}
                   href="https://github.com/Center-for-AI-Innovation"
                 >
@@ -872,6 +882,7 @@ const Home: NextPage = () => {
               <div className="text-md">
                 Developed by the{' '}
                 <a
+                  tabindex="0"
                   style={{ color: 'var(--illinois-orange)' }}
                   href="https://ai.ncsa.illinois.edu/"
                 >
@@ -879,6 +890,7 @@ const Home: NextPage = () => {
                 </a>{' '}
                 at{' '}
                 <a
+                  tabindex="0"
                   style={{ color: 'var(--illinois-orange)' }}
                   href="https://ncsa.illinois.edu/"
                 >
@@ -889,8 +901,9 @@ const Home: NextPage = () => {
             </div>
           </div>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </>
   )
 }
