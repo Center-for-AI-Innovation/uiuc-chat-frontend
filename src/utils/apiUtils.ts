@@ -186,6 +186,8 @@ export async function fetchCourseMetadata(course_name: string): Promise<any> {
         data.course_metadata.is_private.toLowerCase() === 'true'
     }
 
+    // Note: allow_logged_in_users is stored as a boolean in Redis
+
     return data.course_metadata
   } catch (error) {
     console.error('Error fetching course metadata', { course_name, error })
