@@ -105,6 +105,7 @@ const Folder = ({
               <IconCaretRight size={18} />
             )}
             <input
+              aria-label="Rename Folder Input"
               className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-neutral-400 bg-transparent text-left text-[12.5px] leading-3 text-white outline-none focus:border-neutral-100"
               type="text"
               value={renameValue}

@@ -387,7 +387,7 @@ export default function GitHubIngestForm({
       >
         <DialogTrigger
           asChild
-          tabindex="0"
+          tabIndex={0}
           className="focus:bg-[--dashboard-background-dark]"
         >
           <Card
