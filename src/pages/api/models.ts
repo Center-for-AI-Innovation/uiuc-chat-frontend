@@ -10,6 +10,7 @@ import {
   type BedrockProvider,
   type GeminiProvider,
   type SambaNovaProvider,
+  type OpenAICompatibleProvider,
   ProviderNames,
   type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
@@ -27,6 +28,7 @@ import { getNCSAHostedVLMModels } from '~/utils/modelProviders/types/NCSAHostedV
 import { getBedrockModels } from '~/utils/modelProviders/routes/bedrock'
 import { getGeminiModels } from '~/utils/modelProviders/routes/gemini'
 import { getSambaNovaModels } from '~/utils/modelProviders/routes/sambanova'
+import { getOpenAICompatibleModels } from '~/utils/modelProviders/routes/openaiCompatible'
 
 export async function getModels(
   projectName: string,
@@ -44,11 +46,12 @@ export async function getModels(
   // Define a function to create a placeholder provider with default values
   const createPlaceholderProvider = (
     providerName: ProviderNames,
-  ): LLMProvider => ({
-    provider: providerName,
-    enabled: true,
-    models: [],
-  })
+  ): LLMProvider =>
+    ({
+      provider: providerName,
+      enabled: true,
+      models: [],
+    }) as LLMProvider
 
   // Ensure all providers are defined
   const allProviderNames = Object.values(ProviderNames)
@@ -115,6 +118,11 @@ export async function getModels(
       case ProviderNames.SambaNova:
         allLLMProviders[providerName] = await getSambaNovaModels(
           llmProvider as SambaNovaProvider,
+        )
+        break
+      case ProviderNames.OpenAICompatible:
+        allLLMProviders[providerName] = await getOpenAICompatibleModels(
+          llmProvider as OpenAICompatibleProvider,
         )
         break
       default:
