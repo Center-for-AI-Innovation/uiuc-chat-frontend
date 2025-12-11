@@ -475,7 +475,13 @@ const Home = ({
       // Add new conversation to the list
       updatedConversations = [updatedConversation, ...conversations]
     }
-    updateConversationMutation.mutate(updatedConversation)
+    const latestMessage =
+      updatedConversation.messages?.[updatedConversation.messages.length - 1] ??
+      null
+    updateConversationMutation.mutate({
+      conversation: updatedConversation,
+      message: latestMessage,
+    })
     dispatch({ field: 'conversations', value: updatedConversations })
   }
 
