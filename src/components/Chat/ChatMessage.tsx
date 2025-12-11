@@ -1679,17 +1679,6 @@ export const ChatMessage = memo(
     const shouldShowSources =
       condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
 
-    console.log(
-      {
-        condArrayIsArray,
-        condHasContexts,
-        condIsStreamingAndLastMsg,
-        condLoadingAndLastMsg,
-        shouldShowSources,
-      },
-      displayContexts.length,
-      message,
-    )
 
     return (
       <>
