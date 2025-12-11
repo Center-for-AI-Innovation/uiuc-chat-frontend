@@ -1199,6 +1199,8 @@ export const Chat = memo(
               throw new Error('LLM response stream ended before it was done.')
             }
 
+            homeDispatch({ field: 'messageIsStreaming', value: false })
+
             try {
               // This is after the response is done streaming
               console.debug(
@@ -1275,7 +1277,6 @@ export const Chat = memo(
               // })
               // console.log('updatedConversations: ', updatedConversations)
               // saveConversations(updatedConversations)
-              homeDispatch({ field: 'messageIsStreaming', value: false })
             } catch (error) {
               console.error('An error occurred: ', error)
               controller.abort()
