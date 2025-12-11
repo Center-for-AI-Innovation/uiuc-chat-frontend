@@ -196,7 +196,7 @@ const Home: NextPage = () => {
                   <a
                     href="https://chat.illinois.edu"
                     className="underline"
-                    tabindex="0"
+                    tabIndex={0}
                   >
                     chat.illinois.edu
                   </a>
@@ -249,7 +249,7 @@ const Home: NextPage = () => {
               </div>
 
               <Button
-                tabindex="0"
+                tabIndex={0}
                 variant="light"
                 style={{
                   backgroundColor: 'var(--illinois-orange)',
@@ -271,6 +271,7 @@ const Home: NextPage = () => {
                 {/* p-10                style={{ background: 'var(--illinois-orange-gradient)' }} */}
                 <div className="">
                   <img
+                    alt="Upload Materials Banner"
                     src="/media/banner_upload_materials.png"
                     alt="Upload Materials Banner"
                     className="w-full max-w-full rounded-xl"
@@ -280,11 +281,13 @@ const Home: NextPage = () => {
                 <div className="icons_scrolling_container overflow-hidden">
                   <div className="icons_scrolling">
                     <img
+                      alt="Banner Icons"
                       src="/media/banner_icons.png"
                       alt="Banner Icons"
                       className="max-w-full"
                     ></img>
                     <img
+                      alt="Banner Icons"
                       src="/media/banner_icons.png"
                       alt="Banner Icons"
                       className="max-w-full"
@@ -397,6 +400,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
+                  alt="Banner Step 1"
                   src="/media/banner_step_001.png"
                   alt="Banner Step 1"
                   className="w-full max-w-full rounded-xl"
@@ -487,6 +491,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
+                  alt="Banner Step 2"
                   src="/media/banner_step_002.png"
                   alt="Banner Step 2"
                   className="w-full max-w-full rounded-xl"
@@ -573,6 +578,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
+                  alt="Banner Step 3"
                   src="/media/banner_step_003.png"
                   alt="Banner Step 3"
                   className="w-full max-w-full rounded-xl"
@@ -685,7 +691,7 @@ const Home: NextPage = () => {
               </div>
 
               <Button
-                tabindex="0"
+                tabIndex={0}
                 className="mt-8 bg-none focus:bg-[--dashboard-button]"
                 variant="light"
                 style={{
@@ -810,7 +816,7 @@ const Home: NextPage = () => {
                 custom features on this platform. For inquiries, please contact
                 us at{' '}
                 <a
-                  tabindex="0"
+                  tabIndex={0}
                   style={{ color: 'var(--illinois-orange)' }}
                   href="mailto:caii_ai@lists.illinois.edu"
                 >
@@ -845,7 +851,7 @@ const Home: NextPage = () => {
               <div className="text-md">
                 If you have any questions or would like to submit a bug please{' '}
                 <a
-                  tabindex="0"
+                  tabIndex={0}
                   style={{ color: 'var(--illinois-orange)' }}
                   href="mailto:genaisupport@mx.uillinois.edu"
                 >
@@ -867,7 +873,7 @@ const Home: NextPage = () => {
               <div className="text-md">
                 All code is open source. Join us on{' '}
                 <a
-                  tabindex="0"
+                  tabIndex={0}
                   style={{ color: 'var(--illinois-orange)' }}
                   href="https://github.com/Center-for-AI-Innovation"
                 >
@@ -888,7 +894,7 @@ const Home: NextPage = () => {
               <div className="text-md">
                 Developed by the{' '}
                 <a
-                  tabindex="0"
+                  tabIndex={0}
                   style={{ color: 'var(--illinois-orange)' }}
                   href="https://ai.ncsa.illinois.edu/"
                 >
@@ -896,7 +902,7 @@ const Home: NextPage = () => {
                 </a>{' '}
                 at{' '}
                 <a
-                  tabindex="0"
+                  tabIndex={0}
                   style={{ color: 'var(--illinois-orange)' }}
                   href="https://ncsa.illinois.edu/"
                 >

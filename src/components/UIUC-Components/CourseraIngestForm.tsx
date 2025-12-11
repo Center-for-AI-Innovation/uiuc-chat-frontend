@@ -72,7 +72,7 @@ export default function CourseraIngestForm(): JSX.Element {
       >
         <DialogTrigger
           asChild
-          tabindex="0"
+          tabIndex={0}
           className="focus:bg-[--dashboard-background-dark]"
         >
           <Card
