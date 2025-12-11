@@ -2259,18 +2259,7 @@ export const ChatMessage = memo(
                   {/* Action Buttons Container */}
                   <div className="flex flex-col gap-2">
                     {/* Sources button */}
-                    {Array.isArray(displayContexts) &&
-                      displayContexts.length > 0 &&
-                      !(
-                        messageIsStreaming &&
-                        messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1
-                      ) &&
-                      !(
-                        loading &&
-                        messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1
-                      ) && (
+                    {shouldShowSources && (
                         <div className="relative z-0 mb-1 flex justify-start">
                           <button
                             className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
