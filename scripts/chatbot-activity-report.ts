@@ -85,39 +85,11 @@ async function generateChatbotActivityReport() {
       }
     })
 
-    // Generate report
-    console.log('='.repeat(120))
-    console.log('CHATBOT ACTIVITY REPORT')
-    console.log('='.repeat(120))
-    console.log(
-      `${'Chatbot Name'.padEnd(40)} | ${'Created At'.padEnd(20)} | ${'Last Modified'.padEnd(20)} | ${'Last Used'.padEnd(20)} | Owner Email`,
-    )
-    console.log('-'.repeat(120))
-
-    for (const row of reportRows) {
-      const chatbotName = row.chatbot_name || 'N/A'
-      const createdAt: string = row.created_at
-        ? new Date(row.created_at).toISOString().split('T')[0] || 'N/A'
-        : 'N/A'
-      const lastModified: string = row.last_modified_at
-        ? new Date(row.last_modified_at).toISOString().split('T')[0] || 'N/A'
-        : 'N/A'
-      const lastUsed: string = row.last_used_at
-        ? new Date(row.last_used_at).toISOString().split('T')[0] || 'N/A'
-        : 'N/A'
-      const ownerEmail = row.owner_email || 'N/A'
-
-      console.log(
-        `${chatbotName.padEnd(40)} | ${createdAt.padEnd(20)} | ${lastModified.padEnd(20)} | ${lastUsed.padEnd(20)} | ${ownerEmail}`,
-      )
-    }
-
-    console.log('-'.repeat(120))
-    console.log(`Total chatbots: ${reportRows.length}`)
+    // Generate summary
+    console.log(`\nTotal chatbots: ${reportRows.length}`)
     console.log(
       `Chatbots with owner emails: ${reportRows.filter((r) => r.owner_email).length}`,
     )
-    console.log('='.repeat(120))
 
     // Generate CSV output
     const csvLines: string[] = []
