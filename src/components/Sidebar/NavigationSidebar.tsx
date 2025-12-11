@@ -517,7 +517,7 @@ export default function NavigationSidebar({
               >
                 <span>Chatbot</span>
                 <span>/</span>
-                <span className="font-semibold text-[--foreground]">
+                <span className="font-semibold line-clamp-3 break-all text-[--foreground]">
                   {course_name}
                 </span>
               </div>
