@@ -170,7 +170,7 @@ const ListProjectTable: React.FC = () => {
         return (
           <StyledRow
             role="button"
-            tabindex="0"
+            tabIndex={0}
             aria-label={courseName}
             key={courseName}
             onClick={(e) => {
@@ -315,7 +315,7 @@ const ListProjectTable: React.FC = () => {
               You haven&apos;t created any projects yet. Let&apos;s{' '}
               <Link
                 role="button"
-                tabindex="0"
+                tabIndex={0}
                 className="underline"
                 href="/new"
                 style={{ color: 'var(--illinois-orange)' }}

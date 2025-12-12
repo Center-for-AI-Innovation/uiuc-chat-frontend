@@ -89,7 +89,9 @@ export const fileUploads = pgTable('file_uploads', {
   base_url: text('base_url'),
   contexts: jsonb('contexts'),
   course_name: text('course_name'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  created_at: timestamp('created_at', { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   readable_filename: text('readable_filename'),
   s3_path: text('s3_path'),
   url: text('url'),
@@ -158,7 +160,7 @@ export const conversations = pgTable('conversations', {
   folder_id: uuid('folder_id'),
 })
 
-// Documents table 
+// Documents table
 export const documents = pgTable('documents', {
   id: serial('id').primaryKey(),
   s3_path: text('s3_path'),
@@ -430,20 +432,20 @@ export const pubmedDailyUpdate = pgTable('pubmed_daily_update', {
 
 // Keycloak user_entity table schema
 export const keycloakUsers = pgTable('user_entity', {
-    id: text('id').primaryKey(),
-    email: text('email'),
-    email_constraint: text('email_constraint'),
-    email_verified: boolean('email_verified').notNull().default(false),
-    enabled: boolean('enabled').notNull().default(false),
-    federation_link: text('federation_link'),
-    first_name: text('first_name'),
-    last_name: text('last_name'),
-    realm_id: text('realm_id'),
-    username: text('username'),
-    created_timestamp: bigint('created_timestamp', { mode: 'number' }),
-    service_account_client_link: text('service_account_client_link'),
-    not_before: integer('not_before').notNull().default(0),
-  })
+  id: text('id').primaryKey(),
+  email: text('email'),
+  email_constraint: text('email_constraint'),
+  email_verified: boolean('email_verified').notNull().default(false),
+  enabled: boolean('enabled').notNull().default(false),
+  federation_link: text('federation_link'),
+  first_name: text('first_name'),
+  last_name: text('last_name'),
+  realm_id: text('realm_id'),
+  username: text('username'),
+  created_timestamp: bigint('created_timestamp', { mode: 'number' }),
+  service_account_client_link: text('service_account_client_link'),
+  not_before: integer('not_before').notNull().default(0),
+})
 
 // Table relationships
 export const llmGuidedSectionsRelations = relations(

@@ -373,7 +373,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 >
                   <Flex
                     role="button"
-                    tabindex="0"
+                    tabIndex={0}
                     align="center"
                     justify="space-between"
                     sx={{

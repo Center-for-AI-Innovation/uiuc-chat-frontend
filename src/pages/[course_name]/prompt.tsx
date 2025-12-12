@@ -927,7 +927,7 @@ CRITICAL: The optimized prompt must:
                         >
                           <Flex
                             role="button"
-                            tabindex="0"
+                            tabIndex={0}
                             align="center"
                             justify="space-between"
                             sx={{
@@ -1395,7 +1395,7 @@ CRITICAL: The optimized prompt must:
                                     data-right-sidebar-icon
                                   >
                                     <IconLayoutSidebarRight
-                                      tabindex="0"
+                                      tabIndex={0}
                                       aria-label="Close Prompt Builder"
                                       stroke={2}
                                       className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
@@ -1412,7 +1412,7 @@ CRITICAL: The optimized prompt must:
                                     data-right-sidebar-icon
                                   >
                                     <IconLayoutSidebarRightExpand
-                                      tabindex="0"
+                                      tabIndex={0}
                                       aria-label="Open Prompt Builder"
                                       stroke={2}
                                       className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"

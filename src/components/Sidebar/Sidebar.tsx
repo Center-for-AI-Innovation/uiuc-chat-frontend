@@ -107,7 +107,7 @@ const Sidebar = <T,>({
         <div className="flex items-center gap-2">
           <div className="grow">
             <button
-              tabindex="0"
+              tabIndex={0}
               aria-label="Close Sidebar"
               className="flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md p-1 text-sm text-[--foreground] 
               transition-colors duration-200
@@ -120,7 +120,7 @@ const Sidebar = <T,>({
           </div>
 
           <button
-            tabindex="0"
+            tabIndex={0}
             aria-label="Add Folder"
             className="flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md p-1 text-sm text-[--foreground] 
             transition-colors duration-200
@@ -132,7 +132,7 @@ const Sidebar = <T,>({
           </button>
 
           <button
-            tabindex="0"
+            tabIndex={0}
             aria-label="Edit"
             className="flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md p-1 text-sm text-[--foreground] 
             transition-colors duration-200
@@ -156,7 +156,7 @@ const Sidebar = <T,>({
         </div>
 
         <Tooltip
-          tabindex="0"
+          tabIndex={0}
           aria-label="Admin Dashboard"
           label="Admin Dashboard"
           disabled={permission !== 'edit'}
@@ -166,12 +166,10 @@ const Sidebar = <T,>({
         >
           <div
             role="button"
-            tabindex="0"
+            tabIndex={permission === 'edit' ? 0 : -1}
             aria-label="Open Admin Dashboard"
             aria-hidden={permission !== 'edit'}
             className={`flex items-center justify-start gap-3 rounded-lg bg-[--sidebar-background] p-2 text-[--foreground] transition-colors md:gap-4 md:p-3 ${permission === 'edit' ? 'cursor-pointer hover:bg-[--navbar-hover-background]' : 'cursor-default'}`}
-            role={permission === 'edit' ? 'button' : undefined}
-            tabIndex={permission === 'edit' ? 0 : -1}
             onClick={
               permission === 'edit'
                 ? () => {
@@ -300,7 +298,7 @@ const Sidebar = <T,>({
     <div className="relative">
       <div className="absolute left-2 top-2 z-[150]">
         <button
-          tabindex="0"
+          tabIndex={0}
           aria-label="Open Sidebar"
           className="flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-md p-1 text-sm text-[--foreground] 
           transition-colors duration-200

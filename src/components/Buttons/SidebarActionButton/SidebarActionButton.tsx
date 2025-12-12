@@ -3,6 +3,7 @@ import { type MouseEventHandler, type ReactElement } from 'react'
 interface Props {
   handleClick: MouseEventHandler<HTMLButtonElement>
   children: ReactElement
+  ariaLabel: string
 }
 
 const SidebarActionButton = ({ ariaLabel, handleClick, children }: Props) => (
