@@ -1,6 +1,6 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { db, folders } from '~/db/dbClient'
+import { conversations, db, folders } from '~/db/dbClient'
 import { type FolderWithConversation } from '@/types/folder'
 import { type Database } from 'database.types'
 import { convertDBToChatConversation } from './conversation'
@@ -47,6 +47,8 @@ export function convertChatFolderToDBFolder(
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
   const user_email = req.user?.email as string | undefined
+  const courseName = req.query.courseName as string
+
   if (!user_email) {
     res.status(400).json({ error: 'No valid email address in token' })
     return
@@ -92,6 +94,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           orderBy: desc(folders.created_at),
           with: {
             conversations: {
+              where: eq(conversations.project_name, courseName), // filter by course_name
               with: {
                 messages: {
                   columns: {
@@ -122,6 +125,15 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             },
           },
         })
+
+        // If no conversations match the courseName, return an empty array
+        if (
+          !fetchedFolders.some(
+            (folder) => folder.conversations && folder.conversations.length > 0,
+          )
+        ) {
+          return res.status(200).json([])
+        }
 
         // Convert the fetched data to match the expected format
         const formattedFolders = fetchedFolders.map((folder) => {
@@ -157,10 +169,10 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
               eq(folders.user_email, user_email),
             ),
           )
-          .returning({ id: folders.id });
+            .returning({ id: folders.id })
 
           if (deleted.length === 0) {
-            return res.status(403).json({ error: 'Not allowed to delete this folder' });
+            return res.status(403).json({ error: 'Not allowed to delete this folder' })
           }
           res.status(200).json({ message: 'Folder deleted successfully' })
         } else {
