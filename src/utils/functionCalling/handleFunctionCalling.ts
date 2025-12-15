@@ -569,11 +569,6 @@ export async function fetchTools(
   } else {
     // Server-side: use direct backend call
     const backendUrl = getBackendUrl()
-    if (!backendUrl) {
-      throw new Error(
-        'No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.',
-      )
-    }
     response = await fetch(
       `${backendUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
     )

@@ -11,10 +11,24 @@ const isLocal =
   process.env.POSTGRES_ENDPOINT === "localhost" ||
   process.env.POSTGRES_ENDPOINT === "127.0.0.1" ||
   process.env.POSTGRES_ENDPOINT === "postgres-illinois-chat"
+
+/**
+ * Configure connection pool settings to prevent "too many clients" errors
+ * - max: Maximum number of connections in the pool (default: 10)
+ * - idle_timeout: Time in seconds before an idle connection is closed (default: 30)
+ * - connect_timeout: Time in seconds to wait for a connection (default: 30)
+ */
 const clientOptions = isLocal
-  ? {}
+  ? {
+      max: 10,
+      idle_timeout: 30,
+      connect_timeout: 30,
+    }
   : {
       ssl: { rejectUnauthorized: false },
+      max: 10,
+      idle_timeout: 30,
+      connect_timeout: 30,
     }
 
 export const client = postgres(connectionString, clientOptions)

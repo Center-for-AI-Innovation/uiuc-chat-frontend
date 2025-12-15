@@ -21,6 +21,7 @@ import {
   type Content,
   type Conversation,
   type Message,
+  type ToolOutput,
   type UIUCTool,
 } from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
@@ -81,6 +82,10 @@ import {
   handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
+import {
+  executeSimWorkflow,
+  executeWeatherWorkflow,
+} from '~/services/simService'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -343,6 +348,19 @@ export const Chat = memo(
         let searchQuery = Array.isArray(message.content)
           ? message.content.map((content) => content.text).join(' ')
           : message.content
+
+        // Detect if "sim" and "weather" keywords are present in the message
+        const searchQueryLower =
+          typeof searchQuery === 'string' ? searchQuery.toLowerCase() : ''
+        const hasSimKeyword = searchQueryLower.includes('sim')
+        const hasWeatherKeyword = searchQueryLower.includes('weather')
+        const hasSimAndWeather = hasSimKeyword && hasWeatherKeyword
+
+        let simInput = ''
+        if (hasSimKeyword && !hasSimAndWeather) {
+          // Strip out "sim" keyword (case-insensitive) from the query
+          simInput = searchQuery.replace(/\bsim\b/gi, '').trim()
+        }
 
         if (selectedConversation) {
           // Add this type guard function
@@ -855,7 +873,511 @@ export const Chat = memo(
             homeDispatch({ field: 'isRetrievalLoading', value: false })
           }
 
-          // Action 3: Tool Execution
+          // Action 2.5: Weather Workflow Execution (if both 'sim' and 'weather' detected)
+          if (hasSimAndWeather && typeof searchQuery === 'string') {
+            try {
+              // Create Weather tool object
+              const weatherTool: UIUCTool = {
+                id: 'weather-workflow',
+                invocationId: uuidv4(),
+                name: 'weather_workflow',
+                readableName: 'Weather Workflow',
+                description: 'Executes a Sim weather workflow',
+                enabled: true,
+                aiGeneratedArgumentValues: {
+                  query: searchQuery,
+                },
+              }
+
+              // Initialize tools array if it doesn't exist
+              if (!message.tools) {
+                message.tools = []
+              }
+              message.tools.push(weatherTool)
+
+              // Update conversation with the tool BEFORE execution
+              const lastMessageIndex = updatedConversation.messages.length - 1
+              updatedConversation = {
+                ...updatedConversation,
+                messages: updatedConversation.messages.map((msg, idx) =>
+                  idx === lastMessageIndex
+                    ? { ...message, tools: [...message.tools!] }
+                    : msg,
+                ),
+              }
+              homeDispatch({
+                field: 'selectedConversation',
+                value: updatedConversation,
+              })
+
+              console.log('Weather tool added to message, executing workflow...', {
+                tool: weatherTool,
+                messageTools: message.tools,
+              })
+
+              // Execute Weather workflow with the query from the message
+              const weatherResult = await executeWeatherWorkflow(searchQuery)
+
+              console.log('Weather workflow result:', weatherResult)
+
+              // Get the last message index to update
+              const currentLastMessageIndex =
+                updatedConversation.messages.length - 1
+              let lastMessage =
+                updatedConversation.messages[currentLastMessageIndex]
+
+              if (!lastMessage || !lastMessage.tools) {
+                console.error('Last message or tools array not found', {
+                  lastMessage,
+                  hasTools: !!lastMessage?.tools,
+                })
+              } else {
+                // Find the Weather tool in the message and update it with output
+                const weatherToolInMessage = lastMessage.tools.find(
+                  (t) => t.invocationId === weatherTool.invocationId,
+                )
+
+                if (!weatherToolInMessage) {
+                  console.error('Weather tool not found in message tools', {
+                    toolInvocationId: weatherTool.invocationId,
+                    messageToolIds: lastMessage.tools.map(
+                      (t) => t.invocationId,
+                    ),
+                  })
+                } else if (
+                  (weatherResult.success !== false &&
+                    weatherResult.output) ||
+                  (weatherResult.output && !('success' in weatherResult))
+                ) {
+                  // Format output as ToolOutput
+                  let toolOutputText: string
+                  // Check if output has a content field (SIM workflow format)
+                  if (weatherResult.output && typeof weatherResult.output === 'object' && 'content' in weatherResult.output) {
+                    toolOutputText = String(weatherResult.output.content)
+                  } else if (typeof weatherResult.output === 'string') {
+                    toolOutputText = weatherResult.output
+                  } else {
+                    toolOutputText = JSON.stringify(weatherResult.output, null, 2)
+                  }
+                  
+                  const toolOutput: ToolOutput = {
+                    text: toolOutputText,
+                    data:
+                      typeof weatherResult.output === 'object' &&
+                      !Array.isArray(weatherResult.output)
+                        ? weatherResult.output
+                        : undefined,
+                  }
+
+                  weatherToolInMessage.output = toolOutput
+                  lastMessage.simWorkflowResult = weatherResult.output
+
+                  // Create updated message with tool output
+                  const updatedMessage = {
+                    ...lastMessage,
+                    tools: [...lastMessage.tools],
+                  }
+
+                  // Update conversation with tool output
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedConversation.messages.map((msg, idx) =>
+                      idx === currentLastMessageIndex ? updatedMessage : msg,
+                    ),
+                  }
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+
+                  // Update the message reference for later use
+                  message.tools = updatedMessage.tools
+                  message.simWorkflowResult = updatedMessage.simWorkflowResult
+
+                  console.log('Weather workflow executed successfully', {
+                    toolOutput,
+                    updatedMessage,
+                  })
+                } else {
+                  // Handle error case
+                  const hasError =
+                    weatherResult.success === false || weatherResult.error
+                  const hasOutput =
+                    weatherResult.output !== undefined &&
+                    weatherResult.output !== null
+
+                  if (hasError && !hasOutput) {
+                    weatherToolInMessage.error =
+                      weatherResult.error ||
+                      'Weather workflow returned unsuccessful result'
+                    console.warn(
+                      'Weather workflow returned unsuccessful result:',
+                      weatherResult,
+                    )
+                  } else if (!hasOutput) {
+                    weatherToolInMessage.error =
+                      'Weather workflow returned no output'
+                    console.warn('Weather workflow returned no output:', weatherResult)
+                  }
+
+                  // Create updated message with error
+                  const updatedMessage = {
+                    ...lastMessage,
+                    tools: [...lastMessage.tools],
+                  }
+
+                  // Update conversation with error
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedConversation.messages.map((msg, idx) =>
+                      idx === currentLastMessageIndex ? updatedMessage : msg,
+                    ),
+                  }
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+
+                  // Also update the message reference
+                  message.tools = updatedMessage.tools
+                }
+              }
+            } catch (error) {
+              console.error('Error executing Weather workflow:', error)
+
+              // Get the last message index to update
+              const lastMessageIndex = updatedConversation.messages.length - 1
+              const lastMessage =
+                updatedConversation.messages[lastMessageIndex]
+
+              // Find and update Weather tool with error
+              if (lastMessage?.tools) {
+                const weatherToolInMessage = lastMessage.tools.find(
+                  (t) => t.name === 'weather_workflow',
+                )
+                if (weatherToolInMessage) {
+                  weatherToolInMessage.error =
+                    error instanceof Error
+                      ? error.message
+                      : 'Failed to execute Weather workflow'
+
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedConversation.messages.map((msg, idx) =>
+                      idx === lastMessageIndex ? lastMessage : msg,
+                    ),
+                  }
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+
+                  // Also update the message reference
+                  message.tools = lastMessage.tools
+                }
+              }
+
+              errorToast({
+                title: 'Weather Workflow Error',
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : 'Failed to execute Weather workflow. Chat will continue without Weather results.',
+              })
+            }
+          }
+
+          // Action 2.6: Sim Workflow Execution (if 'sim' detected but not 'weather')
+          if (hasSimKeyword && !hasSimAndWeather && simInput) {
+            try {
+              // Create Sim tool object (similar to N8N tools)
+              const simTool: UIUCTool = {
+                id: 'sim-workflow',
+                invocationId: uuidv4(),
+                name: 'sim_workflow',
+                readableName: 'Sim Workflow',
+                description: 'Executes a Sim workflow',
+                enabled: true,
+                aiGeneratedArgumentValues: {
+                  input: simInput,
+                },
+              }
+
+              // Initialize tools array if it doesn't exist
+              if (!message.tools) {
+                message.tools = []
+              }
+              message.tools.push(simTool)
+
+              // Update conversation with the tool BEFORE execution
+              const lastMessageIndex = updatedConversation.messages.length - 1
+              updatedConversation = {
+                ...updatedConversation,
+                messages: updatedConversation.messages.map((msg, idx) =>
+                  idx === lastMessageIndex ? { ...message, tools: [...message.tools!] } : msg,
+                ),
+              }
+              homeDispatch({
+                field: 'selectedConversation',
+                value: updatedConversation,
+              })
+
+              console.log('Sim tool added to message, executing workflow...', {
+                tool: simTool,
+                messageTools: message.tools,
+              })
+
+              // Execute Sim workflow
+              console.log('🚀 About to execute SIM workflow with input:', simInput)
+              let simResult
+              try {
+                simResult = await executeSimWorkflow(simInput)
+                console.log('✅ Sim workflow result received:', simResult)
+                console.log('✅ Sim workflow result.success:', simResult.success)
+                console.log('✅ Sim workflow result.output type:', typeof simResult.output)
+                console.log('✅ Sim workflow result.output value:', simResult.output)
+                
+                // Check if output has content field (from SIM workflow structure)
+                if (simResult.output && typeof simResult.output === 'object' && 'content' in simResult.output) {
+                  console.log('✅ Sim workflow output.content:', simResult.output.content)
+                }
+              } catch (execError) {
+                console.error('❌ Error in executeSimWorkflow call:', execError)
+                throw execError
+              }
+
+              // Get the last message index to update
+              const currentLastMessageIndex = updatedConversation.messages.length - 1
+              let lastMessage = updatedConversation.messages[currentLastMessageIndex]
+
+              if (!lastMessage || !lastMessage.tools) {
+                console.error('Last message or tools array not found', {
+                  lastMessage,
+                  hasTools: !!lastMessage?.tools,
+                })
+              } else {
+                // Find the Sim tool in the message and update it with output
+                const simToolInMessage = lastMessage.tools.find(
+                  (t) => t.invocationId === simTool.invocationId,
+                )
+
+                if (!simToolInMessage) {
+                  console.error('Sim tool not found in message tools', {
+                    toolInvocationId: simTool.invocationId,
+                    messageToolIds: lastMessage.tools.map((t) => t.invocationId),
+                  })
+                } else if (
+                  (simResult.success !== false && simResult.output) ||
+                  (simResult.output && !('success' in simResult))
+                ) {
+                  // Handle both formats:
+                  // 1. {success: true, output: ...}
+                  // 2. {output: ...} (treat as success if output exists)
+                  // Format output as ToolOutput
+                  console.log('📝 Processing simResult.output for toolOutput:', {
+                    outputType: typeof simResult.output,
+                    outputValue: simResult.output,
+                    isString: typeof simResult.output === 'string',
+                    isObject: typeof simResult.output === 'object' && !Array.isArray(simResult.output),
+                    hasContentField: simResult.output && typeof simResult.output === 'object' && 'content' in simResult.output,
+                  })
+                  
+                  let toolOutputText: string
+                  try {
+                    // Check if output has a content field (SIM workflow format)
+                    if (simResult.output && typeof simResult.output === 'object' && 'content' in simResult.output) {
+                      toolOutputText = String(simResult.output.content)
+                      console.log('✅ Extracted content field:', toolOutputText.substring(0, 200))
+                    } else if (typeof simResult.output === 'string') {
+                      toolOutputText = simResult.output
+                    } else {
+                      toolOutputText = JSON.stringify(simResult.output, null, 2)
+                    }
+                    console.log('✅ Successfully created toolOutputText')
+                  } catch (stringifyError) {
+                    console.error('❌ Error stringifying simResult.output:', stringifyError, {
+                      output: simResult.output,
+                      outputType: typeof simResult.output,
+                    })
+                    toolOutputText = String(simResult.output)
+                  }
+                  
+                  const toolOutput: ToolOutput = {
+                    text: toolOutputText,
+                    data:
+                      typeof simResult.output === 'object' &&
+                      !Array.isArray(simResult.output)
+                        ? simResult.output
+                        : undefined,
+                  }
+
+                  simToolInMessage.output = toolOutput
+                  lastMessage.simWorkflowResult = simResult.output
+
+                  // Create updated message with tool output
+                  const updatedMessage = {
+                    ...lastMessage,
+                    tools: [...lastMessage.tools],
+                  }
+
+                  // Update conversation with tool output
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedConversation.messages.map((msg, idx) =>
+                      idx === currentLastMessageIndex ? updatedMessage : msg,
+                    ),
+                  }
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+
+                  // Update the message reference for later use
+                  message.tools = updatedMessage.tools
+                  message.simWorkflowResult = updatedMessage.simWorkflowResult
+
+                  console.log('Sim workflow executed successfully', {
+                    toolOutput,
+                    updatedMessage,
+                  })
+                } else {
+                  // Handle error case - only if explicitly failed or no output
+                  const hasError = simResult.success === false || simResult.error
+                  const hasOutput = simResult.output !== undefined && simResult.output !== null
+                  
+                  if (hasError && !hasOutput) {
+                    simToolInMessage.error =
+                      simResult.error || 'Sim workflow returned unsuccessful result'
+                    console.warn('Sim workflow returned unsuccessful result:', simResult)
+                  } else if (!hasOutput) {
+                    // No output and no explicit error - treat as empty result
+                    simToolInMessage.error = 'Sim workflow returned no output'
+                    console.warn('Sim workflow returned no output:', simResult)
+                  } else {
+                    // Has output but might not have success field - treat as success
+                    let toolOutputText: string
+                    // Check if output has a content field (SIM workflow format)
+                    if (simResult.output && typeof simResult.output === 'object' && 'content' in simResult.output) {
+                      toolOutputText = String(simResult.output.content)
+                    } else if (typeof simResult.output === 'string') {
+                      toolOutputText = simResult.output
+                    } else {
+                      toolOutputText = JSON.stringify(simResult.output, null, 2)
+                    }
+                    
+                    const toolOutput: ToolOutput = {
+                      text: toolOutputText,
+                      data:
+                        typeof simResult.output === 'object' &&
+                        !Array.isArray(simResult.output)
+                          ? simResult.output
+                          : undefined,
+                    }
+
+                    simToolInMessage.output = toolOutput
+                    lastMessage.simWorkflowResult = simResult.output
+
+                    // Create updated message with tool output
+                    const updatedMessage = {
+                      ...lastMessage,
+                      tools: [...lastMessage.tools],
+                    }
+
+                    // Update conversation with tool output
+                    updatedConversation = {
+                      ...updatedConversation,
+                      messages: updatedConversation.messages.map((msg, idx) =>
+                        idx === currentLastMessageIndex ? updatedMessage : msg,
+                      ),
+                    }
+                    homeDispatch({
+                      field: 'selectedConversation',
+                      value: updatedConversation,
+                    })
+
+                    // Update the message reference for later use
+                    message.tools = updatedMessage.tools
+                    message.simWorkflowResult = updatedMessage.simWorkflowResult
+
+                    console.log('Sim workflow executed successfully', {
+                      toolOutput,
+                      updatedMessage,
+                    })
+                    return // Exit early since we handled it
+                  }
+
+                  // Create updated message with error
+                  const updatedMessage = {
+                    ...lastMessage,
+                    tools: [...lastMessage.tools],
+                  }
+
+                  // Update conversation with error
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedConversation.messages.map((msg, idx) =>
+                      idx === currentLastMessageIndex ? updatedMessage : msg,
+                    ),
+                  }
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+
+                  // Also update the message reference
+                  message.tools = updatedMessage.tools
+                }
+              }
+            } catch (error) {
+              console.error('Error executing Sim workflow:', error)
+
+              // Get the last message index to update
+              const lastMessageIndex = updatedConversation.messages.length - 1
+              const lastMessage = updatedConversation.messages[lastMessageIndex]
+
+              // Find and update Sim tool with error
+              if (lastMessage?.tools) {
+                const simToolInMessage = lastMessage.tools.find(
+                  (t) => t.name === 'sim_workflow',
+                )
+                if (simToolInMessage) {
+                  simToolInMessage.error =
+                    error instanceof Error
+                      ? error.message
+                      : 'Failed to execute Sim workflow'
+
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedConversation.messages.map((msg, idx) =>
+                      idx === lastMessageIndex ? lastMessage : msg,
+                    ),
+                  }
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+
+                  // Also update the message reference
+                  message.tools = lastMessage.tools
+                }
+              }
+
+              errorToast({
+                title: 'Sim Workflow Error',
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : 'Failed to execute Sim workflow. Chat will continue without Sim results.',
+              })
+            }
+          }
+
+          // Action 3: Tool Execution (N8N tools)
+          // Preserve Sim tool if it exists before calling handleFunctionCall
+          const simToolBeforeN8N = message.tools?.find(
+            (t) => t.name === 'sim_workflow',
+          )
+
           if (tools.length > 0) {
             try {
               homeDispatch({ field: 'isRouting', value: true })
@@ -869,6 +1391,26 @@ export const Chat = memo(
                 getOpenAIKey(llmProviders, courseMetadata, apiKey),
               )
               homeDispatch({ field: 'isRouting', value: false })
+
+              // Restore Sim tool if it was present (handleFunctionCall replaces message.tools)
+              if (simToolBeforeN8N && message.tools) {
+                // Check if Sim tool is already in the array
+                const simToolExists = message.tools.some(
+                  (t) => t.invocationId === simToolBeforeN8N.invocationId,
+                )
+                if (!simToolExists) {
+                  message.tools.push(simToolBeforeN8N)
+                  // Update conversation with merged tools
+                  const lastMsgIndex = updatedConversation.messages.length - 1
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedConversation.messages.map((msg, idx) =>
+                      idx === lastMsgIndex ? { ...message, tools: [...message.tools] } : msg,
+                    ),
+                  }
+                }
+              }
+
               if (uiucToolsToRun.length > 0) {
                 homeDispatch({ field: 'isRunningTool', value: true })
                 // Run the tools
