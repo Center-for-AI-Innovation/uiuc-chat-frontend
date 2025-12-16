@@ -87,10 +87,20 @@ export async function runAgentConversation(
 
   const message = workingConversation.messages[workingConversation.messages.length - 1]!
   
-  // Initialize agent events array if not present
-  if (!message.agentEvents) {
-    message.agentEvents = []
+  const initializingEvent: AgentEvent = {
+    id: 'agent-initializing',
+    stepNumber: 0,
+    type: 'initializing',
+    status: 'running',
+    title: 'Initializing agent...',
+    createdAt: new Date().toISOString(),
   }
+  message.agentEvents = [initializingEvent]
+  emit({
+    type: 'agent_events_update',
+    agentEvents: message.agentEvents,
+    messageId: message.id,
+  })
 
   // Track accumulated contexts and deduplication
   const seen = new Set<string>()
@@ -104,13 +114,20 @@ export async function runAgentConversation(
     hasError: boolean
   }> = []
 
-  // Fetch available tools for the project
   let availableTools: UIUCTool[] = []
   try {
     availableTools = await fetchToolsServer(courseName)
   } catch (error) {
     console.error('Error fetching tools:', error)
   }
+  
+  initializingEvent.status = 'done'
+  initializingEvent.updatedAt = new Date().toISOString()
+  emit({
+    type: 'agent_events_update',
+    agentEvents: message.agentEvents,
+    messageId: message.id,
+  })
 
   // Add synthetic retrieval tool for agent mode
   // Note: Description explicitly encourages multiple calls for deep research

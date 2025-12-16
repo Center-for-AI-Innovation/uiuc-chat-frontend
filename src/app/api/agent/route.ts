@@ -166,6 +166,7 @@ async function handler(req: AuthenticatedRequest) {
     // Get user identifier from request
     const userIdentifier = (req as any).userEmail || (req as any).user?.email || ''
 
+    // Basic validation only - do heavy setup inside stream for faster feedback
     if (!courseName) {
       return NextResponse.json(
         { error: 'courseName is required' },
@@ -196,89 +197,6 @@ async function handler(req: AuthenticatedRequest) {
       )
     }
 
-    // Fetch LLM providers and course metadata in parallel
-    console.log('[Agent Route] Fetching metadata for course:', courseName)
-    const baseUrl = getBaseUrl()
-    const [llmProviders, courseMetadata] = await Promise.all([
-      fetchLLMProviders(courseName, baseUrl),
-      getCourseMetadata(courseName),
-    ])
-    
-    console.log('[Agent Route] Course metadata result:', courseMetadata ? 'found' : 'not found')
-    console.log('[Agent Route] LLM providers result:', llmProviders ? 'found' : 'not found')
-
-    if (!courseMetadata) {
-      console.error('[Agent Route] Course metadata not found for:', courseName)
-      return NextResponse.json(
-        { error: 'Could not fetch course metadata' },
-        { status: 404 },
-      )
-    }
-
-    // Get or create conversation
-    const conversation = await getOrCreateConversation(
-      conversationId,
-      model.id,
-      courseName,
-      userIdentifier,
-      systemPrompt || courseMetadata.system_prompt || '',
-      temperature ?? 0.7,
-    )
-
-    if (!conversation) {
-      return NextResponse.json(
-        { error: 'Could not create or fetch conversation' },
-        { status: 500 },
-      )
-    }
-
-    // Ensure conversation has agent mode enabled
-    conversation.agentModeEnabled = true
-
-    // Create user message
-    let messageContent: string | Content[]
-    if (typeof userMessage.content === 'string') {
-      messageContent = userMessage.content
-    } else if (Array.isArray(userMessage.content)) {
-      // Convert to proper Content type
-      messageContent = userMessage.content.map((c): Content => ({
-        type: (c.type || 'text') as Content['type'],
-        text: c.text,
-        image_url: c.image_url,
-      }))
-    } else {
-      messageContent = String(userMessage.content)
-    }
-
-    const newUserMessage: Message = {
-      id: userMessage.id,
-      role: 'user',
-      content: messageContent,
-      imageUrls: userMessage.imageUrls,
-      created_at: new Date().toISOString(),
-      contexts: fileUploadContexts?.map((ctx, idx) => ({
-        id: ctx.id ?? idx,
-        text: ctx.text,
-        readable_filename: ctx.readable_filename,
-        course_name: courseName,
-        'course_name ': courseName,
-        s3_path: ctx.s3_path,
-        pagenumber: '',
-        url: ctx.url || '',
-        base_url: '',
-      })),
-    }
-
-    // Get OpenAI key
-    const openaiKey = getOpenAIKey(llmProviders, courseMetadata)
-    if (!openaiKey) {
-      return NextResponse.json(
-        { error: 'No OpenAI API key configured for this project' },
-        { status: 500 },
-      )
-    }
-
-    // Create SSE stream
     const encoder = new TextEncoder()
     let controllerClosed = false
     
@@ -286,14 +204,12 @@ async function handler(req: AuthenticatedRequest) {
       async start(controller) {
         const emit = (event: AgentStreamEvent) => {
           if (controllerClosed) {
-            // Controller already closed, skip emitting
             return
           }
           try {
             const serialized = serializeAgentStreamEvent(event)
             controller.enqueue(encoder.encode(serialized))
           } catch (error) {
-            // Controller might have been closed due to client disconnect
             if ((error as any).code === 'ERR_INVALID_STATE') {
               controllerClosed = true
               return
@@ -302,7 +218,99 @@ async function handler(req: AuthenticatedRequest) {
           }
         }
 
+        emit({
+          type: 'initializing',
+          messageId: userMessage.id,
+          conversationId: conversationId,
+        })
+
         try {
+          console.log('[Agent Route] Fetching metadata for course:', courseName)
+          const baseUrl = getBaseUrl()
+          const [llmProviders, courseMetadata] = await Promise.all([
+            fetchLLMProviders(courseName, baseUrl),
+            getCourseMetadata(courseName),
+          ])
+          
+          console.log('[Agent Route] Course metadata result:', courseMetadata ? 'found' : 'not found')
+          console.log('[Agent Route] LLM providers result:', llmProviders ? 'found' : 'not found')
+
+          if (!courseMetadata) {
+            console.error('[Agent Route] Course metadata not found for:', courseName)
+            emit({
+              type: 'error',
+              message: 'Could not fetch course metadata',
+              recoverable: false,
+            })
+            return
+          }
+
+          // Get or create conversation
+          const conversation = await getOrCreateConversation(
+            conversationId,
+            model.id,
+            courseName,
+            userIdentifier,
+            systemPrompt || courseMetadata.system_prompt || '',
+            temperature ?? 0.7,
+          )
+
+          if (!conversation) {
+            emit({
+              type: 'error',
+              message: 'Could not create or fetch conversation',
+              recoverable: false,
+            })
+            return
+          }
+
+          // Ensure conversation has agent mode enabled
+          conversation.agentModeEnabled = true
+
+          // Create user message
+          let messageContent: string | Content[]
+          if (typeof userMessage.content === 'string') {
+            messageContent = userMessage.content
+          } else if (Array.isArray(userMessage.content)) {
+            messageContent = userMessage.content.map((c): Content => ({
+              type: (c.type || 'text') as Content['type'],
+              text: c.text,
+              image_url: c.image_url,
+            }))
+          } else {
+            messageContent = String(userMessage.content)
+          }
+
+          const newUserMessage: Message = {
+            id: userMessage.id,
+            role: 'user',
+            content: messageContent,
+            imageUrls: userMessage.imageUrls,
+            created_at: new Date().toISOString(),
+            contexts: fileUploadContexts?.map((ctx, idx) => ({
+              id: ctx.id ?? idx,
+              text: ctx.text,
+              readable_filename: ctx.readable_filename,
+              course_name: courseName,
+              'course_name ': courseName,
+              s3_path: ctx.s3_path,
+              pagenumber: '',
+              url: ctx.url || '',
+              base_url: '',
+            })),
+          }
+
+          // Get OpenAI key
+          const openaiKey = getOpenAIKey(llmProviders, courseMetadata)
+          if (!openaiKey) {
+            emit({
+              type: 'error',
+              message: 'No OpenAI API key configured for this project',
+              recoverable: false,
+            })
+            return
+          }
+
           await runAgentConversation({
             conversation,
             courseName,
