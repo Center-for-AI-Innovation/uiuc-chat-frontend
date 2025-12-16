@@ -1040,6 +1040,20 @@ export const Chat = memo(
                 })
 
                 await runAgentStream(agentRequest, {
+                  onInitializing: (messageId, conversationId) => {
+                    // Create initial "Initializing" event for immediate UI feedback
+                    const initEvent: AgentEvent = {
+                      id: 'agent-initializing',
+                      stepNumber: 0,
+                      type: 'initializing',
+                      status: 'running',
+                      title: 'Initializing agent...',
+                      createdAt: new Date().toISOString(),
+                    }
+                    message.agentEvents = [initEvent]
+                    syncAgentMessage()
+                  },
+                  
                   onAgentEventsUpdate: (agentEvents, messageId) => {
                     // Update the user message with agent events - this drives the agent timeline UI
                     message.agentEvents = agentEvents

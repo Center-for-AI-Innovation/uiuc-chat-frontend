@@ -15,6 +15,7 @@ import {
 } from '~/types/chat'
 
 export interface UseAgentStreamCallbacks {
+  onInitializing?: (messageId: string, conversationId?: string) => void
   onSelectionStart?: (stepNumber: number) => void
   onSelectionDone?: (stepNumber: number, event: AgentSelectionEvent) => void
   onRetrievalStart?: (stepNumber: number, query: string) => void
@@ -106,12 +107,14 @@ export function useAgentStream(callbacks: UseAgentStreamCallbacks): UseAgentStre
               const event = parseAgentStreamEvent(dataLine)
               if (!event) continue
 
-              // Yield to allow React to render between events
-              // This ensures UI updates are displayed immediately
               await new Promise(resolve => setTimeout(resolve, 0))
 
               // Dispatch to appropriate callback based on event type
               switch (event.type) {
+                case 'initializing':
+                  callbacks.onInitializing?.(event.messageId, event.conversationId)
+                  break
+
                 case 'selection':
                   if (event.status === 'running') {
                     callbacks.onSelectionStart?.(event.stepNumber)
@@ -266,10 +269,13 @@ export async function runAgentStream(
             const event = parseAgentStreamEvent(dataLine)
             if (!event) continue
 
-            // Yield to allow React to render between events
             await new Promise(resolve => setTimeout(resolve, 0))
 
             switch (event.type) {
+              case 'initializing':
+                callbacks.onInitializing?.(event.messageId, event.conversationId)
+                break
+
               case 'selection':
                 if (event.status === 'running') {
                   callbacks.onSelectionStart?.(event.stepNumber)
