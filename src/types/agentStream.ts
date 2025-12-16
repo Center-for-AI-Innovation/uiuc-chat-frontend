@@ -92,6 +92,16 @@ export interface AgentErrorEvent {
 }
 
 /**
+ * Sent immediately when the agent stream starts.
+ * This provides instant feedback before heavy setup operations complete.
+ */
+export interface AgentInitializingEvent {
+  type: 'initializing'
+  messageId: string
+  conversationId?: string
+}
+
+/**
  * Sent to provide the current agent events array for UI synchronization.
  * This allows the client to update its local agentEvents on the message.
  */
@@ -158,6 +168,7 @@ export interface ClientUIUCTool {
  * Union of all possible agent stream events.
  */
 export type AgentStreamEvent =
+  | AgentInitializingEvent
   | AgentSelectionEvent
   | AgentRetrievalEvent
   | AgentToolEvent
