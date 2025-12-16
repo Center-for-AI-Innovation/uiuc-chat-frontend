@@ -9,7 +9,7 @@ import {
   ChainOfThoughtSearchResults,
   ChainOfThoughtSearchResult,
 } from '@/components/ai-elements/chain-of-thought'
-import { cn } from '@/lib/utils'
+import { cn } from '@/components/shadcn/lib/utils'
 import { Search, Wrench, CheckCircle2, Clock } from 'lucide-react'
 import { LoadingSpinner } from '@/components/UIUC-Components/LoadingSpinner'
 import type { AgentEvent, AgentEventMetadata } from '@/types/chat'
