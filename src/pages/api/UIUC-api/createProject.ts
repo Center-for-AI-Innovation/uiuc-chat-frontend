@@ -1,6 +1,7 @@
 import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
+import { checkCourseExists } from './getCourseExists'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -13,6 +14,27 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (!project_name || !project_owner_email) {
     return res.status(400).json({
       error: 'project_name and project_owner_email are required',
+    })
+  }
+
+  // Server-side validation: Check if project name already exists
+  // This prevents race conditions where a user could bypass client-side validation
+  try {
+    const projectExists = await checkCourseExists(project_name)
+
+    if (projectExists) {
+      return res.status(409).json({
+        error: 'Project name already exists',
+        message: `A project with the name "${project_name}" already exists. Please choose a different name.`,
+      })
+    }
+  } catch (error) {
+    console.error('Error checking project name availability:', error)
+    // If Redis check fails, we must fail the request to prevent data inconsistency
+    // Allowing project creation when Redis is down would lead to out-of-sync data
+    return res.status(503).json({
+      error: 'Service unavailable',
+      message: 'Unable to validate project name. Please contact support.',
     })
   }
 
@@ -52,39 +74,3 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 }
 
 export default withAuth(handler)
-
-// Helper function for backward compatibility
-export const createProject = async (
-  project_name: string,
-  project_description: string | undefined,
-  project_owner_email: string,
-  is_private = false,
-): Promise<boolean> => {
-  try {
-    const response = await fetch('/api/UIUC-api/createProject', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        project_name,
-        project_description,
-        project_owner_email,
-        is_private,
-      }),
-    })
-
-    if (!response.ok) {
-      console.error(
-        'Failed to create the project. Err status:',
-        response.status,
-      )
-      return false
-    }
-
-    return true
-  } catch (error) {
-    console.error(error)
-    return false
-  }
-}
