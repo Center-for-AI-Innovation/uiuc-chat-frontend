@@ -331,6 +331,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               rightSection={<IconChevronDown size={14} />}
             />
             <Button
+              aria-label="Copy Code Snippet"
               onClick={() =>
                 handleCopyCodeSnippet(codeSnippets[selectedLanguage])
               }
@@ -407,6 +408,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             Temperature
           </Title>
           <Slider
+            aria-label="Temperature"
             value={temperature}
             onChange={setTemperature}
             min={0}

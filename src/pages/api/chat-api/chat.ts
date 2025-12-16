@@ -216,11 +216,12 @@ export default async function chat(
     .find((model) => model.default)
 
   // if temperature in the body is set as undefined; use the default model temperature
-  const chatFinalTemperature = temperature !== undefined
-    ? temperature
-    : (defaultModel?.temperature !== undefined
-      ? defaultModel.temperature
-      : 0.1)
+  const chatFinalTemperature =
+    temperature !== undefined
+      ? temperature
+      : defaultModel?.temperature !== undefined
+        ? defaultModel.temperature
+        : 0.1
 
   // Construct the conversation object
   const conversation: Conversation = {
@@ -244,8 +245,8 @@ export default async function chat(
   // Check if the content is an array and filter out image content
   const imageContent = Array.isArray(lastMessage.content)
     ? (lastMessage.content as Content[]).filter(
-      (content) => content.type === 'image_url',
-    )
+        (content) => content.type === 'image_url',
+      )
     : []
 
   const imageUrls = imageContent.map(

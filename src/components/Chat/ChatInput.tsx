@@ -1181,6 +1181,7 @@ export const ChatInput = ({
                 <IconPaperclip size={20} />
               </button>
               <input
+                aria-label="Upload files"
                 type="file"
                 multiple
                 ref={fileUploadRef}
@@ -1225,6 +1226,8 @@ export const ChatInput = ({
 
               {/* Send button */}
               <button
+                tabIndex={0}
+                aria-label="Send"
                 className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center justify-center rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
                 onClick={handleSend}
                 style={{ pointerEvents: 'auto' }}
@@ -1266,6 +1269,8 @@ export const ChatInput = ({
             {showScrollDownButton && (
               <div className="absolute bottom-2 right-10 lg:-right-10 lg:bottom-0">
                 <button
+                  tabIndex={0}
+                  aria-label="Scroll Down"
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
                   onClick={onScrollDownClick}
                   style={{ pointerEvents: 'auto' }}
@@ -1303,6 +1308,9 @@ export const ChatInput = ({
           </div>
 
           <Text
+            role="button"
+            tabIndex={0}
+            aria-label="Chat Settings"
             size={isSmallScreen ? '10px' : 'xs'}
             className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
             onClick={handleTextClick}

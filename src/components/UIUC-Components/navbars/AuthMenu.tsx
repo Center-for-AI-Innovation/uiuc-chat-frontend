@@ -107,6 +107,8 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
               deg: 135,
             }}
             className={classes.userAvatar}
+            tabIndex={0}
+            aria-label="User Menu"
           >
             {getInitials(auth.user?.profile.name || '')}
           </Avatar>
@@ -114,6 +116,8 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
 
         <Menu.Dropdown>
           <Menu.Item
+            role="button"
+            tabIndex={0}
             onClick={() => {
               // Fixed URL construction to avoid realm duplication
               window.open(
@@ -124,7 +128,13 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
           >
             Manage Account
           </Menu.Item>
-          <Menu.Item onClick={() => auth.signoutRedirect()}>Sign Out</Menu.Item>
+          <Menu.Item
+            onClick={() => auth.signoutRedirect()}
+            role="button"
+            tabIndex={0}
+          >
+            Sign Out
+          </Menu.Item>
         </Menu.Dropdown>
       </Menu>
     )
@@ -132,6 +142,7 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
 
   return (
     <button
+      tabIndex={0}
       className={`${classes.link} login-btn`}
       onClick={() => void initiateSignIn(auth, window.location.pathname)}
     >

@@ -922,18 +922,20 @@ CRITICAL: The optimized prompt must:
                           className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
                           p="md"
                           sx={{
-                            cursor: 'pointer',
                             transition: 'all 0.2s ease',
                           }}
-                          onClick={() => setInsightsOpen(!insightsOpen)}
                         >
                           <Flex
+                            role="button"
+                            tabIndex={0}
                             align="center"
                             justify="space-between"
                             sx={{
+                              cursor: 'pointer',
                               padding: '4px 8px',
                               borderRadius: '8px',
                             }}
+                            onClick={() => setInsightsOpen(!insightsOpen)}
                           >
                             <Flex align="center" gap="md">
                               <IconBook
@@ -1134,6 +1136,7 @@ CRITICAL: The optimized prompt must:
                                             }}
                                           >
                                             <Image
+                                              aria-hidden="true"
                                               src={getModelLogo(
                                                 props.modelType,
                                               )}
@@ -1330,6 +1333,7 @@ CRITICAL: The optimized prompt must:
                                   icon={
                                     selectedModel ? (
                                       <Image
+                                        aria-hidden="true"
                                         src={getModelLogo(
                                           modelOptions.find(
                                             (opt) =>
@@ -1391,6 +1395,8 @@ CRITICAL: The optimized prompt must:
                                     data-right-sidebar-icon
                                   >
                                     <IconLayoutSidebarRight
+                                      tabIndex={0}
+                                      aria-label="Close Prompt Builder"
                                       stroke={2}
                                       className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                                       onClick={() =>
@@ -1406,6 +1412,8 @@ CRITICAL: The optimized prompt must:
                                     data-right-sidebar-icon
                                   >
                                     <IconLayoutSidebarRightExpand
+                                      tabIndex={0}
+                                      aria-label="Open Prompt Builder"
                                       stroke={2}
                                       className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                                       onClick={() =>
@@ -2101,8 +2109,9 @@ CRITICAL: The optimized prompt must:
             </Card>
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }
