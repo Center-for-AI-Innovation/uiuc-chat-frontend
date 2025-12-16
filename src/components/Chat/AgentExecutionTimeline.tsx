@@ -11,6 +11,7 @@ import {
 } from '@/components/ai-elements/chain-of-thought'
 import { cn } from '@/lib/utils'
 import { Search, Wrench, CheckCircle2, Clock } from 'lucide-react'
+import { LoadingSpinner } from '@/components/UIUC-Components/LoadingSpinner'
 import type { AgentEvent, AgentEventMetadata } from '@/types/chat'
 
 interface AgentExecutionTimelineProps {
@@ -21,7 +22,7 @@ interface AgentExecutionTimelineProps {
 interface GroupedEvent {
   id: string
   stepNumber: number
-  type: 'retrieval_group' | 'tool' | 'final_response'
+  type: 'initializing' | 'retrieval_group' | 'tool' | 'final_response'
   status: 'running' | 'done' | 'error' | 'pending'
   retrievals?: Array<{
     query: string
@@ -43,15 +44,21 @@ const getEventTimestamp = (event: AgentEvent | GroupedEvent) =>
 const groupEventsByStep = (events: AgentEvent[]): GroupedEvent[] => {
   const grouped: GroupedEvent[] = []
   const retrievalsByStep = new Map<number, AgentEvent[]>()
+  let initializingEvent: AgentEvent | null = null
+  let hasRealEvents = false
 
   for (const event of events) {
-    if (event.type === 'retrieval') {
+    if (event.type === 'initializing') {
+      initializingEvent = event
+    } else if (event.type === 'retrieval') {
+      hasRealEvents = true
       const step = event.stepNumber
       if (!retrievalsByStep.has(step)) {
         retrievalsByStep.set(step, [])
       }
       retrievalsByStep.get(step)!.push(event)
     } else if (event.type === 'tool') {
+      hasRealEvents = true
       grouped.push({
         id: event.id,
         stepNumber: event.stepNumber,
@@ -64,6 +71,7 @@ const groupEventsByStep = (events: AgentEvent[]): GroupedEvent[] => {
         updatedAt: event.updatedAt,
       })
     } else if (event.type === 'final_response') {
+      hasRealEvents = true
       grouped.push({
         id: event.id,
         stepNumber: event.stepNumber,
@@ -75,6 +83,18 @@ const groupEventsByStep = (events: AgentEvent[]): GroupedEvent[] => {
       })
     }
     // Skip action_selection - redundant
+  }
+
+  if (initializingEvent && (initializingEvent.status === 'running' || !hasRealEvents)) {
+    grouped.unshift({
+      id: initializingEvent.id,
+      stepNumber: initializingEvent.stepNumber,
+      type: 'initializing',
+      status: initializingEvent.status,
+      title: initializingEvent.title || 'Initializing agent...',
+      createdAt: initializingEvent.createdAt,
+      updatedAt: initializingEvent.updatedAt,
+    })
   }
 
   // Convert retrieval groups
@@ -339,7 +359,7 @@ export const AgentExecutionTimeline = ({
                             <span className={cn(
                               'h-1 w-1 md:h-1.5 md:w-1.5 rounded-full shrink-0',
                               r.status === 'running' ? 'bg-[--primary] animate-pulse' :
-                              r.status === 'error' ? 'bg-red-500' : 'bg-[--foreground-faded]'
+                              r.status === 'error' ? 'bg-red-500' : 'bg-green-500'
                             )} />
                             <span className="flex-1" title={r.query}>
                               {`"${r.query}"`}
@@ -355,6 +375,23 @@ export const AgentExecutionTimeline = ({
                     </div>
                   }
                 />
+              )
+            }
+
+            if (event.type === 'initializing') {
+              return (
+                <div
+                  key={event.id}
+                  className="flex gap-2 text-sm text-foreground fade-in-0 slide-in-from-top-2 animate-in"
+                >
+                  <div className="relative mt-0.5">
+                    <LoadingSpinner size="xs" />
+                    <div className="-mx-px absolute top-7 bottom-0 left-1/2 w-px bg-border" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-[--foreground]">{event.title}</div>
+                  </div>
+                </div>
               )
             }
 
