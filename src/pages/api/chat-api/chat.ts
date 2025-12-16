@@ -135,7 +135,7 @@ export default async function chat(
   // Check if course is frozen/archived
   if (courseMetadata.is_frozen === true) {
     res.status(403).json({
-      error: 'Course is temporarily frozen by the administrator',
+      error: 'Project is temporarily frozen by the administrator',
       message: `Course '${course_name}' has been temporarily frozen by the administrator`,
     })
     return

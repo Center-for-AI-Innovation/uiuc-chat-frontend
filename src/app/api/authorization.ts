@@ -90,8 +90,8 @@ export function withCourseAccess(courseName: string) {
       if (!courseMetadata) {
         return NextResponse.json(
           {
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
+            error: 'Project not found',
+            message: `Project '${courseName}' does not exist`,
           },
           { status: 404 },
         )
@@ -101,8 +101,8 @@ export function withCourseAccess(courseName: string) {
       if (courseMetadata.is_frozen === true) {
         return NextResponse.json(
           {
-            error: 'Course is temporarily frozen by the administrator',
-            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
+            error: 'Project is temporarily frozen by the administrator',
+            message: `Project '${courseName}' has been temporarily frozen by the administrator`,
           },
           { status: 403 },
         )
@@ -112,7 +112,7 @@ export function withCourseAccess(courseName: string) {
         return NextResponse.json(
           {
             error: 'Access denied',
-            message: `You don't have access to course '${courseName}'`,
+            message: `You don't have access to Project '${courseName}'`,
           },
           { status: 403 },
         )
@@ -145,8 +145,8 @@ export function withCourseAdminAccess(courseName: string) {
       if (!courseMetadata) {
         return NextResponse.json(
           {
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
+            error: 'Project not found',
+            message: `Project '${courseName}' does not exist`,
           },
           { status: 404 },
         )
@@ -156,8 +156,8 @@ export function withCourseAdminAccess(courseName: string) {
       if (courseMetadata.is_frozen === true) {
         return NextResponse.json(
           {
-            error: 'Course is temporarily frozen by the administrator',
-            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
+            error: 'Project is temporarily frozen by the administrator',
+            message: `Project '${courseName}' has been temporarily frozen by the administrator`,
           },
           { status: 403 },
         )
@@ -171,7 +171,7 @@ export function withCourseAdminAccess(courseName: string) {
         return NextResponse.json(
           {
             error: 'Insufficient permissions',
-            message: `This action requires admin access to course '${courseName}'`,
+            message: `This action requires admin access to Project '${courseName}'`,
           },
           { status: 403 },
         )
@@ -205,8 +205,8 @@ export function withCourseOwnerAccess(courseName: string) {
       if (!courseMetadata) {
         return NextResponse.json(
           {
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
+            error: 'Project not found',
+            message: `Project '${courseName}' does not exist`,
           },
           { status: 404 },
         )
@@ -216,8 +216,8 @@ export function withCourseOwnerAccess(courseName: string) {
       if (courseMetadata.is_frozen === true) {
         return NextResponse.json(
           {
-            error: 'Course is temporarily frozen by the administrator',
-            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
+            error: 'Project is temporarily frozen by the administrator',
+            message: `Project '${courseName}' has been temporarily frozen by the administrator`,
           },
           { status: 403 },
         )
@@ -228,7 +228,7 @@ export function withCourseOwnerAccess(courseName: string) {
         return NextResponse.json(
           {
             error: 'Insufficient permissions',
-            message: `This action requires admin access to course '${courseName}'`,
+            message: `This action requires admin access to Project '${courseName}'`,
           },
           { status: 403 },
         )
@@ -317,8 +317,8 @@ export function withCourseAccessFromRequest(
       if (!courseMetadata) {
         return NextResponse.json(
           {
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
+            error: 'Project not found',
+            message: `Project '${courseName}' does not exist`,
           },
           { status: 404 },
         )
@@ -328,8 +328,8 @@ export function withCourseAccessFromRequest(
       if (courseMetadata.is_frozen === true) {
         return NextResponse.json(
           {
-            error: 'Course is temporarily frozen by the administrator',
-            message: `Course '${courseName}' has been temporarily frozen by the administrator`,
+            error: 'Project is temporarily frozen by the administrator',
+            message: `Project '${courseName}' has been temporarily frozen by the administrator`,
           },
           { status: 403 },
         )
@@ -362,7 +362,7 @@ export function withCourseAccessFromRequest(
         return NextResponse.json(
           {
             error: 'Access denied',
-            message: `This action requires ${accessLevelText} access to course '${courseName}'`,
+            message: `This action requires ${accessLevelText} access to Project '${courseName}'`,
           },
           { status: 403 },
         )
