@@ -3,6 +3,7 @@ import { useAuth } from 'react-oidc-context'
 import { montserrat_heading } from 'fonts'
 import { createStyles } from '@mantine/core'
 import { getKeycloakBaseUrl, initiateSignIn } from '~/utils/authHelpers'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles((theme) => ({
   link: {
@@ -86,6 +87,7 @@ interface AuthMenuProps {
 export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
   const { classes } = useStyles()
   const auth = useAuth()
+  const { t } = useTranslation('common')
 
   if (auth.isAuthenticated) {
     return (
@@ -122,9 +124,9 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
               )
             }}
           >
-            Manage Account
+            {t('auth.manage_account')}
           </Menu.Item>
-          <Menu.Item onClick={() => auth.signoutRedirect()}>Sign Out</Menu.Item>
+          <Menu.Item onClick={() => auth.signoutRedirect()}>{t('auth.sign_out')}</Menu.Item>
         </Menu.Dropdown>
       </Menu>
     )

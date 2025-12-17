@@ -228,7 +228,7 @@ export const ChatInput = ({
   chat_ui,
   onRegenerate,
 }: Props) => {
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
 
   const {
     state: {
@@ -319,9 +319,7 @@ export const ChatInput = ({
     const maxLength = selectedConversation?.model?.tokenLimit
 
     if (maxLength && value.length > maxLength) {
-      alert(
-        `This LLM can only handle ${maxLength} characters, but you entered ${value.length} characters. Please switch to a model with a bigger input limit (like Gemini, Claude or GPT) or shorten your message.`,
-      )
+      alert(t('chat.input.llm_input_limit', { maxLength, valueLength: value.length }))
       return
     }
 

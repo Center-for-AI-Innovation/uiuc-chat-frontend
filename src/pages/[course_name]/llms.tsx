@@ -1,7 +1,7 @@
 import { type NextPage } from 'next'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-
+import { useTranslation } from 'next-i18next'
 import { useAuth } from 'react-oidc-context'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
@@ -9,10 +9,19 @@ import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import APIKeyInputForm from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { GetServerSidePropsContext } from 'next'
+
+export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
+  props: {
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+  },
+});
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
   const [courseName, setCourseName] = useState<string | null>(null)
+  const { t } = useTranslation('common')
 
   const auth = useAuth()
   const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)

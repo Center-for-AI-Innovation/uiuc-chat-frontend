@@ -9,7 +9,7 @@ export default withCourseOwnerOrAdminAccess()(handler)
 // Server-side API route handler
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ messageKey: 'common.error' })
   }
 
   const { course_name } = req.query
@@ -45,7 +45,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         })
       } else {
         return res.status(200).json({
-          message: 'Your conversation history is ready for download.',
+          messageKey: 'alerts.exportDocuments.ready_for_download',
         })
       }
     } else if (contentType === 'application/zip') {

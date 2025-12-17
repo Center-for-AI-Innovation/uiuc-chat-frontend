@@ -14,7 +14,9 @@ import {
 // import { Checkbox } from '@radix-ui/react-checkbox'
 import NextLink from 'next/link'
 import Image from 'next/image'
+import { useTranslation } from 'next-i18next'
 export default function CourseraIngestForm(): JSX.Element {
+  const { t } = useTranslation('common')
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -46,10 +48,7 @@ export default function CourseraIngestForm(): JSX.Element {
   const handleIngest = () => {
     setOpen(false)
     if (url.includes('coursera.org')) {
-      // TODO: coursera ingest
-      alert(
-        'Coursera ingest is not yet automated (auth is hard). Please email rohan13@illinois.edu to do it for you',
-      )
+      alert(t('coursera_ingest_alert'))
     }
   }
   // if (isLoading) {
@@ -86,15 +85,14 @@ export default function CourseraIngestForm(): JSX.Element {
                     className="h-8 w-8 object-contain"
                   />
                 </div>
-                <Text className="text-xl font-semibold">Coursera</Text>
+                <Text className="text-xl font-semibold">{t('upload_cards.coursera')}</Text>
               </div>
             </div>
             <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
-              Import content from Coursera courses, including lectures,
-              assignments, and course materials.
+              {t('upload_cards.coursera_description')}
             </Text>
             <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
-              <span>Configure import</span>
+              <span>{t('upload_cards.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -106,19 +104,19 @@ export default function CourseraIngestForm(): JSX.Element {
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
-              Ingest Coursera Course
+              {t('coursera_ingest.title')}
             </DialogTitle>
           </DialogHeader>
           <div className="">
             <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>For Coursera</strong>, just enter a URL like{' '}
+                  <strong>{t('upload_cards.coursera')}</strong>, {t('coursera_ingest.instructions_1')}{' '}
                   <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
                     coursera.org/learn/COURSE_NAME
                   </code>
                   ,<br />
-                  for example:{' '}
+                  {t('coursera_ingest.instructions_2')}{' '}
                   <span className="break-all text-[--dashboard-button]">
                     <NextLink
                       target="_blank"
@@ -159,7 +157,7 @@ export default function CourseraIngestForm(): JSX.Element {
                       width: '100%',
                     },
                   }}
-                  placeholder="Enter URL..."
+                  placeholder={t('github_ingest.enter_url') as unknown as string}
                   radius="md"
                   type="url"
                   value={url}
@@ -177,7 +175,7 @@ export default function CourseraIngestForm(): JSX.Element {
               disabled={!isUrlValid}
               className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
-              Ingest Course
+              {t('coursera_ingest.button')}
             </Button>
           </div>
         </DialogContent>

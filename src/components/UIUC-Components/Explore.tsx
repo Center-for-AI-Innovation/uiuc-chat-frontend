@@ -6,6 +6,7 @@ import { useMediaQuery } from '@mantine/hooks'
 import router from 'next/router'
 import { createProject } from '~/utils/apiUtils'
 import Navbar from './navbars/Navbar'
+import { useTranslation } from 'next-i18next'
 
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
@@ -20,6 +21,7 @@ const Dashboard = ({
   is_new_course?: boolean
   project_description?: string
 }) => {
+  const { t } = useTranslation('common')
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [projectName, setProjectName] = useState(project_name || '')
   const [projectDescription, setProjectDescription] = useState(
@@ -98,7 +100,7 @@ const Dashboard = ({
       <Navbar isPlain={false} />
       <Head>
         <title>{project_name}</title>
-        <meta name="description" content="My projects on UIUC.chat." />
+        <meta name="description" content={t('dashboard_page.meta_description') || 'Dashboard page meta description'} />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main

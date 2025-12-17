@@ -14,6 +14,7 @@ import axios from 'axios'
 import { Text, Title } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
+import { useTranslation } from 'next-i18next'
 
 interface ChartProps {
   data?: { [day: string]: number }
@@ -26,14 +27,15 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
   isLoading,
   error,
 }) => {
+  const { t } = useTranslation('common')
   const daysOfWeek = [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
+    t('analysis.sunday', 'Sunday') || 'Sunday',
+    t('analysis.monday', 'Monday') || 'Monday',
+    t('analysis.tuesday', 'Tuesday') || 'Tuesday',
+    t('analysis.wednesday', 'Wednesday') || 'Wednesday',
+    t('analysis.thursday', 'Thursday') || 'Thursday',
+    t('analysis.friday', 'Friday') || 'Friday',
+    t('analysis.saturday', 'Saturday') || 'Saturday',
   ]
 
   const getYAxisLabelPadding = (data: { count: number }[]) => {
@@ -45,7 +47,7 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
   if (isLoading) {
     return (
       <Text>
-        Loading chart <LoadingSpinner size="xs" />
+        {t('analysis.loadingChart', 'Loading chart')} <LoadingSpinner size="xs" />
       </Text>
     )
   }
@@ -55,7 +57,7 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
   }
 
   if (!data) {
-    return <Text>No data available</Text>
+    return <Text>{t('analysis.noDataAvailable', 'No data available')}</Text>
   }
 
   const chartData = daysOfWeek.map((day) => ({
@@ -78,7 +80,7 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
               fontSize: '.75rem',
             }}
             label={{
-              value: 'Day of Week',
+              value: t('analysis.dayOfWeek', 'Day of Week'),
               position: 'insideBottom',
               offset: -5,
               fill: 'var(--foreground)',
@@ -93,7 +95,7 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
               fontSize: '.75rem',
             }}
             label={{
-              value: 'Number of Conversations',
+              value: t('analysis.numberOfConversations', 'Number of Conversations'),
               angle: -90,
               position: 'center',
               fill: 'var(--foreground)',
@@ -108,13 +110,16 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
               color: '#fff',
               fontFamily: montserrat_paragraph.style.fontFamily,
             }}
-            formatter={(value) => [`Conversations: ${value}`]}
-            labelFormatter={(label) => `Day of Week: ${label}`}
+            formatter={(value) => {
+              const num = typeof value === 'number' ? value : Number(value);
+              return String(t('analysis.conversationsCount', { count: num, defaultValue: `Conversations: ${num}` }));
+            }}
+            labelFormatter={(label) => t('analysis.dayOfWeekLabel', { day: label, defaultValue: 'Day of Week: {{day}}' })}
           />
           <Bar
             dataKey="count"
             fill="var(--dashboard-stat)"
-            name="Number of Conversations"
+            name={t('analysis.numberOfConversations') as unknown as string}
           />
         </BarChart>
       </ResponsiveContainer>

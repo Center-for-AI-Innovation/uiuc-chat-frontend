@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'next-i18next'
 import {
   IconLock,
   IconLockOpen,
@@ -61,6 +62,7 @@ export default function ShareSettingsModal({
   projectName,
   metadata: initialMetadata,
 }: ShareSettingsModalProps) {
+  const { t } = useTranslation('common')
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
@@ -223,12 +225,12 @@ export default function ShareSettingsModal({
             <h2
               className={`${montserrat_heading.variable} font-montserratHeading text-xl font-semibold`}
             >
-              Share your chatbot
+              {t('share_modal.title')}
             </h2>
             <p
               className={`${montserrat_paragraph.variable} mt-1 font-montserratParagraph text-sm text-[--foreground-faded]`}
             >
-              Collaborate with members on this project
+              {t('share_modal.subtitle')}
             </p>
           </div>
           <button
@@ -248,7 +250,7 @@ export default function ShareSettingsModal({
             <h3
               className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
             >
-              Chatbot Link
+              {t('share_modal.chatbot_link')}
             </h3>
 
             <div className="relative mt-2 flex gap-2">
@@ -274,7 +276,7 @@ export default function ShareSettingsModal({
             <h3
               className={`${montserrat_heading.variable} font-montserratHeading text-sm font-medium`}
             >
-              Access Control
+              {t('share_modal.access_control')}
             </h3>
 
             {/* Unified Access dropdown */}

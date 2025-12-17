@@ -14,6 +14,7 @@ import axios from 'axios'
 import { Text, Title, Switch } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
+import { useTranslation } from 'next-i18next'
 
 interface ChartProps {
   data?: { [date: string]: number }
@@ -54,6 +55,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   isLoading,
   error,
 }) => {
+  const { t } = useTranslation('common')
   const [useLogScale, setUseLogScale] = useState(false)
 
   const getCustomTicks = useMemo(
@@ -99,7 +101,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   if (isLoading) {
     return (
       <Text>
-        Loading chart <LoadingSpinner size="xs" />
+        {t('analysis.loadingChart', 'Loading chart') || 'Loading chart'} <LoadingSpinner size="xs" />
       </Text>
     )
   }
@@ -109,7 +111,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   }
 
   if (!data || Object.keys(data).length === 0) {
-    return <Text>No data available</Text>
+    return <Text>{t('analysis.noDataAvailable', 'No data available') || 'No data available'}</Text>
   }
 
   const yAxisDomain = useLogScale
@@ -135,14 +137,14 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
   return (
     <div>
       <div className="mb-4 flex items-center justify-end gap-2">
-        <Text size="sm">Linear</Text>
+        <Text size="sm">{t('analysis.linear')}</Text>
         <Switch
           checked={useLogScale}
           onChange={(event) => setUseLogScale(event.currentTarget.checked)}
           size="sm"
           color="var(--dashboard-button)"
-          aria-label="Toggle between linear and logarithmic scale"
-          title="Switch between linear and logarithmic scale visualization"
+          aria-label={t('analysis.toggleLinearLog') as unknown as string}
+          title={t('analysis.switchLinearLog') as unknown as string}
           styles={{
             track: {
               cursor: 'pointer',
@@ -160,13 +162,13 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
             },
           }}
         />
-        <Text size="sm">Logarithmic</Text>
+        <Text size="sm">{t('analysis.logarithmic')}</Text>
       </div>
 
       <div
         style={{ width: '100%', height: 400 }}
         role="region"
-        aria-label="Conversations per day visualization"
+        aria-label={t('analysis.conversationsPerDayVisualization', 'Conversations per day visualization') || ''}
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -187,7 +189,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
               }}
               angle={chartData.length > 15 ? -45 : 0}
               label={{
-                value: 'Date',
+                value: t('analysis.date', 'Date') || 'Date',
                 position: 'insideBottom',
                 offset: -20,
                 fill: 'var(--dashboard-foreground)',
@@ -207,8 +209,8 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
               }}
               label={{
                 value: useLogScale
-                  ? 'Number of Conversations (log scale)'
-                  : 'Number of Conversations',
+                  ? t('analysis.numberOfConversationsLog', 'Number of Conversations (log scale)') || 'Number of Conversations (log scale)'
+                  : t('analysis.numberOfConversations', 'Number of Conversations') || 'Number of Conversations',
                 angle: -90,
                 position: 'center',
                 fill: 'var(--dashboard-foreground)',
@@ -229,13 +231,13 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
                 color: '#fff',
                 fontFamily: montserrat_paragraph.style.fontFamily,
               }}
-              formatter={(value: number) => [`Conversations: ${value}`]}
-              labelFormatter={(label) => `Date: ${label}`}
+              formatter={(value: number) => [t('analysis.conversationsCount', { count: value, defaultValue: 'Conversations: {{count}}' })]}
+              labelFormatter={(label) => t('analysis.dateLabel', { date: label, defaultValue: 'Date: {{date}}' })}
             />
             <Bar
               dataKey="count"
               fill="var(--dashboard-stat)"
-              name="Number of Conversations"
+              name={t('analysis.numberOfConversations') as unknown as string}
             />
           </BarChart>
         </ResponsiveContainer>

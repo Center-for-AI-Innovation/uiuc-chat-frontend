@@ -13,6 +13,7 @@ import NextLink from 'next/link'
 import axios from 'axios'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'next-i18next'
 export default function MITIngestForm({
   project_name,
   setUploadFiles,
@@ -21,6 +22,7 @@ export default function MITIngestForm({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
+  const { t } = useTranslation('common')
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -74,7 +76,7 @@ export default function MITIngestForm({
       let data = null
       data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
     } else {
-      alert('Invalid URL (please include https://)')
+      alert(t('website_ingest.invalid_url_error') as unknown as string)
     }
   }
   const [inputErrors, setInputErrors] = useState({
@@ -120,16 +122,15 @@ export default function MITIngestForm({
                     className="rounded-full object-contain"
                   />
                 </div>
-                <Text className="text-xl font-semibold">MIT Course</Text>
+                <Text className="text-xl font-semibold">{t('upload_cards.mit_course')}</Text>
               </div>
             </div>
 
             <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
-              Import content from MIT OpenCourseWare, including lecture notes,
-              assignments, and course materials.
+              {t('upload_cards.mit_course_description')}
             </Text>
             <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
-              <span>Configure import</span>
+              <span>{t('upload_cards.configure_import')}</span>
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
@@ -141,20 +142,20 @@ export default function MITIngestForm({
         <DialogContent className="mx-auto h-auto max-h-[85vh] w-[95%] max-w-2xl overflow-y-auto !rounded-2xl border-0 bg-[--modal] px-4 py-6 text-[--modal-text] sm:px-6">
           <DialogHeader>
             <DialogTitle className="mb-4 text-left text-xl font-bold">
-              Ingest MIT Course
+              {t('upload_cards.ingest_website')}
             </DialogTitle>
           </DialogHeader>
           <div className="">
             <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
-                  <strong>For MIT Open Course Ware</strong>, just enter a URL
+                  <strong>{t('mit_ingest.for_mit_open_course_ware')}</strong>, just enter a URL
                   like{' '}
                   <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
                     ocw.mit.edu/courses/ANY_COURSE
                   </code>
                   ,<br />
-                  for example:{' '}
+                  {t('github_ingest.for_example')}{' '}
                   <span className="break-all">
                     <NextLink
                       target="_blank"
@@ -198,7 +199,7 @@ export default function MITIngestForm({
                       width: '100%',
                     },
                   }}
-                  placeholder="Enter URL..."
+                  placeholder={t('mit_ingest.enter_url') as unknown as string}
                   radius="md"
                   type="url"
                   value={url}
@@ -216,7 +217,7 @@ export default function MITIngestForm({
               disabled={!isUrlValid}
               className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
-              Ingest MIT Course
+              {t('coursera_ingest.button')}
             </Button>
           </div>
         </DialogContent>

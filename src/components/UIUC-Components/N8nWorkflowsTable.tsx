@@ -5,10 +5,6 @@ import { useEffect, useState } from 'react'
 import { Switch, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
 import {
-  // IconArrowsSort,
-  // IconCaretDown,
-  // IconCaretUp,
-  // IconSquareArrowUp,
   IconAlertCircle,
 } from '@tabler/icons-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -17,8 +13,12 @@ import { Montserrat } from 'next/font/google'
 import { type UIUCTool } from '~/types/chat'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { LoadingSpinner } from './LoadingSpinner'
+import { useTranslation } from 'next-i18next'
 
 const PAGE_SIZE = 25
+
+type WorkflowRecord = UIUCTool
+type Tag = { name: string }
 
 interface N8nWorkflowsTableProps {
   n8nApiKey: string
@@ -80,6 +80,7 @@ export const N8nWorkflowsTable = ({
   isEmptyWorkflowTable,
   sidebarCollapsed = false,
 }: N8nWorkflowsTableProps) => {
+  const { t } = useTranslation('common')
   const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
 
@@ -111,13 +112,9 @@ export const N8nWorkflowsTable = ({
     },
 
     onMutate: (variables) => {
-      // A mutation is about to happen!
-
-      // Optionally return a context containing data to use when for example rolling back
       return { id: 1 }
     },
     onError: (error, variables, context) => {
-      // An error happened!
       console.log(`Error happened ${error}`)
       notifications.show({
         id: 'error-notification',
@@ -128,7 +125,7 @@ export const N8nWorkflowsTable = ({
         autoClose: 12000,
         title: (
           <Text size={'lg'} className={`${montserrat_med.className}`}>
-            Error with activation
+            {t('tools_section.alerts.error.activation_failed')}
           </Text>
         ),
         message: (
@@ -146,11 +143,9 @@ export const N8nWorkflowsTable = ({
       })
     },
     onSuccess: (data, variables, context) => {
-      // Boom baby!
       console.log(`success`, data)
     },
     onSettled: (data, error, variables, context) => {
-      // Error or success... doesn't matter!
       queryClient.invalidateQueries({
         queryKey: ['tools', n8nApiKey],
       })
@@ -158,7 +153,6 @@ export const N8nWorkflowsTable = ({
   })
 
   useEffect(() => {
-    // Refetch if API key changes
     refetchWorkflows()
   }, [n8nApiKey])
 
@@ -189,8 +183,63 @@ export const N8nWorkflowsTable = ({
       const dateB = new Date(b.createdAt as string)
       return dateB.getTime() - dateA.getTime()
     })
-    currentRecords = (sortedRecords as UIUCTool[]).slice(startIndex, endIndex)
+    currentRecords = (sortedRecords as WorkflowRecord[]).slice(startIndex, endIndex)
   }
+
+  const tableColumns = [
+    { 
+      accessor: 'name', 
+      title: t('tools_section.table.name', { defaultValue: 'Name' }),
+      render: (record: WorkflowRecord) => record.name || ''
+    },
+    {
+      accessor: 'enabled',
+      title: t('tools_section.table.enabled', { defaultValue: 'Enabled' }),
+      width: 100,
+      render: (record: WorkflowRecord) => (
+        <Switch
+          checked={!!record.enabled}
+          onChange={(event) => {
+            mutate_active_flows.mutate({
+              id: record.id,
+              checked: event.target.checked,
+            })
+          }}
+        />
+      ),
+    },
+    {
+      accessor: 'tags',
+      title: t('tools_section.table.tags', { defaultValue: 'Tags' }),
+      width: 100,
+      render: (record: WorkflowRecord) => {
+        return record.tags
+          ? record.tags.map((tag: Tag) => tag.name).join(', ')
+          : ''
+      },
+    },
+    {
+      accessor: 'createdAt',
+      title: t('tools_section.table.created_at', { defaultValue: 'Created at' }),
+      width: 120,
+      render: (record: WorkflowRecord) => {
+        const { createdAt } = record
+        return dayjs(createdAt).format('MMM D YYYY, h:mm A')
+      },
+    },
+    {
+      accessor: 'updatedAt',
+      title: t('tools_section.table.updated_at', { defaultValue: 'Updated at' }),
+      width: 120,
+      render: (record: WorkflowRecord) => {
+        const { updatedAt } = record
+        return dayjs(updatedAt).format('MMM D YYYY, h:mm A')
+      },
+    },
+  ]
+
+  const loadingText = t('common.loading', { defaultValue: 'Loading...' }) as string
+  const noRecordsText = t('tools_section.no_tools_found', { defaultValue: 'No tools found' }) as string
 
   return (
     <>
@@ -206,20 +255,17 @@ export const N8nWorkflowsTable = ({
         // w={isWideScreen ? '85%' : '92%'}
         className={`pb-2 text-[--dashboard-foreground] ${widthClasses}`}
       >
-        These tools can be automatically invoked by the LLM to fetch additional
-        data to answer user questions on the{' '}
+        {t('tools_section.toolsDescription')}{' '}
         <a
           href={`/${course_name}/chat`}
-          // target="_blank"
           rel="noopener noreferrer"
           className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
           style={{
             textDecoration: 'underline',
           }}
         >
-          chat page
+          {t('tools_section.chatPage', { defaultValue: 'Chat Page' })}
         </a>
-        .
       </Text>
 
       {/* dataTable styling options https://icflorescu.github.io/mantine-datatable/examples/overriding-the-default-styles/  */}
@@ -261,11 +307,13 @@ export const N8nWorkflowsTable = ({
           columns={[
             // { titleStyle: dataTableTitleStyles, accessor: 'id', width: 175 },
             {
+              title: t('tools_section.tableName'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'name',
             },
             {
+              title: t('tools_section.tableEnabled'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'enabled',
@@ -300,6 +348,7 @@ export const N8nWorkflowsTable = ({
               ),
             },
             {
+              title: t('tools_section.tableTags'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'tags',
@@ -310,6 +359,7 @@ export const N8nWorkflowsTable = ({
               },
             },
             {
+              title: t('tools_section.tableCreatedAt'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'createdAt',
@@ -320,6 +370,7 @@ export const N8nWorkflowsTable = ({
               },
             },
             {
+              title: t('tools_section.tableUpdatedAt'),
               titleStyle: dataTableTitleStyles,
               cellsStyle: dataTableCellsStyles,
               accessor: 'updatedAt',
@@ -338,9 +389,9 @@ export const N8nWorkflowsTable = ({
           // 👇 uncomment the next line to use a custom pagination size
           // paginationSize="md"
           // 👇 uncomment the next line to use a custom loading text
-          loadingText="Loading..."
+          loadingText={t('tools_section.loading') as string}
           // 👇 uncomment the next line to display a custom text when no records were found
-          noRecordsText="No records found"
+          noRecordsText={t('tools_section.noRecords') as string}
           // 👇 uncomment the next line to use a custom pagination text
           // paginationText={({ from, to, totalRecords }) => `Records ${from} - ${to} of ${totalRecords}`}
           // 👇 uncomment the next lines to use custom pagination colors

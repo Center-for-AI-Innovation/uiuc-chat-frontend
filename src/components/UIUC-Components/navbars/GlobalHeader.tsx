@@ -8,8 +8,10 @@ import { Menu2 } from 'tabler-icons-react'
 
 import { useAuth } from 'react-oidc-context'
 import { AuthMenu } from './AuthMenu'
+import { useTranslation } from 'next-i18next'
 
 export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
+  const { t } = useTranslation('common')
   const headerStyle = isNavbar
     ? {
         display: 'flex',
@@ -74,6 +76,7 @@ export function LandingPageHeader({
 }: {
   forGeneralPurposeNotLandingpage?: boolean
 }) {
+  const { t } = useTranslation('common')
   const { classes, theme } = useStyles()
   const headerStyle = forGeneralPurposeNotLandingpage
     ? {
@@ -251,7 +254,7 @@ export function LandingPageHeader({
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    Create Your Own Bot
+                    {t('navigation.create_your_own_bot')}
                   </span>
                 </span>
               </Link>
@@ -263,11 +266,11 @@ export function LandingPageHeader({
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconClipboardTexts />
-                  <span
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    Docs
-                  </span>
+                                      <span
+                      className={`${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {t('navigation.docs')}
+                    </span>
                 </span>
               </Link>
             </>
@@ -300,6 +303,7 @@ export function LandingPageHeader({
               src="/media/logo_illinois.png"
               width="auto"
               height="100%"
+              alt={t('navbar.illinois_logo_alt') as unknown as string}
             ></img>
           </div>
           <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
@@ -335,7 +339,7 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      Docs
+                      {t('navigation.docs')}
                     </span>
                   </span>
                 </Link>
@@ -360,7 +364,7 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      News
+                      {t('navigation.news')}
                     </span>
                   </span>
                 </Link>
@@ -381,7 +385,7 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      My Chatbots
+                      {t('navigation.my_chatbots')}
                     </span>
                   </span>
                 </Link>
@@ -402,7 +406,7 @@ export function LandingPageHeader({
                       className={`${montserrat_heading.variable} font-montserratHeading`}
                       style={{ color: 'var(--illinois-orange)' }}
                     >
-                      Create Your Own Bot
+                      {t('navigation.create_your_own_bot')}
                     </span>
                   </span>
                 </Link>
@@ -469,7 +473,7 @@ export function LandingPageHeader({
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ color: 'var(--illinois-orange)' }}
                         >
-                          Docs
+                          {t('navigation.docs')}
                         </span>
                       </div>
                     </Link>
@@ -496,7 +500,7 @@ export function LandingPageHeader({
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ color: 'var(--illinois-orange)' }}
                         >
-                          News
+                          {t('navigation.news')}
                         </span>
                       </div>
                     </Link>

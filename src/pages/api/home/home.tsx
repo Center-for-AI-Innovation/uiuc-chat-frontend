@@ -74,7 +74,7 @@ const Home = ({
   const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
 
   // Hooks
-  const { t } = useTranslation('chat')
+  const { t } = useTranslation('common')
   const { getModelsError } = useErrorService()
 
   const queryClient = useQueryClient()
@@ -362,7 +362,7 @@ const Home = ({
 
     const newConversation: Conversation = {
       id: uuidv4(),
-      name: '',
+      name: t('chat.new_conversation'),
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
@@ -712,14 +712,13 @@ const Home = ({
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {
-    // show blank page during loading
     return (
       <>
         <MainPageBackground>
           <div
             className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
           >
-            <span className="mr-2">Warming up the knowledge engines...</span>
+            <span className="mr-2">{t('chat.loading.knowledge_engines')}</span>
             <LoadingSpinner size="sm" />
           </div>
         </MainPageBackground>

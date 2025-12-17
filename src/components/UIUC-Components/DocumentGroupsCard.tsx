@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import { DocGroupsTable } from './DocGroupsTable'
+import { useTranslation } from 'next-i18next'
 
 function DocumentGroupsCard({
   course_name,
@@ -14,6 +15,7 @@ function DocumentGroupsCard({
   course_name: string
   sidebarCollapsed?: boolean
 }) {
+  const { t } = useTranslation('common')
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [accordionOpened, setAccordionOpened] = useState(false)
 
@@ -44,14 +46,14 @@ function DocumentGroupsCard({
                 order={3}
                 className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
               >
-                Document Groups
+                {t('dashboard.document_groups')}
               </Title>
               <ActionIcon
                 variant="subtle"
                 color="var(--foreground-faded)"
                 onClick={() => setAccordionOpened(!accordionOpened)}
                 className="hover:bg-[--background]"
-                title="More info on document groups"
+                title={t('dashboard.document_groups_info') as unknown as string}
               >
                 <IconInfoCircle className="text-[--foreground-faded] hover:text-[--foreground]" />
               </ActionIcon>
@@ -77,29 +79,8 @@ function DocumentGroupsCard({
                     <Text
                       className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph text-[--foreground]`}
                     >
-                      Document Groups help you organize and control your
-                      content:
+                      {t('dashboard.document_groups_description')}
                     </Text>
-                    <ul className="list-inside list-disc space-y-2 text-[--foreground]">
-                      <li className="text-sm">
-                        <span className="text-[--illinois-orange]">
-                          Organize
-                        </span>{' '}
-                        documents into clear categories
-                      </li>
-                      <li className="text-sm">
-                        <span className="text-[--illinois-orange]">
-                          Enable/disable
-                        </span>{' '}
-                        groups to control visibility
-                      </li>
-                      <li className="text-sm">
-                        <span className="text-[--illinois-orange]">
-                          Filter chats
-                        </span>{' '}
-                        to specific document groups
-                      </li>
-                    </ul>
                   </div>
                 </div>
               </motion.div>

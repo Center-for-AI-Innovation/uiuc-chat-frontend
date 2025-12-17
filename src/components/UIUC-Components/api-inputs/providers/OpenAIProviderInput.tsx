@@ -8,6 +8,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
 import { APIKeyInput } from '../LLMsApiKeyInputForm'
+import { useTranslation } from 'next-i18next'
 
 export default function OpenAIProviderInput({
   provider,
@@ -18,6 +19,7 @@ export default function OpenAIProviderInput({
   form: any
   isLoading: boolean
 }) {
+  const { t } = useTranslation('common')
   if (isLoading) {
     return <Skeleton height={200} width={330} radius={'lg'} />
   }
@@ -63,8 +65,8 @@ export default function OpenAIProviderInput({
               <Switch
                 size="md"
                 labelPosition="left"
-                onLabel="ON"
-                offLabel="OFF"
+                onLabel={t('models.on')}
+                offLabel={t('models.off')}
                 aria-label="Enable OpenAI provider"
                 checked={field.state.value}
                 onChange={(event) => {
@@ -133,8 +135,7 @@ export default function OpenAIProviderInput({
                     {(apiKeyField: any) => (
                       <APIKeyInput
                         field={apiKeyField}
-                        placeholder="OpenAI API Key"
-                        // onValidate={validateApiKey}
+                        placeholder={t('models.openai.title')}
                       />
                     )}
                   </form.Field>

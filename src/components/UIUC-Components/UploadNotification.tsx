@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'next-i18next'
 
 export interface FileUpload {
   name: string
@@ -59,6 +60,7 @@ function UploadNotificationContent({
   onClose,
   projectName,
 }: UploadNotificationProps) {
+  const { t } = useTranslation('common')
   const [isMinimized, setIsMinimized] = useState(false)
   const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
   const { data: failedDocuments } = useQuery<FailedDocumentsResponse>({
@@ -247,8 +249,8 @@ function UploadNotificationContent({
             className={`${montserrat_heading.variable} font-montserratHeading`}
           >
             {allComplete
-              ? `${currentFiles.length} document${currentFiles.length > 1 ? 's' : ''} ready for chat`
-              : `Processing ${currentFiles.length} document${currentFiles.length > 1 ? 's' : ''}`}
+              ? t('upload_ready_for_chat', { count: currentFiles.length })
+              : t('processing_documents', { count: currentFiles.length })}
           </Text>
           <Text
             size="xs"
@@ -256,12 +258,12 @@ function UploadNotificationContent({
             component="pre"
           >
             {currentFiles.some((file) => file.status === 'error')
-              ? 'If upload failed, please try again and let us know!'
+              ? t('upload_failed')
               : currentFiles.some((file) => file.status === 'uploading')
-                ? 'Please stay on this page while files are uploading'
+                ? t('stay_while_uploading')
                 : currentFiles.some((file) => file.status === 'ingesting')
-                  ? 'Files are being processed for chat\nYou can leave this page if you want'
-                  : 'All files processed\nContinue to chat'}
+                  ? t('files_processing_for_chat')
+                  : t('all_files_processed')}
           </Text>
         </div>
         <div className="flex items-center gap-1">
@@ -339,8 +341,8 @@ function UploadNotificationContent({
                       <Tooltip
                         label={
                           file.status === 'uploading'
-                            ? 'Uploading to secure storage'
-                            : 'Processing for chat'
+                            ? t('uploading_to_secure_storage')
+                            : t('processing_for_chat')
                         }
                         classNames={{
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
@@ -352,7 +354,7 @@ function UploadNotificationContent({
 
                     {file.status === 'complete' && (
                       <Tooltip
-                        label="Ready for chat"
+                        label={t('ready_for_chat') || ''}
                         classNames={{
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}
@@ -365,7 +367,7 @@ function UploadNotificationContent({
                     )}
                     {file.status === 'error' && (
                       <Tooltip
-                        label="Upload failed"
+                        label={t('upload_failed') || ''}
                         classNames={{
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}

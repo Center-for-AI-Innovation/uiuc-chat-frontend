@@ -20,6 +20,7 @@ import {
   TooltipTrigger,
 } from '../Tooltip'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'next-i18next';
 
 interface FileType {
   icon: (props: TablerIconsProps) => JSX.Element
@@ -107,18 +108,18 @@ const useStyles = createStyles((theme) => ({
 }))
 
 const SupportedFileUploadTypes = () => {
+  const { t } = useTranslation('common')
   const { classes, theme } = useStyles()
-  // className={classes.wrapper}
   const fileTypes: FileType[] = [
-    { icon: IconFileTypePdf, label: 'PDF', color: 'text-red-500' },
-    { icon: IconFileTypeDocx, label: 'Word', color: 'text-blue-500' },
-    { icon: IconFileTypePpt, label: 'PPT', color: 'text-orange-500' },
-    { icon: IconFileTypeXls, label: 'Excel', color: 'text-green-500' },
-    { icon: IconVideo, label: 'Video', color: 'text-purple-500' },
-    { icon: IconPhoto, label: 'Image', color: 'text-pink-500' },
-    { icon: IconMusic, label: 'Audio', color: 'text-yellow-500' },
-    { icon: IconCode, label: 'Code', color: 'text-cyan-500' },
-    { icon: IconFileTypeTxt, label: 'Text', color: 'text-white' },
+    { icon: IconFileTypePdf, label: t('file_types.pdf') as unknown as string, color: 'text-red-500' },
+    { icon: IconFileTypeDocx, label: t('file_types.word') as unknown as string, color: 'text-blue-500' },
+    { icon: IconFileTypePpt, label: t('file_types.ppt') as unknown as string, color: 'text-orange-500' },
+    { icon: IconFileTypeXls, label: t('file_types.excel') as unknown as string, color: 'text-green-500' },
+    { icon: IconVideo, label: t('file_types.video') as unknown as string, color: 'text-purple-500' },
+    { icon: IconPhoto, label: t('file_types.image') as unknown as string, color: 'text-pink-500' },
+    { icon: IconMusic, label: t('file_types.audio') as unknown as string, color: 'text-yellow-500' },
+    { icon: IconCode, label: t('file_types.code') as unknown as string, color: 'text-cyan-500' },
+    { icon: IconFileTypeTxt, label: t('file_types.text') as unknown as string, color: 'text-white' },
   ]
 
   return (
@@ -150,7 +151,7 @@ const SupportedFileUploadTypes = () => {
                   </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{type.label} files supported</p>
+                  <p>{t('file_types.files_supported', { type: type.label })}</p>
                 </TooltipContent>
               </Tooltip>
             )

@@ -4,6 +4,8 @@ import Head from 'next/head'
 import Image from 'next/image'
 import React, { useState, useEffect, useMemo } from 'react'
 import { ArrowNarrowRight, ExternalLink, Link } from 'tabler-icons-react'
+import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 
 import { doto_font, montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -127,12 +129,13 @@ const TypingAnimation: React.FC = () => {
 }
 
 const Home: NextPage = () => {
+  const { t } = useTranslation('common')
   const [isTooltipVisible, setIsTooltipVisible] = useState(false)
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
   const IllinoisChatBannerContent = useMemo(() => {
-    return process.env.NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT || null
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_BANNER_CONTENT || null
   }, [])
 
   return (
@@ -228,12 +231,10 @@ const Home: NextPage = () => {
                 `}
               >
                 <h2>
-                  Create a chatbot with{' '}
-                  <span className="whitespace-nowrap">your content.</span>
+                  {t('homepage.features.create_chatbot_with')} <span className="whitespace-nowrap">{t('homepage.features.your_content')}</span>
                 </h2>
                 <h2 className="mt-4">
-                  Share it with{' '}
-                  <span className="whitespace-nowrap">a click.</span>
+                  {t('homepage.features.share_with')} <span className="whitespace-nowrap">{t('homepage.features.a_click')}</span>
                 </h2>
               </div>
 
@@ -255,8 +256,7 @@ const Home: NextPage = () => {
                   router.push('/chat')
                 }}
               >
-                Try it out{' '}
-                <ArrowNarrowRight size={32} strokeWidth={1} color={'white'} />
+                {t('homepage.features.try_it_out')} <ArrowNarrowRight size={32} strokeWidth={1} color={'white'} />
               </Button>
             </div>
 
@@ -288,7 +288,7 @@ const Home: NextPage = () => {
                 className="mr-8 mt-[2px] hidden text-right text-xs sm:mr-4 sm:mt-[-8px]"
                 style={{ color: 'var(--illinois-orange)' }}
               >
-                Upload almost anything
+                {t('homepage.features.upload_almost_anything')}
               </div>
             </div>
           </div>
@@ -351,7 +351,7 @@ const Home: NextPage = () => {
             {/* Adjusted container with better spacing */}
             <div className="flex w-full flex-col items-center justify-center sm:flex-row">
               <div className="pr-2 sm:flex-shrink-0 sm:text-right">
-                Your AI trained on your
+                {t('homepage.flagship.your_ai_trained_on_your')}
               </div>
 
               <div className="sm:max-w-[300px] sm:flex-grow">
@@ -371,8 +371,9 @@ const Home: NextPage = () => {
               ${montserrat_heading.variable} font-montserratHeading
           `}
           >
-            It&apos;s the easiest way to make your{' '}
-            <span className="whitespace-nowrap">own Chatbot</span>
+            {t('homepage.flagship.its_the_easiest_way_to_make_your')}
+            <br/>
+            <span className="whitespace-nowrap">{t('homepage.flagship.own_chatbot')}</span>
           </h2>
 
           {/* step 1 */}
@@ -403,7 +404,7 @@ const Home: NextPage = () => {
                     `}
                     style={{ color: 'var(--illinois-orange)' }}
                   >
-                    1
+                    {t('homepage.step1.title')}
                   </div>
                   <div
                     className={`
@@ -411,57 +412,31 @@ const Home: NextPage = () => {
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
-                    Bring your documents{' '}
-                    <span className="whitespace-nowrap">and tools</span>
+                    {t('homepage.step1.heading')}
                   </div>
                 </div>
 
                 <div className="mt-4 flex flex-col gap-2 text-sm">
                   <div className="">
-                    Simply{' '}
-                    <span
-                      className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      Drag-n-Drop
-                    </span>{' '}
-                    your files for analysis.
+                    {t('homepage.step1.desc1')}
                   </div>
                   <div className="">
                     <span
                       className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      Connect
+                      {t('homepage.connect.title')}
                     </span>{' '}
-                    to Canvas, GitHub, Notion and more.
+                    {t('homepage.connect.to_canvas_github_notion')}
                   </div>
                   <div className="">
                     <span
                       className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
                     >
-                      Web crawl
+                      {t('homepage.connect.web_crawl')}
                     </span>{' '}
-                    your favorite articles and blogs.
+                    {t('homepage.connect.your_favorite_articles_blogs')}
                   </div>
                 </div>
-                {/*
-                <Button
-                  className="mt-4 bg-neutral-400"
-                  variant="light"
-                  style={{
-                    color: 'var(--illinois-white)',
-                    backgroundColor: 'var(--illinois-blue)',
-                  }}
-                  radius="sm"
-                >
-                  Learn More{' '}
-                  <ExternalLink
-                    size={20}
-                    strokeWidth={1.75}
-                    color={'var(--illinois-white)'}
-                    className="ml-1"
-                  />
-                </Button>
-*/}
               </div>
             </div>
 
@@ -492,7 +467,7 @@ const Home: NextPage = () => {
                     `}
                     style={{ color: 'var(--illinois-orange)' }}
                   >
-                    2
+                    {t('homepage.step2.title')}
                   </div>
                   <div
                     className={`
@@ -500,53 +475,13 @@ const Home: NextPage = () => {
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
-                    Customize LLMs, prompts, and{' '}
-                    <span className="whitespace-nowrap">
-                      tools <span className="font-normal">(optional)</span>
-                    </span>
+                    {t('homepage.step2.heading')}
                   </div>
                 </div>
 
                 <div className="mt-4 text-sm">
-                  Updated with the{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    world&apos;s
-                  </span>{' '}
-                  best AI models at your fingertips, enhanced with{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    tools
-                  </span>{' '}
-                  and advanced{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    prompt engineering
-                  </span>
-                  .
+                  {t('homepage.step2.desc')}
                 </div>
-                {/*
-                <Button
-                  className="mt-4 bg-neutral-400"
-                  variant="light"
-                  style={{
-                    color: 'var(--illinois-white)',
-                    backgroundColor: 'var(--illinois-blue)',
-                  }}
-                  radius="sm"
-                >
-                  Learn More{' '}
-                  <ExternalLink
-                    size={20}
-                    strokeWidth={1.75}
-                    color={'var(--illinois-white)'}
-                    className="ml-1"
-                  />
-                </Button>
-*/}
               </div>
             </div>
 
@@ -585,44 +520,16 @@ const Home: NextPage = () => {
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
-                    Share with anyone
+                    {t('homepage.share.share_with_anyone')}
                   </div>
                 </div>
 
                 <div className="mt-4 text-sm">
-                  Collaborate and{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    publish your chatbot
-                  </span>{' '}
-                  for whoever you want to use it or{' '}
-                  <span
-                    className={`font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    discover other chatbots
-                  </span>{' '}
-                  from the Illinois Chat community.
+                  {t('homepage.share.collaborate_publish_your_chatbot')}
+                  {t('homepage.share.for_whoever_you_want_to_use_it')}
+                  {t('homepage.share.or_discover_other_chatbots')}
+                  {t('homepage.share.from_the_illinois_chat_community')}
                 </div>
-                {/*
-                <Button
-                  className="mt-4 bg-neutral-400"
-                  variant="light"
-                  style={{
-                    color: 'var(--illinois-white)',
-                    backgroundColor: 'var(--illinois-blue)',
-                  }}
-                  radius="sm"
-                >
-                  Learn More{' '}
-                  <ExternalLink
-                    size={20}
-                    strokeWidth={1.75}
-                    color={'var(--illinois-white)'}
-                    className="ml-1"
-                  />
-                </Button>
-*/}
               </div>
             </div>
           </div>
@@ -654,7 +561,7 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Ready to build?
+                {t('homepage.api.ready_to_build')}
               </h2>
               <h2
                 className={`
@@ -662,15 +569,11 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Use our API.
+                {t('homepage.api.use_our_api')}
               </h2>
 
               <div className="mt-4">
-                If you&apos;re tired of the OpenAI API and want an AI
-                that&apos;s trained to understand your data, come build on our
-                API with 52+ models to choose from. We&apos;re always updated
-                with the latest State of the Art (SOTA) open source LLMs for
-                free, hosted here at Illinois.
+                {t('homepage.api.pitch')}
               </div>
 
               <Button
@@ -687,7 +590,7 @@ const Home: NextPage = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Read the docs{' '}
+                {t('homepage.about.read_the_docs')}
                 <ExternalLink
                   size={20}
                   strokeWidth={1.75}
@@ -705,71 +608,7 @@ const Home: NextPage = () => {
             >
               <div className="relative overflow-hidden rounded-xl bg-[#1e1e1e] p-4 text-white">
                 <pre className="overflow-x-auto font-mono text-sm">
-                  <code>
-                    <span className="text-[#569cd6]">import</span>{' '}
-                    <span className="text-[#9cdcfe]">requests</span>
-                    {'\n\n'}
-                    <span className="text-[#9cdcfe]">data</span> = {'{'}
-                    {'\n'}
-                    {'  '}
-                    <span className="text-[#ce9178]">
-                      &quot;model&quot;
-                    </span>:{' '}
-                    <span className="text-[#ce9178]">
-                      &quot;llama3.1:70b&quot;
-                    </span>
-                    ,{'\n'}
-                    {'  '}
-                    <span className="text-[#ce9178]">
-                      &quot;apiKey&quot;
-                    </span>:{' '}
-                    <span className="text-[#ce9178]">
-                      &quot;&lt;********&gt;&quot;
-                    </span>
-                    ,{'\n'}
-                    {'  '}
-                    <span className="text-[#ce9178]">&quot;messages&quot;</span>
-                    : [{'\n'}
-                    {'    '}
-                    {'{'}
-                    {'\n'}
-                    {'      '}
-                    <span className="text-[#ce9178]">
-                      &quot;role&quot;
-                    </span>:{' '}
-                    <span className="text-[#ce9178]">&quot;user&quot;</span>,
-                    {'\n'}
-                    {'      '}
-                    <span className="text-[#ce9178]">
-                      &quot;content&quot;
-                    </span>:{' '}
-                    <span className="text-[#ce9178]">
-                      &quot;How do I use the Illinois Chat API?&quot;
-                    </span>
-                    {'\n'}
-                    {'    '}
-                    {'}'}
-                    {'\n'}
-                    {'  '}],
-                    {'\n'}
-                    {'}'}
-                    {'\n\n'}
-                    <span className="text-[#9cdcfe]">response</span> ={' '}
-                    <span className="text-[#9cdcfe]">requests</span>.
-                    <span className="text-[#dcdcaa]">post</span>({'\n'}
-                    {'  '}
-                    <span className="text-[#ce9178]">
-                      &quot;https://uiuc.chat/api/chat-api/chat&quot;
-                    </span>
-                    ,{'\n'}
-                    {'  '}
-                    <span className="text-[#9cdcfe]">json</span>=
-                    <span className="text-[#9cdcfe]">data</span>
-                    {'\n'}){'\n'}
-                    <span className="text-[#dcdcaa]">print</span>(
-                    <span className="text-[#9cdcfe]">response</span>.
-                    <span className="text-[#9cdcfe]">text</span>)
-                  </code>
+                  <code>{t('homepage.api.code')}</code>
                 </pre>
               </div>
             </div>
@@ -779,7 +618,6 @@ const Home: NextPage = () => {
             className="
               mx-auto flex
               w-full
-
               max-w-3xl flex-col items-start justify-center
               gap-16 sm:flex-row
             "
@@ -791,7 +629,7 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Want something custom?
+                {t('homepage.custom.want_custom')}
               </h2>
 
               <div className="mt-4">
@@ -818,7 +656,7 @@ const Home: NextPage = () => {
             ${montserrat_heading.variable} font-montserratHeading
           `}
           >
-            About Us
+            {t('homepage.about.about_us')}
           </h4>
           <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-3 md:gap-8">
             <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
@@ -897,91 +735,43 @@ const Home: NextPage = () => {
   )
 }
 
+export const getStaticProps = async ({ locale }: { locale: string }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'])),
+    },
+  };
+};
+
 export default Home
 
 function FlagshipChatbots() {
+  const { t } = useTranslation('common');
   const cards = [
-    // {
-    //   course_slug: 'Illinois', // TODO: Replace the "research finder" to Illinois when ready
-    //   imageSrc: '/media/hero_courses_banners/UofI.png',
-    //   title: 'University of Illinois',
-    //   badge: 'Illinois',
-    //   tagline: 'Ask anything about U of I',
-    //   description:
-    //     "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
-    // },
     {
-      course_slug: 'Research', // TODO: Replace the "research finder" to Illinois when ready
+      course_slug: 'Research',
       imageSrc: '/media/hero_courses_banners/UofI.png',
-      title: 'Illinois Research Finder',
-      badge: 'Illinois',
-      tagline: 'Find professors based on your research interests',
-      description:
-        "Using all of Illinois's documentation, get detailed examples, advice and information about the conference.",
+      title: t('flagship.research.title'),
+      badge: t('flagship.research.badge'),
+      tagline: t('flagship.research.tagline'),
+      description: t('flagship.research.description'),
     },
     {
       course_slug: 'NeurIPS-2024',
       imageSrc: '/media/hero_courses_banners/NEURIPS.png',
-      title: 'NeurIPS 2024',
-      badge: 'NeurIPS',
-      tagline:
-        'Trained on all 4,000+ papers from the largest AI conference in the world',
-      description:
-        "Using all of NeurIPS 2024's documentation, get detailed examples, advice and information about the conference.",
+      title: t('flagship.neurips2024.title'),
+      badge: t('flagship.neurips2024.badge'),
+      tagline: t('flagship.neurips2024.tagline'),
+      description: t('flagship.neurips2024.description'),
     },
     {
       course_slug: 'NCSADelta',
       imageSrc: '/media/hero_courses_banners/delta_hero.jpg',
-      title: 'NCSA Delta Supercomputer',
-      badge: 'NCSA Docs',
-      tagline:
-        "Quickstart on our Delta supercomputer, it'll write SLRUM scripts for you 😁",
-      description:
-        "Using all of Delta's documentation, get detailed examples, advice and information about how to use the Delta supercomputer.",
+      title: t('flagship.ncsadelta.title'),
+      badge: t('flagship.ncsadelta.badge'),
+      tagline: t('flagship.ncsadelta.tagline'),
+      description: t('flagship.ncsadelta.description'),
     },
-    /*
-    {
-      course_slug: 'clowder-docs',
-      imageSrc: '/media/hero_courses_banners/clowder_logo.png',
-      title: 'Clowder docs',
-      badge: 'NCSA Docs',
-      description:
-        "Using all of Clowder's documentation, this bot will answer questions and point you to the right docs and YouTube videos about Clowder.",
-    },
-    {
-      course_slug: 'cropwizard-1.5',
-      imageSrc: '/media/hero_courses_banners/aifarms_wide_logo.png',
-      title: 'Crop Wizard',
-      badge: 'AIFARMS',
-      description:
-        'Using documents collected from the <a href="https://www.nifa.usda.gov/about-nifa/how-we-work/extension" target="_blank" rel="noopener noreferrer">Farm Extension division</a> at all the US\'s public land-grant universities, this bot acts as a crop advisor. Useful to both farmers and professional farm advisors. Make sure to use image uploads with GPT4-Vision whenever possible!',
-    },
-    {
-      course_slug: 'langchain-docs',
-      // imageSrc: "",
-      title: 'Langchain',
-      badge: 'Coding',
-      description:
-        "Using all of Langchain's documentation, this bot will write excellent LangChain code. Just ask it to program whatever you'd like.",
-    },
-    {
-      course_slug: 'ansible',
-      // imageSrc: "",
-      title: 'Ansible',
-      badge: 'Coding',
-      description:
-        "Using all of Ansible's documentation, this bot will write excellent Ansible scripts. Just ask it to program whatever you'd like.",
-    },
-    {
-      course_slug: 'lilian-weng-blog',
-      // imageSrc: '/media/hero_courses_banners/lilian_weng_blog.png',
-      title: 'Lilian Wang Blog (OpenAI popular topics)',
-      badge: 'LLMs',
-      description:
-        'A collection of Lilian Wang\'s blog posts, some of the best in the AI world, from here: <a href="https://lilianweng.github.io/" target="_blank" rel="noopener noreferrer">https://lilianweng.github.io</a>.',
-    },
-*/
-    // Add more cards here
   ]
 
   return (
@@ -991,7 +781,6 @@ function FlagshipChatbots() {
           key={card.course_slug}
           component="a"
           href={`/${card.course_slug}/chat`}
-          // target="_blank"
           radius="md"
           className="flex h-56 flex-col"
           style={{

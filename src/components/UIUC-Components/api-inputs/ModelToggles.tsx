@@ -2,6 +2,7 @@ import React from 'react'
 import { IconCheck, IconX } from '@tabler/icons-react'
 import { Switch, Stack } from '@mantine/core'
 import { type LLMProvider } from '~/utils/modelProviders/LLMProvider'
+import { useTranslation } from 'next-i18next'
 
 export function ModelToggles({
   form,
@@ -10,6 +11,7 @@ export function ModelToggles({
   form: any
   provider: LLMProvider
 }) {
+  const { t } = useTranslation('common')
   const providerModels = provider?.provider
     ? form.state.values.providers[provider.provider]?.models || {}
     : {}
@@ -26,8 +28,9 @@ export function ModelToggles({
               <Switch
                 label={modelData.name}
                 checked={field.state.value}
-                onLabel="ON"
-                offLabel="OFF"
+                onLabel={t('models.on') || ''}
+                offLabel={t('models.off') || ''}
+                aria-label={t('models.enable_model', { model: modelData.name }) || ''}
                 onChange={(event) => {
                   field.handleChange(event.currentTarget.checked)
                   // Trigger form submission

@@ -57,10 +57,12 @@ import OllamaProviderInput from './providers/OllamaProviderInput'
 import OpenAIProviderInput from './providers/OpenAIProviderInput'
 import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
 import WebLLMProviderInput from './providers/WebLLMProviderInput'
+import { useTranslation } from 'next-i18next'
 
 const isSmallScreen = false
 
 function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
+  const { t } = useTranslation('common')
   return (
     <>
       {field.state.meta.isTouched && field.state.meta.errors.length ? (
@@ -69,7 +71,7 @@ function FieldInfo({ field }: { field: FieldApi<any, any, any, any> }) {
         </Text>
       ) : null}
       {field.state.meta.isValidating ? (
-        <Text size="xs">Validating...</Text>
+        <Text size="xs">{t('common.validating')}</Text>
       ) : null}
     </>
   )
@@ -82,6 +84,7 @@ export const APIKeyInput = ({
   field: FieldApi<any, any, any, any>
   placeholder: string
 }) => {
+  const { t } = useTranslation('common')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -160,7 +163,7 @@ export const APIKeyInput = ({
               field.form.handleSubmit()
             }}
           >
-            Save
+            {t('common.save')}
           </Button>
         </div>
       </div>
@@ -174,6 +177,7 @@ const NewModelDropdown: React.FC<{
   llmProviders: AllLLMProviders
   isSmallScreen: boolean
 }> = ({ value, onChange, llmProviders, isSmallScreen }) => {
+  const { t } = useTranslation('common')
   // Filter out providers that are not enabled and their models which are disabled
   const { enabledProvidersAndModels, allModels } = Object.keys(
     llmProviders,
@@ -219,7 +223,7 @@ const NewModelDropdown: React.FC<{
       <Select
         className="menu z-[50] w-full"
         size="md"
-        placeholder="Select a model"
+        placeholder={t('settings.sections.model.select_placeholder') as unknown as string}
         // searchable
         value={value?.id || ''}
         onChange={async (modelId) => {
@@ -416,6 +420,7 @@ export function findDefaultModel(
 }
 
 export default function APIKeyInputForm() {
+  const { t } = useTranslation('common')
   const projectName = GetCurrentPageName()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
@@ -444,9 +449,8 @@ export default function APIKeyInputForm() {
     // handle errors
     if (isErrorLLMProviders) {
       showConfirmationToast({
-        title: 'Error',
-        message:
-          'Failed your api keys. Our database must be having a bad day. Please refresh or try again later.',
+        title: t('alerts.llm_providers.fetch_error.title'),
+        message: t('alerts.llm_providers.fetch_error.message'),
         isError: true,
       })
     }
@@ -548,7 +552,6 @@ export default function APIKeyInputForm() {
       mutation.mutate(
         {
           projectName,
-          // queryClient,
           llmProviders,
         },
         {
@@ -557,14 +560,14 @@ export default function APIKeyInputForm() {
               queryKey: ['projectLLMProviders', projectName],
             })
             showConfirmationToast({
-              title: 'Updated LLM providers',
-              message: `Now your project's users can use the supplied LLMs!`,
+              title: t('alerts.llm_providers.update_success.title'),
+              message: t('alerts.llm_providers.update_success.message'),
             })
           },
           onError: (error, variables, context) =>
             showConfirmationToast({
-              title: 'Error updating LLM providers',
-              message: `Update failed with error: ${error.name} -- ${error.message}`,
+              title: t('alerts.llm_providers.update_error.title'),
+              message: t('alerts.llm_providers.update_error.message'),
               isError: true,
             }),
         },
@@ -642,8 +645,7 @@ export default function APIKeyInputForm() {
                       align="left"
                       className={`pl-4 pr-2 pt-4 ${montserrat_heading.variable} font-montserratHeading text-[--foreground]`}
                     >
-                      {/* API Keys: Add LLMs to your Chatbot */}
-                      Configure LLM Providers for your Chatbot
+                      {t('models.more_details_about_ai_models')}
                     </Title>
                     <Title
                       className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading text-[--foreground]`}
@@ -652,8 +654,7 @@ export default function APIKeyInputForm() {
                       ml={'md'}
                       style={{ textAlign: 'left' }}
                     >
-                      Configure which LLMs are available to your users. Enable
-                      or disable models to balance price and performance.
+                      {t('models.configure_llm_providers_subtitle')}
                     </Title>
                     <Stack align="center" justify="start">
                       <form
@@ -677,14 +678,13 @@ export default function APIKeyInputForm() {
                               className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
                               order={3}
                             >
-                              Closed source LLMs
+                              {t('models.openai.title')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              The best performers, but you gotta pay their
-                              prices and follow their rules.
+                              {t('models.openai.description')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -740,13 +740,13 @@ export default function APIKeyInputForm() {
                               className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
                               order={3}
                             >
-                              Open source LLMs
+                              {t('models.ncsa_hosted.title')}
                             </Title>
                             <Text
                               className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                               size="md"
                             >
-                              Your weights, your rules.
+                              {t('models.ncsa_hosted.description')}
                             </Text>
                             <Flex
                               direction={{ base: 'column', '75rem': 'row' }}
@@ -811,16 +811,14 @@ export default function APIKeyInputForm() {
                           className={`label ${montserrat_heading.variable} font-montserratHeading`}
                           order={3}
                         >
-                          Default Model
+                          {t('models.default_model')}
                         </Title>
                         <br />
                         <Text
                           className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
                           size="md"
                         >
-                          Choose the default model for your chatbot. Users can
-                          still override this default to use any of the models
-                          enabled on the left.
+                          {t('models.default_model_helper')}
                         </Text>
                         <br />
                         <div className="flex justify-center">

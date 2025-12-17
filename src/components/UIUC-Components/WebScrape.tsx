@@ -29,6 +29,7 @@ import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Montserrat } from 'next/font/google'
+import { useTranslation } from 'next-i18next';
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -143,10 +144,7 @@ export const WebScrape = ({
       let data = null
       // Make API call based on URL
       if (url.includes('coursera.org')) {
-        // TODO: coursera ingest
-        alert(
-          'Coursera ingest is not yet automated (auth is hard). Please email rohan13@illinois.edu to do it for you',
-        )
+        alert(t('coursera_ingest.alert') as unknown as string);
       } else if (url.includes('ocw.mit.edu')) {
         data = downloadMITCourse(url, courseName, 'local_dir') // no await -- do in background
 
@@ -188,7 +186,7 @@ export const WebScrape = ({
         await new Promise((resolve) => setTimeout(resolve, 8000))
       }
     } else {
-      alert('Invalid URL (please include https://)')
+      alert(t('website_ingest.invalid_url_error') as unknown as string);
     }
     setLoadingSpinner(false)
     setUrl('') // clear url
@@ -240,9 +238,8 @@ export const WebScrape = ({
         onOpen: () => console.log('mounted'),
         autoClose: 15000,
         // position="top-center",
-        title: 'Web scraping started',
-        message:
-          "It'll scrape in the background, just wait for the results to show up in your project (~3 minutes total).\nThis feature is stable but the web is a messy place. If you have trouble, I'd love to fix it. Just shoot me an email: rohan13@illinois.edu.",
+        title: t('alerts.web_scrape_started'),
+        message: t('alerts.web_scrape_message'),
         icon: <IconWorldDownload />,
         styles: {
           root: {
@@ -301,7 +298,7 @@ export const WebScrape = ({
         autoClose: 12000,
         title: (
           <Text size={'lg'} className={`${montserrat_med.className}`}>
-            {'Error during web scraping. Please try again.'}
+            {t('alerts.web_scrape_error')}
           </Text>
         ),
         message: (
@@ -353,6 +350,8 @@ export const WebScrape = ({
       setIsUrlUpdated(false)
     }
   }, [url])
+
+  const { t } = useTranslation('common');
 
   return (
     <>
@@ -458,7 +457,7 @@ export const WebScrape = ({
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
-                Ingest
+                {t('ingest')}
               </Button>
             }
             rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
@@ -469,14 +468,13 @@ export const WebScrape = ({
             style={{ color: '#C1C2C5', fontSize: '16px' }}
             className={`${montserrat_heading.variable} font-montserratHeading`}
           >
-            Web scrape in progress...
+            {t('web_scrape_in_progress')}
           </Text>
           <Text
             style={{ color: '#C1C2C5', textAlign: 'center', maxWidth: '80%' }}
             className={`pb-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
           >
-            Page refreshes upon completion. Your documents stay safe even if you
-            navigate away.
+            {t('web_scrape_refresh_notice')}
           </Text>
           <LoadingSpinner />
         </>
@@ -572,7 +570,7 @@ export const WebScrape = ({
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
-                Ingest
+                {t('ingest')}
               </Button>
             }
             rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
@@ -595,20 +593,20 @@ export const WebScrape = ({
                 arrowSize={8}
                 withArrow
                 position="bottom-start"
-                label="We will attempt to visit this number of pages, but not all will be scraped if they're duplicates, broken or otherwise inaccessible."
+                label={t('max_urls_tooltip') || ''}
               >
                 <div>
                   <Text
                     style={{ color: '#C1C2C5', fontSize: '16px' }}
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    Max URLs (1 to 500)
+                    {t('max_urls_label')}
                   </Text>
                   <TextInput
                     styles={{ input: { backgroundColor: '#1A1B1E' } }}
                     name="maximumUrls"
                     radius="md"
-                    placeholder="Default 50"
+                    placeholder={t('default_50') || ''}
                     value={maxUrls}
                     onChange={(e) => {
                       handleInputChange(e, 'maxUrls')
@@ -626,7 +624,7 @@ export const WebScrape = ({
               style={{ color: '#C1C2C5', fontSize: '16px' }}
               className={`${montserrat_heading.variable} font-montserratHeading`}
             >
-              Limit web crawl
+              {t('limit_web_crawl')}
             </Text>
             {/* <Text style={{ color: '#C1C2C5', fontSize: '16px' }} className={`${montserrat_paragraph.variable} font-montserratParagraph`}>Limit web crawl (from least to most inclusive)</Text> */}
             <div className="pl-3">

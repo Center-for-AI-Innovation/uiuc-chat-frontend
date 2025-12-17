@@ -9,7 +9,7 @@ import { FancyRetrieval } from './FancyRetrieval'
 import { DocumentGroupsItem } from './DocumentGroupsItem'
 import { ToolsItem } from './ToolsItem'
 import { ModelParams } from './ModelParams'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'next-i18next'
 import { prebuiltAppConfig } from '~/utils/modelProviders/ConfigWebLLM'
 import * as webllm from '@mlc-ai/web-llm'
 import { type WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
@@ -69,7 +69,7 @@ export const UserSettings = () => {
     dispatch: homeDispatch,
   } = useContext(HomeContext)
 
-  const { t } = useTranslation('chat')
+  const { t, i18n } = useTranslation('common')
   const { classes } = useStyles()
   const [opened, { open, close }] = useDisclosure(false)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
@@ -97,6 +97,10 @@ export const UserSettings = () => {
     }
   }, [showModelSettings, open, close, loadModelCache])
 
+  useEffect(() => {
+    i18n.loadNamespaces('common')
+  }, [i18n])
+
   const handleClose = () => {
     homeDispatch({ field: 'showModelSettings', value: false })
   }
@@ -113,11 +117,11 @@ export const UserSettings = () => {
           <Modal.Title
             className={`${classes.title} ${montserrat_heading.variable} font-montserratHeading`}
           >
-            Settings
+            {t('settings.title')}
           </Modal.Title>
           <Modal.CloseButton
             onClick={handleClose}
-            aria-label="Close settings"
+            aria-label={t('settings.close') || 'Close settings'}
             className="text-[--foreground-faded] hover:text-[--foreground]"
           />
         </Modal.Header>
@@ -137,19 +141,19 @@ export const UserSettings = () => {
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="model"
               >
-                Model
+                {t('settings.tabs.model')}
               </Tabs.Tab>
               <Tabs.Tab
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="documentGroups"
               >
-                Document Groups
+                {t('settings.tabs.document_groups')}
               </Tabs.Tab>
               <Tabs.Tab
                 className={`${classes.tab} ${isSmallScreen ? 'px-2 text-xs' : 'text-md'} ${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
                 value="tools"
               >
-                Tools
+                {t('settings.tabs.tools')}
               </Tabs.Tab>
             </Tabs.List>
 

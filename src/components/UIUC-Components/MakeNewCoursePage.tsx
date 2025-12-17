@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import React, { useMemo, useState } from 'react'
+import { useTranslation } from 'next-i18next'
 
 import {
   Button,
@@ -137,6 +138,8 @@ const MakeNewCoursePage = ({
       setIsLoading(false)
     }
   }
+
+  const { t } = useTranslation('common');
 
   return (
     <>
@@ -279,7 +282,7 @@ const MakeNewCoursePage = ({
                       </label>
                     </Flex>
                     <Textarea
-                      placeholder="Describe your project, goals, expected impact etc..."
+                      placeholder={t('upload.describe_project_placeholder') || 'Describe your project, goals, expected impact etc...'}
                       radius={'md'}
                       value={projectDescription}
                       onChange={(e) => setProjectDescription(e.target.value)}

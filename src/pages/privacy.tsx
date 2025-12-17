@@ -1,14 +1,24 @@
 import { type NextPage } from 'next'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 // import { Card, Image, Text, Title, Badge, Button, Group } from '@mantine/core'
+import { useTranslation } from 'react-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { GetStaticPropsContext } from 'next'
 
 const PrivacyStatementPage: NextPage = () => {
+  const { t } = useTranslation('common')
   return (
     <MainPageBackground>
-      <p style={{ whiteSpace: 'pre-line' }}>{terms_string}</p>
+      <p style={{ whiteSpace: 'pre-line' }}>{t('this_is_privacy_statement')}</p>
     </MainPageBackground>
   )
 }
+
+export const getStaticProps = async ({ locale }: GetStaticPropsContext) => ({
+  props: {
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+  },
+});
 
 const terms_string = `PRIVACY POLICY
 Last updated August 21, 2023

@@ -26,6 +26,7 @@ import { type AuthContextProps } from 'react-oidc-context'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
+import { useTranslation } from 'next-i18next'
 
 const ApiKeyManagement = ({
   course_name,
@@ -39,6 +40,7 @@ const ApiKeyManagement = ({
   const theme = useMantineTheme()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const { copy } = useClipboard()
+  const { t } = useTranslation('common')
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
@@ -198,8 +200,8 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
         setApiKey(data.apiKey)
       } else {
         showNotification({
-          title: 'Error',
-          message: 'Failed to fetch API key.',
+          title: t('error'),
+          message: t('api.error.failed_to_fetch'),
           color: 'red',
         })
       }
@@ -224,13 +226,13 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       const data = await response.json()
       setApiKey(data.apiKey)
       showNotification({
-        title: 'Success',
-        message: 'API key generated successfully.',
+        title: t('api.success.title'),
+        message: t('api.success.key_generated'),
       })
     } else {
       showNotification({
-        title: 'Error',
-        message: 'Failed to generate API key.',
+        title: t('error'),
+        message: t('api.error.failed_to_generate'),
         color: 'red',
       })
     }
@@ -248,13 +250,13 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       const data = await response.json()
       setApiKey(data.newApiKey)
       showNotification({
-        title: 'Success',
-        message: 'API key rotated successfully.',
+        title: t('api.success.title'),
+        message: t('api.success.key_rotated'),
       })
     } else {
       showNotification({
-        title: 'Error',
-        message: 'Failed to rotate API key.',
+        title: t('error'),
+        message: t('api.error.failed_to_rotate'),
         color: 'red',
       })
     }
@@ -271,13 +273,13 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     if (response.ok) {
       setApiKey(null)
       showNotification({
-        title: 'Success',
-        message: 'API key deleted successfully.',
+        title: t('api.success.title'),
+        message: t('api.success.key_deleted'),
       })
     } else {
       showNotification({
-        title: 'Error',
-        message: 'Failed to delete API key.',
+        title: t('error'),
+        message: t('api.error.failed_to_delete'),
         color: 'red',
       })
     }
@@ -328,7 +330,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                   order={2}
                   className={`${montserrat_heading.variable} font-montserratHeading text-lg sm:text-2xl`}
                 >
-                  API Key Management
+                  {t('api.key_management')}
                 </Title>
                 <Text className="">/</Text>
                 <Title
@@ -393,7 +395,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         weight={600}
                         className={`${montserrat_paragraph.variable} select-text font-montserratParagraph text-[--dashboard-foreground]`}
                       >
-                        API Documentation
+                        {t('api.documentation')}
                       </Text>
                     </Flex>
                     <div
@@ -418,10 +420,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         size="md"
                         className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
                       >
-                        This API is <i>stateless</i>, meaning each request is
-                        independent of others. For multi-turn conversations,
-                        simply append new messages to the &apos;messages&apos;
-                        array in the next call.
+                        {t('api.stateless_info')}
                         <List
                           withPadding
                           className="mt-2"
@@ -446,7 +445,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              OpenAI API documentation
+                              {t('api.openai_docs')}
                               <IconExternalLink
                                 size={18}
                                 className="inline-block pl-1"
@@ -462,7 +461,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              UIUC.chat API documentation
+                              {t('api.uiuc_docs')}
                               <IconExternalLink
                                 size={18}
                                 className="inline-block pl-1"
@@ -477,7 +476,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                           order={5}
                           style={{ marginTop: '1.5rem' }}
                         >
-                          Notes:
+                          {t('api.notes')}:
                         </Title>
                         <List
                           withPadding
@@ -485,22 +484,88 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                           spacing="xs"
                         >
                           <List.Item>
-                            NCSA hosted models like Qwen and Llama are hosted by
-                            NCSA and they are free!
+                            {t('api.note_ncsa_models')}
                           </List.Item>
                           <List.Item>
-                            GPT-4o-mini offers the best price/performance ratio
+                            {t('api.note_gpt4o_mini')}
                           </List.Item>
                           <List.Item>
-                            UIUC.chat automatically manages LLM provider keys -
-                            just add them in the LLMs page.
+                            {t('api.note_llm_keys')}
                           </List.Item>
                           <List.Item>
-                            For getting only RAG results, set retrieval_only to
-                            true. This will not invoke the LLM.
+                            {t('api.note_rag_results')}
                           </List.Item>
                         </List>
                       </Text>
+                      <List
+                        withPadding
+                        className="mt-2"
+                        spacing="sm"
+                        icon={
+                          <div
+                            style={{
+                              width: '6px',
+                              height: '6px',
+                              borderRadius: '50%',
+                              backgroundColor: 'hsl(280,100%,70%)',
+                              marginTop: '8px',
+                            }}
+                          />
+                        }
+                      >
+                        <List.Item>
+                          <a
+                            className={`text-sm transition-colors duration-200 hover:text-purple-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                            style={{ color: 'hsl(280,100%,70%)' }}
+                            href="https://platform.openai.com/docs/api-reference/chat/create"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {t('api.openai_docs')}
+                            <IconExternalLink
+                              size={18}
+                              className="inline-block pl-1"
+                              style={{ position: 'relative', top: '-2px' }}
+                            />
+                          </a>
+                        </List.Item>
+                        <List.Item>
+                          <a
+                            className={`text-sm transition-colors duration-200 hover:text-purple-400 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                            style={{ color: 'hsl(280,100%,70%)' }}
+                            href="https://docs.uiuc.chat/api/endpoints"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {t('api.uiuc_docs')}
+                            <IconExternalLink
+                              size={18}
+                              className="inline-block pl-1"
+                              style={{ position: 'relative', top: '-2px' }}
+                            />
+                          </a>
+                        </List.Item>
+                      </List>
+                      <Title
+                        className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
+                        size="md"
+                        order={5}
+                        style={{ marginTop: '1.5rem' }}
+                      >
+                        {t('api.notes')}
+                      </Title>
+                      <List
+                        withPadding
+                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                        spacing="xs"
+                      >
+                        <List.Item>{t('api.note_ncsa_models')}</List.Item>
+                        <List.Item>{t('api.note_gpt4o_mini')}</List.Item>
+                        <List.Item>{t('api.note_llm_keys')}</List.Item>
+                        <List.Item>{t('api.note_rag_results')}</List.Item>
+                      </List>
                     </div>
                   </Collapse>
                 </Paper>
@@ -547,7 +612,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 order={2}
                 style={{ marginBottom: '1rem' }}
               >
-                Your API Key
+                {t('api.your_key')}
               </Title>
               {apiKey && (
                 <Input
@@ -597,7 +662,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 className="min-w-[5rem] self-center rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
                 // w={'60%'}
               >
-                Generate API Key
+                {t('api.generate_key')}
               </Button>
             )}
             {apiKey && !loading && (
@@ -617,7 +682,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     className="min-w-[5rem] rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
                     w={'auto'}
                   >
-                    Rotate API Key
+                    {t('api.rotate_key')}
                   </Button>
                   <Button
                     onClick={handleDelete}
@@ -627,7 +692,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     className="min-w-[5rem] rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
                     w={'auto'}
                   >
-                    Delete API Key
+                    {t('api.delete_key')}
                   </Button>
                 </Group>
               </>

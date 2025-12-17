@@ -1,10 +1,12 @@
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { Title, Text, Flex, Divider, ActionIcon } from '@mantine/core'
+import { useTranslation } from 'next-i18next'
 import React, { useEffect, useState } from 'react'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 function NomicDocumentMap({ course_name }: { course_name: string }) {
+  const { t } = useTranslation('common')
   const [accordionOpened, setAccordionOpened] = useState(false)
 
   const [nomicMapData, setNomicMapData] = useState<NomicMapData | null>(null)
@@ -60,7 +62,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   order={3}
                   className={`pl-4 ${montserrat_heading.variable} font-montserratHeading text-lg sm:text-2xl`}
                 >
-                  Concept Map of User Queries
+                  {t('analysis.conceptMapOfUserQueries')}
                 </Title>
 
                 <ActionIcon
@@ -68,7 +70,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   color="gray"
                   onClick={() => setAccordionOpened(!accordionOpened)}
                   className="hover:bg-gray/10"
-                  title="More info on nomic map"
+                  title={t('analysis.moreInfoConceptMap') as unknown as string}
                 >
                   <IconInfoCircle className="text-gray/60" />
                 </ActionIcon>
@@ -99,38 +101,37 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                         <Text
                           className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph text-[--foreground]`}
                         >
-                          The Concept Map visualizes all queries made in this
-                          project:
+                          {t('analysis.conceptMapDescription', 'The Concept Map visualizes all queries made in this project:')}
                         </Text>
                         <ul className="list-inside list-disc space-y-2 text-[--foreground]">
                           <li className="text-sm">
                             <span className="font-bold text-[--accent]">
-                              Similar topics
+                              {t('analysis.similarTopics')}
                             </span>{' '}
-                            cluster together
+                            {t('analysis.clusterTogether', 'cluster together')}
                           </li>
                           <li className="text-sm">
                             <span className="font-bold text-[--accent]">
-                              Different topics
+                              {t('analysis.differentTopics')}
                             </span>{' '}
-                            are positioned further apart
+                            {t('analysis.positionedFurtherApart', 'are positioned further apart')}
                           </li>
                           <li className="text-sm">
                             <span className="font-bold text-[--accent]">
-                              Common themes
+                              {t('analysis.commonThemes')}
                             </span>{' '}
-                            and knowledge gaps become visible
+                            {t('analysis.knowledgeGapsVisible', 'and knowledge gaps become visible')}
                           </li>
                         </ul>
                         <Text className="mt-3" size="sm">
-                          Learn more about{' '}
+                          {t('analysis.learnMoreSemantic')}{' '}
                           <a
                             className="text-[--dashboard-button] underline hover:text-[--dashboard-button-hover]"
                             href="https://atlas.nomic.ai/"
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            semantic similarity visualizations
+                            {t('analysis.semanticSimilarityVisualizations', 'semantic similarity visualizations')}
                           </a>
                         </Text>
                       </div>
@@ -157,15 +158,14 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
               />
               <div className="mt-4">
                 <Text className="pb-4 text-gray-400" size="sm">
-                  Note you are unable to login or edit this map. It&apos;s for
-                  your visualization only. Please{' '}
+                  {t('analysis.visualizationNote')}{' '}
                   <a
                     href="mailto:rohan13@illinois.edu"
                     className="text-[--dashboard-button] underline hover:text-[--dashboard-button-hover]"
                   >
-                    contact us
+                    {t('analysis.contactUs')}
                   </a>{' '}
-                  with questions.
+                  {t('analysis.withQuestions')}
                 </Text>
               </div>
             </>
@@ -176,22 +176,20 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   className={`${montserrat_heading.variable} font-montserratHeading`}
                   size="lg"
                 >
-                  Visualization Not Available Yet
+                  {t('analysis.notEnoughDataTitle')}
                 </Text>
                 <Text className="mt-2">
-                  We need at least 20 questions to generate a meaningful
-                  visualization of how topics relate to each other. Please ask
-                  more questions and check back later!
+                  {t('analysis.notEnoughDataBody')}
                 </Text>
                 <Text className="mt-3" size="sm">
-                  Learn more about{' '}
+                  {t('analysis.learnMoreSemantic')}{' '}
                   <a
                     className="text-[--dashboard-button] underline hover:text-[--dashboard-button-hover]"
                     href="https://atlas.nomic.ai/"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    semantic similarity visualizations
+                    {t('analysis.semanticSimilarityVisualizations')}
                   </a>
                 </Text>
               </div>

@@ -102,10 +102,42 @@ export const Chat = memo(
     currentEmail,
     documentCount,
   }: Props) => {
-    const { t } = useTranslation('chat')
+    const { t } = useTranslation('common')
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
+
+    const errorToast = ({ title, message }: { title: string; message: string }) => {
+      notifications.show({
+        id: 'error-notification-reused',
+        withCloseButton: true,
+        closeButtonProps: { color: 'red' },
+        onClose: () => console.log('error unmounted'),
+        onOpen: () => console.log('error mounted'),
+        autoClose: 12000,
+        title: (
+          <Text size={'lg'} className={`${montserrat_med.className}`}>
+            {t(`alerts.${title}`) || title}
+          </Text>
+        ),
+        message: (
+          <Text className={`${montserrat_med.className} text-neutral-200`}>
+            {t(`alerts.${message}`) || message}
+          </Text>
+        ),
+        color: 'red',
+        radius: 'lg',
+        icon: <IconAlertCircle />,
+        className: 'my-notification-class',
+        style: {
+          backgroundColor: 'rgba(42,42,64,0.3)',
+          backdropFilter: 'blur(10px)',
+          borderLeft: '5px solid red',
+        },
+        withBorder: true,
+        loading: false,
+      })
+    }
     // const
     const [bannerUrl, setBannerUrl] = useState<string | null>(null)
     const getCurrentPageName = () => {
@@ -1687,9 +1719,9 @@ export const Chat = memo(
       courseMetadata.example_questions.length > 0
         ? courseMetadata.example_questions
         : [
-            'Make a bullet point list of key takeaways from this project.',
-            'What are the best practices for [Activity or Process] in [Context or Field]?',
-            'Can you explain the concept of [Specific Concept] in simple terms?',
+            t('example_takeaways'),
+            t('example_best_practices'),
+            t('example_explain_concept'),
           ]
 
     // Add this function to create dividers with statements
@@ -1721,7 +1753,7 @@ export const Chat = memo(
                 <CropwizardLicenseDisclaimer />
               )}
               {getCurrentPageName() !== 'chat' && (
-                <p>Start a conversation below or try these examples</p>
+                <p>{t('examples.start_conversation')}</p>
               )}
             </h4>
             <div className="mt-4 flex flex-col items-start space-y-2 overflow-hidden">
@@ -2115,7 +2147,7 @@ export const Chat = memo(
         </SourcesSidebarProvider>
       </>
     )
-    Chat.displayName = 'Chat'
+    Chat.displayName = t('navigation.chat') || 'Chat'
   },
 )
 

@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const Import: FC<Props> = ({ onImport }) => {
-  const { t } = useTranslation('sidebar')
+  const { t } = useTranslation('common')
   return (
     <>
       <input
@@ -35,7 +35,7 @@ export const Import: FC<Props> = ({ onImport }) => {
       />
 
       <SidebarButton
-        text={t('Import history')}
+        text={t('sidebar.importHistory')}
         icon={<IconFileImport size={18} />}
         onClick={() => {
           const importFile = document.querySelector(

@@ -15,6 +15,14 @@ import NomicDocumentMap from '~/components/UIUC-Components/NomicDocumentsMap'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { useAuth } from 'react-oidc-context'
 import { initiateSignIn } from '~/utils/authHelpers'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { GetServerSidePropsContext } from 'next'
+
+export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
+  props: {
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+  },
+});
 
 const CourseMain: NextPage = () => {
   const router = useRouter()

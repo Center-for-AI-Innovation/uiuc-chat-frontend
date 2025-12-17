@@ -2,6 +2,7 @@ import Head from 'next/head'
 import { useEffect, useState } from 'react'
 
 import { Card, Title } from '@mantine/core'
+import { useTranslation } from 'next-i18next'
 import { useMediaQuery } from '@mantine/hooks'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import router from 'next/router'
@@ -22,6 +23,7 @@ const Dashboard = ({
   is_new_course?: boolean
   project_description?: string
 }) => {
+  const { t } = useTranslation('common')
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [projectName, setProjectName] = useState(project_name || '')
   const [projectDescription, setProjectDescription] = useState(
@@ -100,7 +102,7 @@ const Dashboard = ({
       <Navbar isPlain={false} />
       <Head>
         <title>{project_name}</title>
-        <meta name="description" content="My projects on UIUC.chat." />
+        <meta name="description" content={t('dashboard_page.meta_description') as unknown as string} />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main
@@ -120,7 +122,7 @@ const Dashboard = ({
               `}
               style={{ color: 'var(--foreground)' }}
             >
-              My Chatbots
+              {t('dashboard_page.title')}
             </Title>
 
             <p
@@ -130,7 +132,7 @@ const Dashboard = ({
             `}
               style={{ color: 'var(--foreground-faded)' }}
             >
-              These are chatbots you&apos;ve created, or where you are an admin.
+              {t('dashboard_page.description')}
             </p>
           </div>
 

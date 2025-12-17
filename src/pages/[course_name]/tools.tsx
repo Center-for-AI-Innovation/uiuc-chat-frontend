@@ -16,14 +16,24 @@ import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
 import { ProtectedRoute } from '~/components/ProtectedRoute'
+import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { GetServerSidePropsContext } from 'next'
 
 const montserrat = Montserrat({
   weight: '700',
   subsets: ['latin'],
 })
 
+export const getServerSideProps = async ({ locale }: GetServerSidePropsContext) => ({
+  props: {
+    ...(await serverSideTranslations(locale ?? 'en', ['common'])),
+  },
+})
+
 const ToolsPage: NextPage = () => {
   const router = useRouter()
+  const { t } = useTranslation('common')
 
   const GetCurrentPageName = () => {
     // return router.asPath.slice(1).split('/')[0]
@@ -105,8 +115,7 @@ const ToolsPage: NextPage = () => {
           p="xl"
           style={{ marginTop: '4rem' }}
         >
-          You&apos;ve encountered a software bug!<br></br>Your account has no
-          email address. Please shoot me an email so I can fix it for you:{' '}
+          {t('auth.account_bug_message')}
           <a className="goldUnderline" href="mailto:rohan13@illinois.edu">
             rohan13@illinois.edu
           </a>

@@ -9,7 +9,7 @@ export default withCourseOwnerOrAdminAccess()(handler)
 // Server-side API route handler
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
+    return res.status(405).json({ error: 'Method not allowed', message_key: 'errors.method_not_allowed' })
   }
 
   const { course_name } = req.query
@@ -63,6 +63,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
   } catch (error) {
     console.error('Error exporting documents:', error)
-    return res.status(500).json({ message: 'Error exporting documents.' })
+    return res.status(500).json({ message: 'Error exporting documents.', message_key: 'alerts.exportDocuments.error_exporting' })
   }
 }
