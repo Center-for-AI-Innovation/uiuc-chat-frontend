@@ -1,5 +1,6 @@
 import { IconRobot } from '@tabler/icons-react'
 import { type FC } from 'react'
+import { useTranslation } from 'next-i18next'
 
 interface Props {}
 

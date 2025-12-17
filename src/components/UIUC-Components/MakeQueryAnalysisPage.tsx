@@ -1265,50 +1265,6 @@ async function fetchCourseMetadata(course_name: string) {
   }
 }
 
-const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
-  const { t } = useTranslation('common')
-  return (
-    // docs: https://mantine.dev/others/notifications/
-
-    notifications.show({
-      id: 'file-deleted-from-materials',
-      withCloseButton: true,
-      onClose: () => console.log('unmounted'),
-      onOpen: () => console.log('mounted'),
-      autoClose: 5000,
-      // position="top-center",
-      title: was_error ? 'Error deleting file' : 'Deleting file...',
-      message: was_error
-        ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email rohan13@illinois.edu to report this bug."
-        : t('alerts.file_deleting_bg') || 'An error occurred while deleting the file. Please try again and I\'d be so grateful if you email rohan13@illinois.edu to report this bug.',
-      icon: <IconCheck />,
-      // className: 'my-notification-class',
-      styles: {
-        root: {
-          backgroundColor: was_error ? 'var(--error)' : 'var(--notification)',
-          borderColor: was_error
-            ? 'var(--error)'
-            : 'var(--notification-border)',
-        },
-        title: {
-          color: 'var(--notification-title)',
-        },
-        description: {
-          color: 'var(--notification-message)',
-        },
-        closeButton: {
-          color: 'var(--text-foreground-faded)',
-          '&:hover': {
-            color: 'var(--text-foreground)',
-            backgroundColor: 'var(--text-background-faded)',
-          },
-        },
-      },
-      loading: false,
-    })
-  )
-}
-
 export default MakeQueryAnalysisPage
 
 export const showToastOnUpdate = (
