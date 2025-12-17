@@ -33,19 +33,28 @@ const conversationToMessages = (
 }
 
 async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
-  const {
-    conversation,
-    tools,
-    openaiKey,
-    imageUrls = [],
-    imageDescription = '',
-  }: {
-    tools: ChatCompletionTool[]
-    conversation: Conversation
-    imageUrls?: string[]
-    imageDescription?: string
-    openaiKey: string
-  } = await req.json()
+  let conversation: Conversation
+  let tools: ChatCompletionTool[]
+  let openaiKey: string
+  let imageUrls: string[] = []
+  let imageDescription: string = ''
+
+  try {
+    const body = await req.json()
+    conversation = body.conversation
+    tools = body.tools
+    openaiKey = body.openaiKey
+    imageUrls = body.imageUrls || []
+    imageDescription = body.imageDescription || ''
+    
+    console.log('🔵 Received openaiFunctionCall request with', tools.length, 'tools')
+  } catch (parseError) {
+    console.error('❌ Failed to parse request body:', parseError)
+    return NextResponse.json(
+      { error: 'Invalid request body: ' + (parseError instanceof Error ? parseError.message : String(parseError)) },
+      { status: 400 }
+    )
+  }
 
   // console.log('Received request with openaiKey:', openaiKey)
   let decryptedKey = openaiKey

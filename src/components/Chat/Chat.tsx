@@ -249,6 +249,7 @@ export const Chat = memo(
     // TOOLS
     useEffect(() => {
       if (isSuccessTools) {
+        console.log('🟢 Dispatching tools to context:', toolsHook)
         homeDispatch({
           field: 'tools',
           value: [...toolsHook],
@@ -264,9 +265,10 @@ export const Chat = memo(
     }, [toolsHook, isSuccessTools])
 
     useEffect(() => {
-      setEnabledTools(
-        tools.filter((action) => action.enabled).map((action) => action.name),
-      )
+      const enabled = tools.filter((action) => action.enabled).map((action) => action.name)
+      console.log('🟢 Enabled tools:', enabled)
+      console.log('🟢 All tools (enabled status):', tools.map(t => ({ name: t.name, enabled: t.enabled })))
+      setEnabledTools(enabled)
     }, [tools])
 
     const onMessageReceived = async (conversation: Conversation) => {
@@ -306,6 +308,7 @@ export const Chat = memo(
         documentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
+        console.log('🔴 handleSend called with tools:', tools.map(t => ({ name: t.name, enabled: t.enabled })))
         const startOfHandleSend = performance.now()
         setCurrentMessage(message)
         resetMessageStates()
@@ -349,18 +352,10 @@ export const Chat = memo(
           ? message.content.map((content) => content.text).join(' ')
           : message.content
 
-        // Detect if "sim" and "weather" keywords are present in the message
-        const searchQueryLower =
-          typeof searchQuery === 'string' ? searchQuery.toLowerCase() : ''
-        const hasSimKeyword = searchQueryLower.includes('sim')
-        const hasWeatherKeyword = searchQueryLower.includes('weather')
-        const hasSimAndWeather = hasSimKeyword && hasWeatherKeyword
-
-        let simInput = ''
-        if (hasSimKeyword && !hasSimAndWeather) {
-          // Strip out "sim" keyword (case-insensitive) from the query
-          simInput = searchQuery.replace(/\bsim\b/gi, '').trim()
-        }
+        // REMOVED: Old keyword-based Sim workflow triggering
+        // Now using proper AI function calling with handleFunctionCall
+        const hasWeatherKeyword = typeof searchQuery === 'string' && searchQuery.toLowerCase().includes('weather')
+        const hasSimAndWeather = false // Weather workflow still uses keywords
 
         if (selectedConversation) {
           // Add this type guard function
@@ -1087,8 +1082,9 @@ export const Chat = memo(
             }
           }
 
-          // Action 2.6: Sim Workflow Execution (if 'sim' detected but not 'weather')
-          if (hasSimKeyword && !hasSimAndWeather && simInput) {
+          // REMOVED: Old keyword-based Sim Workflow Execution
+          // Now using proper AI function calling via handleFunctionCall with Sim tools
+          if (false) {
             try {
               // Create Sim tool object (similar to N8N tools)
               const simTool: UIUCTool = {
@@ -1380,6 +1376,13 @@ export const Chat = memo(
 
           if (tools.length > 0) {
             try {
+              console.log('🟢 Calling handleFunctionCall with tools:', tools.map(t => ({ name: t.name, description: t.description?.slice(0, 100) })))
+              console.log('🔐 Auth state:', { 
+                isAuthenticated: auth.isAuthenticated, 
+                hasUser: !!auth.user,
+                hasAccessToken: !!auth.user?.access_token,
+                tokenLength: auth.user?.access_token?.length 
+              })
               homeDispatch({ field: 'isRouting', value: true })
               // Check if any tools need to be run
               const uiucToolsToRun = await handleFunctionCall(
@@ -1389,6 +1392,8 @@ export const Chat = memo(
                 imgDesc,
                 updatedConversation,
                 getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                undefined,
+                auth.user?.access_token,
               )
               homeDispatch({ field: 'isRouting', value: false })
 
@@ -1405,7 +1410,7 @@ export const Chat = memo(
                   updatedConversation = {
                     ...updatedConversation,
                     messages: updatedConversation.messages.map((msg, idx) =>
-                      idx === lastMsgIndex ? { ...message, tools: [...message.tools] } : msg,
+                      idx === lastMsgIndex ? { ...message, tools: [...(message.tools || [])] } : msg,
                     ),
                   }
                 }

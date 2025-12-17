@@ -211,6 +211,11 @@ export const projects = pgTable('projects', {
   metadata_schema: jsonb('metadata_schema'),
   conversation_map_index: text('conversation_map_index'),
   document_map_index: text('document_map_index'),
+  // Sim AI workflow configuration
+  sim_api_key: text('sim_api_key'),
+  sim_base_url: text('sim_base_url'),
+  sim_workflow_ids: text('sim_workflow_ids'), // Comma-separated workflow IDs
+  sim_workflow_metadata: jsonb('sim_workflow_metadata'), // Workflow metadata: { workflowId: { name, description } }
 })
 
 // CourseNames table

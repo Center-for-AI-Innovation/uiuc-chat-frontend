@@ -1,0 +1,489 @@
+{
+  "version": "1.0",
+  "exportedAt": "2025-12-15T21:02:47.401Z",
+  "state": {
+    "blocks": {
+      "28af958a-618b-4342-963a-c9794128dec2": {
+        "id": "28af958a-618b-4342-963a-c9794128dec2",
+        "type": "api_trigger",
+        "name": "Input",
+        "position": {
+          "x": 150,
+          "y": 247.95833333333331
+        },
+        "enabled": true,
+        "horizontalHandles": true,
+        "advancedMode": false,
+        "triggerMode": false,
+        "height": 100,
+        "subBlocks": {
+          "inputFormat": {
+            "id": "inputFormat",
+            "type": "input-format",
+            "value": [
+              {
+                "id": "bced5a01-a59a-4667-8e53-f304f7be8d79",
+                "name": "Query",
+                "type": "string",
+                "value": "What is the temperature in New York?",
+                "collapsed": false
+              },
+              {
+                "id": "960041b4-4816-49e6-affa-97414cef1514",
+                "name": "host",
+                "type": "string",
+                "value": "sim-weatherdb-1",
+                "collapsed": false
+              },
+              {
+                "id": "78dd267a-0fe0-4a8d-9b31-fc03f2613620",
+                "name": "port",
+                "type": "number",
+                "value": "5432",
+                "collapsed": false
+              },
+              {
+                "id": "4660bef0-d721-4b14-9a07-b81eb723ffad",
+                "name": "dbname",
+                "type": "string",
+                "value": "weather",
+                "collapsed": false
+              },
+              {
+                "id": "457fe51e-5ed7-43fc-90a3-f56deb78a98e",
+                "name": "username",
+                "type": "string",
+                "value": "postgres",
+                "collapsed": false
+              },
+              {
+                "id": "2c4a96a6-684d-4af0-a3e9-f5281d44b2e5",
+                "name": "password",
+                "type": "string",
+                "value": "postgres",
+                "collapsed": false
+              }
+            ]
+          }
+        },
+        "outputs": {},
+        "data": {},
+        "layout": {
+          "measuredWidth": 250,
+          "measuredHeight": 100
+        }
+      },
+      "b5276e2c-4f6d-4824-a1a0-caa3ac35b3fa": {
+        "id": "b5276e2c-4f6d-4824-a1a0-caa3ac35b3fa",
+        "type": "agent",
+        "name": "Agent 1",
+        "position": {
+          "x": 2350,
+          "y": 170.5
+        },
+        "enabled": false,
+        "horizontalHandles": true,
+        "advancedMode": false,
+        "triggerMode": false,
+        "height": 230,
+        "subBlocks": {
+          "model": {
+            "id": "model",
+            "type": "combobox",
+            "value": "qwen2.5:3b"
+          },
+          "tools": {
+            "id": "tools",
+            "type": "tool-input",
+            "value": []
+          },
+          "apiKey": {
+            "id": "apiKey",
+            "type": "short-input",
+            "value": null
+          },
+          "memories": {
+            "id": "memories",
+            "type": "short-input",
+            "value": null
+          },
+          "messages": {
+            "id": "messages",
+            "type": "messages-input",
+            "value": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant that formats SQL query results into natural language responses.\\n\\nYour task:\\n1. Take the raw SQL results and present them in a clear, human-readable format\\n2. If the results are empty, say so politely\\n3. For large result sets, provide a summary and highlight key insights\\n4. Format the data in a structured way (lists, tables in markdown, etc.)\\n\\nBe concise and helpful."
+              },
+              {
+                "role": "user",
+                "content": "<sqlrunner.rows>"
+              }
+            ]
+          },
+          "verbosity": {
+            "id": "verbosity",
+            "type": "dropdown",
+            "value": null
+          },
+          "memoryType": {
+            "id": "memoryType",
+            "type": "unknown",
+            "value": "none"
+          },
+          "userPrompt": {
+            "id": "userPrompt",
+            "type": "long-input",
+            "value": "<sqlrunner.rows>"
+          },
+          "temperature": {
+            "id": "temperature",
+            "type": "slider",
+            "value": null
+          },
+          "systemPrompt": {
+            "id": "systemPrompt",
+            "type": "long-input",
+            "value": "You are a helpful assistant that formats SQL query results into natural language responses.\\n\\nYour task:\\n1. Take the raw SQL results and present them in a clear, human-readable format\\n2. If the results are empty, say so politely\\n3. For large result sets, provide a summary and highlight key insights\\n4. Format the data in a structured way (lists, tables in markdown, etc.)\\n\\nBe concise and helpful."
+          },
+          "azureEndpoint": {
+            "id": "azureEndpoint",
+            "type": "short-input",
+            "value": null
+          },
+          "responseFormat": {
+            "id": "responseFormat",
+            "type": "code",
+            "value": null
+          },
+          "azureApiVersion": {
+            "id": "azureApiVersion",
+            "type": "short-input",
+            "value": null
+          },
+          "reasoningEffort": {
+            "id": "reasoningEffort",
+            "type": "dropdown",
+            "value": null
+          }
+        },
+        "outputs": {
+          "model": "string",
+          "tokens": "any",
+          "content": "string",
+          "toolCalls": "any"
+        },
+        "data": {},
+        "layout": {
+          "measuredWidth": 250,
+          "measuredHeight": 230
+        }
+      },
+      "bbfa294d-1c6b-43bf-bacd-b3b54b18f470": {
+        "id": "bbfa294d-1c6b-43bf-bacd-b3b54b18f470",
+        "type": "postgresql",
+        "name": "SQLRunner",
+        "position": {
+          "x": 1800,
+          "y": 150
+        },
+        "enabled": true,
+        "horizontalHandles": true,
+        "advancedMode": false,
+        "triggerMode": false,
+        "height": 317,
+        "subBlocks": {
+          "ssl": {
+            "id": "ssl",
+            "type": "dropdown",
+            "value": "disabled"
+          },
+          "data": {
+            "id": "data",
+            "type": "code",
+            "value": null
+          },
+          "host": {
+            "id": "host",
+            "type": "short-input",
+            "value": "<input.host>"
+          },
+          "port": {
+            "id": "port",
+            "type": "short-input",
+            "value": "<input.port>"
+          },
+          "query": {
+            "id": "query",
+            "type": "code",
+            "value": "<sqlgenerator.content>"
+          },
+          "table": {
+            "id": "table",
+            "type": "short-input",
+            "value": null
+          },
+          "where": {
+            "id": "where",
+            "type": "short-input",
+            "value": null
+          },
+          "database": {
+            "id": "database",
+            "type": "short-input",
+            "value": "<input.dbname>"
+          },
+          "password": {
+            "id": "password",
+            "type": "short-input",
+            "value": null
+          },
+          "username": {
+            "id": "username",
+            "type": "short-input",
+            "value": "<input.username>"
+          },
+          "operation": {
+            "id": "operation",
+            "type": "dropdown",
+            "value": "query"
+          }
+        },
+        "outputs": {
+          "rows": "array",
+          "message": "string",
+          "rowCount": "number"
+        },
+        "data": {},
+        "layout": {
+          "measuredWidth": 250,
+          "measuredHeight": 317
+        }
+      },
+      "a79b8130-057c-42d0-9233-fb01183ad5d2": {
+        "id": "a79b8130-057c-42d0-9233-fb01183ad5d2",
+        "type": "postgresql",
+        "name": "SchemaGetter",
+        "position": {
+          "x": 700,
+          "y": 150
+        },
+        "enabled": true,
+        "horizontalHandles": true,
+        "advancedMode": false,
+        "triggerMode": false,
+        "height": 317,
+        "subBlocks": {
+          "ssl": {
+            "id": "ssl",
+            "type": "dropdown",
+            "value": "disabled"
+          },
+          "data": {
+            "id": "data",
+            "type": "code",
+            "value": null
+          },
+          "host": {
+            "id": "host",
+            "type": "short-input",
+            "value": "<input.host>"
+          },
+          "port": {
+            "id": "port",
+            "type": "short-input",
+            "value": "<input.port>"
+          },
+          "query": {
+            "id": "query",
+            "type": "code",
+            "value": "SELECT t.schemaname AS table_schema, t.tablename AS table_name, 'table' AS object_type, c.column_name, c.data_type FROM pg_tables t JOIN information_schema.columns c ON c.table_schema = t.schemaname AND c.table_name = t.tablename WHERE t.schemaname NOT LIKE 'pg%' AND t.schemaname <> 'information_schema' ORDER BY t.schemaname, t.tablename, c.ordinal_position;"
+          },
+          "table": {
+            "id": "table",
+            "type": "short-input",
+            "value": null
+          },
+          "where": {
+            "id": "where",
+            "type": "short-input",
+            "value": null
+          },
+          "database": {
+            "id": "database",
+            "type": "short-input",
+            "value": "<input.dbname>"
+          },
+          "password": {
+            "id": "password",
+            "type": "short-input",
+            "value": null
+          },
+          "username": {
+            "id": "username",
+            "type": "short-input",
+            "value": "<input.username>"
+          },
+          "operation": {
+            "id": "operation",
+            "type": "dropdown",
+            "value": "query"
+          }
+        },
+        "outputs": {
+          "rows": "array",
+          "message": "string",
+          "rowCount": "number"
+        },
+        "data": {},
+        "layout": {
+          "measuredWidth": 250,
+          "measuredHeight": 317
+        }
+      },
+      "b20fcdb9-4519-4004-afc8-d4b16ef79d6e": {
+        "id": "b20fcdb9-4519-4004-afc8-d4b16ef79d6e",
+        "type": "agent",
+        "name": "SQLGenerator",
+        "position": {
+          "x": 1250,
+          "y": 170.5
+        },
+        "enabled": true,
+        "horizontalHandles": true,
+        "advancedMode": false,
+        "triggerMode": false,
+        "height": 230,
+        "subBlocks": {
+          "model": {
+            "id": "model",
+            "type": "combobox",
+            "value": "qwen2.5:3b"
+          },
+          "tools": {
+            "id": "tools",
+            "type": "tool-input",
+            "value": []
+          },
+          "apiKey": {
+            "id": "apiKey",
+            "type": "short-input",
+            "value": null
+          },
+          "memories": {
+            "id": "memories",
+            "type": "short-input",
+            "value": null
+          },
+          "messages": {
+            "id": "messages",
+            "type": "messages-input",
+            "value": [
+              {
+                "role": "system",
+                "content": "You are a SQL expert. Convert natural language queries into PostgreSQL SQL queries.\\n\\n# DATABASE SCHEMA\\nHere is the complete database schema with all tables, columns, and data types:\\n<schemagetter.rows>\\n\\nIMPORTANT INSTRUCTIONS:\\n- Study the schema carefully to understand table names, column names, schemas, and relationships\\n- Use the EXACT table and column names from the schema (including proper schema prefixes like schema_name.table_name)\\n- Return ONLY the SQL query, no explanations or markdown formatting\\n- Do not wrap the query in code blocks or quotes\\n- Use proper PostgreSQL syntax\\n- Be cautious with UPDATE and DELETE queries\\n- Always include schema prefixes (e.g., sales.customers, inventory.products)\\n- Pay attention to data types when writing WHERE clauses\\n\\nExamples:\\nUser: \\\"Show me all customers\\\"\\nYou: SELECT * FROM sales.customers;\\n\\nUser: \\\"Count orders from last week\\\"\\nYou: SELECT COUNT(*) FROM orders.order_header WHERE created_date >= CURRENT_DATE - INTERVAL '7 days';"
+              },
+              {
+                "role": "user",
+                "content": "<input.Query>"
+              }
+            ]
+          },
+          "verbosity": {
+            "id": "verbosity",
+            "type": "dropdown",
+            "value": null
+          },
+          "memoryType": {
+            "id": "memoryType",
+            "type": "unknown",
+            "value": "none"
+          },
+          "userPrompt": {
+            "id": "userPrompt",
+            "type": "long-input",
+            "value": "<input.Query>"
+          },
+          "temperature": {
+            "id": "temperature",
+            "type": "slider",
+            "value": 1
+          },
+          "systemPrompt": {
+            "id": "systemPrompt",
+            "type": "long-input",
+            "value": "You are a SQL expert. Convert natural language queries into PostgreSQL SQL queries.\\n\\n# DATABASE SCHEMA\\nHere is the complete database schema with all tables, columns, and data types:\\n<schemagetter.rows>\\n\\nIMPORTANT INSTRUCTIONS:\\n- Study the schema carefully to understand table names, column names, schemas, and relationships\\n- Use the EXACT table and column names from the schema (including proper schema prefixes like schema_name.table_name)\\n- Return ONLY the SQL query, no explanations or markdown formatting\\n- Do not wrap the query in code blocks or quotes\\n- Use proper PostgreSQL syntax\\n- Be cautious with UPDATE and DELETE queries\\n- Always include schema prefixes (e.g., sales.customers, inventory.products)\\n- Pay attention to data types when writing WHERE clauses\\n\\nExamples:\\nUser: \\\"Show me all customers\\\"\\nYou: SELECT * FROM sales.customers;\\n\\nUser: \\\"Count orders from last week\\\"\\nYou: SELECT COUNT(*) FROM orders.order_header WHERE created_date >= CURRENT_DATE - INTERVAL '7 days';"
+          },
+          "azureEndpoint": {
+            "id": "azureEndpoint",
+            "type": "short-input",
+            "value": null
+          },
+          "responseFormat": {
+            "id": "responseFormat",
+            "type": "code",
+            "value": null
+          },
+          "azureApiVersion": {
+            "id": "azureApiVersion",
+            "type": "short-input",
+            "value": null
+          },
+          "reasoningEffort": {
+            "id": "reasoningEffort",
+            "type": "dropdown",
+            "value": null
+          }
+        },
+        "outputs": {
+          "model": "string",
+          "tokens": "any",
+          "content": "string",
+          "toolCalls": "any"
+        },
+        "data": {},
+        "layout": {
+          "measuredWidth": 250,
+          "measuredHeight": 230
+        }
+      }
+    },
+    "edges": [
+      {
+        "id": "df508896-1b36-498f-9e71-84277286c979",
+        "source": "a79b8130-057c-42d0-9233-fb01183ad5d2",
+        "target": "b20fcdb9-4519-4004-afc8-d4b16ef79d6e",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "type": "default",
+        "data": {}
+      },
+      {
+        "id": "98137522-d2b1-4b4f-be0f-615205d92c47",
+        "source": "28af958a-618b-4342-963a-c9794128dec2",
+        "target": "a79b8130-057c-42d0-9233-fb01183ad5d2",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "type": "default",
+        "data": {}
+      },
+      {
+        "id": "499422e6-f706-44fc-97af-4c215a49d2bb",
+        "source": "b20fcdb9-4519-4004-afc8-d4b16ef79d6e",
+        "target": "bbfa294d-1c6b-43bf-bacd-b3b54b18f470",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "type": "default",
+        "data": {}
+      }
+    ],
+    "loops": {},
+    "parallels": {},
+    "metadata": {
+      "name": "sql-agent",
+      "description": "Your first workflow - start building here!",
+      "exportedAt": "2025-12-15T21:02:47.401Z"
+    },
+    "variables": []
+  }
+}

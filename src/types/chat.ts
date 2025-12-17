@@ -45,6 +45,7 @@ export interface Message {
   feedback?: MessageFeedback
   wasQueryRewritten?: boolean
   queryRewriteText?: string
+  simWorkflowResult?: unknown // Result from Sim workflow execution
 }
 
 export type MessageFeedback = {
