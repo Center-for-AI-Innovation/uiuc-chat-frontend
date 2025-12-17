@@ -31,8 +31,6 @@ export const VariableModal: FC<Props> = ({
   const modalRef = useRef<HTMLDivElement>(null)
   const nameInputRef = useRef<HTMLTextAreaElement>(null)
 
-  const { t } = useTranslation()
-
   const handleChange = (index: number, value: string) => {
     setUpdatedVariables((prev) => {
       const updated = prev.map((item, i) => {

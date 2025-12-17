@@ -18,7 +18,6 @@ function DocumentGroupsCard({
   const { t } = useTranslation('common')
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [accordionOpened, setAccordionOpened] = useState(false)
-  const { t } = useTranslation('common')
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)

@@ -213,9 +213,8 @@ export const createShowToastOnUpdate = (t: (key: string) => string) => (
 }
 
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
   const { classes, theme } = useStyles()
-  const { t, i18n } = useTranslation('common')
   const auth = useAuth()
   const showToastOnFileDeleted = createShowToastOnFileDeleted(t)
   const showToastOnUpdate = createShowToastOnUpdate(t)
@@ -623,7 +622,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           {(() => {
                             const trend = weeklyTrends.find(
-                              (t) => t.metric_name === 'Total Conversations',
+                              (t) => t.metric_name === t('analysis.totalConversations') as unknown as string,
                             )
                             if (!trend) return null
 
@@ -1033,7 +1032,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             value={dateRange}
                             onChange={setDateRange}
                             // TODO fix me type error complaining placeholder doesn't exist for mantine/date v6
-                            // placeholder="Pick date range"
+                            // placeholder=t('analysis.pickDateRange')
                             className="date_picker"
                             styles={(theme: MantineTheme) => ({
                               icon: {
@@ -1267,6 +1266,7 @@ async function fetchCourseMetadata(course_name: string) {
 }
 
 const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
+  const { t } = useTranslation('common')
   return (
     // docs: https://mantine.dev/others/notifications/
 
@@ -1280,7 +1280,7 @@ const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
       title: was_error ? 'Error deleting file' : 'Deleting file...',
       message: was_error
         ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email rohan13@illinois.edu to report this bug."
-        : 'The file is being deleted in the background.',
+        : t('alerts.file_deleting_bg') || 'An error occurred while deleting the file. Please try again and I\'d be so grateful if you email rohan13@illinois.edu to report this bug.',
       icon: <IconCheck />,
       // className: 'my-notification-class',
       styles: {

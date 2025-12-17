@@ -82,13 +82,12 @@ export function LargeDropzone({
   const [uploadInProgress, setUploadInProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
   const [successfulUploads, setSuccessfulUploads] = useState(0)
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
   const router = useRouter()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const { classes, theme } = useStyles()
   const openRef = useRef<() => void>(null)
   const [files, setFiles] = useState<File[]>([])
-  const { t } = useTranslation('common')
 
   const refreshOrRedirect = async (redirect_to_gpt_4: boolean) => {
     if (is_new_course) {

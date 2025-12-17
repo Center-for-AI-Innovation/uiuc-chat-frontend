@@ -121,7 +121,7 @@ export const UserSettings = () => {
           </Modal.Title>
           <Modal.CloseButton
             onClick={handleClose}
-            aria-label="Close settings"
+            aria-label={t('settings.close') || 'Close settings'}
             className="text-[--foreground-faded] hover:text-[--foreground]"
           />
         </Modal.Header>

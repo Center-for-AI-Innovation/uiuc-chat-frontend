@@ -78,7 +78,6 @@ export function LandingPageHeader({
 }) {
   const { t } = useTranslation('common')
   const { classes, theme } = useStyles()
-  const { t } = useTranslation('common')
   const headerStyle = forGeneralPurposeNotLandingpage
     ? {
         backgroundColor: 'var(--background)', //illinois-blue

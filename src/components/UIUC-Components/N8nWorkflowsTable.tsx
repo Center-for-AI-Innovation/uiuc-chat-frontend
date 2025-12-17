@@ -80,7 +80,6 @@ export const N8nWorkflowsTable = ({
   const { t } = useTranslation('common')
   const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
-  const { t } = useTranslation('common')
 
   // Get responsive width classes based on sidebar state
   const widthClasses = sidebarCollapsed

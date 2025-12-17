@@ -43,7 +43,7 @@ export const CannotViewCourse = ({
         if (response.ok) {
           const data = await response.json()
           if (data.success === false) {
-            console.error('An error occurred while fetching course metadata')
+            console.error(t('auto.text_001'))
             return null
           }
           return data.course_metadata
@@ -52,7 +52,7 @@ export const CannotViewCourse = ({
           return null
         }
       } catch (error) {
-        console.error('Error fetching course metadata:', error)
+        console.error(t('auto.text_002'), error)
         return null
       }
     }
@@ -75,7 +75,7 @@ export const CannotViewCourse = ({
   ) {
     // CAN view course
     // Cannot edit course
-    console.log('CAN view course, cannot EDIT course')
+    console.log(t('auto.text_003'))
     console.log('curr_user_email: ', curr_user_email)
     console.log('courseMetadata.course_owner: ', courseMetadata.course_owner)
     console.log('courseMetadata.course_admins: ', courseMetadata.course_admins)

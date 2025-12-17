@@ -49,7 +49,6 @@ const ApiKeyManagement = ({
   const [loading, setLoading] = useState(true)
   const [metadata, setMetadata] = useState<{ system_prompt?: string }>()
   const [insightsOpen, setInsightsOpen] = useState(false)
-  const { t } = useTranslation('common')
 
   useEffect(() => {
     const getMetadata = async () => {

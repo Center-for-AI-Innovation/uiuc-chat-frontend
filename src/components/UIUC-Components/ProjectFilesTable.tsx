@@ -85,7 +85,7 @@ export function ProjectFilesTable({
   onTabChange: (value: string) => void
   failedCount?: number
 }) {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [selectedRecords, setSelectedRecords] = useState<CourseDocument[]>([])
   const [filterKey, setFilterKey] = useState<string>('')
@@ -107,7 +107,6 @@ export function ProjectFilesTable({
   const [showDeleteButton, setShowDeleteButton] = useState(false)
   const [selectedCount, setSelectedCount] = useState(0)
   const router = useRouter()
-  const { t } = useTranslation('common');
 
   const getCurrentPageName = () => {
     return router.asPath.slice(1).split('/')[0] as string
@@ -1053,8 +1052,8 @@ export function ProjectFilesTable({
               filter: (
                 <TextInput
                   label={t('dashboard.starting_url_web_scraping') || ''}
-                  description="Show all urls that include the specified text"
-                  placeholder="Search urls..."
+                  description={t('project_files.search_urls_description') as string}
+                  placeholder={t('project_files.search_urls') as string}
                   rightSection={
                     <ActionIcon
                       size="sm"

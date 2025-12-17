@@ -2147,7 +2147,7 @@ export const Chat = memo(
         </SourcesSidebarProvider>
       </>
     )
-    Chat.displayName = 'Chat'
+    Chat.displayName = t('navigation.chat') || 'Chat'
   },
 )
 

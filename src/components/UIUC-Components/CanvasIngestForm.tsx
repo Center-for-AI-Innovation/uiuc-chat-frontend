@@ -49,7 +49,6 @@ export default function CanvasIngestForm({
     return regex.test(input)
   }
   const router = useRouter()
-  const { t } = useTranslation('common');
 
   const getCurrentPageName = () => {
     return router.query.course_name as string

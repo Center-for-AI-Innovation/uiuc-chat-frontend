@@ -59,14 +59,13 @@ function DocumentsCard({
   metadata: CourseMetadata
   sidebarCollapsed?: boolean
 }) {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
   const [tabValue, setTabValue] = useState<string | null>('success')
   const [failedCount, setFailedCount] = useState<number>(0)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [exportModalOpened, setExportModalOpened] = useState(false)
   const router = useRouter()
   const { classes, theme } = useStyles()
-  const { t } = useTranslation('common')
   const showToastOnUpdate = createShowToastOnUpdate(t)
 
   // Get responsive card width classes based on sidebar state

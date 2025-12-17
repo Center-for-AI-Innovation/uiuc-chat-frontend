@@ -3,6 +3,7 @@ import { useAuth } from 'react-oidc-context'
 import { montserrat_heading } from 'fonts'
 import { createStyles } from '@mantine/core'
 import { getKeycloakBaseUrl, initiateSignIn } from '~/utils/authHelpers'
+import { useTranslation } from 'next-i18next'
 
 const useStyles = createStyles((theme) => ({
   link: {

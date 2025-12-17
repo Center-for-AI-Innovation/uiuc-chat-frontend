@@ -78,7 +78,6 @@ type SortableColumn = 'name' | 'privacy' | 'owner' | 'admins'
 
 const ListProjectTable: React.FC = () => {
   const auth = useAuth()
-  const { t } = useTranslation('common')
   const [courses, setProjects] = useState<
     { [key: string]: CourseMetadata }[] | null
   >(null)
@@ -92,7 +91,7 @@ const ListProjectTable: React.FC = () => {
   const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>(
     [],
   )
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
 
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {

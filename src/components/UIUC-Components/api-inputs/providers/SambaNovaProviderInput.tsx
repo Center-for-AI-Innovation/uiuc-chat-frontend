@@ -65,7 +65,7 @@ export default function SambaNovaProviderInput({
                 labelPosition="left"
                 onLabel={t('models.on') || ''}
                 offLabel={t('models.off') || ''}
-                aria-label={t('models.enable_model', { model: 'SambaNova' }) || ''}
+                aria-label={t('models.enable_model', { model: t('models.sambanova.title') }) || ''}
                 checked={field.state.value}
                 onChange={(event) => {
                   event.preventDefault()

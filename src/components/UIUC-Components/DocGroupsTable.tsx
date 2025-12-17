@@ -86,7 +86,6 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
   const queryClient = useQueryClient()
   const { t } = useTranslation('common')
   const [documentGroupSearch, setDocumentGroupSearch] = useState('')
-  const { t } = useTranslation('common')
 
   const updateDocGroup = useUpdateDocGroup(course_name, queryClient)
 

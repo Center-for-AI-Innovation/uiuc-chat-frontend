@@ -110,7 +110,6 @@ const useStyles = createStyles((theme) => ({
 const SupportedFileUploadTypes = () => {
   const { t } = useTranslation('common')
   const { classes, theme } = useStyles()
-  const { t } = useTranslation('common')
   const fileTypes: FileType[] = [
     { icon: IconFileTypePdf, label: t('file_types.pdf') as unknown as string, color: 'text-red-500' },
     { icon: IconFileTypeDocx, label: t('file_types.word') as unknown as string, color: 'text-blue-500' },

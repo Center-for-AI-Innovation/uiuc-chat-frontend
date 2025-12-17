@@ -86,7 +86,6 @@ export const APIKeyInput = ({
 }) => {
   const { t } = useTranslation('common')
   const [error, setError] = useState<string | null>(null)
-  const { t } = useTranslation('common')
 
   useEffect(() => {
     setError(null)

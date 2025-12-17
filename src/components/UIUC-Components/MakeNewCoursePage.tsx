@@ -281,7 +281,7 @@ const MakeNewCoursePage = ({
                       </label>
                     </Flex>
                     <Textarea
-                      placeholder="Describe your project, goals, expected impact etc..."
+                      placeholder={t('upload.describe_project_placeholder') || 'Describe your project, goals, expected impact etc...'}
                       radius={'md'}
                       value={projectDescription}
                       onChange={(e) => setProjectDescription(e.target.value)}

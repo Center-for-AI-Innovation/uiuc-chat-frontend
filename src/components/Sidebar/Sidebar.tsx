@@ -147,7 +147,7 @@ const Sidebar = <T,>({
         </div>
 
         <Tooltip
-          label="Admin Dashboard"
+          label={t('navigation.admin_dashboard') || 'Admin dashboard'}
           disabled={permission !== 'edit'}
           withArrow
           position="right"
@@ -231,8 +231,8 @@ const Sidebar = <T,>({
                       void nextRouter.push(`/${courseName}/dashboard`)
                     }
                   }}
-                  title="Admin Dashboard"
-                  aria-label="Admin Dashboard"
+                  title={t('navigation.admin_dashboard') || 'Admin dashboard'}
+                  aria-label={t('navigation.admin_dashboard') || 'Admin dashboard'}
                 >
                   <IconSettings stroke={1.5} size={20} />
                 </Button>

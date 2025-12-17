@@ -96,7 +96,7 @@ export const UploadCard = memo(function UploadCard({
 }) {
   const auth = useAuth()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
-  const { t } = useTranslation('common')
+  const { t } = useTranslation()
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
@@ -112,7 +112,6 @@ export const UploadCard = memo(function UploadCard({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
   const [metadata, setMetadata] = useState(initialMetadata)
-  const { t } = useTranslation('common');
 
   useEffect(() => {
     // Set initial query data
@@ -439,25 +438,26 @@ export const UploadCard = memo(function UploadCard({
                         metadata.banner_image_s3 = banner_s3_image
                         await callSetCourseMetadata(projectName, metadata)
                       }
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    className={`w-full border-violet-800 bg-violet-800 text-white shadow-inner hover:border-violet-600 hover:bg-violet-800 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                    onClick={() => {
-                      const fileInput = document.getElementById('logo-upload') as HTMLInputElement
-                      if (fileInput) {
-                        fileInput.click()
-                      }
-                    }}
-                  >
-                    {t('file_upload.browse_button')}
-                  </Button>
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  className={`w-full border-violet-800 bg-violet-800 text-white shadow-inner hover:border-violet-600 hover:bg-violet-800 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                  onClick={() => {
+                    const fileInput = document.getElementById('logo-upload') as HTMLInputElement
+                    if (fileInput) {
+                      fileInput.click()
+                    }
+                  }}
+                >
+                  {t('file_upload.browse_button')}
+                </Button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+
       </Flex>
       <ShareSettingsModal
         opened={isShareModalOpen}

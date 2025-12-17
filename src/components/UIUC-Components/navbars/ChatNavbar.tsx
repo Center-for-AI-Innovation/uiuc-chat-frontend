@@ -266,8 +266,8 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 style={{ ...styles.thumbnailImage }}
                 width={2000}
                 height={2000}
-                alt="The course creator uploaded a logo for this chatbot."
-                aria-label="The course creator uploaded a logo for this chatbot."
+                alt=t('navbar.course_logo_aria') as unknown as string
+                aria-label=t('navbar.course_logo_aria') as unknown as string
                 onError={(e) => (e.currentTarget.style.display = 'none')} // display nothing if image fails
               />
             </div>

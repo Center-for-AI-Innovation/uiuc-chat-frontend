@@ -119,7 +119,7 @@ const ConversationsPerDayOfWeekChart: React.FC<ChartProps> = ({
           <Bar
             dataKey="count"
             fill="var(--dashboard-stat)"
-            name="Number of Conversations"
+            name={t('analysis.numberOfConversations') as unknown as string}
           />
         </BarChart>
       </ResponsiveContainer>
