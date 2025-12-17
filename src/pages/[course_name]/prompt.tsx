@@ -140,7 +140,6 @@ const CourseMain: NextPage = () => {
   const { t } = useTranslation(['common', 'prompt'])
   const theme = useMantineTheme()
   const router = useRouter()
-  const { t } = useTranslation('common')
 
   const GetCurrentPageName = () => {
     return router.query.course_name as string
