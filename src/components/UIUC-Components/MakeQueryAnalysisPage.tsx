@@ -622,7 +622,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
                           {(() => {
                             const trend = weeklyTrends.find(
-                              (t) => t.metric_name === t('analysis.totalConversations') as unknown as string,
+                              (item) => item.metric_name === t('analysis.totalConversations') as unknown as string,
                             )
                             if (!trend) return null
 

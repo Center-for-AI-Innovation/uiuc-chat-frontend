@@ -1,5 +1,6 @@
 import { IconCircleX } from '@tabler/icons-react'
 import { type FC } from 'react'
+import { useTranslation } from 'next-i18next'
 
 import { type ErrorMessage } from '@/types/error'
 

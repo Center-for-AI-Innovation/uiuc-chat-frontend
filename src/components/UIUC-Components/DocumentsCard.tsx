@@ -7,7 +7,7 @@ import { useState } from 'react'
 import handleExport from '~/pages/util/handleExport'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
-import { showToastOnUpdate } from './MakeQueryAnalysisPage'
+import { createShowToastOnUpdate } from './MakeQueryAnalysisPage'
 import { ProjectFilesTable } from './ProjectFilesTable'
 import { useTranslation } from 'next-i18next'
 

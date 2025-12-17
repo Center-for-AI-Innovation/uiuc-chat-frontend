@@ -4,6 +4,8 @@ import Head from 'next/head'
 import Image from 'next/image'
 import React, { useState, useEffect, useMemo } from 'react'
 import { ArrowNarrowRight, ExternalLink, Link } from 'tabler-icons-react'
+import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 
 import { doto_font, montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -127,12 +129,13 @@ const TypingAnimation: React.FC = () => {
 }
 
 const Home: NextPage = () => {
+  const { t } = useTranslation('common')
   const [isTooltipVisible, setIsTooltipVisible] = useState(false)
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
   const IllinoisChatBannerContent = useMemo(() => {
-    return process.env.NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT || null
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_BANNER_CONTENT || null
   }, [])
 
   return (

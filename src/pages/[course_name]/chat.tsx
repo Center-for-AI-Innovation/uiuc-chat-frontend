@@ -3,6 +3,7 @@
 import { useAuth } from 'react-oidc-context'
 import { type NextPage } from 'next'
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'next-i18next'
 import Home from '../api/home/home'
 import { useRouter } from 'next/router'
 

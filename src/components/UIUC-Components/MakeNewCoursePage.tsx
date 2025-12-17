@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import React, { useMemo, useState } from 'react'
+import { useTranslation } from 'next-i18next'
 
 import {
   Button,

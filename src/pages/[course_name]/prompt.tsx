@@ -83,6 +83,8 @@ import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { useTranslation } from 'next-i18next'
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
+import { type GetServerSidePropsContext } from 'next'
 
 const montserrat = Montserrat({
   weight: '700',

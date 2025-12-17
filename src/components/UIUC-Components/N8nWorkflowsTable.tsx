@@ -17,6 +17,9 @@ import { useTranslation } from 'next-i18next'
 
 const PAGE_SIZE = 25
 
+type WorkflowRecord = UIUCTool
+type Tag = { name: string }
+
 interface N8nWorkflowsTableProps {
   n8nApiKey: string
   course_name: string
@@ -195,7 +198,7 @@ export const N8nWorkflowsTable = ({
       width: 100,
       render: (record: WorkflowRecord) => (
         <Switch
-          checked={!!record.active}
+          checked={!!record.enabled}
           onChange={(event) => {
             mutate_active_flows.mutate({
               id: record.id,

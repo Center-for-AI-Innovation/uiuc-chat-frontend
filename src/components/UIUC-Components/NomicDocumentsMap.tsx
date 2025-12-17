@@ -4,7 +4,6 @@ import { useTranslation } from 'next-i18next'
 import React, { useEffect, useState } from 'react'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useTranslation } from 'next-i18next'
 
 function NomicDocumentMap({ course_name }: { course_name: string }) {
   const { t } = useTranslation('common')
