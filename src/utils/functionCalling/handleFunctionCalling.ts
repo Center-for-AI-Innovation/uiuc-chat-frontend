@@ -30,7 +30,6 @@ export async function handleFunctionCall(
   try {
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
 
-    // Check if the selected model is from OpenAICompatible provider
     const isOpenAICompatible =
       llmProviders?.OpenAICompatible?.enabled &&
       (llmProviders.OpenAICompatible.models || []).some(
@@ -58,7 +57,20 @@ export async function handleFunctionCall(
     if (isOpenAICompatible) {
       body.providerBaseUrl = llmProviders!.OpenAICompatible.baseUrl
       body.apiKey = llmProviders!.OpenAICompatible.apiKey
-      body.modelId = selectedConversation.model.id
+      // Check if this is OpenRouter and lowercase model ID if so
+      let modelIdToSend = selectedConversation.model.id
+      const baseUrl = llmProviders!.OpenAICompatible.baseUrl
+      if (baseUrl) {
+        try {
+          const parsedUrl = new URL(baseUrl)
+          const hostname = parsedUrl.hostname.toLowerCase()
+          const isOpenRouter = hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
+          if (isOpenRouter) {
+            modelIdToSend = selectedConversation.model.id.toLowerCase()
+          }
+        } catch { /* invalid URL, use original modelId */ }
+      }
+      body.modelId = modelIdToSend
     } else {
       body.openaiKey = openaiKey
     }
