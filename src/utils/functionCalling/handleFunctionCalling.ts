@@ -104,11 +104,35 @@ export async function handleFunctionCall(
     }
     console.log('OpenAI tools to run: ', openaiResponse)
 
+    // Helper function to heal and parse JSON arguments, fixing common malformed JSON issues
+    const healToolArguments = (args: string): any => {
+      try {
+        return JSON.parse(args)
+      } catch (parseError) {
+        // Try to fix common malformed JSON issues (missing opening brace)
+        const trimmed = args.trim()
+        if (!trimmed.startsWith('{') && trimmed.endsWith('}')) {
+          try {
+            const fixed = '{' + trimmed
+            const parsed = JSON.parse(fixed)
+            return parsed
+          } catch (fixError) {
+            console.error('Failed to fix malformed JSON:', fixError, 'Original:', args)
+          }
+        }
+        // If all fixes fail, return empty object
+        console.error('Failed to parse tool arguments:', parseError, 'Arguments:', args)
+        return {}
+      }
+    }
+
     // Map tool into UIUCTool, parse arguments, and add invocation ID
     const uiucToolsToRun: UIUCTool[] = openaiResponse.map((openaiTool) => {
       const baseTool = availableTools.find(
         (availableTool) => availableTool.name === openaiTool.function.name,
       )
+
+      const parsedArguments = healToolArguments(openaiTool.function.arguments)
 
       if (!baseTool) {
         // Handle case where the tool specified by OpenAI isn't available
@@ -124,7 +148,7 @@ export async function handleFunctionCall(
           name: openaiTool.function.name,
           readableName: `Error: ${openaiTool.function.name} not found`,
           description: 'Tool definition not found',
-          aiGeneratedArgumentValues: JSON.parse(openaiTool.function.arguments),
+          aiGeneratedArgumentValues: parsedArguments,
           error: 'Tool definition not found in available tools list.',
         } as UIUCTool
       }
@@ -133,7 +157,7 @@ export async function handleFunctionCall(
       return {
         ...baseTool, // Copy properties from the base tool definition
         invocationId: openaiTool.id, // Add the unique invocation ID from OpenAI
-        aiGeneratedArgumentValues: JSON.parse(openaiTool.function.arguments), // Add the specific arguments for this call
+        aiGeneratedArgumentValues: parsedArguments, // Add the specific arguments for this call
       }
     })
 
