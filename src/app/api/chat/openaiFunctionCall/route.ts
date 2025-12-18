@@ -229,10 +229,14 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     })
 
     if (!response.ok) {
+      let errorBody = ''
+      try {
+        errorBody = await response.text()
+      } catch {}
       const apiName = isOpenAICompatible
         ? 'OpenAI-compatible API'
         : 'OpenAI API'
-      console.error(`${apiName} error:`, response.status, response.statusText)
+      console.error(`${apiName} error:`, response.status, response.statusText, errorBody)
       return NextResponse.json(
         { error: `${apiName} error: ${response.status}` },
         { status: response.status },
