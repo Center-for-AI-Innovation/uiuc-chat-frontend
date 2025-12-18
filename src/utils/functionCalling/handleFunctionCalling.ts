@@ -114,15 +114,18 @@ export async function handleFunctionCall(
         if (!trimmed.startsWith('{') && trimmed.endsWith('}')) {
           try {
             const fixed = '{' + trimmed
-            const parsed = JSON.parse(fixed)
-            return parsed
+            return JSON.parse(fixed)
           } catch (fixError) {
-            console.error('Failed to fix malformed JSON:', fixError, 'Original:', args)
+            // If healing fails, throw error with context
+            throw new Error(
+              `Failed to parse tool arguments: ${parseError instanceof Error ? parseError.message : String(parseError)}. Original arguments: ${args.substring(0, 200)}`,
+            )
           }
         }
-        // If all fixes fail, return empty object
-        console.error('Failed to parse tool arguments:', parseError, 'Arguments:', args)
-        return {}
+        // If not healable, throw error
+        throw new Error(
+          `Failed to parse tool arguments: ${parseError instanceof Error ? parseError.message : String(parseError)}. Arguments: ${args.substring(0, 200)}`,
+        )
       }
     }
 
