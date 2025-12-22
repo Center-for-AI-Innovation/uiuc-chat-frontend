@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/completions'
 import posthog from 'posthog-js'
+import Cookies from 'js-cookie'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
 import type { ToolOutput } from '~/types/chat'
 import { type Conversation, type Message, type UIUCTool } from '~/types/chat'
@@ -11,6 +12,13 @@ import {
 } from '~/types/tools'
 import { getBackendUrl } from '~/utils/apiUtils'
 
+/**
+ * Get the access token from cookies if not explicitly provided
+ */
+function getAccessTokenFromCookie(): string | undefined {
+  return Cookies.get('access_token')
+}
+
 export async function handleFunctionCall(
   message: Message,
   availableTools: UIUCTool[],
@@ -19,19 +27,36 @@ export async function handleFunctionCall(
   selectedConversation: Conversation,
   openaiKey: string,
   base_url?: string,
+  accessToken?: string,
 ): Promise<UIUCTool[]> {
   try {
     // Convert UIUCTool to OpenAICompatibleTool
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
-    // console.log('OpenAI compatible tools (handle tools): ', openaiKey)
+    console.log('🟢 OpenAI compatible tools being sent:', JSON.stringify(openAITools, null, 2))
+    const courseName = selectedConversation.projectName || selectedConversation.name
     const url = base_url
-      ? `${base_url}/api/chat/openaiFunctionCall`
-      : '/api/chat/openaiFunctionCall'
+      ? `${base_url}/api/chat/openaiFunctionCall?course_name=${encodeURIComponent(courseName)}`
+      : `/api/chat/openaiFunctionCall?course_name=${encodeURIComponent(courseName)}`
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    
+    // Try to get access token: use provided token or fall back to cookie
+    const token = accessToken || getAccessTokenFromCookie()
+    
+    // Add Authorization header if access token is available
+    if (token) {
+      console.log('🟢 Adding Authorization header with token (length):', token.length)
+      headers['Authorization'] = `Bearer ${token}`
+    } else {
+      console.warn('⚠️ No access token found (neither provided nor in cookies), relying on cookie header for authentication')
+    }
+    
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
+      credentials: 'include', // Include cookies for authentication
       body: JSON.stringify({
         conversation: selectedConversation,
         tools: openAITools,
@@ -42,7 +67,23 @@ export async function handleFunctionCall(
     })
 
     if (!response.ok) {
-      console.error('Error calling openaiFunctionCall: ', response)
+      const errorText = await response.text()
+      console.error('❌ Error calling openaiFunctionCall:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+      })
+      
+      // Provide helpful error message for authentication issues
+      if (response.status === 401) {
+        console.error('🔐 Authentication failed. Please ensure you are logged in and your session is valid.')
+        console.error('🔐 Token info:', {
+          tokenProvidedAsParam: !!accessToken,
+          tokenFromCookie: !!getAccessTokenFromCookie(),
+          tokenUsed: !!token
+        })
+      }
+      
       return []
     }
     const openaiFunctionCallResponse = await response.json()
@@ -53,7 +94,8 @@ export async function handleFunctionCall(
 
     const openaiResponse: ChatCompletionMessageToolCall[] =
       openaiFunctionCallResponse.choices?.[0]?.message?.tool_calls || []
-    console.log('OpenAI tools to run: ', openaiResponse)
+    console.log('🟢 OpenAI selected tools to run:', openaiResponse)
+    console.log('🟢 Available tools for matching:', availableTools.map(t => t.name))
 
     // Map tool into UIUCTool, parse arguments, and add invocation ID
     const uiucToolsToRun: UIUCTool[] = openaiResponse.map((openaiTool) => {
@@ -112,6 +154,15 @@ export async function handleFunctionCall(
   }
 }
 
+/**
+ * Check if a tool is a Sim workflow tool
+ * @param tool - The UIUCTool to check
+ * @returns true if this is a Sim tool
+ */
+function isSimTool(tool: UIUCTool): boolean {
+  return tool.name.startsWith('sim_') || tool.id.includes('-') && tool.id.length === 36
+}
+
 export async function handleToolCall(
   uiucToolsToRun: UIUCTool[],
   selectedConversation: Conversation,
@@ -154,12 +205,22 @@ export async function handleToolCall(
         }
 
         try {
-          const toolOutput = await callN8nFunction(
-            tool,
-            projectName,
-            undefined,
-            base_url,
-          )
+          let toolOutput: ToolOutput
+          
+          // Check if this is a Sim tool or an N8N tool
+          if (isSimTool(tool)) {
+            console.log(`Running Sim tool: ${tool.readableName}`)
+            toolOutput = await callSimFunction(tool)
+          } else {
+            console.log(`Running N8N tool: ${tool.readableName}`)
+            toolOutput = await callN8nFunction(
+              tool,
+              projectName,
+              undefined,
+              base_url,
+            )
+          }
+          
           // Add success output: update message with tool output, but don't add another tool.
           // ✅ TOOL SUCCEEDED
           targetToolInMessage.output = toolOutput
@@ -569,11 +630,6 @@ export async function fetchTools(
   } else {
     // Server-side: use direct backend call
     const backendUrl = getBackendUrl()
-    if (!backendUrl) {
-      throw new Error(
-        'No backend URL configured. Please provide base_url parameter or set RAILWAY_URL environment variable.',
-      )
-    }
     response = await fetch(
       `${backendUrl}/getworkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}`,
     )
@@ -604,8 +660,294 @@ export const useFetchAllWorkflows = (
   // Note: api_key can still be 'undefined' here... but we'll fetch it inside fetchTools
 
   return useQuery({
-    queryKey: ['tools', api_key],
-    queryFn: async (): Promise<UIUCTool[]> =>
-      fetchTools(course_name!, api_key!, limit, pagination, full_details),
+    queryKey: ['tools', api_key, course_name, 'all-workflows'],
+    queryFn: async (): Promise<UIUCTool[]> => {
+      // Fetch both n8n and Sim tools in parallel
+      const [n8nTools, simTools] = await Promise.all([
+        fetchTools(course_name!, api_key!, limit, pagination, full_details).catch((error) => {
+          console.debug('No n8n tools found:', error)
+          return [] as UIUCTool[]
+        }),
+        fetchSimTools(course_name).catch((error) => {
+          console.debug('No Sim tools found:', error)
+          return [] as UIUCTool[]
+        }),
+      ])
+
+      // Combine both sets of tools, with n8n tools first
+      return [...n8nTools, ...simTools]
+    },
   })
+}
+/**
+ * Convert Sim workflows to UIUCTool format
+ * @param workflows - Array of Sim workflows
+ * @returns Array of UIUCTool objects
+ */
+export function getUIUCToolFromSim(workflows: any[]): UIUCTool[] {
+  const extractedTools: UIUCTool[] = []
+
+  for (const workflow of workflows) {
+    // Build input parameters from workflow's inputFields if available
+    let inputParameters: any = {
+      type: 'object',
+      properties: {},
+      required: [],
+    }
+
+    if (workflow.inputFields && Array.isArray(workflow.inputFields) && workflow.inputFields.length > 0) {
+      // Use custom input fields from metadata
+      const properties: any = {}
+      const required: string[] = []
+
+      for (const field of workflow.inputFields) {
+        // Skip fields with empty or invalid names
+        if (!field.name || field.name.trim() === '') {
+          console.warn(`Skipping input field with empty name for workflow ${workflow.id}`)
+          continue
+        }
+        
+        properties[field.name] = {
+          type: field.type || 'string',
+          description: field.description || `${field.name} parameter`,
+        }
+        if (field.required) {
+          required.push(field.name)
+        }
+      }
+
+      // If no valid fields were found, use default
+      if (Object.keys(properties).length === 0) {
+        inputParameters = {
+          type: 'object',
+          properties: {
+            input: {
+              type: 'string',
+              description: 'The input data to pass to the workflow',
+            },
+          },
+          required: ['input'],
+        }
+      } else {
+        inputParameters = {
+          type: 'object',
+          properties,
+          required: required.length > 0 ? required : undefined,
+        }
+      }
+    } else {
+      // Default generic input parameter
+      inputParameters = {
+        type: 'object',
+        properties: {
+          input: {
+            type: 'string',
+            description: 'The input data to pass to the workflow',
+          },
+        },
+        required: ['input'],
+      }
+    }
+
+    extractedTools.push({
+      id: workflow.id,
+      name: `sim_${workflow.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}`,
+      readableName: workflow.name,
+      description: workflow.description || `Execute the "${workflow.name}" Sim workflow`,
+      updatedAt: workflow.updatedAt,
+      createdAt: workflow.createdAt,
+      enabled: true,
+      inputParameters,
+    })
+  }
+
+  return extractedTools
+}
+
+/**
+ * Fetch Sim workflows and convert to UIUCTool format
+ * @param course_name - The course name to fetch Sim config for
+ * @returns Array of UIUCTool objects representing Sim workflows
+ */
+export async function fetchSimTools(course_name?: string): Promise<UIUCTool[]> {
+  try {
+    const isClientSide = typeof window !== 'undefined'
+    
+    console.log('🔵 fetchSimTools called with course_name:', course_name)
+    console.log('🔵 isClientSide:', isClientSide)
+    
+    // Get API key and workflow IDs from localStorage (client-side only)
+    let simApiKey = ''
+    let simWorkflowIds = ''
+    
+    if (isClientSide && course_name) {
+      simApiKey = localStorage.getItem(`sim_api_key_${course_name}`) || ''
+      simWorkflowIds = localStorage.getItem(`sim_workflow_ids_${course_name}`) || ''
+      
+      console.log('🔵 Retrieved from localStorage:', {
+        apiKeyExists: !!simApiKey,
+        workflowIdsExists: !!simWorkflowIds,
+        workflowIds: simWorkflowIds,
+      })
+      
+      if (!simApiKey || !simWorkflowIds) {
+        console.debug('No Sim configuration found in localStorage for course:', course_name)
+        return []
+      }
+    } else {
+      console.log('🔵 Skipping localStorage check (server-side or no course_name)')
+    }
+    
+    let response: Response
+    if (isClientSide) {
+      const url = `/api/UIUC-api/getSimWorkflows?` +
+        `course_name=${encodeURIComponent(course_name || '')}&` +
+        `api_key=${encodeURIComponent(simApiKey)}&` +
+        `workflow_ids=${encodeURIComponent(simWorkflowIds)}`
+      response = await fetch(url)
+    } else {
+      // Server-side: use API route with env vars
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+      const url = course_name
+        ? `${baseUrl}/api/UIUC-api/getSimWorkflows?course_name=${encodeURIComponent(course_name)}`
+        : `${baseUrl}/api/UIUC-api/getSimWorkflows`
+      response = await fetch(url)
+    }
+
+    if (!response.ok) {
+      console.error('Failed to fetch Sim workflows:', response.status)
+      return []
+    }
+
+    const data = await response.json()
+    console.log('🔵 API response:', data)
+    const workflows = data.workflows || data.data || []
+    
+    if (workflows.length === 0) {
+      console.log('❌ No Sim workflows configured for this project. API returned:', data)
+      return []
+    }
+    
+    console.log('✅ Found', workflows.length, 'Sim workflows')
+    
+    // Merge metadata from localStorage (client-side only)
+    if (isClientSide && course_name) {
+      try {
+        const metadataStr = localStorage.getItem(`sim_workflow_metadata_${course_name}`) || '{}'
+        const metadata = JSON.parse(metadataStr) as Record<string, { 
+          name?: string
+          description?: string
+          inputFields?: any[]
+        }>
+        
+        console.log('🔵 Metadata from localStorage:', metadata)
+        
+        workflows.forEach((workflow: any) => {
+          const meta = metadata[workflow.id]
+          if (meta) {
+            console.log(`🔵 Applying metadata to workflow ${workflow.id}:`, meta)
+            if (meta.name) workflow.name = meta.name
+            if (meta.description) workflow.description = meta.description
+            if (meta.inputFields) workflow.inputFields = meta.inputFields
+          }
+        })
+      } catch (error) {
+        console.warn('Failed to parse workflow metadata:', error)
+      }
+    }
+    
+    console.log('🔵 Workflows after metadata merge:', workflows)
+    
+    const tools = getUIUCToolFromSim(workflows)
+    console.log('🟢 Final Sim tools being returned:', tools)
+    
+    return tools
+  } catch (error) {
+    console.error('❌ Error calling openaiFunctionCall from handleFunctionCall:', error)
+    return []
+  }
+}
+
+/**
+ * Hook to fetch Sim workflows as UIUCTools
+ */
+export const useFetchSimWorkflows = () => {
+  return useQuery({
+    queryKey: ['sim-tools'],
+    queryFn: async (): Promise<UIUCTool[]> => fetchSimTools(),
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false,
+  })
+}
+
+/**
+ * Call a Sim workflow function
+ * @param tool - The UIUCTool representing the Sim workflow
+ * @returns The tool output
+ */
+export async function callSimFunction(
+  tool: UIUCTool,
+): Promise<ToolOutput> {
+  const timeStart = Date.now()
+  
+  try {
+    // Import the Sim service function dynamically to avoid circular dependencies
+    const { executeSimWorkflowById } = await import('~/services/simService')
+    
+    // Extract input from the tool's AI-generated arguments
+    const userInput = tool.aiGeneratedArgumentValues || {}
+    
+    // Merge with system/environment parameters if they exist
+    // This allows workflows to have both user-facing and system parameters
+    // System parameters (like DB connection strings) are injected from env vars
+    const input = { ...userInput }
+    
+    console.log(`Executing Sim workflow ${tool.readableName} with input:`, input)
+    
+    const result = await executeSimWorkflowById(tool.id, input)
+    
+    const timeEnd = Date.now()
+    console.log(`Sim workflow ${tool.readableName} completed in ${(timeEnd - timeStart) / 1000}s`)
+    
+    // Format the output
+    let toolOutput: ToolOutput = {}
+    
+    if (result.success === false || result.error) {
+      throw new Error(result.error || 'Workflow execution failed')
+    }
+    
+    // Handle different output formats from Sim
+    if (result.output) {
+      if (typeof result.output === 'string') {
+        toolOutput.text = result.output
+      } else if (result.output.content) {
+        toolOutput.text = String(result.output.content)
+      } else {
+        toolOutput.text = JSON.stringify(result.output, null, 2)
+      }
+    }
+    
+    // Capture analytics
+    posthog.capture('sim_tool_invoked', {
+      readableToolName: tool.readableName,
+      toolDescription: tool.description,
+      secondsToRunTool: (timeEnd - timeStart) / 1000,
+      toolInputs: input,
+      success: true,
+    })
+    
+    return toolOutput
+  } catch (error) {
+    const timeEnd = Date.now()
+    console.error(`Error executing Sim workflow ${tool.readableName}:`, error)
+    
+    posthog.capture('sim_tool_error', {
+      readableToolName: tool.readableName,
+      toolDescription: tool.description,
+      secondsToRunTool: (timeEnd - timeStart) / 1000,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    
+    throw error
+  }
 }

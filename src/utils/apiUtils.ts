@@ -17,18 +17,12 @@ export const getBaseUrl = () => {
 
 /**
  * Gets the backend URL from environment variables.
- * Throws an error if RAILWAY_URL is not configured.
+ * Falls back to localhost:8000 if RAILWAY_URL is not configured (for local development).
  * @returns {string} - The validated backend URL
- * @throws {Error} - If RAILWAY_URL is not set
  */
 export const getBackendUrl = (): string => {
-  const backendUrl = process.env.RAILWAY_URL
-
-  if (!backendUrl) {
-    throw new Error(
-      'Backend URL is not configured. Please set the RAILWAY_URL environment variable.',
-    )
-  }
+  // Use RAILWAY_URL for production, fall back to localhost for local development
+  const backendUrl = process.env.RAILWAY_URL || 'http://localhost:8000'
 
   // Remove trailing slash if present for consistency
   return backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl

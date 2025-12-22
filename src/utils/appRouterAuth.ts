@@ -5,7 +5,13 @@ import { getKeycloakBaseFromHost, getKeycloakIssuerUrl } from '~/utils/authHelpe
 import { verifyTokenAsync } from './keycloakClient'
 
 function getTokenFromCookies(req: NextRequest): string | null {
-  // Find oidc.user* cookie
+  // Check Authorization header first
+  const authHeader = req.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.substring(7)
+  }
+  
+  // Fall back to cookie
   const cookieHeader = req.headers.get('cookie')
   if (!cookieHeader) return null
 
@@ -36,19 +42,24 @@ export function withAppRouterAuth(
       const token = getTokenFromCookies(req)
 
       if (!token) {
+        console.error('❌ Authentication failed: No token found in Authorization header or cookies')
         return NextResponse.json({ error: 'Missing token' }, { status: 401 })
       }
+
+      console.log('🔐 Token found, length:', token.length, 'starts with:', token.substring(0, 20) + '...')
 
       const rawHost =
         req.headers.get('x-forwarded-host') ?? req.headers.get('host')
       const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost
 
-      console.log('Host value:', hostValue)
+      console.log('🔐 Host value:', hostValue)
 
       // Fallback to 'localhost' if undefined
       const hostname = (hostValue ?? 'localhost').split(':')[0]
       const keycloakBaseUrl = getKeycloakBaseFromHost(hostname)
       const issuerUrl = getKeycloakIssuerUrl(hostname)
+
+      console.log('🔐 Verifying token with Keycloak:', { keycloakBaseUrl, issuerUrl })
 
       // Verify JWT token using Keycloak's JWKS endpoint
       const decoded = (await verifyTokenAsync(
@@ -57,6 +68,8 @@ export function withAppRouterAuth(
         issuerUrl,
       )) as AuthenticatedUser
 
+      console.log('🔐 Token verified successfully for user:', decoded.email)
+
       // Add user to request object
       const authenticatedReq = req as AuthenticatedRequest
       authenticatedReq.user = decoded
@@ -64,9 +77,12 @@ export function withAppRouterAuth(
       // Call the original handler
       return await handler(authenticatedReq)
     } catch (error) {
-      console.error('JWT verification error:', error)
+      console.error('❌ JWT verification error:', error)
+      console.error('❌ Error type:', error?.constructor?.name)
+      console.error('❌ Error message:', error instanceof Error ? error.message : String(error))
 
       if (error instanceof jwt.TokenExpiredError) {
+        console.error('❌ Token has expired')
         return NextResponse.json(
           {
             error: 'Token expired',
@@ -77,6 +93,7 @@ export function withAppRouterAuth(
       }
 
       if (error instanceof jwt.JsonWebTokenError) {
+        console.error('❌ Invalid JWT token format or signature')
         return NextResponse.json(
           {
             error: 'Invalid token',
@@ -86,6 +103,7 @@ export function withAppRouterAuth(
         )
       }
 
+      console.error('❌ Unknown authentication error')
       return NextResponse.json(
         {
           error: 'Authentication failed',

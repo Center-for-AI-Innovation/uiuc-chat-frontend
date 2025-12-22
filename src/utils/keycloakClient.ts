@@ -41,21 +41,30 @@ export async function initializeKeycloakAdmin(keycloakBaseUrl: string): Promise<
  * Get signing key from Keycloak's JWKS endpoint
  */
 export function getSigningKey(keycloakBaseUrl: string, header: any, callback: any) {
+  const jwksUri = `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`
+  console.log('🔐 Fetching signing key from JWKS:', jwksUri)
+  console.log('🔐 JWT header kid:', header.kid)
+  
   // JWKS client for fetching public keys
   const jwksClientInstance = jwksClient({
-    jwksUri: `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`,
+    jwksUri,
     cache: true,
     cacheMaxAge: 600000, // 10 minutes
     rateLimit: true,
     jwksRequestsPerMinute: 5,
   })
-  if (!header.kid) return callback(new Error('Missing kid in JWT header'))
+  if (!header.kid) {
+    console.error('❌ Missing kid in JWT header')
+    return callback(new Error('Missing kid in JWT header'))
+  }
   jwksClientInstance.getSigningKey(header.kid, (err, key) => {
     if (err) {
+      console.error('❌ Failed to get signing key:', err)
       callback(err)
       return
     }
     const signingKey = key?.getPublicKey()
+    console.log('✅ Successfully retrieved signing key')
     callback(null, signingKey)
   })
 }
@@ -146,19 +155,32 @@ export function verifyTokenAsync(
   issuerUrl?: string
 ): Promise<any> {
   return new Promise((resolve, reject) => {
-    const verifier = createTokenVerifier(keycloakBaseUrl, issuerUrl)
-    jwt.verify(
-      token,
-      verifier.getKey,
-      verifier.options,
-      (err: any, decoded: any) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(decoded)
-        }
-      },
-    )
+    try {
+      console.log('🔐 verifyTokenAsync called with:', { 
+        tokenLength: token.length, 
+        keycloakBaseUrl, 
+        issuerUrl 
+      })
+      const verifier = createTokenVerifier(keycloakBaseUrl, issuerUrl)
+      console.log('🔐 Token verifier created with options:', verifier.options)
+      jwt.verify(
+        token,
+        verifier.getKey,
+        verifier.options,
+        (err: any, decoded: any) => {
+          if (err) {
+            console.error('❌ JWT verification failed in callback:', err)
+            reject(err)
+          } else {
+            console.log('✅ JWT verification succeeded, decoded:', { sub: decoded.sub, email: decoded.email })
+            resolve(decoded)
+          }
+        },
+      )
+    } catch (error) {
+      console.error('❌ Error in verifyTokenAsync before jwt.verify:', error)
+      reject(error)
+    }
   })
 }
 
