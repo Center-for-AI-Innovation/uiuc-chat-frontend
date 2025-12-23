@@ -269,7 +269,6 @@ function NavigationContent({
         {(styles) => (
           <Paper
             className={classes.dropdown}
-            style={styles}
             role="navigation"
             aria-label="Main"
           >
