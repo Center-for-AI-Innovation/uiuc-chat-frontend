@@ -1,7 +1,7 @@
 // @utils/app/conversation
 import { type Conversation, type ConversationPage } from '@/types/chat'
 import posthog from 'posthog-js'
-import { cleanConversationHistory } from './clean'
+import { cleanConversationHistory } from '../../utils/app/clean'
 
 export async function fetchConversationHistory(
   searchTerm: string,
@@ -97,7 +97,10 @@ export async function fetchLastConversation(
   }
 }
 
-export const deleteConversationFromServer = async (id: string, course_name: string) => {
+export const deleteConversationFromServer = async (
+  id: string,
+  course_name: string,
+) => {
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
@@ -115,9 +118,7 @@ export const deleteConversationFromServer = async (id: string, course_name: stri
   }
 }
 
-export const deleteAllConversationsFromServer = async (
-  course_name: string,
-) => {
+export const deleteAllConversationsFromServer = async (course_name: string) => {
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
@@ -264,28 +265,6 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
   return successful
 }
 
-const clearSingleOldestConversation = () => {
-  console.debug('CLEARING OLDEST CONVERSATIONS to free space in local storage.')
-
-  const existingConversations = JSON.parse(
-    localStorage.getItem('conversationHistory') || '[]',
-  )
-
-  // let existingConversations = JSON.parse(localStorage.getItem('conversationHistory') || '[]');
-  while (existingConversations.length > 0) {
-    existingConversations.shift() // Remove the oldest conversation
-    try {
-      localStorage.setItem(
-        'conversationHistory',
-        JSON.stringify(existingConversations),
-      )
-      break // Exit loop if setItem succeeds
-    } catch (error) {
-      continue // Try removing another conversation
-    }
-  }
-}
-
 export const saveConversations = (conversations: Conversation[]) => {
   /*
   Note: This function is a workaround for the issue where localStorage is full and cannot save new conversation history.
@@ -374,20 +353,10 @@ export const saveConversations = (conversations: Conversation[]) => {
   }
 }
 
-// Old method without error handling
-// export const saveConversations = (conversations: Conversation[]) => {
-//   try {
-//     localStorage.setItem('conversationHistory', JSON.stringify(conversations))
-//   } catch (e) {
-//     console.error(
-//       'Error saving conversation history. Clearing storage, then setting convo. Error:',
-//       e,
-//     )
-//     localStorage.setItem('conversationHistory', JSON.stringify(conversations))
-//   }
-// }
-
-export async function saveConversationToServer(conversation: Conversation, course_name: string) {
+export async function saveConversationToServer(
+  conversation: Conversation,
+  course_name: string,
+) {
   const MAX_RETRIES = 3
   let retryCount = 0
 

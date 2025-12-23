@@ -5,7 +5,7 @@ import {
   type DocumentGroup,
 } from '~/types/courseMaterials'
 
-export function useRemoveFromDocGroup(
+export function useDeleteFromDocGroup(
   course_name: string,
   queryClient: QueryClient,
   page: number,

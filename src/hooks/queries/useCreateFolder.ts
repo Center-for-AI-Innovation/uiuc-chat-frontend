@@ -3,7 +3,7 @@ import {
   type FolderWithConversation,
   type FolderInterface,
 } from '~/types/folder'
-import { saveFolderToServer } from '~/utils/app/folders'
+import { saveFolderToServer } from '~/hooks/__internal__/folders'
 
 export function useCreateFolder(
   user_email: string,
