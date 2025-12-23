@@ -1,6 +1,6 @@
 import { useState, useCallback, useContext, useEffect, Suspense } from 'react'
 import { useTranslation } from 'next-i18next'
-import { useCreateReducer } from '~/hooks/queries/useCreateReducer'
+import { useCreateReducer } from '~/hooks/useCreateReducer'
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '@/utils/app/const'
 import { type Conversation } from '@/types/chat'
 import { OpenAIModels } from '~/utils/modelProviders/types/openai'
