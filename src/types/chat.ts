@@ -33,8 +33,19 @@ export interface Conversation {
 export interface Message {
   id: string
   role: Role
+
+  // content is a list of array for
+  // - text content: input by user through textarea
+  // - file content:
+  //   - file metadata for non-image file
+  //   - image URL for image file
   content: string | Content[]
+
+  // contexts are for non-image file,
+  // returned from fileUploadContexts endpoint per uploaded non-image file
+  // enhanced query then updates contexts using context search service
   contexts?: ContextWithMetadata[]
+
   tools?: UIUCTool[]
   latestSystemMessage?: string
   finalPromtEngineeredMessage?: string // after all prompt enginering, to generate final response.
@@ -102,6 +113,7 @@ export interface OpenAIChatMessage {
   content: Content[]
 }
 
+// BG: used in citations - context created from context search service
 export interface ContextWithMetadata {
   id: number
   text: string
