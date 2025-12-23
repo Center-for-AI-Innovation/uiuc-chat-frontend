@@ -392,3 +392,29 @@ export async function saveConversationToServer(
     }
   }
 }
+
+export async function logConversationToServer(
+  conversation: Conversation,
+  course_name: string,
+) {
+  try {
+    const response = await fetch('/api/UIUC-api/logConversation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ course_name, conversation }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null)
+      const errorMessage = errorData?.error || response.statusText
+      throw new Error(`Error logging conversation: ${errorMessage}`)
+    }
+
+    return response.json().catch(() => null)
+  } catch (error) {
+    console.error('Error logging conversation to server:', error)
+    throw error
+  }
+}

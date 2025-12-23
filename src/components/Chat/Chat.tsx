@@ -60,6 +60,7 @@ import { useAuth } from 'react-oidc-context'
 import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
 import { useFetchEnabledDocGroups } from '~/hooks/queries/useFetchEnabledDocGroups'
 import { useDeleteMessages } from '~/hooks/queries/useDeleteMessages'
+import { useLogConversation } from '~/hooks/queries/useLogConversation'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
@@ -119,6 +120,8 @@ export const Chat = memo(
       string[]
     >([])
     const [enabledTools, setEnabledTools] = useState<string[]>([])
+
+    const logConversationMutation = useLogConversation(getCurrentPageName())
 
     const {
       data: documentGroupsHook,
@@ -262,23 +265,7 @@ export const Chat = memo(
     }, [tools])
 
     const onMessageReceived = async (conversation: Conversation) => {
-      // Log conversation to database
-      try {
-        const response = await fetch(`/api/UIUC-api/logConversation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            course_name: getCurrentPageName(),
-            conversation: conversation,
-          }),
-        })
-        // const data = await response.json()
-        // return data.success
-      } catch (error) {
-        console.error('Error setting course data:', error)
-      }
+      await logConversationMutation.mutateAsync(conversation)
     }
 
     const resetMessageStates = () => {
@@ -1907,16 +1894,7 @@ export const Chat = memo(
           await updateConversationMutation.mutateAsync(updatedConversation)
 
           // Log to database
-          await fetch('/api/UIUC-api/logConversation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              course_name: getCurrentPageName(),
-              conversation: updatedConversation,
-            }),
-          })
+          await logConversationMutation.mutateAsync(updatedConversation)
         } catch (error) {
           homeDispatch({
             field: 'conversations',
@@ -1937,6 +1915,7 @@ export const Chat = memo(
         conversations,
         homeDispatch,
         updateConversationMutation,
+        logConversationMutation,
       ],
     )
 
