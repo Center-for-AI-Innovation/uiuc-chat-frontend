@@ -121,7 +121,11 @@ const ALLOWED_FILE_EXTENSIONS = [
 type FileUploadStatus = {
   file: File
   status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error'
+
+  // BG: url for image file
   url?: string
+
+  // BG: contexts for non-image file
   contexts?: ContextWithMetadata[]
 }
 
@@ -336,7 +340,7 @@ export const ChatInput = ({
       (fu) =>
         fu.status === 'processing' ||
         fu.status === 'uploading' ||
-        fu.status === 'uploaded',
+        fu.status === 'uploaded', // BG: haven't finished processing the file
     )
 
     if (messageIsStreaming || hasProcessingFiles) {
@@ -356,6 +360,7 @@ export const ChatInput = ({
     const allFileContexts: ContextWithMetadata[] = []
 
     if (fileUploads.length > 0) {
+      // BG: removable?
       const pendingFiles = fileUploads.filter((fu) => fu.status !== 'completed')
 
       if (pendingFiles.length > 0) {
@@ -365,6 +370,7 @@ export const ChatInput = ({
         )
         return
       }
+      // END BG
 
       // Create file content for the message (files are already processed)
       fileContent = fileUploads
@@ -702,6 +708,8 @@ export const ChatInput = ({
           conversation = await createNewConversation(courseName, homeDispatch)
         }
 
+        // image file returns a presigned URL for display
+        // non-image file returns a context from context search service
         if (isImageFile) {
           console.log('=== FILE UPLOAD STEP 4A: Processing image file ===')
           // For image files, generate a presigned URL for display
