@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 import Head from 'next/head'
 
-import { useCreateReducer } from '~/hooks/queries/useCreateReducer'
+import { useCreateReducer } from '~/hooks/useCreateReducer'
 
 import useErrorService from '@/services/errorService'
 
