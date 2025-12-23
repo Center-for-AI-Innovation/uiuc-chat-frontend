@@ -26,14 +26,15 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
+
 import { useFetchLastConversation } from '~/hooks/useFetchLastConversation'
 import { useUpdateConversation } from '~/hooks/useUpdateConversation'
-import {
-  useCreateFolder,
-  useDeleteFolder,
-  useFetchFolders,
-  useUpdateFolder,
-} from '~/hooks/folderQueries'
+
+import { useDeleteFolder } from '~/hooks/useDeleteFolder'
+import { useUpdateFolder } from '~/hooks/useUpdateFolder'
+import { useFetchFolders } from '~/hooks/useFetchFolders'
+import { useCreateFolder } from '~/hooks/useCreateFolder'
+
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
