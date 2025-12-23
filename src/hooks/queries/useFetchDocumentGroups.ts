@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { type DocumentGroup } from '~/types/courseMaterials'
 
-export function useGetDocumentGroups(course_name: string) {
+export function useFetchDocumentGroups(course_name: string) {
   // USAGE:
   // const {
   //   data: documentGroups,
