@@ -26,10 +26,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import {
-  useFetchLastConversation,
-  useUpdateConversation,
-} from '~/hooks/conversationQueries'
+import { useFetchLastConversation } from '~/hooks/useFetchLastConversation'
+import { useUpdateConversation } from '~/hooks/useUpdateConversation'
 import {
   useCreateFolder,
   useDeleteFolder,
