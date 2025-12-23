@@ -58,7 +58,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
 import { useUpdateConversation } from '~/hooks/useUpdateConversation'
-import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
+import { useFetchEnabledDocGroups } from '~/hooks/useFetchEnabledDocGroups'
 import { useDeleteMessages } from '~/hooks/messageQueries'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 

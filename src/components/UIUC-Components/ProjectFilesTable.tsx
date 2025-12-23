@@ -41,11 +41,10 @@ import {
   type CourseDocument,
   type DocumentGroup,
 } from 'src/types/courseMaterials'
-import {
-  useAppendToDocGroup,
-  useGetDocumentGroups,
-  useRemoveFromDocGroup,
-} from '~/hooks/docGroupsQueries'
+import { useAppendToDocGroup } from '~/hooks/useAppendToDocGroup'
+import { useGetDocumentGroups } from '~/hooks/useGetDocumentGroups'
+import { useRemoveFromDocGroup } from '~/hooks/useRemoveFromDocGroup'
+
 import handleExport from '~/pages/util/handleExport'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { LoadingSpinner } from './LoadingSpinner'
