@@ -59,7 +59,7 @@ import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
 import { useUpdateConversation } from '~/hooks/useUpdateConversation'
 import { useFetchEnabledDocGroups } from '~/hooks/useFetchEnabledDocGroups'
-import { useDeleteMessages } from '~/hooks/messageQueries'
+import { useDeleteMessages } from '~/hooks/useDeleteMessages'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
