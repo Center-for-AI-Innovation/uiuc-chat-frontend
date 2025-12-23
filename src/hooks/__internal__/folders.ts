@@ -1,17 +1,19 @@
 import { type FolderWithConversation } from '@/types/folder'
 
-
 export async function fetchFolders(
   course_name: string,
 ): Promise<FolderWithConversation[]> {
   let fetchedFolders = []
   try {
-    const foldersResonse = await fetch(`/api/folder?courseName=${course_name}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
+    const foldersResonse = await fetch(
+      `/api/folder?courseName=${course_name}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       },
-    })
+    )
 
     if (!foldersResonse.ok) {
       throw new Error('Error fetching folders')
@@ -57,7 +59,10 @@ export const deleteFolderFromServer = async (
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ deletedFolderId: folder.id, courseName: course_name }),
+      body: JSON.stringify({
+        deletedFolderId: folder.id,
+        courseName: course_name,
+      }),
     })
 
     if (!response.ok) {

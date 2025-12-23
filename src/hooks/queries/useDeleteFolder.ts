@@ -1,38 +1,35 @@
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { type FolderWithConversation } from '~/types/folder'
-import { saveFolderToServer } from '~/utils/app/folders'
+import { deleteFolderFromServer } from '~/hooks/__internal__/folders'
 
-export function useUpdateFolder(
+export function useDeleteFolder(
   user_email: string,
   queryClient: QueryClient,
   course_name: string,
 ) {
   return useMutation({
-    mutationKey: ['updateFolder', user_email, course_name],
-    mutationFn: async (folder: FolderWithConversation) =>
-      saveFolderToServer(folder, course_name),
-    onMutate: async (updatedFolder: FolderWithConversation) => {
+    mutationKey: ['deleteFolder', user_email, course_name],
+    mutationFn: async (deletedFolder: FolderWithConversation) =>
+      deleteFolderFromServer(deletedFolder, course_name),
+    onMutate: async (deletedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
         ['folders', course_name],
         (oldData: FolderWithConversation[]) => {
-          return oldData.map((f: FolderWithConversation) => {
-            if (f.id === updatedFolder.id) {
-              return updatedFolder
-            }
-            return f
-          })
+          return oldData.filter(
+            (f: FolderWithConversation) => f.id !== deletedFolder.id,
+          )
         },
       )
 
       const oldFolder = queryClient.getQueryData(['folders', course_name])
 
-      return { oldFolder, updatedFolder }
+      return { oldFolder, deletedFolder }
     },
     onError: (error, variables, context) => {
       queryClient.setQueryData(['folders', course_name], context?.oldFolder)
-      console.error('Error saving updated folder to server:', error, context)
+      console.error('Error deleting folder from server:', error, context)
     },
     onSuccess: (data, variables, context) => {
       // No need to do anything here because the folders query will be invalidated

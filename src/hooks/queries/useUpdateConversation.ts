@@ -1,7 +1,7 @@
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { type Conversation, type ConversationPage } from '~/types/chat'
 import { type FolderWithConversation } from '~/types/folder'
-import { saveConversationToServer } from '~/utils/app/conversation'
+import { saveConversationToServer } from '~/hooks/__internal__/conversation'
 
 export function useUpdateConversation(
   user_email: string,
