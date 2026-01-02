@@ -63,7 +63,8 @@ import {
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
-import { ContextWithMetadata } from '~/types/chat'
+import { useRouteChat } from '~/hooks/queries/useRouteChat'
+import { type ChatBody, ContextWithMetadata } from '~/types/chat'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -264,6 +265,7 @@ export const ChatInput = ({
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
   const fileUploadRef = useRef<HTMLInputElement | null>(null)
   const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
+  const { mutateAsync: routeChatAsync } = useRouteChat()
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -561,27 +563,16 @@ export const ChatInput = ({
       return
     }
 
-    try {
-      const response = await fetch('/api/allNewRoutingChat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversation: selectedConversation,
-          course_name: courseName,
-          stream: true,
-        }),
-      })
+    const chatBody: ChatBody = {
+      conversation: selectedConversation ?? undefined,
+      course_name: courseName,
+      stream: true,
+      key: '',
+      mode: 'chat',
+    }
 
-      if (!response.ok) {
-        const errorResponse = await response.json()
-        const errorMessage =
-          errorResponse.error ||
-          'An error occurred while processing your request'
-        showErrorToast(errorMessage)
-        return
-      }
+    try {
+      await routeChatAsync(chatBody)
     } catch (error) {
       console.error('Error in chat submission:', error)
       showErrorToast(
