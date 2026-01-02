@@ -24,7 +24,7 @@ import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
 import { useUpdateProjectLLMProviders } from '~/hooks/queries/useUpdateProjectLLMProviders'
-import { useFetchProjectLLMProviders } from '~/hooks/queries/useFetchProjectLLMProviders'
+import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
 import {
   LLM_PROVIDER_ORDER,
   type AllLLMProviders,
@@ -431,7 +431,7 @@ export default function APIKeyInputForm() {
     isError: isErrorLLMProviders,
     error: errorLLMProviders,
     // enabled: !!projectName // Only run the query when projectName is available
-  } = useFetchProjectLLMProviders({ projectName: projectName })
+  } = useFetchLLMProviders({ projectName })
 
   useEffect(() => {
     if (llmProviders) {
