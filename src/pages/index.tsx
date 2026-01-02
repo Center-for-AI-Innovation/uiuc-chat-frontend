@@ -273,7 +273,6 @@ const Home: NextPage = () => {
                   <img
                     alt="Upload Materials Banner"
                     src="/media/banner_upload_materials.png"
-                    alt="Upload Materials Banner"
                     className="w-full max-w-full rounded-xl"
                   ></img>
                 </div>
@@ -283,13 +282,11 @@ const Home: NextPage = () => {
                     <img
                       alt="Banner Icons"
                       src="/media/banner_icons.png"
-                      alt="Banner Icons"
                       className="max-w-full"
                     ></img>
                     <img
                       alt="Banner Icons"
                       src="/media/banner_icons.png"
-                      alt="Banner Icons"
                       className="max-w-full"
                     ></img>
                   </div>
@@ -402,7 +399,6 @@ const Home: NextPage = () => {
                 <img
                   alt="Banner Step 1"
                   src="/media/banner_step_001.png"
-                  alt="Banner Step 1"
                   className="w-full max-w-full rounded-xl"
                 ></img>
               </div>
@@ -493,7 +489,6 @@ const Home: NextPage = () => {
                 <img
                   alt="Banner Step 2"
                   src="/media/banner_step_002.png"
-                  alt="Banner Step 2"
                   className="w-full max-w-full rounded-xl"
                 ></img>
               </div>
@@ -580,7 +575,6 @@ const Home: NextPage = () => {
                 <img
                   alt="Banner Step 3"
                   src="/media/banner_step_003.png"
-                  alt="Banner Step 3"
                   className="w-full max-w-full rounded-xl"
                 ></img>
               </div>

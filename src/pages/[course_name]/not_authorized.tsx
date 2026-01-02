@@ -112,10 +112,7 @@ const NotAuthorizedPage: NextPage = () => {
     return (
       <MainPageBackground>
         <div className="flex h-full min-h-[16rem] w-full flex-col items-center justify-center p-4 text-[--foreground]">
-          <img
-            src="/media/error_sad_bot_illini_blue.png"
-            alt="Error not authorized"
-          ></img>
+          <img src="/media/error_sad_bot_illini_blue.png"></img>
 
           <div className="mt-4 font-semibold">
             Sorry, you don’t have access to this chatbot.
