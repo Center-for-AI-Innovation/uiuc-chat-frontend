@@ -38,7 +38,7 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
     <>
       <img
         src={src}
-        alt={alt || 'Image Preview'}
+        alt={alt}
         onClick={() => setIsModalOpen(true)}
         style={{ cursor: 'pointer' }}
         onLoad={() => setIsImageLoaded(true)}
@@ -55,9 +55,7 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
         <Modal.Overlay className="modal-overlay-common" />
         <Modal.Content className="modal-common">
           <Modal.Header className="modal-header-common">
-            <Modal.Title
-              className={`modal-title-common ${montserrat_heading.variable} font-montserratHeading`}
-            >
+            <Modal.Title className={`modal-title-common ${montserrat_heading.variable} font-montserratHeading`}>
               {alt || 'Image Preview'}
             </Modal.Title>
             <Modal.CloseButton
@@ -68,9 +66,9 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
           </Modal.Header>
           <Modal.Body className="modal-body-common">
             <div className="file-preview-container">
-              <img
-                src={src}
-                alt={alt || 'Image Preview'}
+              <img 
+                src={src} 
+                alt={alt} 
                 className="file-preview-image"
                 style={{
                   display: 'flex',
