@@ -76,6 +76,7 @@ import {
   warningLargeModelIds,
 } from '~/utils/modelProviders/ConfigWebLLM'
 import {
+  BedrockProvider,
   LLM_PROVIDER_ORDER,
   ProviderNames,
   ReasoningCapableModels,
@@ -254,10 +255,11 @@ const CourseMain: NextPage = () => {
 
       if (isApiKeyRequired(provider)) {
         if (provider === 'Bedrock') {
+          const bedrockProvider = llmProviders[provider] as BedrockProvider
           if (
-            !llmProviders[provider]?.accessKeyId ||
-            !llmProviders[provider]?.secretAccessKey ||
-            !llmProviders[provider]?.region
+            !bedrockProvider.accessKeyId ||
+            !bedrockProvider.secretAccessKey ||
+            !bedrockProvider.region
           ) {
             showToastNotification(
               theme,
