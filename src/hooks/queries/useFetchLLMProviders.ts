@@ -6,6 +6,10 @@ interface FetchLLMProvidersVariables {
   projectName: string
 }
 
+interface UseFetchLLMProvidersOptions extends FetchLLMProvidersVariables {
+  enabled?: boolean
+}
+
 async function fetchLLMProviders({
   projectName,
 }: FetchLLMProvidersVariables): Promise<AllLLMProviders> {
@@ -33,10 +37,12 @@ async function fetchLLMProviders({
 
 export function useFetchLLMProviders({
   projectName,
-}: FetchLLMProvidersVariables) {
+  enabled = true,
+}: UseFetchLLMProvidersOptions) {
   return useQuery({
     queryKey: ['projectLLMProviders', projectName],
     queryFn: () => fetchLLMProviders({ projectName }),
     retry: 1,
+    enabled: enabled && Boolean(projectName),
   })
 }
