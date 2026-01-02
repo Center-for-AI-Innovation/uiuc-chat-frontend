@@ -62,6 +62,8 @@ import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
 import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type ChatBody } from '~/types/chat'
+import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
+import { useRouteChat } from '~/hooks/queries/useRouteChat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import {
@@ -150,7 +152,7 @@ const CourseMain: NextPage = () => {
   const isLoaded = !auth.isLoading
   const isSignedIn = auth.isAuthenticated
   const user = auth.user
-  const [courseExists, setCourseExists] = useState(null)
+  const [courseExists, setCourseExists] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
@@ -162,7 +164,11 @@ const CourseMain: NextPage = () => {
   const [opened, { close, open }] = useDisclosure(false)
   const [resetModalOpened, { close: closeResetModal, open: openResetModal }] =
     useDisclosure(false)
-  const [llmProviders, setLLMProviders] = useState<any>(null)
+  const { data: llmProviders } = useFetchLLMProviders({
+    projectName: course_name,
+    enabled: Boolean(course_name),
+  })
+  const { mutateAsync: routeChatAsync } = useRouteChat()
   const [
     linkGeneratorOpened,
     { open: openLinkGenerator, close: closeLinkGenerator },
@@ -374,22 +380,14 @@ CRITICAL: The optimized prompt must:
         key: '',
       }
 
-      const response = await fetch('/api/allNewRoutingChat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(chatBody),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        showToastNotification(
-          theme,
-          'Error',
-          errorData.error || 'Failed to optimize prompt',
-          true,
-        )
+      let response: Response
+      try {
+        response = await routeChatAsync(chatBody)
+      } catch (error) {
+        console.error('Error optimizing prompt:', error)
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to optimize prompt'
+        showToastNotification(theme, 'Error', errorMessage, true)
         return
       }
 
@@ -446,27 +444,6 @@ CRITICAL: The optimized prompt must:
     }
   }, [llmProviders])
 
-  useEffect(() => {
-    const fetchProviders = async () => {
-      try {
-        const response = await fetch('/api/models', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ projectName: course_name }),
-        })
-        if (!response.ok) throw new Error('Failed to fetch providers')
-        const providers = await response.json()
-        setLLMProviders(providers)
-      } catch (error) {
-        console.error('Error fetching LLM providers:', error)
-      }
-    }
-    if (course_name) {
-      fetchProviders()
-    }
-  }, [course_name])
   // Updated state variables for checkboxes
   const [guidedLearning, setGuidedLearning] = useState(false)
   const [documentsOnly, setDocumentsOnly] = useState(false)
