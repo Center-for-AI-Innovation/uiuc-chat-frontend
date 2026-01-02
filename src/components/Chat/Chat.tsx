@@ -57,10 +57,13 @@ import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
-import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
 import { useFetchEnabledDocGroups } from '~/hooks/queries/useFetchEnabledDocGroups'
+import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
 import { useDeleteMessages } from '~/hooks/queries/useDeleteMessages'
 import { useLogConversation } from '~/hooks/queries/useLogConversation'
+import { useQueryRewrite } from '~/hooks/queries/useQueryRewrite'
+import { useRouteChat } from '~/hooks/queries/useRouteChat'
+import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
@@ -106,6 +109,11 @@ export const Chat = memo(
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
+    const { refetch: refetchLLMProviders } = useFetchLLMProviders({
+      projectName: courseName,
+    })
+    const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
+    const { mutateAsync: routeChatAsync } = useRouteChat()
     // const
     const [bannerUrl, setBannerUrl] = useState<string | null>(null)
     const getCurrentPageName = () => {
@@ -296,26 +304,13 @@ export const Chat = memo(
         // This happens when the user hits send before the LLM providers have loaded
         if (!llmProviders || Object.keys(llmProviders).length === 0) {
           try {
-            const response = await fetch('/api/models', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                projectName: courseName,
-              }),
+            const refetchResult = await refetchLLMProviders({
+              throwOnError: true,
             })
-
-            if (!response.ok) {
-              throw new Error('Failed to fetch LLM providers')
-            }
-
-            const data = await response.json()
-            llmProviders = data
-
-            if (!llmProviders) {
+            if (!refetchResult.data) {
               throw new Error('No LLM providers returned from API')
             }
+            llmProviders = refetchResult.data
           } catch (error) {
             console.error('Error fetching LLM providers:', error)
             errorToast({
@@ -734,13 +729,7 @@ export const Chat = memo(
               } else {
                 // Direct call to routeModelRequest instead of going through the API route
                 try {
-                  rewriteResponse = await fetch('/api/queryRewrite', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(queryRewriteBody),
-                  })
+                  rewriteResponse = await runQueryRewriteAsync(queryRewriteBody)
                 } catch (error) {
                   console.error('Error calling query rewrite endpoint:', error)
                   throw error
@@ -947,31 +936,7 @@ export const Chat = memo(
             startOfCallToLLM = performance.now()
 
             try {
-              response = await fetch('/api/allNewRoutingChat', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(finalChatBody),
-              })
-
-              // Check if response is ok before proceeding
-              if (!response.ok) {
-                const errorData = await response.json()
-                console.log(
-                  'Chat.txs --- errorData from /api/allNewRoutingChat',
-                  errorData,
-                )
-                // Read our custom error object. But normal errors are captured too via errorData.error.
-                const customError = new Error(
-                  errorData.message ||
-                    errorData.error ||
-                    'The LLM might be overloaded or misconfigured. Please check your API key, or use a different LLM.',
-                )
-                ;(customError as any).title =
-                  errorData.title || "LLM Didn't Respond"
-                throw customError
-              }
+              response = await routeChatAsync(finalChatBody)
             } catch (error) {
               console.error('Error calling the LLM:', error)
               homeDispatch({ field: 'loading', value: false })
@@ -1300,6 +1265,9 @@ export const Chat = memo(
         selectedConversation,
         stopConversationRef,
         chat_ui,
+        refetchLLMProviders,
+        routeChatAsync,
+        runQueryRewriteAsync,
       ],
     )
 
