@@ -295,4 +295,4 @@ const logConversation = async (
   return res.status(200).json({ success: true })
 }
 
-export default withCourseAccessFromRequest("any")(logConversation)
+export default withCourseAccessFromRequest('any')(logConversation)
