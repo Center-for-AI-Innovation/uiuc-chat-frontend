@@ -21,6 +21,7 @@ import {
 } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { getBaseUrl } from '~/utils/apiUtils'
+import { createLogConversationPayload } from '~/utils/app/conversation'
 import {
   type AllLLMProviders,
   AllSupportedModels,
@@ -637,17 +638,23 @@ export async function updateConversationInDatabase(
   // Log conversation
   try {
     const baseUrl = await getBaseUrl()
-    const response = await fetch(`${baseUrl}/api/UIUC-api/logConversation`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        course_name: course_name,
-        conversation: conversation,
-      }),
-    })
-    // const data = await response.json()
+    const latestMessage =
+      conversation.messages?.[conversation.messages.length - 1] ?? null
+    if (latestMessage) {
+      await fetch(`${baseUrl}/api/UIUC-api/logConversation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+          createLogConversationPayload(
+            course_name,
+            conversation,
+            latestMessage,
+          ),
+        ),
+      })
+    }
   } catch (error) {
     console.error('Error setting course data:', error)
     // return false

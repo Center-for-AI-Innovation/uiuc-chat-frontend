@@ -5,6 +5,7 @@ import type {
   ChatCompletionContentPart,
 } from 'openai/resources/chat/completions'
 import { type Conversation } from '~/types/chat'
+import { persistMessageServer } from '~/pages/api/conversation'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { withCourseAccessFromRequest } from '~/app/api/authorization'
@@ -117,7 +118,25 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     modelId?: string
   } = await req.json()
 
-  // Determine if this is an OpenAI-compatible request
+  const lastMessage = conversation.messages[conversation.messages.length - 1]
+  if (!lastMessage) {
+    return NextResponse.json(
+      { error: 'Conversation missing last message' },
+      { status: 400 },
+    )
+  }
+
+  if (imageUrls.length > 0 && imageDescription) {
+    lastMessage.imageDescription = imageDescription
+    lastMessage.imageUrls = imageUrls
+    await persistMessageServer({
+      conversation,
+      message: lastMessage,
+      courseName: conversation.projectName ?? '',
+      userIdentifier: conversation.userEmail ?? '',
+    })
+  }
+
   const isOpenAICompatible = !!(providerBaseUrl && apiKey && modelId)
 
   // Get API key - prefer OpenAI-compatible if provided, otherwise use OpenAI key
@@ -269,6 +288,14 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     }
 
     const toolCalls = data.choices[0].message.tool_calls
+
+    lastMessage.tools = toolCalls as any
+    await persistMessageServer({
+      conversation,
+      message: lastMessage,
+      courseName: conversation.projectName ?? '',
+      userIdentifier: conversation.userEmail ?? '',
+    })
 
     return NextResponse.json({
       choices: [

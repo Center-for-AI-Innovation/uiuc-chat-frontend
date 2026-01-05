@@ -17,6 +17,7 @@ import {
 } from '@/utils/app/const'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
+import { persistMessageServer } from '~/pages/api/conversation'
 
 import { encodingForModel } from 'js-tiktoken'
 import { v4 as uuidv4 } from 'uuid'
@@ -117,15 +118,21 @@ export const buildPrompt = async ({
       // Extract system messages from conversation history
       const systemMessagesFromHistory = _extractSystemMessages(conversation)
 
-      if (systemMessagesFromHistory && conversation.messages.length > 0) {
-        const lastMessage =
-          conversation.messages[conversation.messages.length - 1]
-        if (lastMessage && lastMessage.role === 'user') {
-          lastMessage.latestSystemMessage = systemMessagesFromHistory
-          lastMessage.finalPromtEngineeredMessage =
-            typeof lastMessage.content === 'string' ? lastMessage.content : ''
-        }
-      }
+  if (systemMessagesFromHistory && conversation.messages.length > 0) {
+    const lastMessage =
+      conversation.messages[conversation.messages.length - 1]
+    if (lastMessage && lastMessage.role === 'user') {
+      lastMessage.latestSystemMessage = systemMessagesFromHistory
+      lastMessage.finalPromtEngineeredMessage =
+        typeof lastMessage.content === 'string' ? lastMessage.content : ''
+      await persistMessageServer({
+        conversation,
+        message: lastMessage,
+        courseName: projectName,
+        userIdentifier: conversation.userEmail ?? '',
+      })
+    }
+  }
       return conversation
     }
     const allPromises = []
@@ -210,11 +217,12 @@ export const buildPrompt = async ({
       }
     }
 
-    const latestUserMessage =
-      conversation.messages[conversation.messages.length - 1]
+    // Track the most recent user message once and reuse the reference
+    const lastUserMessageIndex = conversation.messages.length - 1
+    const lastUserMessage = conversation.messages[lastUserMessageIndex]
 
     // Move Tool Outputs to be added before the userQuery
-    if (latestUserMessage?.tools) {
+    if (lastUserMessage?.tools) {
       const toolsOutputResults = _buildToolsOutputResults({ conversation })
 
       // Add Tool Instructions and outputs
@@ -234,7 +242,7 @@ export const buildPrompt = async ({
     }
 
     // Add tool routing response if present (model asked follow-up instead of invoking tools)
-    const toolRoutingResponse = (latestUserMessage as any)?._toolRoutingResponse
+    const toolRoutingResponse = (lastUserMessage as any)?._toolRoutingResponse
     if (toolRoutingResponse) {
       userPromptSections.push(`<AssistantFollowUp>${toolRoutingResponse}</AssistantFollowUp>`)
     }
@@ -246,13 +254,17 @@ export const buildPrompt = async ({
     const userPrompt = userPromptSections.join('\n\n')
 
     // Set final system and user prompts in the conversation
-    conversation.messages[
-      conversation.messages.length - 1
-    ]!.finalPromtEngineeredMessage = userPrompt
-
-    conversation.messages[
-      conversation.messages.length - 1
-    ]!.latestSystemMessage = finalSystemPrompt
+    const latestUserMessage = lastUserMessage
+    if (latestUserMessage) {
+      latestUserMessage.finalPromtEngineeredMessage = userPrompt
+      latestUserMessage.latestSystemMessage = finalSystemPrompt
+      await persistMessageServer({
+        conversation,
+        message: latestUserMessage,
+        courseName: projectName,
+        userIdentifier: conversation.userEmail ?? '',
+      })
+    }
 
     return conversation
   } catch (error) {
