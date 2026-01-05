@@ -27,13 +27,16 @@ const CourseMain: NextPage = () => {
   const courseName = getCurrentPageName() as string
 
   const auth = useAuth()
-  const [currentEmail, setCurrentEmail] = useState('')
   const [metadata, setMetadata] = useState<CourseMetadata | null>()
   const [isLoading, setIsLoading] = useState(true)
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
+
 
   useEffect(() => {
-    if (!router.isReady) return
+    if (!router.isReady && auth.isLoading) return
+    if (!courseName) return
     const fetchCourseData = async () => {
+      setIsLoading(true)
       try {
         const local_metadata: CourseMetadata = (await fetchCourseMetadata(
           courseName,
@@ -53,6 +56,14 @@ const CourseMain: NextPage = () => {
       } catch (error) {
         console.error(error)
         // alert('An error occurred while fetching course metadata. Please try again later.')
+
+        const errorWithStatus = error as Error & { status?: number }
+        const status = errorWithStatus.status
+        if (status === 401 || status === 403 || status === 404) {
+          setErrorType(status as 401 | 403 | 404)
+        }
+      } finally {
+      setIsLoading(false)
       }
     }
     fetchCourseData()
@@ -88,6 +99,16 @@ const CourseMain: NextPage = () => {
   ) {
     // Don't edit certain special pages (no context allowed)
     return <CannotEditGPT4Page course_name={courseName as string} />
+  }
+
+  // Show error page if there was an authorization error
+  if (errorType !== null) {
+    return (
+      <PermissionGate
+        course_name={courseName ? (courseName as string) : 'new'}
+        errorType={errorType}
+      />
+    )
   }
 
   return (

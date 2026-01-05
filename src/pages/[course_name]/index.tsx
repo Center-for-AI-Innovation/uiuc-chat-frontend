@@ -59,9 +59,6 @@ const IfCourseExists: NextPage = () => {
 
         if (status === 401 || status === 403 || status === 404) {
           setErrorType(status as 401 | 403 | 404)
-        } else {
-          // For other errors, redirect to new page
-          await router.replace('/new?course_name=' + course_name)
         }
       }
     }
