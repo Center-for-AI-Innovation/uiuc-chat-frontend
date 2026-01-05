@@ -5,25 +5,25 @@ import { useRouter } from 'next/router'
 
 import { useAuth } from 'react-oidc-context'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
-import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
   LoadingPlaceholderForAdminPages,
-  MainPageBackground,
 } from '~/components/UIUC-Components/MainPageBackground'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
-import Navbar from '~/components/UIUC-Components/navbars/Navbar'
-import { initiateSignIn } from '~/utils/authHelpers'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
 
   const getCurrentPageName = () => {
-    return router.query.course_name as string
+    const raw = router.query.course_name
+    return typeof raw === 'string'
+        ? raw
+        : Array.isArray(raw)
+          ? raw[0]
+          : undefined
   }
-
   const courseName = getCurrentPageName() as string
 
   const auth = useAuth()
@@ -33,8 +33,7 @@ const CourseMain: NextPage = () => {
 
 
   useEffect(() => {
-    if (!router.isReady && auth.isLoading) return
-    if (!courseName) return
+    if (!router.isReady || auth.isLoading) return
     const fetchCourseData = async () => {
       setIsLoading(true)
       try {
@@ -43,7 +42,7 @@ const CourseMain: NextPage = () => {
         )) as CourseMetadata
 
         if (local_metadata == null) {
-          await router.push('/new?course_name=' + courseName)
+          setErrorType(404)
           return
         }
 
@@ -67,7 +66,7 @@ const CourseMain: NextPage = () => {
       }
     }
     fetchCourseData()
-  }, [router.isReady, courseName])
+  }, [router.isReady, auth.isLoading, courseName])
 
   useEffect(() => {
     if (!router.isReady) return
@@ -77,19 +76,14 @@ const CourseMain: NextPage = () => {
 
     // Everything is loaded
     setIsLoading(false)
-  }, [router.isReady, !auth.isLoading, metadata])
+  }, [router.isReady, auth.isLoading, metadata])
 
   if (isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
 
   if (!auth.isAuthenticated && courseName) {
-    void router.push(`/new?course_name=${courseName}`)
-    return (
-      <MainPageBackground>
-        <LoadingSpinner />
-      </MainPageBackground>
-    )
+    return <PermissionGate course_name={courseName as string} />
   }
 
   if (

@@ -31,7 +31,7 @@ const IfCourseExists: NextPage = () => {
 
   // Move all useEffect hooks before any conditional logic
   useEffect(() => {
-    if (!router.isReady && auth.isLoading) return
+    if (!router.isReady || auth.isLoading) return
 
     const fetchMetadata = async () => {
       const course_name = getCurrentPageName()
@@ -39,7 +39,7 @@ const IfCourseExists: NextPage = () => {
         const metadata: CourseMetadata = await fetchCourseMetadata(course_name)
 
         if (metadata === null) {
-          await router.replace('/new?course_name=' + course_name)
+          setErrorType(404)
           return
         }
 

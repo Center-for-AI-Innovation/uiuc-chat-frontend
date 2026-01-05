@@ -24,13 +24,13 @@ export const PermissionGate = ({
   const getErrorMessage = () => {
     switch (errorType) {
       case 401:
-        return "You must sign in to access this chatbot"
+        return "You must sign in to access this chatbot."
       case 403:
         return "You don't have sufficient permissions to access this chatbot."
       case 404:
         return "This chatbot does not exist."
       default:
-        return "You must sign in to create or edit content."
+        return "You must sign in to access this chatbot."
     }
   }
 
@@ -43,7 +43,7 @@ export const PermissionGate = ({
       case 404:
         return "Chatbot not found"
       default:
-        return "You must sign in to create or edit content."
+        return "Sign in required"
     }
   }
 
@@ -93,7 +93,7 @@ export const PermissionGate = ({
                 </Button>
               </Link>
             )}
-            {errorType === 401 && (
+            {errorType !== 404 && errorType !== 403 && (
               <Link href="/sign-in">
                 <Button
                   className=" btn bg-[--button] text-white hover:bg-[--button-hover] login-btn"

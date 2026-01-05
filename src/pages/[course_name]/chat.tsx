@@ -18,7 +18,12 @@ const ChatPage: NextPage = () => {
   const auth = useAuth()
   const router = useRouter()
   const getCurrentPageName = () => {
-    return router.query.course_name as string
+    const raw = router.query.course_name
+    return typeof raw === 'string'
+        ? raw
+        : Array.isArray(raw)
+          ? raw[0]
+          : undefined
   }
   const courseName = getCurrentPageName() as string
   const [currentEmail, setCurrentEmail] = useState('')

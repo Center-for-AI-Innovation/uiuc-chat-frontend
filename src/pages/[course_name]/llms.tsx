@@ -12,31 +12,48 @@ import APIKeyInputForm from '~/components/UIUC-Components/api-inputs/LLMsApiKeyI
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
-  const [courseName, setCourseName] = useState<string | null>(null)
 
   const auth = useAuth()
   const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
   const getCurrentPageName = () => {
-    return router.query.course_name as string
+    const raw = router.query.course_name
+    return typeof raw === 'string'
+        ? raw
+        : Array.isArray(raw)
+          ? raw[0]
+          : undefined
   }
+  const courseName = getCurrentPageName() as string
 
   useEffect(() => {
-    if (!router.isReady) return
+    if (!router.isReady || auth.isLoading) return
     const fetchCourseData = async () => {
-      const local_course_name = getCurrentPageName()
+      setIsFetchingCourseMetadata(true)
 
-      const metadata: CourseMetadata =
-        await fetchCourseMetadata(local_course_name)
-      if (metadata === null) {
-        await router.push('/new?course_name=' + local_course_name)
-        return
+      try {
+        const metadata: CourseMetadata =
+          await fetchCourseMetadata(courseName)
+        if (metadata === null) {
+          setErrorType(404)
+          return
+        }
+      } catch (error) {
+        console.error(error)
+        // alert('An error occurred while fetching course metadata. Please try again later.')
+
+        const errorWithStatus = error as Error & { status?: number }
+        const status = errorWithStatus.status
+        if (status === 401 || status === 403 || status === 404) {
+          setErrorType(status as 401 | 403 | 404)
+        }
+      } finally {
+        setIsFetchingCourseMetadata(false)
       }
-      setCourseName(local_course_name)
-      setIsFetchingCourseMetadata(false)
     }
     fetchCourseData()
-  }, [router.isReady])
+  }, [router.isReady, auth.isLoading, courseName])
 
   if (auth.isLoading || isFetchingCourseMetadata || courseName == null) {
     return <LoadingPlaceholderForAdminPages />
@@ -59,6 +76,16 @@ const CourseMain: NextPage = () => {
     courseName.toLowerCase() == 'extreme'
   ) {
     return <CannotEditGPT4Page course_name={courseName as string} />
+  }
+
+  // Show error page if there was an authorization error
+  if (errorType !== null) {
+    return (
+      <PermissionGate
+        course_name={courseName ? (courseName as string) : 'new'}
+        errorType={errorType}
+      />
+    )
   }
 
   return (
