@@ -9,7 +9,7 @@ import {
   LoadingPlaceholderForAdminPages,
   MainPageBackground,
 } from '~/components/UIUC-Components/MainPageBackground'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { Title } from '@mantine/core'
 
 import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
@@ -71,7 +71,7 @@ const ToolsPage: NextPage = () => {
     void router.push(`/new?course_name=${course_name}`)
     return (
       <ProtectedRoute>
-        <AuthComponent course_name={course_name} />
+        <PermissionGate course_name={course_name} />
       </ProtectedRoute>
     )
   }

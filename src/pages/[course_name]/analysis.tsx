@@ -8,7 +8,7 @@ import {
   LoadingPlaceholderForAdminPages,
   MainPageBackground,
 } from '~/components/UIUC-Components/MainPageBackground'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import NomicDocumentMap from '~/components/UIUC-Components/NomicDocumentsMap'

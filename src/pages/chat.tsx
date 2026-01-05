@@ -11,7 +11,7 @@ import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import Home from '~/pages/api/home/home'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 const ChatPage: NextPage = () => {
   const [metadata, setMetadata] = useState<CourseMetadata | null>()
@@ -142,7 +142,7 @@ const ChatPage: NextPage = () => {
       'NewCoursePage',
     )
     return (
-      <AuthComponent
+      <PermissionGate
         course_name={course_name ? (course_name as string) : 'new'}
       />
     )

@@ -27,7 +27,7 @@ import {
   type MantineTheme,
 } from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
@@ -792,7 +792,7 @@ CRITICAL: The optimized prompt must:
 
   if (!isSignedIn) {
     console.log('User not logged in', isSignedIn, isLoaded, course_name)
-    return <AuthComponent course_name={course_name} />
+    return <PermissionGate course_name={course_name} />
   }
 
   const user_emails = user?.profile?.email ? [user.profile.email] : []
