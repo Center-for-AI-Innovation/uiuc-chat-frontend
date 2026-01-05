@@ -9,11 +9,16 @@ import {
 } from '@/types/chat'
 import posthog from 'posthog-js'
 import { cleanConversationHistory } from './clean'
+import { createHeaders } from '~/utils/httpHeaders'
+
+// Helper function to create headers with PostHog ID and user email
+// removed local createHeaders; use shared from ~/utils/httpHeaders
 
 export async function fetchConversationHistory(
   searchTerm: string,
   courseName: string,
   pageParam: number,
+  userEmail?: string,
 ): Promise<ConversationPage> {
   let finalResponse: ConversationPage = {
     conversations: [],
@@ -24,9 +29,7 @@ export async function fetchConversationHistory(
       `/api/conversation?searchTerm=${searchTerm}&courseName=${courseName}&pageParam=${pageParam}`,
       {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: createHeaders(userEmail),
       },
     )
 
@@ -77,6 +80,7 @@ export async function fetchConversationHistory(
 
 export async function fetchLastConversation(
   courseName: string,
+  userEmail?: string,
 ): Promise<Conversation | null> {
   try {
     // Grab the first page; server already orders by updated_at DESC in your SQL,
@@ -84,7 +88,7 @@ export async function fetchLastConversation(
       `/api/conversation?searchTerm=&courseName=${encodeURIComponent(courseName)}&pageParam=0`,
       {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: createHeaders(userEmail),
       },
     )
 
@@ -104,13 +108,15 @@ export async function fetchLastConversation(
   }
 }
 
-export const deleteConversationFromServer = async (id: string, course_name: string) => {
+export const deleteConversationFromServer = async (
+  id: string,
+  course_name: string,
+  userEmail?: string,
+) => {
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createHeaders(userEmail),
       body: JSON.stringify({ id, course_name }),
     })
 
@@ -124,13 +130,12 @@ export const deleteConversationFromServer = async (id: string, course_name: stri
 
 export const deleteAllConversationsFromServer = async (
   course_name: string,
+  userEmail?: string,
 ) => {
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createHeaders(userEmail),
       body: JSON.stringify({ course_name }),
     })
 
