@@ -1707,6 +1707,7 @@ export const ChatMessage = memo(
                   {isEditing ? (
                     <div className="flex w-full flex-col">
                       <textarea
+                        aria-label="Edit message"
                         ref={textareaRef}
                         className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
                         value={messageContent}
@@ -2235,7 +2236,7 @@ export const ChatMessage = memo(
                             }}
                           >
                             <button
-                              tabindex="0"
+                              tabIndex={0}
                               aria-label="Edit Message"
                               className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
                                 ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
@@ -2263,7 +2264,7 @@ export const ChatMessage = memo(
                     {shouldShowSources && (
                         <div className="relative z-0 mb-1 flex justify-start">
                           <button
-                            tabindex="0"
+                            tabIndex={0}
                             aria-label={
                               'Open citations for ' +
                               getContextsLength(message.contexts) +
