@@ -118,7 +118,7 @@ export const Chat = memo(
 
     const [enabledDocumentGroups, setEnabledDocumentGroups] = useState<
       string[]
-    >([])
+    >(['All Documents']) // Default to 'All Documents' so retrieval can work immediately
     const [enabledTools, setEnabledTools] = useState<string[]>([])
 
     const {
@@ -879,6 +879,7 @@ export const Chat = memo(
                 imgDesc,
                 updatedConversation,
                 getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                courseName,
               )
               homeDispatch({ field: 'isRouting', value: false })
               if (uiucToolsToRun.length > 0) {

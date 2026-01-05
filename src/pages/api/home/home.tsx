@@ -27,6 +27,7 @@ import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import {
+  useFetchConversationHistory,
   useFetchLastConversation,
   useUpdateConversation,
 } from '~/hooks/conversationQueries'
@@ -47,12 +48,12 @@ import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
 const Home = ({
-                current_email,
-                course_metadata,
-                course_name,
-                document_count,
-                link_parameters,
-              }: {
+  current_email,
+  course_metadata,
+  course_name,
+  document_count,
+  link_parameters,
+}: {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
@@ -106,7 +107,7 @@ const Home = ({
     data: lastConversation,
     isFetched: isLastConversationFetched,
     isLoading: isLastConversationLoading,
-  } = useFetchLastConversation(course_name)
+  } = useFetchLastConversation(course_name, current_email)
 
   const stopConversationRef = useRef<boolean>(false)
   const getModels = useCallback(
@@ -207,7 +208,7 @@ const Home = ({
         dispatch({ field: 'apiKey', value: local_api_key })
       } else {
         console.error(
-          'you have entered an API key that does not start with \'sk-\', which indicates it\'s invalid. Please enter just the key from OpenAI starting with \'sk-\'. You entered',
+          "you have entered an API key that does not start with 'sk-', which indicates it's invalid. Please enter just the key from OpenAI starting with 'sk-'. You entered",
           apiKey,
         )
       }
@@ -581,10 +582,10 @@ const Home = ({
     // defaultModelId &&
     //   dispatch({ field: 'defaultModelId', value: defaultModelId })
     serverSidePluginKeysSet &&
-    dispatch({
-      field: 'serverSidePluginKeysSet',
-      value: serverSidePluginKeysSet,
-    })
+      dispatch({
+        field: 'serverSidePluginKeysSet',
+        value: serverSidePluginKeysSet,
+      })
   }, [serverSidePluginKeysSet]) // defaultModelId,
 
   // ON LOAD --------------------------------------------
@@ -648,7 +649,7 @@ const Home = ({
     llmProviders,
     current_email,
     isLastConversationFetched,
-    isLastConversationLoading
+    isLastConversationLoading,
   ]) // ! serverSidePluginKeysSet, removed
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
@@ -706,6 +707,18 @@ const Home = ({
             <Navbar isPlain={false} />
 
             <div className="flex h-full w-full overflow-y-auto sm:pt-0">
+              {/* {isDragging &&
+                VisionCapableModels.has(
+                  selectedConversation?.model.id as OpenAIModelID,
+                ) && (
+                  <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
+                    <GradientIconPhoto />
+                    <span className="text-3xl font-extrabold text-[--foreground]">
+                      Drop your image here!
+                    </span>
+                  </div>
+                )} */}
+
               <Chatbar
                 current_email={current_email}
                 courseName={course_name}
