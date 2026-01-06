@@ -63,7 +63,7 @@ import {
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
-import { useRouteChat } from '~/hooks/queries/useRouteChat'
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
 import { type ChatBody, ContextWithMetadata } from '~/types/chat'
 
 const montserrat_med = Montserrat({

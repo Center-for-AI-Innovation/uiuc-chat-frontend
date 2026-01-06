@@ -1,7 +1,7 @@
 import {
   type AllLLMProviders,
   type AnySupportedModel,
-} from '../utils/modelProviders/LLMProvider'
+} from '@/utils/modelProviders/LLMProvider'
 import { type CourseMetadata } from './courseMetadata'
 import { type N8NParameter } from './tools'
 

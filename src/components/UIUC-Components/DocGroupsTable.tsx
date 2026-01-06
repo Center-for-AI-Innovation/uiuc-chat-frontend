@@ -12,8 +12,8 @@ import { IconHelp, IconSearch } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { createGlobalStyle } from 'styled-components'
 
-import { useFetchDocumentGroups } from '~/hooks/queries/useFetchDocumentGroups'
-import { useUpdateDocGroup } from '~/hooks/queries/useUpdateDocGroup'
+import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
+import { useUpdateDocGroup } from '@/hooks/queries/useUpdateDocGroup'
 import { useQueryClient } from '@tanstack/react-query'
 
 const GlobalStyle = createGlobalStyle`
