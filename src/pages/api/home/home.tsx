@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 import Head from 'next/head'
 
-import { useCreateReducer } from '~/hooks/useCreateReducer'
+import { useCreateReducer } from '@/hooks/useCreateReducer'
 
 import useErrorService from '@/services/errorService'
 
@@ -27,13 +27,13 @@ import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 
-import { useFetchLastConversation } from '~/hooks/queries/useFetchLastConversation'
-import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
+import { useFetchLastConversation } from '@/hooks/queries/useFetchLastConversation'
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
 
-import { useDeleteFolder } from '~/hooks/queries/useDeleteFolder'
-import { useUpdateFolder } from '~/hooks/queries/useUpdateFolder'
-import { useFetchFolders } from '~/hooks/queries/useFetchFolders'
-import { useCreateFolder } from '~/hooks/queries/useCreateFolder'
+import { useDeleteFolder } from '@/hooks/queries/useDeleteFolder'
+import { useUpdateFolder } from '@/hooks/queries/useUpdateFolder'
+import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
+import { useCreateFolder } from '@/hooks/queries/useCreateFolder'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'

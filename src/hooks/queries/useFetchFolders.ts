@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchFolders } from '~/hooks/__internal__/folders'
+import { fetchFolders } from '@/hooks/__internal__/folders'
 
 export function useFetchFolders(user_email: string, course_name: string) {
   return useQuery({

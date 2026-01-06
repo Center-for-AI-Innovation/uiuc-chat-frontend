@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { type Conversation } from '~/types/chat'
-import { fetchLastConversation } from '~/hooks/__internal__/conversation'
+import { fetchLastConversation } from '@/hooks/__internal__/conversation'
 
 export function useFetchLastConversation(courseName: string) {
   return useQuery<Conversation | null>({

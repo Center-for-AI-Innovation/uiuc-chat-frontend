@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { type Conversation } from '~/types/chat'
-import { logConversationToServer } from '~/hooks/__internal__/conversation'
+import { logConversationToServer } from '@/hooks/__internal__/conversation'
 
 export function useLogConversation(course_name: string) {
   return useMutation({

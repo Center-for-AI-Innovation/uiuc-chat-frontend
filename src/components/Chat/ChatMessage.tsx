@@ -49,7 +49,7 @@ import { ImagePreview } from './ImagePreview'
 import MessageActions from './MessageActions'
 import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 
-import { saveConversationToServer } from '~/hooks/__internal__/conversation'
+import { saveConversationToServer } from '@/hooks/__internal__/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'

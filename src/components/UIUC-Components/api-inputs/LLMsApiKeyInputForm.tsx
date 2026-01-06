@@ -23,8 +23,8 @@ import { getModelLogo } from '~/components/Chat/ModelSelect'
 import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
-import { useUpdateProjectLLMProviders } from '~/hooks/queries/useUpdateProjectLLMProviders'
-import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
+import { useUpdateProjectLLMProviders } from '@/hooks/queries/useUpdateProjectLLMProviders'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import {
   LLM_PROVIDER_ORDER,
   type AllLLMProviders,

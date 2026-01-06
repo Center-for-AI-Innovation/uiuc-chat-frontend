@@ -1,6 +1,6 @@
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { type FolderWithConversation } from '~/types/folder'
-import { deleteFolderFromServer } from '~/hooks/__internal__/folders'
+import { deleteFolderFromServer } from '@/hooks/__internal__/folders'
 
 export function useDeleteFolder(
   user_email: string,

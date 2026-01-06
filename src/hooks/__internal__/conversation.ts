@@ -1,7 +1,7 @@
 // @utils/app/conversation
 import { type Conversation, type ConversationPage } from '@/types/chat'
 import posthog from 'posthog-js'
-import { cleanConversationHistory } from '../../utils/app/clean'
+import { cleanConversationHistory } from '@/utils/app/clean'
 
 export async function fetchConversationHistory(
   searchTerm: string,
