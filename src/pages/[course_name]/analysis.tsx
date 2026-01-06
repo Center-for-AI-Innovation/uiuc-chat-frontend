@@ -57,7 +57,6 @@ const CourseMain: NextPage = () => {
   if (
     auth.isLoading ||
     isLoading ||
-    !auth.isAuthenticated ||
     courseName == null
   ) {
     return <LoadingPlaceholderForAdminPages />
