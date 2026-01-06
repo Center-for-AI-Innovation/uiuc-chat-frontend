@@ -305,6 +305,7 @@ export function LandingPageHeader({
         >
           <div style={{ width: '2.5rem', height: '2.5rem' }}>
             <img
+              alt="Illinois Logo"
               src="/media/logo_illinois.png"
               width="auto"
               height="100%"
