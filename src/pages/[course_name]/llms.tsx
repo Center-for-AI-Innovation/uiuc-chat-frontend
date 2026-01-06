@@ -78,7 +78,6 @@ const CourseMain: NextPage = () => {
     return <CannotEditGPT4Page course_name={courseName as string} />
   }
 
-  // Show error page if there was an authorization error
   if (errorType !== null) {
     return (
       <PermissionGate

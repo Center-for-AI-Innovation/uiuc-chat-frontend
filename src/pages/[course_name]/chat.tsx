@@ -224,7 +224,6 @@ const ChatPage: NextPage = () => {
     )
   }
 
-  // Show error page if there was an authorization error
   if (errorType !== null) {
     return (
       <PermissionGate

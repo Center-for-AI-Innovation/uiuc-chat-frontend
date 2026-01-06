@@ -3,46 +3,56 @@ import MakeQueryAnalysisPage from '~/components/UIUC-Components/MakeQueryAnalysi
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
-import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
   LoadingPlaceholderForAdminPages,
-  MainPageBackground,
 } from '~/components/UIUC-Components/MainPageBackground'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import NomicDocumentMap from '~/components/UIUC-Components/NomicDocumentsMap'
-import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { useAuth } from 'react-oidc-context'
-import { initiateSignIn } from '~/utils/authHelpers'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
-  const [courseName, setCourseName] = useState<string | null>(null)
   const auth = useAuth()
   const [isLoading, setIsLoading] = useState(true)
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
   const getCurrentPageName = () => {
-    return router.query.course_name as string
+    const raw = router.query.course_name
+    return typeof raw === 'string'
+        ? raw
+        : Array.isArray(raw)
+          ? raw[0]
+          : undefined
   }
+  const courseName = getCurrentPageName() as string
 
   useEffect(() => {
-    if (!router.isReady) return
+    if (!router.isReady || auth.isLoading) return
     const fetchCourseData = async () => {
-      const local_course_name = getCurrentPageName()
+      setIsLoading(true)
+      try {
+        // Check exists
+        const metadata: CourseMetadata =
+          await fetchCourseMetadata(courseName)
+        if (metadata === null) {
+          setErrorType(404)
+          return
+        }
+      } catch (error) {
+        console.error(error)
 
-      // Check exists
-      const metadata: CourseMetadata =
-        await fetchCourseMetadata(local_course_name)
-      if (metadata === null) {
-        await router.push('/new?course_name=' + local_course_name)
-        return
-      }
-      setCourseName(local_course_name)
+        const errorWithStatus = error as Error & { status?: number }
+        const status = errorWithStatus.status
+        if (status === 401 || status === 403 || status === 404) {
+          setErrorType(status as 401 | 403 | 404)
+        }
+      } finally {
       setIsLoading(false)
+      }
     }
     fetchCourseData()
-  }, [router.isReady])
+  }, [router.isReady, auth.isLoading, courseName])
 
   if (
     auth.isLoading ||
@@ -53,9 +63,8 @@ const CourseMain: NextPage = () => {
     return <LoadingPlaceholderForAdminPages />
   }
 
-  if (!auth.user || !auth.isAuthenticated) {
-    void initiateSignIn(auth, router.asPath)
-    return null
+  if ((!auth.user || !auth.isAuthenticated) && courseName) {
+    return <PermissionGate course_name={courseName as string} />
   }
 
   // Don't edit certain special pages (no context allowed)
@@ -65,6 +74,15 @@ const CourseMain: NextPage = () => {
     courseName.toLowerCase() == 'extreme'
   ) {
     return <CannotEditGPT4Page course_name={courseName as string} />
+  }
+
+  if (errorType !== null) {
+    return (
+      <PermissionGate
+        course_name={courseName ? (courseName as string) : 'new'}
+        errorType={errorType}
+      />
+    )
   }
 
   return (
