@@ -36,17 +36,14 @@ const ToolsPage: NextPage = () => {
           ? raw[0]
           : undefined
   }
-  const courseName = (getCurrentPageName() ?? '') as string
+  const courseName = getCurrentPageName() as string
 
   useEffect(() => {
-    if (!router.isReady || auth.isLoading || courseName === '') return
+    if (!router.isReady || auth.isLoading) return
 
     const fetchCourseData = async () => {
       setIsLoading(true)
       try {
-        if (courseName == undefined) {
-          return
-        }
         const exsitResponse = await fetch(
           `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
         )
@@ -93,7 +90,7 @@ const ToolsPage: NextPage = () => {
     fetchCourseData()
   }, [router.isReady, auth.isLoading, courseName])
 
-  if (auth.isLoading || isLoading || courseName === '') {
+  if (auth.isLoading || isLoading || courseName === undefined) {
     return <LoadingPlaceholderForAdminPages />
   }
 

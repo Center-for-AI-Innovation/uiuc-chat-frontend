@@ -93,7 +93,7 @@ export const PermissionGate = ({
                 </Button>
               </Link>
             )}
-            {(errorType === 404 || errorType === 403) && (
+            {(errorType === 404) && (
               <Link
                 href={
                   course_name !== 'new'

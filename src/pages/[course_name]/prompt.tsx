@@ -62,7 +62,7 @@ import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { callSetCourseMetadata, fetchCourseMetadata } from '~/utils/apiUtils'
 import {
   DEFAULT_SYSTEM_PROMPT,
   DOCUMENT_FOCUS_PROMPT,
@@ -137,14 +137,14 @@ const CourseMain: NextPage = () => {
   
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
   const getCurrentPageName = () => {
-      const raw = router.query.courseName
-      return typeof raw === 'string'
-          ? raw
-          : Array.isArray(raw)
-            ? raw[0]
-            : undefined
-    }
-  const courseName = (getCurrentPageName() ?? '') as string
+    const raw = router.query.course_name
+    return typeof raw === 'string'
+        ? raw
+        : Array.isArray(raw)
+          ? raw[0]
+          : undefined
+  }
+  const courseName = getCurrentPageName() as string
 
   const auth = useAuth()
   const isLoaded = !auth.isLoading
@@ -486,19 +486,19 @@ CRITICAL: The optimized prompt must:
     if (!router.isReady || auth.isLoading) return
     const fetchCourseData = async () => {
       setIsLoading(true)
-      try {
-        if (courseName === undefined) {
+      const response = await fetch(
+        `/api/UIUC-api/getCourseExists?courseName=${courseName}`,
+      )
+      const data = await response.json()
+      setCourseExists(data)
+      try{
+        const fetchedMetadata: CourseMetadata = (await fetchCourseMetadata(
+          courseName,
+        )) as CourseMetadata
+        if (fetchedMetadata === null) {
+          setErrorType(404)
           return
         }
-        const response = await fetch(
-          `/api/UIUC-api/getCourseExists?courseName=${courseName}`,
-        )
-        const data = await response.json()
-        setCourseExists(data)
-        const response_metadata = await fetch(
-          `/api/UIUC-api/getCourseMetadata?courseName=${courseName}`,
-        )
-        const fetchedMetadata = (await response_metadata.json()).course_metadata
         setCourseMetadata(fetchedMetadata)
         setBaseSystemPrompt(
           fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
@@ -835,9 +835,10 @@ CRITICAL: The optimized prompt must:
 
   // Don't edit certain special pages (no context allowed)
   if (
-    courseName.toLowerCase() == 'gpt4' ||
+    courseName &&
+    (courseName.toLowerCase() == 'gpt4' ||
     courseName.toLowerCase() == 'global' ||
-    courseName.toLowerCase() == 'extreme'
+    courseName.toLowerCase() == 'extreme')
   ) {
     return <CannotEditGPT4Page course_name={courseName as string} />
   }
