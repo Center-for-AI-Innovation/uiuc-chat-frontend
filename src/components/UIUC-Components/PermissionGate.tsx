@@ -83,13 +83,29 @@ export const PermissionGate = ({
             >
               {getErrorMessage()}
             </Text>
-            {(errorType === 404 || errorType === 403) && (
+            {(errorType === 403) && (
               <Link href="/chatbots">
                 <Button
                   className=" btn bg-[--button] text-white hover:bg-[--button-hover] login-btn"
                   style={{ fontSize: '24px' }}
                 >
                   My Chatbots →
+                </Button>
+              </Link>
+            )}
+            {(errorType === 404 || errorType === 403) && (
+              <Link
+                href={
+                  course_name !== 'new'
+                    ? `/new?course_name=${encodeURIComponent(course_name)}`
+                    : '/new'
+                }
+              >
+                <Button
+                  className=" btn bg-[--button] text-white hover:bg-[--button-hover] login-btn"
+                  style={{ fontSize: '24px' }}
+                >
+                  Create New →
                 </Button>
               </Link>
             )}

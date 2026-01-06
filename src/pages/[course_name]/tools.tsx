@@ -1,5 +1,4 @@
 import { type NextPage } from 'next'
-import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 import React, { useEffect, useState } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
@@ -15,7 +14,6 @@ import { Title } from '@mantine/core'
 import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
-import { ProtectedRoute } from '~/components/ProtectedRoute'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -41,7 +39,7 @@ const ToolsPage: NextPage = () => {
   const courseName = (getCurrentPageName() ?? '') as string
 
   useEffect(() => {
-    if (!router.isReady || auth.isLoading) return
+    if (!router.isReady || auth.isLoading || courseName === '') return
 
     const fetchCourseData = async () => {
       setIsLoading(true)
@@ -49,15 +47,30 @@ const ToolsPage: NextPage = () => {
         if (courseName == undefined) {
           return
         }
-        const response = await fetch(
+        const exsitResponse = await fetch(
           `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
         )
-        const data = await response.json()
-        if (data) {
-          const response = await fetch(
+        if (!exsitResponse.ok) {
+          const s = exsitResponse.status
+          if (s === 401 || s === 403 || s === 404) setErrorType(s as 401 | 403 | 404)
+          return
+        }
+
+        const data = await exsitResponse.json()
+        if (!data) {
+          setErrorType(404)
+          return
+        }
+        else{
+          const dataResponse = await fetch(
             `/api/UIUC-api/getAllCourseData?course_name=${courseName}`,
           )
-          const data = await response.json()
+          if (!dataResponse.ok) {
+            const s = dataResponse.status
+            if (s === 401 || s === 403 || s === 404) setErrorType(s as 401 | 403 | 404)
+            return
+          }
+          const data = await dataResponse.json()
           const courseData = data.distinct_files
           setCourseData(courseData)
         }
@@ -80,7 +93,7 @@ const ToolsPage: NextPage = () => {
     fetchCourseData()
   }, [router.isReady, auth.isLoading, courseName])
 
-  if (auth.isLoading) {
+  if (auth.isLoading || isLoading || courseName === '') {
     return <LoadingPlaceholderForAdminPages />
   }
 
@@ -88,14 +101,9 @@ const ToolsPage: NextPage = () => {
     return <PermissionGate course_name={courseName as string} />
   }
 
-  if (isLoading) {
-    return <LoadingPlaceholderForAdminPages />
-  }
-
   const user_emails = auth.user?.profile?.email ? [auth.user.profile.email] : []
 
   // if their account is somehow broken (with no email address)
-
   // Don't edit certain special pages (no context allowed)
   if (
     courseName &&
@@ -124,15 +132,6 @@ const ToolsPage: NextPage = () => {
           </a>
         </Title>
       </MainPageBackground>
-    )
-  }
-
-  if (courseData === null) {
-    return (
-      <MakeNewCoursePage
-        project_name={courseName as string}
-        current_user_email={user_emails[0] as string}
-      />
     )
   }
 

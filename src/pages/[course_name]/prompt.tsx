@@ -4,7 +4,6 @@ import { type NextPage } from 'next'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 import React, { useEffect, useRef, useState } from 'react'
-import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 
 import {
   Button,
@@ -103,10 +102,6 @@ interface LLMConfig {
   enabled: boolean
   apiKey?: string
   models?: LLMModel[]
-}
-
-interface LLMProviders {
-  [key: string]: LLMConfig
 }
 
 interface ModelOption {
@@ -852,15 +847,6 @@ CRITICAL: The optimized prompt must:
       <MainPageBackground>
         <LoadingSpinner />
       </MainPageBackground>
-    )
-  }
-
-  if (courseExists === false) {
-    return (
-      <MakeNewCoursePage
-        project_name={courseName as string}
-        current_user_email={user_emails[0] as string}
-      />
     )
   }
 
