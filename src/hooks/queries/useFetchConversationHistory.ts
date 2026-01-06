@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { ConversationPage } from '~/types/chat'
-import { fetchConversationHistory } from '~/hooks/__internal__/conversation'
+import { fetchConversationHistory } from '@/hooks/__internal__/conversation'
 
 export function useFetchConversationHistory(
   user_email: string | undefined,

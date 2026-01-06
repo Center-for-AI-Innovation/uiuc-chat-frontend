@@ -15,7 +15,7 @@ import {
   IconChevronDown,
   IconInfoCircle,
 } from '@tabler/icons-react'
-import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 

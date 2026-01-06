@@ -1,6 +1,6 @@
 import { type Dispatch, createContext } from 'react'
 
-import { type ActionType } from '~/hooks/useCreateReducer'
+import { type ActionType } from '@/hooks/useCreateReducer'
 
 import { type Conversation } from '@/types/chat'
 import { SupportedExportFormats } from '@/types/export'

@@ -1,6 +1,6 @@
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { type FolderWithConversation } from '~/types/folder'
-import { saveFolderToServer } from '~/hooks/__internal__/folders'
+import { saveFolderToServer } from '@/hooks/__internal__/folders'
 
 export function useUpdateFolder(
   user_email: string,

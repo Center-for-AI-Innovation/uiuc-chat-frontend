@@ -1,6 +1,6 @@
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { type ConversationPage } from '~/types/chat'
-import { deleteAllConversationsFromServer } from '~/hooks/__internal__/conversation'
+import { deleteAllConversationsFromServer } from '@/hooks/__internal__/conversation'
 
 export function useDeleteAllConversations(
   queryClient: QueryClient,

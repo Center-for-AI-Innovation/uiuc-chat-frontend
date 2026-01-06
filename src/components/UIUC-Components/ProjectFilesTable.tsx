@@ -41,9 +41,9 @@ import {
   type CourseDocument,
   type DocumentGroup,
 } from 'src/types/courseMaterials'
-import { useAppendToDocGroup } from '~/hooks/queries/useAppendToDocGroup'
-import { useFetchDocumentGroups } from '~/hooks/queries/useFetchDocumentGroups'
-import { useDeleteFromDocGroup } from '~/hooks/queries/useDeleteFromDocGroup'
+import { useAppendToDocGroup } from '@/hooks/queries/useAppendToDocGroup'
+import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
+import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
 
 import handleExport from '~/pages/util/handleExport'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
