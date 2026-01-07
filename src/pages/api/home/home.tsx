@@ -47,12 +47,12 @@ import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
 const Home = ({
-                current_email,
-                course_metadata,
-                course_name,
-                document_count,
-                link_parameters,
-              }: {
+  current_email,
+  course_metadata,
+  course_name,
+  document_count,
+  link_parameters,
+}: {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
@@ -207,7 +207,7 @@ const Home = ({
         dispatch({ field: 'apiKey', value: local_api_key })
       } else {
         console.error(
-          'you have entered an API key that does not start with \'sk-\', which indicates it\'s invalid. Please enter just the key from OpenAI starting with \'sk-\'. You entered',
+          "you have entered an API key that does not start with 'sk-', which indicates it's invalid. Please enter just the key from OpenAI starting with 'sk-'. You entered",
           apiKey,
         )
       }
@@ -540,6 +540,7 @@ const Home = ({
 
   const GradientIconPhoto = () => (
     <svg
+      aria-label="Gradient Icon"
       xmlns="http://www.w3.org/2000/svg"
       className="icon icon-tabler icon-tabler-photo"
       width="256"
@@ -575,10 +576,10 @@ const Home = ({
     // defaultModelId &&
     //   dispatch({ field: 'defaultModelId', value: defaultModelId })
     serverSidePluginKeysSet &&
-    dispatch({
-      field: 'serverSidePluginKeysSet',
-      value: serverSidePluginKeysSet,
-    })
+      dispatch({
+        field: 'serverSidePluginKeysSet',
+        value: serverSidePluginKeysSet,
+      })
   }, [serverSidePluginKeysSet]) // defaultModelId,
 
   // ON LOAD --------------------------------------------
@@ -642,7 +643,7 @@ const Home = ({
     llmProviders,
     current_email,
     isLastConversationFetched,
-    isLastConversationLoading
+    isLastConversationLoading,
   ]) // ! serverSidePluginKeysSet, removed
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 

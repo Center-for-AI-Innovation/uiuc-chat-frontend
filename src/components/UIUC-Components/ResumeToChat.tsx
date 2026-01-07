@@ -82,6 +82,7 @@ export default function ResumeToChat({
               Back to Chat with Documents
             </Text>
             <svg
+              aria-hidden="true"
               width="24"
               height="24"
               viewBox="0 0 24 24"

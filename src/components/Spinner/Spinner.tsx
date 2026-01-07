@@ -8,6 +8,7 @@ interface Props {
 const Spinner = ({ size = '1em', className = '' }: Props) => {
   return (
     <svg
+      aria-label="spinner"
       stroke="currentColor"
       fill="none"
       strokeWidth="2"
