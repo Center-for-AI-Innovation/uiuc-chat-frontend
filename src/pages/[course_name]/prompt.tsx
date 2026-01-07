@@ -487,7 +487,7 @@ CRITICAL: The optimized prompt must:
     const fetchCourseData = async () => {
       setIsLoading(true)
       const response = await fetch(
-        `/api/UIUC-api/getCourseExists?courseName=${courseName}`,
+        `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
       )
       const data = await response.json()
       setCourseExists(data)
