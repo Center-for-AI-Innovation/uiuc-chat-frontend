@@ -75,7 +75,9 @@ export const WebScrape = ({
 }: WebScrapeProps) => {
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [url, setUrl] = useState('')
-  const [icon, setIcon] = useState(<IconWorldDownload size={'50%'} />)
+  const [icon, setIcon] = useState(
+    <IconWorldDownload size={'50%'} aria-hidden="true" />,
+  )
   const [loadingSpinner, setLoadingSpinner] = useState(false)
   const router = useRouter()
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
@@ -243,7 +245,7 @@ export const WebScrape = ({
         title: 'Web scraping started',
         message:
           "It'll scrape in the background, just wait for the results to show up in your project (~3 minutes total).\nThis feature is stable but the web is a messy place. If you have trouble, I'd love to fix it. Just shoot me an email: rohan13@illinois.edu.",
-        icon: <IconWorldDownload />,
+        icon: <IconWorldDownload aria-hidden="true" />,
         styles: {
           root: {
             backgroundColor: 'var(--modal-background)',
@@ -311,7 +313,7 @@ export const WebScrape = ({
         ),
         color: 'red',
         radius: 'lg',
-        icon: <IconAlertCircle />,
+        icon: <IconAlertCircle aria-hidden="true" />,
         className: 'my-notification-class',
         style: {
           backgroundColor: 'rgba(42,42,64,0.3)',
@@ -428,7 +430,7 @@ export const WebScrape = ({
                   />,
                 )
               } else {
-                setIcon(<IconWorldDownload />)
+                setIcon(<IconWorldDownload aria-hidden="true" />)
               }
             }}
             onKeyPress={(event) => {
@@ -542,7 +544,7 @@ export const WebScrape = ({
                   />,
                 )
               } else {
-                setIcon(<IconWorldDownload />)
+                setIcon(<IconWorldDownload aria-hidden="true" />)
               }
             }}
             onKeyPress={(event) => {
@@ -689,6 +691,7 @@ export const WebScrape = ({
                     <Center style={{ gap: 10 }}>
                       <IconSitemap
                         style={{ width: rem(16), height: rem(16) }}
+                        aria-hidden="true"
                       />
                       <span>Equal and Below</span>
                     </Center>
@@ -700,6 +703,7 @@ export const WebScrape = ({
                     <Center style={{ gap: 10 }}>
                       <IconSubtask
                         style={{ width: rem(16), height: rem(16) }}
+                        aria-hidden="true"
                       />
                       <span>Subdomain</span>
                     </Center>
@@ -709,7 +713,10 @@ export const WebScrape = ({
                   value: 'same-domain',
                   label: (
                     <Center style={{ gap: 10 }}>
-                      <IconHome style={{ width: rem(16), height: rem(16) }} />
+                      <IconHome
+                        style={{ width: rem(16), height: rem(16) }}
+                        aria-hidden="true"
+                      />
                       <span>Entire domain</span>
                     </Center>
                   ),
@@ -718,7 +725,10 @@ export const WebScrape = ({
                   value: 'all',
                   label: (
                     <Center style={{ gap: 10 }}>
-                      <IconWorld style={{ width: rem(16), height: rem(16) }} />
+                      <IconWorld
+                        style={{ width: rem(16), height: rem(16) }}
+                        aria-hidden="true"
+                      />
                       <span>All</span>
                     </Center>
                   ),

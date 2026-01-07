@@ -115,7 +115,11 @@ const Sidebar = <T,>({
               focus:text-[--dashboard-button] hover:focus:text-[--dashboard-button-foreground]"
               onClick={toggleOpen}
             >
-              <IconLayoutSidebarLeftCollapse size={20} stroke={1.5} />
+              <IconLayoutSidebarLeftCollapse
+                size={20}
+                stroke={1.5}
+                aria-hidden="true"
+              />
             </button>
           </div>
 
@@ -128,7 +132,7 @@ const Sidebar = <T,>({
             focus:text-[--dashboard-button] hover:focus:text-[--dashboard-button-foreground]"
             onClick={handleCreateFolder}
           >
-            <IconFolderPlus size={20} stroke={1.5} />
+            <IconFolderPlus size={20} stroke={1.5} aria-hidden="true" />
           </button>
 
           <button
@@ -151,7 +155,7 @@ const Sidebar = <T,>({
               }, 100)
             }}
           >
-            <IconEdit size={20} stroke={1.5} />
+            <IconEdit size={20} stroke={1.5} aria-hidden="true" />
           </button>
         </div>
 
@@ -248,7 +252,7 @@ const Sidebar = <T,>({
                   title="Admin Dashboard"
                   aria-label="Admin Dashboard"
                 >
-                  <IconSettings stroke={1.5} size={20} />
+                  <IconSettings stroke={1.5} size={20} aria-hidden="true" />
                 </Button>
               </div>
             ) : null}
@@ -280,7 +284,7 @@ const Sidebar = <T,>({
             </div>
           ) : (
             <div className="mt-8 select-none text-center text-[--foreground] opacity-50">
-              <IconMistOff className="mx-auto mb-3" />
+              <IconMistOff className="mx-auto mb-3" aria-hidden="true" />
               <span className="text-[14px] leading-normal">
                 {t('No data.')}
               </span>
@@ -306,7 +310,11 @@ const Sidebar = <T,>({
           focus:text-[--dashboard-button] hover:focus:text-[--dashboard-button-foreground]"
           onClick={toggleOpen}
         >
-          <IconLayoutSidebarLeftExpand size={20} stroke={1.5} />
+          <IconLayoutSidebarLeftExpand
+            size={20}
+            stroke={1.5}
+            aria-hidden="true"
+          />
         </button>
       </div>
 

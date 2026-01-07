@@ -142,7 +142,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
           autoClose: 15000,
           color: 'red',
           radius: 'lg',
-          icon: <IconAlertCircle />,
+          icon: <IconAlertCircle aria-hidden="true" />,
           className: 'my-notification-class',
           styles: notificationStyles(true),
           loading: false,
@@ -184,7 +184,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         autoClose: 10000,
         color: 'red',
         radius: 'lg',
-        icon: <IconAlertCircle />,
+        icon: <IconAlertCircle aria-hidden="true" />,
         className: 'my-notification-class',
         styles: notificationStyles(true),
         loading: false,
@@ -200,7 +200,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         autoClose: 10000,
         color: 'green',
         radius: 'lg',
-        icon: <IconCheck />,
+        icon: <IconCheck aria-hidden="true" />,
         className: 'my-notification-class',
         styles: notificationStyles(false),
         loading: false,
@@ -213,7 +213,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         autoClose: 10000,
         color: 'red',
         radius: 'lg',
-        icon: <IconAlertCircle />,
+        icon: <IconAlertCircle aria-hidden="true" />,
         className: 'my-notification-class',
         styles: notificationStyles(true),
         loading: false,
@@ -295,7 +295,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       ),
       color: 'red',
       radius: 'lg',
-      icon: <IconAlertCircle />,
+      icon: <IconAlertCircle aria-hidden="true" />,
       className: 'my-notification-class',
       styles: notificationStyles(true),
       withBorder: true,
@@ -453,9 +453,9 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           accordionKey="setup-instructions"
                           chevron={
                             n8nApiKey ? (
-                              <IconCircleCheck />
+                              <IconCircleCheck aria-hidden="true" />
                             ) : (
-                              <IconCircleDashed />
+                              <IconCircleDashed aria-hidden="true" />
                             )
                           }
                           disableChevronRotation
@@ -524,9 +524,9 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           accordionKey="usage-instructions"
                           chevron={
                             n8nApiKey && isEmptyWorkflowTable ? (
-                              <IconCircleDashed />
+                              <IconCircleDashed aria-hidden="true" />
                             ) : (
-                              <IconCircleCheck />
+                              <IconCircleCheck aria-hidden="true" />
                             )
                           }
                           disableChevronRotation

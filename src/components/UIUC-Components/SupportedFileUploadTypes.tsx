@@ -144,6 +144,7 @@ const SupportedFileUploadTypes = () => {
                       className={`h-6 w-6 ${type.color}`}
                       size={24}
                       stroke={1.5}
+                      aria-hidden="true"
                     />
                     <span className="mt-1 text-xs text-gray-400">
                       {type.label}

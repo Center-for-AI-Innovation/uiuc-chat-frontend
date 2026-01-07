@@ -501,7 +501,7 @@ export default function NavigationSidebar({
           className={`${classes.toggleButton} md:hidden`}
           onClick={onToggle}
         >
-          <IconMenu2 size={20} />
+          <IconMenu2 size={20} aria-hidden="true" />
         </button>
       )}
 
@@ -533,7 +533,7 @@ export default function NavigationSidebar({
               >
                 <span>Chatbot</span>
                 <span>/</span>
-                <span className="font-semibold line-clamp-3 break-all text-[--foreground]">
+                <span className="line-clamp-3 break-all font-semibold text-[--foreground]">
                   {course_name}
                 </span>
               </div>
@@ -574,12 +574,13 @@ export default function NavigationSidebar({
                 handleLinkHover(chatUrl)
               }
             }}
+            aria-label="Back to Chat"
           >
             <IconChevronLeft
               size={16}
               strokeWidth={3}
               role="img"
-              aria-label="Back to Chat"
+              aria-hidden="true"
             />
             <span
               className={`md:${isCollapsed ? 'hidden' : 'inline'} ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}

@@ -282,6 +282,7 @@ function NavigationContent({
                 onClick={() => onLinkClick()}
                 data-active={activeLink === item.link}
                 className={classes.link}
+                aria-label={item.name}
               >
                 {item.icon}
                 {item.name}
@@ -307,6 +308,7 @@ function NavigationContent({
               onClick={() => onLinkClick()}
               data-active={activeLink === item.link}
               className={classes.link}
+              aria-label={item.name}
             >
               {item.icon}
               {item.name}
@@ -331,7 +333,7 @@ function NavigationContent({
 
 // Icon Components
 export function DashboardIcon() {
-  return <IconHome size={20} strokeWidth={2} />
+  return <IconHome size={20} strokeWidth={2} aria-hidden="true" />
 }
 
 export function FileIcon() {
@@ -341,6 +343,7 @@ export function FileIcon() {
       size={20}
       strokeWidth={2}
       style={{ margin: '0' }}
+      aria-hidden="true"
     />
   )
 }
@@ -352,6 +355,7 @@ export function ClipboardIcon() {
       size={20}
       strokeWidth={2}
       style={{ margin: '0' }}
+      aria-hidden="true"
     />
   )
 }
@@ -385,7 +389,7 @@ export default function Navbar({
     // },
     {
       name: <NavText>Create Your Own Bot</NavText>,
-      icon: <IconSparkles />,
+      icon: <IconSparkles aria-hidden="true" />,
       link: '/new',
     },
   ]

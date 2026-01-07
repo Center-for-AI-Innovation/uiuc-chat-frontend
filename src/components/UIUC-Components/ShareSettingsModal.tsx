@@ -129,13 +129,13 @@ export default function ShareSettingsModal({
           key: 'invited' as AccessLevel,
           label: ACCESS_LABELS.invited,
           description: ACCESS_DESCRIPTIONS.invited,
-          icon: <IconLock className="h-4 w-4" />,
+          icon: <IconLock className="h-4 w-4" aria-hidden="true" />,
         },
         {
           key: 'logged_in' as AccessLevel,
           label: ACCESS_LABELS.logged_in,
           description: ACCESS_DESCRIPTIONS.logged_in,
-          icon: <IconUsers className="h-4 w-4" />,
+          icon: <IconUsers className="h-4 w-4" aria-hidden="true" />,
         },
         // Public option will be conditionally included below
       ].concat(
@@ -146,7 +146,7 @@ export default function ShareSettingsModal({
                 key: 'public' as AccessLevel,
                 label: ACCESS_LABELS.public,
                 description: ACCESS_DESCRIPTIONS.public,
-                icon: <IconLockOpen className="h-4 w-4" />,
+                icon: <IconLockOpen className="h-4 w-4" aria-hidden="true" />,
               },
             ],
       ),
@@ -263,8 +263,13 @@ export default function ShareSettingsModal({
               <button
                 onClick={handleCopy}
                 className="flex min-w-[42px] items-center justify-center rounded-lg bg-[--dashboard-button] p-2.5 text-[--dashboard-button-foreground] transition-all duration-300 hover:bg-[--dashboard-button-hover] active:scale-95"
+                aria-label="Copy Chatbot Link"
               >
-                {isCopied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                {isCopied ? (
+                  <IconCheck size={16} aria-hidden="true" />
+                ) : (
+                  <IconCopy size={16} aria-hidden="true" />
+                )}
               </button>
             </div>
           </div>
@@ -283,13 +288,22 @@ export default function ShareSettingsModal({
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--modal]">
                     {currentAccessLevel === 'invited' && (
-                      <IconLock className="h-5 w-5 text-[--foreground-faded]" />
+                      <IconLock
+                        className="h-5 w-5 text-[--foreground-faded]"
+                        aria-hidden="true"
+                      />
                     )}
                     {currentAccessLevel === 'logged_in' && (
-                      <IconUsers className="h-5 w-5 text-[--foreground-faded]" />
+                      <IconUsers
+                        className="h-5 w-5 text-[--foreground-faded]"
+                        aria-hidden="true"
+                      />
                     )}
                     {currentAccessLevel === 'public' && (
-                      <IconLockOpen className="h-5 w-5 text-[--foreground-faded]" />
+                      <IconLockOpen
+                        className="h-5 w-5 text-[--foreground-faded]"
+                        aria-hidden="true"
+                      />
                     )}
                   </div>
                   <div>
@@ -312,7 +326,7 @@ export default function ShareSettingsModal({
                     <button className="flex items-center gap-2 rounded-lg border border-[--background-dark] bg-[--modal] px-3 py-2 text-sm transition-colors hover:bg-[--background-dark]">
                       <span className="hidden sm:inline">Change access</span>
                       <span className="sm:hidden">Access</span>
-                      <IconChevronDown className="h-4 w-4" />
+                      <IconChevronDown className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -346,7 +360,11 @@ export default function ShareSettingsModal({
                           </div>
                           <DropdownMenuShortcut className="ml-auto">
                             {currentAccessLevel === opt.key && (
-                              <IconCheck size={16} className="h-4 w-4" />
+                              <IconCheck
+                                size={16}
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              />
                             )}
                           </DropdownMenuShortcut>
                         </DropdownMenuRadioItem>
@@ -397,7 +415,10 @@ export default function ShareSettingsModal({
                       <div className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--modal]">
-                            <IconUsers className="h-5 w-5 text-[--foreground-faded]" />
+                            <IconUsers
+                              className="h-5 w-5 text-[--foreground-faded]"
+                              aria-hidden="true"
+                            />
                           </div>
                           <div className="flex flex-col items-start">
                             <span

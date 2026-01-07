@@ -211,11 +211,16 @@ export const ModelItem = forwardRef<
                           size="1rem"
                           style={{ marginLeft: '8px' }}
                           className=""
+                          aria-hidden="true"
                         />
                         {/* {isLoading && setLoadingModelId(null)} */}
                       </>
                     ) : (
-                      <IconDownload size="1rem" style={{ marginLeft: '8px' }} />
+                      <IconDownload
+                        size="1rem"
+                        style={{ marginLeft: '8px' }}
+                        aria-hidden="true"
+                      />
                     )}
                     <Text
                       size="xs"
@@ -238,7 +243,11 @@ export const ModelItem = forwardRef<
                 )}
                 {showSparkles && (
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <IconSparkles size="1rem" style={{ marginLeft: '8px' }} />
+                    <IconSparkles
+                      size="1rem"
+                      style={{ marginLeft: '8px' }}
+                      aria-hidden="true"
+                    />
                     <Text
                       size="xs"
                       opacity={0.65}
@@ -253,6 +262,7 @@ export const ModelItem = forwardRef<
                     <IconAlertTriangleFilled
                       size="1rem"
                       style={{ marginLeft: '8px' }}
+                      aria-hidden="true"
                     />
                     <Text
                       size="xs"
@@ -415,6 +425,7 @@ const ModelDropdown: React.FC<
             <IconChevronDown
               size="1rem"
               className="mr-2 text-[--modal-button-text]"
+              aria-label="Chevron Down Icon"
             />
           }
           classNames={{
@@ -537,12 +548,14 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
               <button
                 onClick={() => setIsAccordionOpen(!isAccordionOpen)}
                 className="w-full opacity-60 transition-colors duration-200 hover:opacity-100"
+                aria-label="More Details Button"
               >
                 <div className="flex items-center justify-between rounded-md p-2">
                   <Title className={`pb-1 pl-3 text-sm`} order={5}>
                     More details about the AI models
                   </Title>
                   <IconChevronDown
+                    aria-hidden="true"
                     size={'1em'}
                     className={`transition-transform duration-200 ${
                       isAccordionOpen ? 'rotate-180' : ''
@@ -603,6 +616,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               >
                                 model details and pricing.{' '}
                                 <IconExternalLink
+                                  aria-hidden="true"
                                   size={15}
                                   style={{ position: 'relative', top: '2px' }}
                                   className={'mb-2 inline'}
@@ -636,6 +650,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               >
                                 Azure OpenAI models{' '}
                                 <IconExternalLink
+                                  aria-hidden="true"
                                   size={15}
                                   style={{ position: 'relative', top: '2px' }}
                                   className={'mb-2 inline'}
@@ -666,6 +681,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               >
                                 Anthropic&apos;s API{' '}
                                 <IconExternalLink
+                                  aria-hidden="true"
                                   size={15}
                                   style={{ position: 'relative', top: '2px' }}
                                   className={'mb-2 inline'}
@@ -697,6 +713,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               >
                                 Ollama{' '}
                                 <IconExternalLink
+                                  aria-hidden="true"
                                   size={15}
                                   style={{ position: 'relative', top: '2px' }}
                                   className={'mb-2 inline'}
@@ -730,6 +747,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               >
                                 must pass this compatability check for WebGPU.{' '}
                                 <IconExternalLink
+                                  aria-hidden="true"
                                   size={15}
                                   style={{ position: 'relative', top: '2px' }}
                                   className={'mb-2 inline'}
@@ -763,6 +781,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               >
                                 Gemini&apos;s full suite{' '}
                                 <IconExternalLink
+                                  aria-hidden="true"
                                   size={15}
                                   style={{ position: 'relative', top: '2px' }}
                                   className={'mb-2 inline'}
@@ -791,6 +810,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                               >
                                 Bedrock&apos;s full suite{' '}
                                 <IconExternalLink
+                                  aria-hidden="true"
                                   size={15}
                                   style={{ position: 'relative', top: '2px' }}
                                   className={'mb-2 inline'}

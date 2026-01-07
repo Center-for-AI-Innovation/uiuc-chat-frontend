@@ -936,10 +936,12 @@ CRITICAL: The optimized prompt must:
                               borderRadius: '8px',
                             }}
                             onClick={() => setInsightsOpen(!insightsOpen)}
+                            aria-label="Prompt Engineering Guide"
                           >
                             <Flex align="center" gap="md">
                               <IconBook
                                 size={24}
+                                aria-hidden="true"
                                 style={{
                                   color: 'var(--dashboard-button)',
                                 }}
@@ -964,7 +966,7 @@ CRITICAL: The optimized prompt must:
                                 justifyContent: 'center',
                               }}
                             >
-                              <IconChevronDown size={24} />
+                              <IconChevronDown size={24} aria-hidden="true" />
                             </div>
                           </Flex>
 
@@ -1000,12 +1002,14 @@ CRITICAL: The optimized prompt must:
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
+                                      aria-label="The Official OpenAI Prompt Engineering Guide"
                                     >
                                       The Official OpenAI Prompt Engineering
                                       Guide
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
+                                        aria-hidden="true"
                                         style={{
                                           position: 'relative',
                                           top: '-2px',
@@ -1020,11 +1024,13 @@ CRITICAL: The optimized prompt must:
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={(e) => e.stopPropagation()}
+                                      aria-label="The Official Anthropic Prompt Library"
                                     >
                                       The Official Anthropic Prompt Library
                                       <IconExternalLink
                                         size={18}
                                         className="inline-block pl-1"
+                                        aria-hidden="true"
                                         style={{
                                           position: 'relative',
                                           top: '-2px',
@@ -1182,6 +1188,7 @@ CRITICAL: The optimized prompt must:
                                                     style={{
                                                       marginLeft: '8px',
                                                     }}
+                                                    aria-hidden="true"
                                                   />
                                                   <Text
                                                     size="xs"
@@ -1208,6 +1215,7 @@ CRITICAL: The optimized prompt must:
                                                     style={{
                                                       marginLeft: '8px',
                                                     }}
+                                                    aria-hidden="true"
                                                   />
                                                   <Text
                                                     size="xs"
@@ -1328,6 +1336,7 @@ CRITICAL: The optimized prompt must:
                                     <IconChevronDown
                                       size={isSmallScreen ? 12 : 14}
                                       style={{ marginRight: '8px' }}
+                                      aria-hidden="true"
                                     />
                                   }
                                   icon={
@@ -1381,6 +1390,7 @@ CRITICAL: The optimized prompt must:
                                       size={18}
                                       className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                                       style={{ cursor: 'pointer' }}
+                                      aria-hidden="true"
                                     />
                                   </div>
                                 </Tooltip>
@@ -1502,6 +1512,7 @@ CRITICAL: The optimized prompt must:
                                         <IconSparkles
                                           stroke={1}
                                           color="var(--dashboard-button-foreground)"
+                                          aria-hidden="true"
                                         />
                                       )
                                     }
@@ -1903,6 +1914,7 @@ CRITICAL: The optimized prompt must:
                                       size={24}
                                       color={theme.colors.red[5]}
                                       style={{ marginTop: '2px' }}
+                                      aria-hidden="true"
                                     />
                                     <Text
                                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -2041,7 +2053,12 @@ CRITICAL: The optimized prompt must:
                                   variant="filled"
                                   color="red"
                                   radius="md"
-                                  leftIcon={<IconAlertTriangle size={16} />}
+                                  leftIcon={
+                                    <IconAlertTriangle
+                                      size={16}
+                                      aria-hidden="true"
+                                    />
+                                  }
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   sx={(theme) => ({
                                     backgroundColor: `${theme.colors.red[8]} !important`,
@@ -2063,7 +2080,9 @@ CRITICAL: The optimized prompt must:
                                 <Button
                                   variant="filled"
                                   radius="md"
-                                  leftIcon={<IconLink size={16} />}
+                                  leftIcon={
+                                    <IconLink size={16} aria-hidden="true" />
+                                  }
                                   onClick={openLinkGenerator}
                                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                                   sx={(theme) => ({
@@ -2136,7 +2155,13 @@ export const showToastNotification = (
     autoClose: duration,
     title: title,
     message: message,
-    icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
+    icon:
+      icon ||
+      (isError ? (
+        <IconAlertTriangle aria-hidden="true" />
+      ) : (
+        <IconCheck aria-hidden="true" />
+      )),
     styles: {
       root: {
         backgroundColor: 'var(--notification)', // Dark background to match the page

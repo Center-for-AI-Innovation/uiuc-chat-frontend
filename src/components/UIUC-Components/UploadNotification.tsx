@@ -163,35 +163,89 @@ function UploadNotificationContent({
     */
     switch (fileType.toLowerCase()) {
       case 'pdf':
-        return <IconFileTypePdf {...iconProps} className="text-red-500" />
+        return (
+          <IconFileTypePdf
+            {...iconProps}
+            className="text-red-500"
+            aria-hidden="true"
+          />
+        )
       case 'doc':
       case 'docx':
-        return <IconFileTypeDocx {...iconProps} className="text-blue-500" />
+        return (
+          <IconFileTypeDocx
+            {...iconProps}
+            className="text-blue-500"
+            aria-hidden="true"
+          />
+        )
       case 'ppt':
       case 'pptx':
-        return <IconFileTypePpt {...iconProps} className="text-orange-500" />
+        return (
+          <IconFileTypePpt
+            {...iconProps}
+            className="text-orange-500"
+            aria-hidden="true"
+          />
+        )
       case 'xls':
       case 'xlsx':
-        return <IconFileTypeXls {...iconProps} className="text-green-500" />
+        return (
+          <IconFileTypeXls
+            {...iconProps}
+            className="text-green-500"
+            aria-hidden="true"
+          />
+        )
       case 'mp4':
       case 'mov':
       case 'avi':
-        return <IconVideo {...iconProps} className="text-purple-500" />
+        return (
+          <IconVideo
+            {...iconProps}
+            className="text-purple-500"
+            aria-hidden="true"
+          />
+        )
       case 'jpg':
       case 'jpeg':
       case 'png':
       case 'gif':
-        return <IconPhoto {...iconProps} className="text-pink-500" />
+        return (
+          <IconPhoto
+            {...iconProps}
+            className="text-pink-500"
+            aria-hidden="true"
+          />
+        )
       case 'mp3':
       case 'wav':
-        return <IconMusic {...iconProps} className="text-yellow-500" />
+        return (
+          <IconMusic
+            {...iconProps}
+            className="text-yellow-500"
+            aria-hidden="true"
+          />
+        )
       case 'js':
       case 'ts':
       case 'tsx':
       case 'jsx':
-        return <IconCode {...iconProps} className="text-cyan-500" />
+        return (
+          <IconCode
+            {...iconProps}
+            className="text-cyan-500"
+            aria-hidden="true"
+          />
+        )
       default:
-        return <IconFileTypeTxt {...iconProps} className="text-white" />
+        return (
+          <IconFileTypeTxt
+            {...iconProps}
+            className="text-white"
+            aria-hidden="true"
+          />
+        )
     }
   }
 
@@ -271,11 +325,12 @@ function UploadNotificationContent({
             compact
             onClick={toggleMinimize}
             className="h-8 w-8 rounded-md p-0 text-[--modal-button] hover:bg-[--background-dark] hover:text-[--modal-button-text-hover]"
+            aria-label="Minimize Upload Notification"
           >
             {isMinimized ? (
-              <IconChevronUp size={18} />
+              <IconChevronUp size={18} aria-hidden="true" />
             ) : (
-              <IconChevronDown size={18} />
+              <IconChevronDown size={18} aria-hidden="true" />
             )}
           </Button>
           <Button
@@ -284,8 +339,9 @@ function UploadNotificationContent({
             compact
             onClick={onClose}
             className="h-8 w-8 rounded-md p-0 text-[--modal-button] hover:bg-[--background-dark] hover:text-[--modal-button-text-hover]"
+            aria-label="Close Upload Notification"
           >
-            <IconX size={18} />
+            <IconX size={18} aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -305,7 +361,7 @@ function UploadNotificationContent({
                 <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center text-[--foreground-faded]">
                     {file.type === 'webscrape' ? (
-                      <IconWorld size={18} />
+                      <IconWorld size={18} aria-hidden="true" />
                     ) : file.name ? (
                       getFileIcon(file.name.split('.').pop() || '')
                     ) : (
@@ -360,6 +416,7 @@ function UploadNotificationContent({
                         <IconCheck
                           size={18}
                           className="text-[--modal-button]"
+                          aria-hidden="true"
                         />
                       </Tooltip>
                     )}
@@ -370,7 +427,11 @@ function UploadNotificationContent({
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}
                       >
-                        <IconX size={18} className="text-[--error]" />
+                        <IconX
+                          size={18}
+                          className="text-[--error]"
+                          aria-hidden="true"
+                        />
                       </Tooltip>
                     )}
                   </div>

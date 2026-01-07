@@ -22,7 +22,6 @@ import SidebarActionButton from '@/components/Buttons/SidebarActionButton'
 
 import { Tooltip } from '@mantine/core'
 
-
 interface Props {
   currentFolder: FolderInterface
   searchTerm: string
@@ -31,11 +30,11 @@ interface Props {
 }
 
 const Folder = ({
-                  currentFolder,
-                  searchTerm,
-                  handleDrop,
-                  folderComponent,
-                }: Props) => {
+  currentFolder,
+  searchTerm,
+  handleDrop,
+  folderComponent,
+}: Props) => {
   const { handleDeleteFolder, handleUpdateFolder } = useContext(HomeContext)
 
   const [isDeleting, setIsDeleting] = useState(false)
@@ -100,9 +99,9 @@ const Folder = ({
         {isRenaming ? (
           <div className="flex w-full items-center gap-3 bg-[#343541]/90 p-3">
             {isOpen ? (
-              <IconCaretDown size={18} />
+              <IconCaretDown size={18} aria-hidden="true" />
             ) : (
-              <IconCaretRight size={18} />
+              <IconCaretRight size={18} aria-hidden="true" />
             )}
             <input
               aria-label="Rename Folder Input"
@@ -126,9 +125,9 @@ const Folder = ({
             onDragLeave={removeHighlight}
           >
             {isOpen ? (
-              <IconCaretDown size={18} />
+              <IconCaretDown size={18} aria-hidden="true" />
             ) : (
-              <IconCaretRight size={18} />
+              <IconCaretRight size={18} aria-hidden="true" />
             )}
             <Tooltip
               label={currentFolder.name}
@@ -136,8 +135,7 @@ const Folder = ({
               withArrow
               multiline
             >
-              <div
-                className="relative max-h-5 min-w-0 flex-1 truncate text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3">
+              <div className="relative max-h-5 min-w-0 flex-1 truncate text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3">
                 {currentFolder.name}
               </div>
             </Tooltip>
@@ -164,6 +162,7 @@ const Folder = ({
               <IconCheck
                 size={18}
                 className="text-[--foreground-faded] hover:text-[--dashboard-button-foreground]"
+                aria-hidden="true"
               />
             </SidebarActionButton>
             <SidebarActionButton
@@ -177,6 +176,7 @@ const Folder = ({
               <IconX
                 size={18}
                 className="text-[--foreground-faded] hover:text-[--dashboard-button-foreground]"
+                aria-hidden="true"
               />
             </SidebarActionButton>
           </div>
@@ -192,7 +192,7 @@ const Folder = ({
                 setRenameValue(currentFolder.name)
               }}
             >
-              <IconPencil size={18} />
+              <IconPencil size={18} aria-hidden="true" />
             </SidebarActionButton>
             <SidebarActionButton
               ariaLabel="Delete Folder"
@@ -201,7 +201,7 @@ const Folder = ({
                 setIsDeleting(true)
               }}
             >
-              <IconTrash size={18} />
+              <IconTrash size={18} aria-hidden="true" />
             </SidebarActionButton>
           </div>
         )}

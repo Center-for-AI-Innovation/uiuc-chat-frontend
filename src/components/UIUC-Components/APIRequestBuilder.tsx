@@ -276,7 +276,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               },
             })}
             className={`w-full flex-shrink-0 sm:w-[150px] ${montserrat_paragraph.variable} font-montserratParagraph`}
-            rightSection={<IconChevronDown size={14} />}
+            rightSection={<IconChevronDown size={14} aria-hidden="true" />}
           />
           <div className="flex w-full items-center gap-2">
             <Select
@@ -328,7 +328,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
                 },
               })}
               className={`min-w-0 flex-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
-              rightSection={<IconChevronDown size={14} />}
+              rightSection={<IconChevronDown size={14} aria-hidden="true" />}
             />
             <Button
               aria-label="Copy Code Snippet"
@@ -339,7 +339,11 @@ fetch('${baseUrl}/api/chat-api/chat', {
               size="xs"
               className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
             >
-              {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
+              {copiedCodeSnippet ? (
+                <IconCheck aria-hidden="true" />
+              ) : (
+                <IconCopy aria-hidden="true" />
+              )}
             </Button>
           </div>
         </div>
@@ -479,6 +483,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               <IconInfoCircle
                 size={16}
                 className="mt-4 cursor-help text-gray-400"
+                aria-label="Information Icon"
               />
             </Tooltip>
           </div>

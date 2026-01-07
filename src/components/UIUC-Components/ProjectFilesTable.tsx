@@ -392,7 +392,7 @@ export function ProjectFilesTable({
       title: 'Error',
       message: 'Failed to fetch documents',
       color: 'red',
-      icon: <IconTrash size={24} />,
+      icon: <IconTrash size={24} aria-hidden="true" />,
     })
 
     return errorStateForProjectFilesTable()
@@ -412,7 +412,11 @@ export function ProjectFilesTable({
         message: was_error
           ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email rohan13@illinois.edu to report this bug."
           : 'The file is being deleted in the background.',
-        icon: was_error ? <IconAlertTriangle /> : <IconCheck />,
+        icon: was_error ? (
+          <IconAlertTriangle aria-hidden="true" />
+        ) : (
+          <IconCheck aria-hidden="true" />
+        ),
         styles: {
           root: {
             backgroundColor: theme.colors.nearlyWhite,
@@ -456,7 +460,11 @@ export function ProjectFilesTable({
       autoClose: 12000,
       title: title,
       message: message,
-      icon: was_error ? <IconAlertTriangle /> : <IconCheck />,
+      icon: was_error ? (
+        <IconAlertTriangle aria-hidden="true" />
+      ) : (
+        <IconCheck aria-hidden="true" />
+      ),
       styles: {
         root: {
           backgroundColor: theme.colors.nearlyWhite,
@@ -799,8 +807,9 @@ export function ProjectFilesTable({
                   )}
                   {showDeleteButton && (
                     <Button
+                      aria-label="Delete Selected Records"
                       uppercase
-                      leftIcon={<IconTrash size={16} />}
+                      leftIcon={<IconTrash size={16} aria-hidden="true" />}
                       disabled={!selectedCount}
                       onClick={() => {
                         if (selectedCount > 100) {
@@ -922,8 +931,9 @@ export function ProjectFilesTable({
                         setFilterKey('readable_filename')
                         setFilterValue('')
                       }}
+                      aria-label="Clear File Name Filter"
                     >
-                      <IconX size={14} />
+                      <IconX size={14} aria-hidden="true" />
                     </ActionIcon>
                   }
                   value={filterValue}
@@ -963,8 +973,9 @@ export function ProjectFilesTable({
                         setFilterKey('url')
                         setFilterValue('')
                       }}
+                      aria-label="Clear URL Filter"
                     >
-                      <IconX size={14} />
+                      <IconX size={14} aria-hidden="true" />
                     </ActionIcon>
                   }
                   value={filterValue}
@@ -1003,8 +1014,9 @@ export function ProjectFilesTable({
                         setFilterKey('base_url')
                         setFilterValue('')
                       }}
+                      aria-label="Clear Starting URL Filter"
                     >
-                      <IconX size={14} />
+                      <IconX size={14} aria-hidden="true" />
                     </ActionIcon>
                   }
                   value={filterValue}
@@ -1221,16 +1233,18 @@ export function ProjectFilesTable({
                             variant="subtle"
                             color="green"
                             onClick={() => openModal('view')}
+                            aria-label="View Record"
                           >
-                            <IconEye size={16} />
+                            <IconEye size={16} aria-hidden="true" />
                           </ActionIcon>
                           <ActionIcon
                             size="sm"
                             variant="subtle"
                             color="red"
                             onClick={() => openModal('delete')}
+                            aria-label="Delete Record"
                           >
-                            <IconTrash size={16} />
+                            <IconTrash size={16} aria-hidden="true" />
                           </ActionIcon>
                         </Group>
                       )
@@ -1388,16 +1402,19 @@ export function ProjectFilesTable({
                       <ActionIcon
                         color={copied ? 'teal' : 'gray'}
                         onClick={copy}
+                        aria-label={copied ? 'Copied' : 'Copy'}
                       >
                         {copied ? (
                           <IconCheck
                             size="1rem"
                             className="text-[--foreground]"
+                            aria-hidden="true"
                           />
                         ) : (
                           <IconCopy
                             size="1rem"
                             className="text-[--foreground-faded]"
+                            aria-hidden="true"
                           />
                         )}
                       </ActionIcon>

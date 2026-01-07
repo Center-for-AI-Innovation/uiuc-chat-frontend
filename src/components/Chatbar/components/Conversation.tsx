@@ -114,7 +114,11 @@ export const ConversationComponent = ({ conversation }: Props) => {
           }
         `}
         >
-          <IconMessage size={16} className="text-[--sidebar]" />
+          <IconMessage
+            size={16}
+            className="text-[--sidebar]"
+            aria-hidden="true"
+          />
           <input
             aria-label="Rename Chat Input"
             className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar] outline-none"
@@ -141,7 +145,11 @@ export const ConversationComponent = ({ conversation }: Props) => {
           draggable="true"
           onDragStart={(e) => handleDragStart(e, conversation)}
         >
-          <IconMessage size={16} className="text-[--sidebar]" />
+          <IconMessage
+            size={16}
+            className="text-[--sidebar]"
+            aria-hidden="true"
+          />
           {/* <div
             className={`relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-[12.5px] leading-3 ${selectedConversation?.id === conversation.id ? 'pr-12' : 'pr-1'
               }`}
@@ -168,6 +176,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
               handleClick={handleConfirm}
             >
               <IconCheck
+                aria-hidden="true"
                 size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
@@ -176,6 +185,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
               <IconX
                 size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
+                aria-hidden="true"
               />
             </SidebarActionButton>
           </div>
@@ -190,6 +200,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
               handleClick={handleOpenRenameModal}
             >
               <IconPencil
+                aria-hidden="true"
                 size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
@@ -199,6 +210,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
               handleClick={handleOpenDeleteModal}
             >
               <IconTrash
+                aria-hidden="true"
                 size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />

@@ -382,6 +382,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                       borderRadius: '8px',
                     }}
                     onClick={() => setInsightsOpen(!insightsOpen)}
+                    aria-label="API Documentation"
                   >
                     <Flex align="center" gap="md">
                       <IconBook
@@ -389,6 +390,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         style={{
                           color: 'var(--dashboard-button)',
                         }}
+                        aria-hidden="true"
                       />
                       <Text
                         size="md"
@@ -410,7 +412,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         justifyContent: 'center',
                       }}
                     >
-                      <IconChevronDown size={24} />
+                      <IconChevronDown size={24} aria-hidden="true" />
                     </div>
                   </Flex>
 
@@ -447,12 +449,14 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
+                              aria-label="OpenAI API documentation"
                             >
                               OpenAI API documentation
                               <IconExternalLink
                                 size={18}
                                 className="inline-block pl-1"
                                 style={{ position: 'relative', top: '-2px' }}
+                                aria-hidden="true"
                               />
                             </a>
                           </List.Item>
@@ -463,12 +467,14 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
+                              aria-label="UIUC.chat API documentation"
                             >
                               UIUC.chat API documentation
                               <IconExternalLink
                                 size={18}
                                 className="inline-block pl-1"
                                 style={{ position: 'relative', top: '-2px' }}
+                                aria-hidden="true"
                               />
                             </a>
                           </List.Item>
@@ -567,7 +573,11 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                       radius={'md'}
                       className="min-w-[5rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
                     >
-                      {copiedApiKey ? <IconCheck /> : <IconCopy />}
+                      {copiedApiKey ? (
+                        <IconCheck aria-hidden="true" />
+                      ) : (
+                        <IconCopy aria-hidden="true" />
+                      )}
                     </Button>
                   }
                   rightSectionWidth={'auto'}

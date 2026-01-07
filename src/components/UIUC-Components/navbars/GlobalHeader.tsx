@@ -247,12 +247,14 @@ export function LandingPageHeader({
                 className={classes.link}
                 role="button"
                 tabIndex={0}
+                aria-label="Create Your Own Bot"
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconSparkles
                     size={20}
                     strokeWidth={2}
                     style={{ marginRight: '5px' }}
+                    aria-hidden="true"
                   />
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading`}
@@ -268,9 +270,10 @@ export function LandingPageHeader({
                 className={classes.link}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Docs"
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <IconClipboardTexts />
+                  <IconClipboardTexts aria-hidden="true" />
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
@@ -333,6 +336,7 @@ export function LandingPageHeader({
                   className={classes.link}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Docs"
                 >
                   <span className="flex items-center">
                     <IconClipboardText
@@ -342,6 +346,7 @@ export function LandingPageHeader({
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
                       }}
+                      aria-hidden="true"
                     />
                     <span
                       className={`${montserrat_heading.variable} font-montserratHeading`}
@@ -360,6 +365,7 @@ export function LandingPageHeader({
                   href="http://news.uiuc.chat/"
                   target="_blank"
                   className={classes.link}
+                  aria-label="News"
                 >
                   <span className="flex items-center">
                     <IconNews
@@ -369,6 +375,7 @@ export function LandingPageHeader({
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
                       }}
+                      aria-hidden="true"
                     />
                     <span
                       className={`${montserrat_heading.variable} font-montserratHeading`}
@@ -386,6 +393,7 @@ export function LandingPageHeader({
                   className={classes.link}
                   role="button"
                   tabIndex={0}
+                  aria-label="My Chatbots"
                 >
                   <span className="flex items-center">
                     <IconHome
@@ -395,6 +403,7 @@ export function LandingPageHeader({
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
                       }}
+                      aria-hidden="true"
                     />
                     <span
                       className={`${montserrat_heading.variable} font-montserratHeading`}
@@ -412,6 +421,7 @@ export function LandingPageHeader({
                   className={classes.link}
                   role="button"
                   tabIndex={0}
+                  aria-label="Create Your Own Bot"
                 >
                   <span className="flex items-center">
                     <IconSparkles
@@ -421,6 +431,7 @@ export function LandingPageHeader({
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
                       }}
+                      aria-hidden="true"
                     />
                     <span
                       className={`${montserrat_heading.variable} font-montserratHeading`}
@@ -484,6 +495,7 @@ export function LandingPageHeader({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => handleLinkClick(e)}
+                      aria-label="Docs"
                     >
                       <div className="menu-item-content flex items-center p-2">
                         <IconClipboardText
@@ -493,6 +505,7 @@ export function LandingPageHeader({
                             marginRight: '8px',
                             color: 'var(--illinois-orange)',
                           }}
+                          aria-hidden="true"
                         />
                         <span
                           className={`${montserrat_heading.variable} font-montserratHeading`}
@@ -541,6 +554,7 @@ export function LandingPageHeader({
                       href="/chatbots"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}
+                      aria-label="My Chatbots"
                     >
                       <div className="menu-item-content flex items-center p-2">
                         <IconHome
@@ -550,6 +564,7 @@ export function LandingPageHeader({
                             marginRight: '8px',
                             color: 'var(--illinois-orange)',
                           }}
+                          aria-hidden="true"
                         />
                         <span
                           className={`${montserrat_heading.variable} font-montserratHeading`}
@@ -568,6 +583,7 @@ export function LandingPageHeader({
                       href="/new"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}
+                      aria-label="Create Your Own Bot"
                     >
                       <div className="menu-item-content flex items-center p-2">
                         <IconSparkles
@@ -577,6 +593,7 @@ export function LandingPageHeader({
                             marginRight: '8px',
                             color: 'var(--illinois-orange)',
                           }}
+                          aria-hidden="true"
                         />
                         <span
                           className={`${montserrat_heading.variable} font-montserratHeading`}
@@ -755,6 +772,7 @@ export function IconClipboardTexts() {
       size={20}
       strokeWidth={2}
       style={{ marginRight: '5px' }}
+      aria-hidden="true"
     />
   )
 }

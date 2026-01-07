@@ -112,6 +112,7 @@ const FileCard: React.FC<{
   onClick: () => void
   isPreviewable?: boolean
 }> = ({ fileName, fileType, fileUrl, onClick, isPreviewable = true }) => {
+  // TODO(BG): can be refactored with __1__
   const getFileIcon = (name: string, type?: string) => {
     const extension = name.split('.').pop()?.toLowerCase()
     const iconProps = { size: 20 }
@@ -120,6 +121,7 @@ const FileCard: React.FC<{
       return (
         <IconFileTypePdf
           {...iconProps}
+          aria-label="PDF Icon"
           style={{ color: 'var(--illinois-orange)' }}
         />
       )
@@ -128,6 +130,7 @@ const FileCard: React.FC<{
       return (
         <IconFileTypeDocx
           {...iconProps}
+          aria-label="Word Icon"
           style={{ color: 'var(--illinois-orange)' }}
         />
       )
@@ -136,12 +139,17 @@ const FileCard: React.FC<{
       return (
         <IconFileTypeTxt
           {...iconProps}
+          aria-label="Text Icon"
           style={{ color: 'var(--illinois-orange)' }}
         />
       )
     }
     return (
-      <IconFile {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+      <IconFile
+        {...iconProps}
+        aria-label="File Icon"
+        style={{ color: 'var(--illinois-orange)' }}
+      />
     )
   }
 
@@ -178,6 +186,8 @@ const FileCard: React.FC<{
         e.currentTarget.style.borderColor = 'var(--border)'
         e.currentTarget.style.backgroundColor = 'var(--background-faded)'
       }}
+      role="button"
+      aria-label="File Button"
     >
       {getFileIcon(fileName, fileType)}
       <span
@@ -193,9 +203,17 @@ const FileCard: React.FC<{
         {truncateFileName(fileName)}
       </span>
       {isPreviewable ? (
-        <IconEye size={16} style={{ color: 'var(--illinois-orange)' }} />
+        <IconEye
+          size={16}
+          style={{ color: 'var(--illinois-orange)' }}
+          aria-hidden="true"
+        />
       ) : (
-        <IconFile size={16} style={{ color: 'var(--illinois-orange)' }} />
+        <IconFile
+          size={16}
+          style={{ color: 'var(--illinois-orange)' }}
+          aria-hidden="true"
+        />
       )}
     </div>
   )
@@ -1606,11 +1624,15 @@ export const ChatMessage = memo(
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
-                  <IconRobot size={30} />
+                  <IconRobot size={30} aria-label="Assistant Icon" />
                   <Timer timerVisible={timerVisible} />
                 </>
               ) : (
-                <IconUser size={30} color="var(--chat-user)" />
+                <IconUser
+                  size={30}
+                  color="var(--chat-user)"
+                  aria-label="User Icon"
+                />
               )}
             </div>
 
@@ -1642,16 +1664,18 @@ export const ChatMessage = memo(
                             setMessageContent(messageContent)
                             setIsEditing(false)
                           }}
+                          aria-label="Cancel Button"
                         >
-                          <IconX size={16} />
+                          <IconX size={16} aria-hidden="true" />
                           {t('Cancel')}
                         </button>
                         <button
                           className="flex items-center gap-2 rounded-md bg-[--button] px-4 py-2 text-sm font-medium text-[--button-text-color] transition-colors hover:bg-[--button-hover] hover:text-[--button-hover-text-color] disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={handleEditMessage}
                           disabled={messageContent.trim().length <= 0}
+                          aria-label="Save & Submit Button"
                         >
-                          <IconCheck size={16} />
+                          <IconCheck size={16} aria-hidden="true" />
                           {t('Save & Submit')}
                         </button>
                       </div>
@@ -2158,6 +2182,7 @@ export const ChatMessage = memo(
                               <IconEdit
                                 size={20}
                                 className="text-[--button-faded] hover:text-[--button]"
+                                aria-hidden="true"
                               />
                             </button>
                           </Tooltip>

@@ -233,6 +233,7 @@ export const CitationCard = ({
     <UnstyledButton
       onClick={handleClick}
       className="-m-0.5 w-full rounded-md p-0.5 transition-all duration-300 hover:opacity-100"
+      aria-label={`Citation ${(index || 0) + 1} ${readable_filename}`}
     >
       <Paper
         className="flex flex-col overflow-hidden border-[1px] border-[--sources-border] bg-[--sources-item-background] text-[--sources-foreground] transition-all
@@ -279,11 +280,13 @@ export const CitationCard = ({
                         <IconExternalLink
                           size={14}
                           className="text-[--sources-badge]"
+                          aria-hidden="true"
                         />
                       ) : (
                         <IconDownload
                           size={14}
                           className="text-[--sources-badge]"
+                          aria-hidden="true"
                         />
                       )}
                     </div>
@@ -295,11 +298,11 @@ export const CitationCard = ({
             <div className="relative flex w-full justify-center bg-[--sources-item-header-background] p-2">
               <div className="flex h-12 w-12 items-center justify-center">
                 {getFileType() === 'md' ? (
-                  <IconMarkdown size={32} />
+                  <IconMarkdown size={32} aria-hidden="true" />
                 ) : getFileType() === 'rtf' ? (
-                  <IconFileDescription size={32} />
+                  <IconFileDescription size={32} aria-hidden="true" />
                 ) : (
-                  <IconFileText size={32} />
+                  <IconFileText size={32} aria-hidden="true" />
                 )}
               </div>
               {index !== undefined && (
@@ -322,11 +325,13 @@ export const CitationCard = ({
                         <IconExternalLink
                           size={14}
                           className="text-[--sources-badge]"
+                          aria-hidden="true"
                         />
                       ) : (
                         <IconDownload
                           size={14}
                           className="text-[--sources-badge]"
+                          aria-hidden="true"
                         />
                       )}
                     </div>

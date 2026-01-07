@@ -162,9 +162,10 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
             <IconCheck
               size={20}
               className="text-green-500 dark:text-green-400"
+              aria-hidden="true"
             />
           ) : (
-            <IconCopy size={20} />
+            <IconCopy size={20} aria-hidden="true" />
           )}
         </button>
       </Tooltip>
@@ -201,9 +202,9 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
             }
           >
             {isThumbsUp ? (
-              <IconThumbUpFilled size={20} />
+              <IconThumbUpFilled size={20} aria-hidden="true" />
             ) : (
-              <IconThumbUp size={20} />
+              <IconThumbUp size={20} aria-hidden="true" />
             )}
           </div>
         </button>
@@ -234,9 +235,9 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           onClick={handleThumbsDown}
         >
           {isThumbsDown ? (
-            <IconThumbDownFilled size={20} />
+            <IconThumbDownFilled size={20} aria-hidden="true" />
           ) : (
-            <IconThumbDown size={20} />
+            <IconThumbDown size={20} aria-hidden="true" />
           )}
         </button>
       </Tooltip>
@@ -266,7 +267,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           onClick={handleRegenerate}
           disabled={isRegenerating}
         >
-          <IconRepeat size={20} />
+          <IconRepeat size={20} aria-hidden="true" />
         </button>
       </Tooltip>
     </div>
