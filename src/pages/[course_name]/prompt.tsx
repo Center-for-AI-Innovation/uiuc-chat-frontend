@@ -1,4 +1,4 @@
-// src/pages/[courseName]/prompt.tsx
+// src/pages/[course_name]/prompt.tsx
 'use client'
 import { type NextPage } from 'next'
 import { Montserrat } from 'next/font/google'
