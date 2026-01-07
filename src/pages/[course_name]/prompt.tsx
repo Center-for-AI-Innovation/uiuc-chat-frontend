@@ -491,7 +491,7 @@ CRITICAL: The optimized prompt must:
       )
       const data = await response.json()
       setCourseExists(data)
-      try{
+      try {
         const fetchedMetadata: CourseMetadata = (await fetchCourseMetadata(
           courseName,
         )) as CourseMetadata
