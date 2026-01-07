@@ -226,7 +226,7 @@ const SourcesSidebar = ({
           className={`absolute right-[270px] top-5 z-50 h-7 w-7 text-[--foreground-faded] hover:text-[--foreground] sm:top-0.5 sm:h-8 sm:w-8`}
           onClick={handleClose}
         >
-          <IconArrowBarRight />
+          <IconArrowBarRight aria-hidden="true" />
         </button>
       </div>
 

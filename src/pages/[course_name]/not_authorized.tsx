@@ -138,8 +138,9 @@ const NotAuthorizedPage: NextPage = () => {
             onClick={() => {
               router.push(`/`)
             }}
+            aria-label="Return to Illinois Chat Home"
           >
-            <IconArrowBackUp className="mr-1 text-sm" />
+            <IconArrowBackUp className="mr-1 text-sm" aria-hidden="true" />
             <div>Return to Illinois Chat Home</div>
           </Button>
         </div>

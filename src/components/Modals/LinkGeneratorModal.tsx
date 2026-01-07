@@ -204,9 +204,14 @@ export const LinkGeneratorModal = ({
                   variant="filled"
                   radius="md"
                   onClick={copy}
+                  aria-label="Copy Link"
                   className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                   leftIcon={
-                    copied ? <IconCheck size={16} /> : <IconCopy size={16} />
+                    copied ? (
+                      <IconCheck size={16} aria-hidden="true" />
+                    ) : (
+                      <IconCopy size={16} aria-hidden="true" />
+                    )
                   }
                   sx={(theme) => ({
                     background: copied

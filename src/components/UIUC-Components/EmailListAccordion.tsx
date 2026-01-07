@@ -32,7 +32,7 @@ function EmailInput({
   return (
     <div className="relative">
       <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-        <IconAt className="h-4 w-4 text-gray-400" />
+        <IconAt className="h-4 w-4 text-gray-400" aria-hidden="true" />
       </div>
       <input
         type="text"
@@ -72,9 +72,15 @@ function EmailListItem({
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--background-faded]">
           {isAdmin ? (
-            <IconUsers className="h-5 w-5 text-[--modal-text]" />
+            <IconUsers
+              className="h-5 w-5 text-[--modal-text]"
+              aria-hidden="true"
+            />
           ) : (
-            <IconUser className="h-5 w-5 text-[--modal-text]" />
+            <IconUser
+              className="h-5 w-5 text-[--modal-text]"
+              aria-hidden="true"
+            />
           )}
         </div>
         <div className="flex flex-col">
@@ -94,8 +100,12 @@ function EmailListItem({
       <button
         onClick={onDelete}
         className="rounded-full p-1.5 opacity-0 transition-all duration-300 hover:bg-[--background-faded] group-hover:opacity-100"
+        aria-label="Delete email"
       >
-        <IconX className="h-4 w-4 text-[--foreground] transition-colors" />
+        <IconX
+          className="h-4 w-4 text-[--foreground] transition-colors"
+          aria-hidden="true"
+        />
       </button>
     </div>
   )
@@ -303,7 +313,10 @@ function EmailListAccordion({
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--modal]">
-                  <IconUsers className="h-5 w-5 text-[--foreground-faded]" />
+                  <IconUsers
+                    className="h-5 w-5 text-[--foreground-faded]"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div className="flex flex-col items-start">
                   <span
@@ -366,7 +379,10 @@ function EmailListAccordion({
           <AccordionTrigger className="px-4 py-3 text-[--modal-text] hover:no-underline">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[--modal]">
-                <IconUsers className="h-5 w-5 text-[--foreground-faded]" />
+                <IconUsers
+                  className="h-5 w-5 text-[--foreground-faded]"
+                  aria-hidden="true"
+                />
               </div>
               <div className="flex flex-col items-start">
                 <span

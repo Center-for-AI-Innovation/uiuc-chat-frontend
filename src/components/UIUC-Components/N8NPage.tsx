@@ -422,9 +422,11 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`text-[--dashboard-button] hover:text-[--dashboard-button-hover] ${montserrat_heading.variable} font-montserratHeading`}
+                            aria-label="n8n.io"
                           >
                             n8n.io&apos;s{' '}
                             <IconExternalLink
+                              aria-hidden="true"
                               className="mr-2 inline-block"
                               style={{ position: 'relative', top: '-3px' }}
                             />

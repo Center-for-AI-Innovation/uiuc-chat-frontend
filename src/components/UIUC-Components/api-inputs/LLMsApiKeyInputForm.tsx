@@ -134,7 +134,7 @@ export const APIKeyInput = ({
             className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] hover:text-[white]"
             style={{ marginLeft: '8px' }}
           >
-            <IconX size={12} />
+            <IconX size={12} aria-hidden="true" />
           </ActionIcon>
         </div>
       </Input.Wrapper>
@@ -1002,7 +1002,11 @@ export const showConfirmationToast = ({
     message: message,
     color: isError ? 'red' : 'green',
     radius: 'lg',
-    icon: isError ? <IconAlertCircle /> : <IconCheck />,
+    icon: isError ? (
+      <IconAlertCircle aria-hidden="true" />
+    ) : (
+      <IconCheck aria-hidden="true" />
+    ),
     className: 'my-notification-class',
     styles: {
       root: {

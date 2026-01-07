@@ -61,7 +61,9 @@ export const ToolsItem = ({}) => {
               placeholder="Search Tools"
               my="sm"
               radius="md"
-              icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
+              icon={
+                <IconSearch size={isSmallScreen ? 15 : 20} aria-hidden="true" />
+              }
               value={toolSearch}
               onChange={handleToolSearchChange}
               w={'90%'}

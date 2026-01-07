@@ -60,9 +60,10 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
               size="0.8rem"
               color={disabled ? 'gray' : 'var(--dashboard-button)'}
               stroke={3}
+              aria-hidden="true"
             />
           ) : (
-            <IconX size="0.8rem" color="grey" stroke={3} />
+            <IconX size="0.8rem" color="grey" stroke={3} aria-hidden="true" />
           )
         }
         styles={{
@@ -139,9 +140,11 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
               }
             }
             onClick={(e) => e.stopPropagation()}
+            aria-hidden="true"
           >
             <IconInfoCircle
               size={16}
+              aria-hidden="true"
               className={
                 !disabled && isContainerHovered
                   ? 'text-gray/60'

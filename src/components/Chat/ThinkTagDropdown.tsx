@@ -84,7 +84,11 @@ export const ThinkTagDropdown: React.FC<ThinkTagDropdownProps> = ({
         aria-controls="think-tag-content"
       >
         <div className="flex items-center gap-2">
-          <IconBrain size={20} className="think-tag-brain-icon" />
+          <IconBrain
+            size={20}
+            className="think-tag-brain-icon"
+            aria-hidden="true"
+          />
           <span
             id="ai-thought-process-label"
             className={`text-base font-medium ${montserrat_paragraph.variable} font-montserratParagraph`}

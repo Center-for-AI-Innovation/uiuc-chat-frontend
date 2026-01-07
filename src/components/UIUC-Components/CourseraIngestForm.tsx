@@ -102,6 +102,7 @@ export default function CourseraIngestForm(): JSX.Element {
               <IconArrowRight
                 size={16}
                 className="ml-2 transition-transform group-hover:translate-x-1"
+                aria-hidden="true"
               />
             </div>
           </Card>

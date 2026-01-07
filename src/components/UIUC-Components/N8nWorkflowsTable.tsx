@@ -138,7 +138,7 @@ export const N8nWorkflowsTable = ({
         ),
         color: 'red',
         radius: 'lg',
-        icon: <IconAlertCircle />,
+        icon: <IconAlertCircle aria-hidden="true" />,
         className: 'my-notification-class',
         styles: notificationStyles(true),
         withBorder: true,

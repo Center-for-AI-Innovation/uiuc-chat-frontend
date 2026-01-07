@@ -95,12 +95,14 @@ export const FancyRetrieval = () => {
               href="https://platform.openai.com/account/usage"
               target="_blank"
               className="hover:underline"
+              aria-label="View account usage on OpenAI"
             >
               View account usage on OpenAI{' '}
               <IconExternalLink
                 size={15}
                 style={{ position: 'relative', top: '2px' }}
                 className={'mb-2 inline'}
+                aria-hidden="true"
               />
             </Link>
           </Input.Description>

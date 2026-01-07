@@ -21,7 +21,7 @@ export const ClearConversations: FC<Props> = ({ onClearConversations }) => {
 
   return isConfirming ? (
     <div className="flex w-full cursor-pointer items-center rounded-lg px-3 py-3 hover:bg-gray-500/10">
-      <IconTrash size={18} />
+      <IconTrash size={18} aria-hidden="true" />
 
       <div className="ml-3 flex-1 text-left text-[12.5px] leading-3 text-white">
         {t('Are you sure?')}
@@ -35,6 +35,7 @@ export const ClearConversations: FC<Props> = ({ onClearConversations }) => {
             e.stopPropagation()
             handleClearConversations()
           }}
+          aria-label="Confirm Clear Conversations"
         />
 
         <IconX
@@ -44,6 +45,7 @@ export const ClearConversations: FC<Props> = ({ onClearConversations }) => {
             e.stopPropagation()
             setIsConfirming(false)
           }}
+          aria-label="Cancel Clear Conversations"
         />
       </div>
     </div>
@@ -51,7 +53,7 @@ export const ClearConversations: FC<Props> = ({ onClearConversations }) => {
     <SidebarButton
       ariaLabel={t('Clear conversations')}
       text={t('Clear conversations')}
-      icon={<IconTrash size={18} />}
+      icon={<IconTrash size={18} aria-hidden="true" />}
       onClick={() => setIsConfirming(true)}
     />
   )

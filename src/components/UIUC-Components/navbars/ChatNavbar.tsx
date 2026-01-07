@@ -333,9 +333,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         cursor: 'pointer',
                         height: '100%',
                       }}
+                      aria-label="Start a new chat"
                     >
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <IconPlus size={24} />
+                        <IconPlus size={24} aria-hidden="true" />
                         <span
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ marginLeft: '8px' }}
@@ -368,9 +369,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         cursor: 'pointer',
                         height: '100%',
                       }}
+                      aria-label="Open or close show model settings."
                     >
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <IconSettings size={24} />
+                        <IconSettings size={24} aria-hidden="true" />
                         <span
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ marginLeft: '8px' }}
@@ -403,9 +405,10 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                           display: 'block',
                           height: '100%',
                         }}
+                        aria-label="Go to admin dashboard"
                       >
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <IconHome size={24} />
+                          <IconHome size={24} aria-hidden="true" />
                           <span
                             className={`${montserrat_heading.variable} font-montserratHeading`}
                             style={{ marginLeft: '8px' }}
@@ -451,6 +454,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   >
                     <IconPlus
                       size={24}
+                      aria-hidden="true"
                       style={{
                         position: 'relative',
                         top: '-2px',
@@ -500,6 +504,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   >
                     <IconSettings
                       size={24}
+                      aria-hidden="true"
                       style={{
                         position: 'relative',
                         top: '-2px',
@@ -571,6 +576,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                     >
                       <IconHome
                         size={30}
+                        aria-hidden="true"
                         strokeWidth={2}
                         style={{
                           marginRight: '4px',

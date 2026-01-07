@@ -34,6 +34,7 @@ const Search: FC<Props> = ({ placeholder, searchTerm, onSearch }) => {
           className="absolute right-4 cursor-pointer text-[--foreground-faded] hover:text-[--foreground]"
           size={18}
           onClick={clearSearch}
+          aria-label="Clear Search"
         />
       )}
     </div>

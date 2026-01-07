@@ -69,8 +69,9 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
                   onClick={() => setAccordionOpened(!accordionOpened)}
                   className="hover:bg-gray/10"
                   title="More info on nomic map"
+                  aria-label="More info on nomic map"
                 >
-                  <IconInfoCircle className="text-gray/60" />
+                  <IconInfoCircle className="text-gray/60" aria-hidden="true" />
                 </ActionIcon>
               </div>
             </div>

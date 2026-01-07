@@ -36,7 +36,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
 
   return isChanging ? (
     <div className="duration:200 flex w-full cursor-pointer items-center rounded-md px-3 py-3 transition-colors hover:bg-gray-500/10">
-      <IconKey size={18} />
+      <IconKey size={18} aria-hidden="true" />
 
       <input
         ref={inputRef}
@@ -56,6 +56,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
             e.stopPropagation()
             handleUpdateKey(newKey)
           }}
+          aria-label="Update API Key"
         />
 
         <IconX
@@ -66,6 +67,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
             setIsChanging(false)
             setNewKey(apiKey)
           }}
+          aria-label="Cancel Update API Key"
         />
       </div>
     </div>
@@ -73,7 +75,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
     <SidebarButton
       ariaLabel={t('OpenAI API Key')}
       text={t('OpenAI API Key')}
-      icon={<IconKey size={18} />}
+      icon={<IconKey size={18} aria-hidden="true" />}
       onClick={() => setIsChanging(true)}
     />
   )

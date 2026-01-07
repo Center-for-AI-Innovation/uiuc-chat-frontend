@@ -101,7 +101,11 @@ const ModelUsageChart: React.FC<ModelUsageChartProps> = ({
     return (
       <div className="rounded-lg bg-red-500/10 p-4" role="alert">
         <div className="flex items-center gap-2">
-          <IconAlertCircle className="text-red-400" size={20} />
+          <IconAlertCircle
+            className="text-red-400"
+            size={20}
+            aria-hidden="true"
+          />
           <Text color="red">Error loading model usage data: {error}</Text>
         </div>
       </div>

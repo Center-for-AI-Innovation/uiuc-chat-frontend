@@ -61,8 +61,9 @@ const CustomCopyButton: React.FC<CustomCopyButtonProps> = ({
             },
           },
         }}
+        aria-label="Copy"
       >
-        <IconCopy size={18} />
+        <IconCopy size={18} aria-hidden="true" />
       </Button>
       <span
         className={`${montserrat_paragraph.variable} text-md ml-3 flex items-center font-montserratParagraph transition-colors duration-200 ease-in-out ${
@@ -106,6 +107,7 @@ const CustomCopyButton: React.FC<CustomCopyButtonProps> = ({
               size={16}
               className={isHovered ? 'text-white' : 'text-gray-400'}
               style={{ transition: 'all 0.2s ease-in-out' }}
+              aria-hidden="true"
             />
           </span>
         </Tooltip>

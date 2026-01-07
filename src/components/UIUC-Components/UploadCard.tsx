@@ -195,11 +195,20 @@ export const UploadCard = memo(function UploadCard({
                     text-sm sm:min-h-[2.5rem]
                     sm:px-4 sm:text-base
                   `}
+                  aria-label="Share Chatbot"
                 >
                   <span className="hidden sm:inline">Share Chatbot</span>
                   <span className="inline sm:hidden">Share</span>
-                  <IconShare size={12} className="ml-1 inline sm:hidden" />
-                  <IconShare size={20} className="ml-2 hidden sm:inline" />
+                  <IconShare
+                    size={12}
+                    className="ml-1 inline sm:hidden"
+                    aria-hidden="true"
+                  />
+                  <IconShare
+                    size={20}
+                    className="ml-2 hidden sm:inline"
+                    aria-hidden="true"
+                  />
                 </Button>
               </div>
             </div>

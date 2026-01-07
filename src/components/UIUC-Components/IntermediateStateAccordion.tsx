@@ -38,7 +38,7 @@ export const IntermediateStateAccordion = ({
           ) : isLoading ? (
             <LoadingSpinner size="xs" />
           ) : (
-            <IconChevronDown />
+            <IconChevronDown aria-hidden="true" />
           )
         }
         disableChevronRotation={disableChevronRotation}

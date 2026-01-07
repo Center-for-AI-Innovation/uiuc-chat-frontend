@@ -51,7 +51,11 @@ export default function AnthropicProviderInput({
                 >
                   Anthropic
                 </Text>
-                <IconExternalLink size={16} className="mb-3" />
+                <IconExternalLink
+                  size={16}
+                  className="mb-3"
+                  aria-hidden="true"
+                />
               </div>
             </a>
           </div>
@@ -75,9 +79,15 @@ export default function AnthropicProviderInput({
                       size="0.8rem"
                       color="var(--dashboard-button)"
                       stroke={3}
+                      aria-hidden="true"
                     />
                   ) : (
-                    <IconX size="0.8rem" color="grey" stroke={3} />
+                    <IconX
+                      size="0.8rem"
+                      color="grey"
+                      stroke={3}
+                      aria-hidden="true"
+                    />
                   )
                 }
                 styles={{

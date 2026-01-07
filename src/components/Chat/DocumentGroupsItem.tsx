@@ -71,7 +71,9 @@ export const DocumentGroupsItem = ({}) => {
               placeholder="Search by Document Group"
               my="sm"
               radius="md"
-              icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
+              icon={
+                <IconSearch size={isSmallScreen ? 15 : 20} aria-hidden="true" />
+              }
               value={documentGroupSearch}
               onChange={handleDocumentGroupSearchChange}
               w={'90%'}
