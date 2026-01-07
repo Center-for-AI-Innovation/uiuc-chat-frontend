@@ -17,8 +17,7 @@ const NotAuthorizedPage: NextPage = () => {
   const router = useRouter()
   const auth = useAuth()
 
-  const [componentToRender, setComponentToRender] =
-    useState<React.ReactNode | null>(null)
+  const [componentToRender, setComponentToRender] = useState(null)
 
   const getCurrentPageName = () => {
     return router.asPath.slice(1).split('/')[0] as string
@@ -112,7 +111,10 @@ const NotAuthorizedPage: NextPage = () => {
     return (
       <MainPageBackground>
         <div className="flex h-full min-h-[16rem] w-full flex-col items-center justify-center p-4 text-[--foreground]">
-          <img src="/media/error_sad_bot_illini_blue.png"></img>
+          <img
+            src="/media/error_sad_bot_illini_blue.png"
+            alt="Error Sad Bot Illini Blue"
+          ></img>
 
           <div className="mt-4 font-semibold">
             Sorry, you don’t have access to this chatbot.
