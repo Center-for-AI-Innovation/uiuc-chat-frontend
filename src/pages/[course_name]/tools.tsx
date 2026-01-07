@@ -58,7 +58,7 @@ const ToolsPage: NextPage = () => {
           setErrorType(404)
           return
         }
-        else{
+        else {
           const dataResponse = await fetch(
             `/api/UIUC-api/getAllCourseData?course_name=${courseName}`,
           )
