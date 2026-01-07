@@ -49,7 +49,7 @@ export const PermissionGate = ({
 
   return (
     <>
-      <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
+      <main className="justify-center course-page-main flex min-h-screen flex-col items-center">
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">
           <Link href="/">
             <h2
