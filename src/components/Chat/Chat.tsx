@@ -1702,8 +1702,13 @@ export const Chat = memo(
                     <Button
                       variant="link"
                       className={`text-md h-auto p-2 font-bold leading-relaxed text-[--foreground] hover:text-[--background] hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+                      aria-label="Use Example Question Button"
                     >
-                      <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
+                      <IconArrowRight
+                        size={25}
+                        className="mr-2 min-w-[40px]"
+                        aria-hidden="true"
+                      />
                       <p className="whitespace-break-spaces">{statement}</p>
                     </Button>
                   </div>
@@ -1960,7 +1965,7 @@ export const Chat = memo(
                     if (courseName) router.push(`/${courseName}/dashboard`)
                   }}
                 >
-                  <IconSettings stroke={1.5} size={20} />
+                  <IconSettings stroke={1.5} size={20} aria-hidden="true" />
                 </button>
                 <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-[--background-faded] px-2 py-1 text-sm text-[--foreground] opacity-0 transition-opacity group-hover:opacity-100">
                   Admin Dashboard
@@ -2098,7 +2103,7 @@ export function errorToast({
     ),
     color: '',
     radius: 'lg',
-    icon: <IconAlertCircle color="#fff" />,
+    icon: <IconAlertCircle color="#fff" aria-hidden="true" />,
     className: 'my-notification-class',
     style: {
       backgroundColor: 'var(--notification)',
