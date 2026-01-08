@@ -232,8 +232,8 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     }
     // OpenRouter requires these headers
     if (isOpenRouter) {
-      headers['HTTP-Referer'] = 'https://uiuc.chat'
-      headers['X-Title'] = 'UIUC.chat'
+      headers['HTTP-Referer'] = 'https://chat.illinois.edu'
+      headers['X-Title'] = 'Illinois Chat'
     }
 
     const response = await fetch(apiUrl, {
