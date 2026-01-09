@@ -217,6 +217,7 @@ const Home = ({
       try {
         if (!course_metadata) return
 
+        //TODO(BG): can be replaced with react query call
         const models = await getModels({
           projectName: course_name,
         })
