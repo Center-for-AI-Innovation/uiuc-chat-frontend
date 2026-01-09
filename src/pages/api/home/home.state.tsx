@@ -19,34 +19,34 @@ import {
 
 export interface HomeInitialState {
   apiKey: string
-  pluginKeys: PluginKey[]
+  pluginKeys: PluginKey[] //TODO(BG): can be removed since the value is never set
   loading: boolean
   messageIsStreaming: boolean
-  modelError: ErrorMessage | null
-  llmProviders: AllLLMProviders
-  selectedModel: AnySupportedModel | null
-  folders: FolderWithConversation[]
+  modelError: ErrorMessage | null //TODO(BG): can be replaced by React Query Hook
+  llmProviders: AllLLMProviders //TODO(BG): can be replaced by React Query Hook
+  selectedModel: AnySupportedModel | null //TODO(BG): can be removed since the value is never set
+  folders: FolderWithConversation[] //TODO(BG): can be removed since the value is never set (even through createFolderFunction)
   conversations: Conversation[]
   selectedConversation: Conversation | undefined
-  currentMessage: Message | undefined
-  prompts: Prompt[]
-  temperature: number
+  currentMessage: Message | undefined //TODO(BG): can be removed since the value is never set
+  prompts: Prompt[] //TODO(BG): can be removed since the value is never set
+  temperature: number //TODO(BG): can be removed since the value is never set
   showChatbar: boolean
   currentFolder: FolderInterface | undefined
-  messageError: boolean
-  searchTerm: string
+  messageError: boolean //TODO(BG): can be removed since the value is never set
+  searchTerm: string //TODO(BG): can be removed since the value is never set (a similar variable exists in ChatbarContext)
   defaultModelId: OpenAIModelID | undefined
   serverSideApiKeyIsSet: boolean
-  serverSidePluginKeysSet: boolean
-  cooldown: number
+  serverSidePluginKeysSet: boolean //TODO(BG): maybe removed since the value only used in two places?
+  cooldown: number //TODO(BG): can be removed since the value is never used
   showModelSettings: boolean
-  isImg2TextLoading: boolean
-  isRouting: boolean | undefined
-  isRunningTool: boolean | undefined
-  isRetrievalLoading: boolean | undefined
-  isQueryRewriting: boolean | undefined
-  wasQueryRewritten: boolean | undefined
-  queryRewriteText: string | undefined
+  isImg2TextLoading: boolean //TODO(BG): can be removed react query dup
+  isRouting: boolean | undefined //TODO(BG): can be removed react query dup
+  isRunningTool: boolean | undefined //TODO(BG): can be removed react query dup
+  isRetrievalLoading: boolean | undefined //TODO(BG): can be removed react query dup
+  isQueryRewriting: boolean | undefined //TODO(BG): can be removed react query dup
+  wasQueryRewritten: boolean | undefined //TODO(BG): can be removed not used anywhere
+  queryRewriteText: string | undefined //TODO(BG): can be removed not used anywhere
   documentGroups: Action[]
   tools: UIUCTool[]
   webLLMModelIdLoading: {
