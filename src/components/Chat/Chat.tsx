@@ -81,6 +81,7 @@ import {
   handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
+import { createLogConversationPayload } from '@/utils/app/conversation'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -117,7 +118,7 @@ export const Chat = memo(
 
     const [enabledDocumentGroups, setEnabledDocumentGroups] = useState<
       string[]
-    >([])
+    >(['All Documents']) // Default to 'All Documents' so retrieval can work immediately
     const [enabledTools, setEnabledTools] = useState<string[]>([])
 
     const {
@@ -202,6 +203,7 @@ export const Chat = memo(
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const editedMessageIdRef = useRef<string | undefined>(undefined)
     const updateConversationMutation = useUpdateConversation(
       currentEmail,
       queryClient,
@@ -261,7 +263,11 @@ export const Chat = memo(
       )
     }, [tools])
 
-    const onMessageReceived = async (conversation: Conversation) => {
+    const onMessageReceived = async (
+      conversation: Conversation,
+      message: Message,
+      earliestEditedMessageId?: string,
+    ) => {
       // Log conversation to database
       try {
         const response = await fetch(`/api/UIUC-api/logConversation`, {
@@ -269,10 +275,14 @@ export const Chat = memo(
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            course_name: getCurrentPageName(),
-            conversation: conversation,
-          }),
+          body: JSON.stringify(
+            createLogConversationPayload(
+              getCurrentPageName(),
+              conversation,
+              message,
+              earliestEditedMessageId,
+            ),
+          ),
         })
         // const data = await response.json()
         // return data.success
@@ -365,6 +375,9 @@ export const Chat = memo(
 
           let updatedConversation: Conversation
           if (deleteCount) {
+            // Track the edited message ID for logging purposes
+            editedMessageIdRef.current = message.id
+
             // FIXED: Don't clear contexts if they come from a file upload
             const isFileUploadMessage =
               Array.isArray(message.content) &&
@@ -403,6 +416,9 @@ export const Chat = memo(
               deletedMessages: messagesToDelete,
             })
           } else {
+            // Clear edited message ID for non-edit sends
+            editedMessageIdRef.current = undefined
+
             updatedConversation = {
               ...selectedConversation,
               messages: [...(selectedConversation.messages || []), message],
@@ -434,7 +450,6 @@ export const Chat = memo(
             key: 'messages',
             value: updatedConversation.messages,
           })
-          updateConversationMutation.mutate(updatedConversation)
           homeDispatch({ field: 'loading', value: true })
           homeDispatch({ field: 'messageIsStreaming', value: true })
           const controller = new AbortController()
@@ -864,6 +879,9 @@ export const Chat = memo(
                 imgDesc,
                 updatedConversation,
                 getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                courseName,
+                undefined,
+                llmProviders,
               )
               homeDispatch({ field: 'isRouting', value: false })
               if (uiucToolsToRun.length > 0) {
@@ -1109,7 +1127,6 @@ export const Chat = memo(
                       id: uuidv4(),
                       role: 'assistant',
                       content: chunkValue,
-                      contexts: message.contexts,
                       feedback: message.feedback,
                       wasQueryRewritten: message.wasQueryRewritten,
                       queryRewriteText: message.queryRewriteText,
@@ -1184,6 +1201,8 @@ export const Chat = memo(
               throw new Error('LLM response stream ended before it was done.')
             }
 
+            homeDispatch({ field: 'messageIsStreaming', value: false })
+
             try {
               // This is after the response is done streaming
               console.debug(
@@ -1194,13 +1213,39 @@ export const Chat = memo(
                 key: 'messages',
                 value: updatedConversation.messages,
               })
-              updateConversationMutation.mutate(updatedConversation)
+              // Here, we want to persist the full streamed assistant message, not the initial user message.
+              // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
+              const streamedAssistantMessage =
+                updatedConversation.messages?.[
+                  updatedConversation.messages.length - 1
+                ] ?? message
+
+              if (streamedAssistantMessage.role === 'assistant') {
+                await updateConversationMutation.mutateAsync({
+                  conversation: updatedConversation,
+                  message: streamedAssistantMessage,
+                })
+              } else {
+                // Fallback: do not trigger mutation if it's not an assistant message
+                console.warn(
+                  'Attempted to persist a non-assistant message after stream:',
+                  streamedAssistantMessage,
+                )
+              }
               console.debug(
                 'updatedConversation after mutation:',
                 updatedConversation,
               )
 
-              onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
+              if (streamedAssistantMessage) {
+                onMessageReceived(
+                  updatedConversation,
+                  streamedAssistantMessage,
+                  editedMessageIdRef.current,
+                )
+                // Clear the ref after logging
+                editedMessageIdRef.current = undefined
+              }
 
               // } else {
               //   onMessageReceived(updatedConversation)
@@ -1234,7 +1279,6 @@ export const Chat = memo(
               // })
               // console.log('updatedConversations: ', updatedConversations)
               // saveConversations(updatedConversations)
-              homeDispatch({ field: 'messageIsStreaming', value: false })
             } catch (error) {
               console.error('An error occurred: ', error)
               controller.abort()
@@ -1248,7 +1292,6 @@ export const Chat = memo(
                   id: uuidv4(),
                   role: 'assistant',
                   content: answer,
-                  contexts: message.contexts,
                   feedback: message.feedback,
                   wasQueryRewritten: message.wasQueryRewritten,
                   queryRewriteText: message.queryRewriteText,
@@ -1897,19 +1940,31 @@ export const Chat = memo(
           })
 
           // Update database
-          await updateConversationMutation.mutateAsync(updatedConversation)
+          const latestMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? null
 
           // Log to database
-          await fetch('/api/UIUC-api/logConversation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              course_name: getCurrentPageName(),
-              conversation: updatedConversation,
-            }),
-          })
+          const latestAssistantMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? null
+          if (latestAssistantMessage) {
+            await fetch('/api/UIUC-api/logConversation', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(
+                createLogConversationPayload(
+                  getCurrentPageName(),
+                  updatedConversation,
+                  latestAssistantMessage,
+                ),
+              ),
+            })
+          }
         } catch (error) {
           homeDispatch({
             field: 'conversations',
@@ -1999,7 +2054,7 @@ export const Chat = memo(
                               key={index}
                               message={message}
                               messageIndex={index}
-                              onEdit={(editedMessage) => {
+                              onEdit={async (editedMessage) => {
                                 handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
@@ -2036,7 +2091,7 @@ export const Chat = memo(
               <ChatInput
                 stopConversationRef={stopConversationRef}
                 textareaRef={textareaRef}
-                onSend={(message, plugin) => {
+                onSend={(message, plugin) =>
                   handleSend(
                     message,
                     0,
@@ -2045,7 +2100,7 @@ export const Chat = memo(
                     enabledDocumentGroups,
                     llmProviders,
                   )
-                }}
+                }
                 onScrollDownClick={handleScrollDown}
                 showScrollDownButton={showScrollDownButton}
                 onRegenerate={() => handleRegenerate()}

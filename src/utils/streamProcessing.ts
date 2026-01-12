@@ -8,6 +8,7 @@ import { runSambaNovaChat } from '~/app/utils/sambanova'
 import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
+import { runOpenAICompatibleChat } from '~/app/utils/openaiCompatible'
 import { fetchContexts, fetchMQRContexts } from '~/utils/fetchContexts'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
@@ -20,6 +21,7 @@ import {
 } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { getBaseUrl } from '~/utils/apiUtils'
+import { createLogConversationPayload } from '~/utils/app/conversation'
 import {
   type AllLLMProviders,
   AllSupportedModels,
@@ -29,6 +31,7 @@ import {
   type GenericSupportedModel,
   type NCSAHostedVLMProvider,
   type OllamaProvider,
+  type OpenAICompatibleProvider,
   ProviderNames,
   type SambaNovaProvider,
   VisionCapableModels,
@@ -380,10 +383,7 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
       Array.isArray(message.content) &&
       message.content.some((content) => content.type === 'image_url'),
   )
-  if (
-    hasImageContent &&
-    !VisionCapableModels.has(body.model as OpenAIModelID)
-  ) {
+  if (hasImageContent && !VisionCapableModels.has(body.model as any)) {
     throw new Error(
       `The selected model '${body.model}' does not support vision capabilities. Use one of these: ${Array.from(VisionCapableModels).join(', ')}`,
     )
@@ -638,17 +638,23 @@ export async function updateConversationInDatabase(
   // Log conversation
   try {
     const baseUrl = await getBaseUrl()
-    const response = await fetch(`${baseUrl}/api/UIUC-api/logConversation`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        course_name: course_name,
-        conversation: conversation,
-      }),
-    })
-    // const data = await response.json()
+    const latestMessage =
+      conversation.messages?.[conversation.messages.length - 1] ?? null
+    if (latestMessage) {
+      await fetch(`${baseUrl}/api/UIUC-api/logConversation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+          createLogConversationPayload(
+            course_name,
+            conversation,
+            latestMessage,
+          ),
+        ),
+      })
+    }
   } catch (error) {
     console.error('Error setting course data:', error)
     // return false
@@ -822,6 +828,19 @@ export const routeModelRequest = async (
   })
 
   if (
+    chatBody?.llmProviders?.OpenAICompatible?.enabled &&
+    (chatBody.llmProviders.OpenAICompatible.models || []).some(
+      (m) =>
+        m.enabled &&
+        m.id.toLowerCase() === selectedConversation.model.id.toLowerCase(),
+    )
+  ) {
+    return await runOpenAICompatibleChat(
+      selectedConversation,
+      chatBody.llmProviders.OpenAICompatible as OpenAICompatibleProvider,
+      chatBody.stream,
+    )
+  } else if (
     Object.values(NCSAHostedVLMModelID).includes(
       selectedConversation.model.id as any,
     )

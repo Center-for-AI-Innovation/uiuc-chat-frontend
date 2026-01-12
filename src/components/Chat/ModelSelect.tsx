@@ -77,6 +77,8 @@ export const getModelLogo = (modelType: string) => {
       return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png'
     case ProviderNames.SambaNova:
       return 'https://sambanova.ai/hubfs/logotype_sambanova_orange.png'
+    case ProviderNames.OpenAICompatible:
+      return '/media/llm_icons/OpenAI.png' // Reuse OpenAI icon for OpenAI-compatible models
     default:
       throw new Error(`Unknown model type: ${modelType}`)
   }
@@ -304,7 +306,7 @@ const ModelDropdown: React.FC<
       const provider = llmProviders[key as keyof typeof llmProviders]
       if (provider && provider.enabled) {
         const enabledModels =
-          provider.models?.filter((model) => model.enabled) || []
+          provider.models?.filter((model: AnySupportedModel) => model.enabled) || []
         if (enabledModels.length > 0) {
           // @ts-ignore -- Can't figure out why the types aren't perfect.
           acc.enabledProvidersAndModels[key as keyof typeof llmProviders] = {
@@ -312,7 +314,7 @@ const ModelDropdown: React.FC<
             models: enabledModels,
           }
           acc.allModels.push(
-            ...enabledModels.map((model) => ({
+            ...enabledModels.map((model: AnySupportedModel) => ({
               ...model,
               provider: provider.provider,
             })),
@@ -376,7 +378,7 @@ const ModelDropdown: React.FC<
             })
             .flatMap(
               ([_, provider]) =>
-                provider.models?.map((model) => ({
+                provider.models?.map((model: AnySupportedModel) => ({
                   value: model.id,
                   label: model.name,
                   // @ts-ignore -- this being missing is fine

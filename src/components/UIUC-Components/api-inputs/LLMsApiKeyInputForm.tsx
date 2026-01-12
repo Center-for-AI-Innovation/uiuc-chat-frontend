@@ -40,6 +40,7 @@ import {
   type NCSAHostedVLMProvider,
   type OllamaProvider,
   type OpenAIProvider,
+  type OpenAICompatibleProvider,
   type ProviderNames,
   type SambaNovaProvider,
   type WebLLMProvider,
@@ -55,6 +56,7 @@ import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
 import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
 import OllamaProviderInput from './providers/OllamaProviderInput'
 import OpenAIProviderInput from './providers/OpenAIProviderInput'
+import OpenAICompatibleProviderInput from './providers/OpenAICompatibleProviderInput'
 import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
 import WebLLMProviderInput from './providers/WebLLMProviderInput'
 
@@ -244,7 +246,7 @@ const NewModelDropdown: React.FC<{
           })
           .flatMap(
             ([_, provider]) =>
-              provider.models?.map((model) => ({
+              provider.models?.map((model: AnySupportedModel) => ({
                 value: model.id,
                 label: model.name,
                 // @ts-ignore -- this being missing is fine
@@ -403,7 +405,7 @@ export function findDefaultModel(
     const provider = providers[providerKey as keyof typeof providers]
     if (provider && provider.models) {
       const currentDefaultModel = provider.models.find(
-        (model) => model.default === true,
+        (model: AnySupportedModel) => model.default === true,
       )
       if (currentDefaultModel) {
         return {
@@ -470,7 +472,7 @@ export default function APIKeyInputForm() {
           const provider =
             updatedProviders[providerKey as keyof AllLLMProviders]
           if (provider && provider.models) {
-            provider.models = provider.models.map((model) => ({
+            provider.models = provider.models.map((model: AnySupportedModel) => ({
               ...model,
               default: false,
             }))
@@ -706,6 +708,13 @@ export default function APIKeyInputForm() {
                               <OpenAIProviderInput
                                 provider={
                                   llmProviders?.OpenAI as OpenAIProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <OpenAICompatibleProviderInput
+                                provider={
+                                  llmProviders?.OpenAICompatible as OpenAICompatibleProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}

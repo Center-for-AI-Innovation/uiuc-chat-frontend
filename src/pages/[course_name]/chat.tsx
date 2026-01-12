@@ -13,6 +13,7 @@ import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
+import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()
@@ -147,6 +148,12 @@ const ChatPage: NextPage = () => {
             return
           }
 
+          // Check if course is frozen/archived
+          if (metadata.is_frozen === true) {
+            router.replace(`/${courseName}/not_authorized`)
+            return
+          }
+
           // Check if course is public
           if (!metadata.is_private) {
             setIsAuthorized(true)
@@ -165,8 +172,13 @@ const ChatPage: NextPage = () => {
                 const postHogUser = JSON.parse(postHogUserObj)
                 setCurrentEmail(postHogUser.distinct_id)
               } else {
-                // When user is not logged in and posthog user is not found
-                setCurrentEmail('')
+                // Generate a unique identifier for unauthenticated users
+                let anonymousId = localStorage.getItem('anonymous_user_id')
+                if (!anonymousId) {
+                  anonymousId = generateAnonymousUserId()
+                  localStorage.setItem('anonymous_user_id', anonymousId)
+                }
+                setCurrentEmail(anonymousId)
               }
             }
             return
@@ -234,7 +246,7 @@ const ChatPage: NextPage = () => {
   }
 
   // redirect to login page if needed
-  if (!auth.isAuthenticated) {
+  if (!auth.isAuthenticated && courseMetadata?.is_private) {
     console.log(
       'User not logged in',
       auth.isAuthenticated,
@@ -253,8 +265,7 @@ const ChatPage: NextPage = () => {
       {!isLoading &&
         !auth.isLoading &&
         router.isReady &&
-        ((currentEmail && currentEmail !== '') ||
-          !courseMetadata?.is_private) &&
+        currentEmail !== undefined &&
         courseMetadata && (
           <Home
             current_email={currentEmail || ''}
@@ -269,17 +280,17 @@ const ChatPage: NextPage = () => {
           />
         )}
       {isLoading ||
-        !currentEmail ||
-        (currentEmail === '' && (
-          <MainPageBackground>
-            <div
-              className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
-            >
-              <span className="mr-2">Warming up the knowledge engines...</span>
-              <LoadingSpinner size="sm" />
-            </div>
-          </MainPageBackground>
-        ))}
+      (!currentEmail && courseMetadata?.is_private) ||
+      (currentEmail === '' && courseMetadata?.is_private) ? (
+        <MainPageBackground>
+          <div
+            className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
+          >
+            <span className="mr-2">Warming up the knowledge engines...</span>
+            <LoadingSpinner size="sm" />
+          </div>
+        </MainPageBackground>
+      ) : null}
     </>
   )
 }
