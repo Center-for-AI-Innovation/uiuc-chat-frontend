@@ -59,15 +59,15 @@ const useStyles = createStyles((theme) => ({
 }))
 
 export function LargeDropzone({
-                                courseName,
-                                current_user_email,
-                                redirect_to_gpt_4 = true,
-                                isDisabled = false,
-                                courseMetadata,
-                                is_new_course,
-                                setUploadFiles,
-                                auth,
-                              }: {
+  courseName,
+  current_user_email,
+  redirect_to_gpt_4 = true,
+  isDisabled = false,
+  courseMetadata,
+  is_new_course,
+  setUploadFiles,
+  auth,
+}: {
   courseName: string
   current_user_email: string
   redirect_to_gpt_4?: boolean
@@ -377,24 +377,46 @@ export function LargeDropzone({
               // Common audio and video file extensions to block
               const audioVideoExtensions = [
                 // Audio extensions
-                '.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac', '.wma', '.aiff', '.ape', '.opus',
+                '.mp3',
+                '.wav',
+                '.ogg',
+                '.m4a',
+                '.flac',
+                '.aac',
+                '.wma',
+                '.aiff',
+                '.ape',
+                '.opus',
                 // Video extensions
-                '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm', '.m4v', '.mpg', '.mpeg', '.3gp',
+                '.mp4',
+                '.avi',
+                '.mov',
+                '.wmv',
+                '.flv',
+                '.mkv',
+                '.webm',
+                '.m4v',
+                '.mpg',
+                '.mpeg',
+                '.3gp',
               ]
-              
+
               const hasRejected = files.some((f) => {
                 // Check MIME type
-                const hasMimeType = f.type.startsWith('audio/') || f.type.startsWith('video/')
-                
+                const hasMimeType =
+                  f.type.startsWith('audio/') || f.type.startsWith('video/')
+
                 // Check file extension as fallback
                 const fileName = f.name.toLowerCase()
-                const hasExtension = audioVideoExtensions.some(ext => fileName.endsWith(ext))
-                
+                const hasExtension = audioVideoExtensions.some((ext) =>
+                  fileName.endsWith(ext),
+                )
+
                 return hasMimeType || hasExtension
               })
-              
+
               if (hasRejected) {
-                alert("Audio and video files are not supported at this time.")
+                alert('Audio and video files are not supported at this time.')
                 return
               }
 
