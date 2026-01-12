@@ -68,6 +68,12 @@ const ChatPage: NextPage = () => {
       )
       const metadataData = await metadataResponse.json()
 
+      // Check if course is frozen/archived
+      if (metadataData.course_metadata?.is_frozen === true) {
+        router.replace(`/${courseName}/not_authorized`)
+        return
+      }
+
       // Log original course metadata settings without modifying them
       if (metadataData.course_metadata) {
         console.log('Course metadata settings:', {
@@ -120,6 +126,12 @@ const ChatPage: NextPage = () => {
 
           if (!metadata) {
             router.replace(`/new?course_name=${courseName}`)
+            return
+          }
+
+          // Check if course is frozen/archived
+          if (metadata.is_frozen === true) {
+            router.replace(`/${courseName}/not_authorized`)
             return
           }
 
