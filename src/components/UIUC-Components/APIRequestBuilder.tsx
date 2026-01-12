@@ -17,6 +17,7 @@ import {
 } from '@tabler/icons-react'
 import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
+import { type AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 interface APIRequestBuilderProps {
@@ -75,8 +76,8 @@ export default function APIRequestBuilder({
     ? Object.entries(llmProviders).flatMap(([provider, config]) =>
         config.enabled && config.models && provider !== 'WebLLM'
           ? config.models
-              .filter((model) => model.enabled)
-              .map((model) => ({
+              .filter((model: AnySupportedModel) => model.enabled)
+              .map((model: AnySupportedModel) => ({
                 group: provider,
                 value: model.id,
                 label: model.name,
