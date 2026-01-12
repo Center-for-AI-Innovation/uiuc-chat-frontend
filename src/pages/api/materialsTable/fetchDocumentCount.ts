@@ -27,11 +27,7 @@ async function fetchDocumentCount(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const {
-    course_name,
-    filter_key: search_key,
-    filter_value: search_value,
-  } = req.query
+  const { course_name } = req.query
 
   if (!course_name || typeof course_name !== 'string') {
     return res
@@ -40,39 +36,16 @@ async function fetchDocumentCount(
   }
 
   try {
-    let countQuery
+    // Check if at least one document exists for this course_name
+    const existsQuery = await db
+      .select({ id: documents.id })
+      .from(documents)
+      .where(eq(documents.course_name, course_name))
+      .limit(1)
 
-    if (
-      search_key &&
-      search_value &&
-      typeof search_key === 'string' &&
-      search_key in documents
-    ) {
-      // Fetch count with filter
-      const searchColumn = documents[
-        search_key as keyof typeof documents
-      ] as PgColumn<any>
+    const total_count = existsQuery.length > 0 ? 1 : 0
 
-      countQuery = await db
-        .select({ count: sql<number>`count(distinct ${documents.id})` })
-        .from(documents)
-        .where(
-          and(
-            eq(documents.course_name, course_name),
-            sql`${searchColumn} ILIKE ${`%${search_value}%`}`,
-          ),
-        )
-    } else {
-      // Fetch count without filter
-      countQuery = await db
-        .select({ count: sql<number>`count(distinct ${documents.id})` })
-        .from(documents)
-        .where(eq(documents.course_name, course_name))
-    }
-
-    const count = countQuery[0]?.count ?? 0
-
-    return res.status(200).json({ total_count: count })
+    return res.status(200).json({ total_count })
   } catch (error) {
     console.error('Failed to fetch document count:', error)
     return res.status(500).json({ error: (error as any).message })
