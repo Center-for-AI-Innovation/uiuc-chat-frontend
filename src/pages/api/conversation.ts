@@ -23,6 +23,7 @@ import { sanitizeText } from '@/utils/sanitization'
 import { inArray, eq, and, isNull, sql, gt } from 'drizzle-orm'
 import { NewConversations } from '~/db/schema'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+import { getUserIdentifier } from '~/pages/api/_utils/userIdentifier'
 
 export const config = {
   api: {
@@ -121,10 +122,10 @@ export function convertDBToChatConversation(
 
       const feedbackObj = msg.feedback
         ? {
-          isPositive: msg.feedback.feedback_is_positive,
-          category: msg.feedback.feedback_category,
-          details: msg.feedback.feedback_details,
-        }
+            isPositive: msg.feedback.feedback_is_positive,
+            category: msg.feedback.feedback_category,
+            details: msg.feedback.feedback_details,
+          }
         : undefined
 
       // Process contexts to ensure both page number fields are preserved
@@ -217,10 +218,10 @@ export function convertChatToDBMessage(
           // Sanitize and truncate text to 100 characters and add ellipsis if needed
           text: context.text
             ? sanitizeText(
-              context.text.length > 100
-                ? context.text.slice(0, 100) + '...'
-                : context.text,
-            )
+                context.text.length > 100
+                  ? context.text.slice(0, 100) + '...'
+                  : context.text,
+              )
             : '',
         }
 
@@ -266,16 +267,20 @@ export function convertChatToDBMessage(
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
-  const user_email = req.user?.email as string | undefined
-  if (!user_email) {
-    res.status(400).json({ error: 'No valid email address in token' })
-    return
-  }
+  const userIdentifier = getUserIdentifier(req)
 
   switch (method) {
     case 'POST':
       const { conversation }: { conversation: ChatConversation } = req.body
       try {
+        // Validate user identifier is available
+        if (!userIdentifier) {
+          return res.status(400).json({
+            error: 'No valid user identifier provided',
+            message: 'Cannot save conversation without a valid user identifier',
+          })
+        }
+
         // Convert conversation to DB type
         const dbConversation = convertChatToDBConversation(conversation)
 
@@ -291,7 +296,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           model: dbConversation.model,
           prompt: dbConversation.prompt,
           temperature: dbConversation.temperature,
-          user_email: req.user?.email || null,
+          user_email: userIdentifier || null,
           project_name: dbConversation.project_name,
           folder_id: isUUID(dbConversation.folder_id ?? '')
             ? dbConversation.folder_id
@@ -316,7 +321,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 model: dbConversation.model,
                 prompt: dbConversation.prompt,
                 temperature: dbConversation.temperature,
-                user_email: req.user?.email || null,
+                user_email: userIdentifier || null,
                 project_name: dbConversation.project_name,
                 folder_id: dbConversation.folder_id,
                 updated_at: new Date(),
@@ -352,7 +357,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           return (
             existingMsg.content_text !== newDbMsg.content_text ||
             JSON.stringify(existingMsg.contexts) !==
-            JSON.stringify(newDbMsg.contexts)
+              JSON.stringify(newDbMsg.contexts)
           )
         })
 
@@ -459,9 +464,12 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       const courseName = req.query.courseName as string
       const pageParam = parseInt(req.query.pageParam as string, 0)
       // Search term is optional
-      if (!user_email || !courseName || isNaN(pageParam)) {
+      if (!userIdentifier || !courseName || isNaN(pageParam)) {
         console.error('Invalid query parameters:', req.query)
-        res.status(400).json({ error: 'Invalid query parameters' })
+        res.status(400).json({
+          error: 'Invalid query parameters',
+          message: 'userIdentifier, courseName, and pageParam are required',
+        })
         return
       }
 
@@ -474,7 +482,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           search_conversations_v3: { conversations: any[]; total_count: number }
         }>(sql`
           SELECT * FROM search_conversations_v3(
-            ${user_email},
+            ${userIdentifier},
             ${courseName},
             ${searchTerm || null},
             ${pageSize},
@@ -540,38 +548,43 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       }
 
       try {
-        if (id && user_email) {
+        if (id && userIdentifier) {
           // Delete single conversation, but only if it belongs to the current user
           const deleted = await db
             .delete(conversationsTable)
             .where(
               and(
                 eq(conversationsTable.id, id),
-                eq(conversationsTable.user_email, user_email),
+                eq(conversationsTable.user_email, userIdentifier),
               ),
             )
             .returning({ id: conversationsTable.id })
           if (deleted.length === 0) {
-            return res.status(403).json({ error: 'Not allowed to delete this conversation' })
+            return res
+              .status(403)
+              .json({ error: 'Not allowed to delete this conversation' })
           }
-        } else if (user_email && course_name) {
+        } else if (userIdentifier && course_name) {
           // Delete all conversations for this user/course that are not in folders
           const deleted = await db
             .delete(conversationsTable)
             .where(
               and(
-                eq(conversationsTable.user_email, user_email),
+                eq(conversationsTable.user_email, userIdentifier),
                 eq(conversationsTable.project_name, course_name),
                 isNull(conversationsTable.folder_id),
               ),
-            ).returning({ id: conversationsTable.id })
+            )
+            .returning({ id: conversationsTable.id })
           if (deleted.length === 0) {
-            return res.status(403).json({ error: 'Not allowed to delete all conversations' })
+            return res
+              .status(403)
+              .json({ error: 'Not allowed to delete all conversations' })
           }
         } else {
-          res
-            .status(400)
-            .json({ error: 'Invalid user email or invalid request parameters' })
+          res.status(400).json({
+            error: 'Invalid user identifier or invalid request parameters',
+          })
           return
         }
         res.status(200).json({ success: true })

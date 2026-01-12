@@ -16,7 +16,10 @@ export const config = {
   },
 }
 
-const logConversation = async (req: AuthenticatedRequest, res: NextApiResponse) => {
+const logConversation = async (
+  req: AuthenticatedRequest,
+  res: NextApiResponse,
+) => {
   const { course_name, conversation } = req.body as {
     course_name: string
     conversation: Conversation
@@ -147,4 +150,4 @@ const logConversation = async (req: AuthenticatedRequest, res: NextApiResponse) 
   return res.status(200).json({ success: true })
 }
 
-export default withCourseAccessFromRequest("any")(logConversation)
+export default withCourseAccessFromRequest('any')(logConversation)
