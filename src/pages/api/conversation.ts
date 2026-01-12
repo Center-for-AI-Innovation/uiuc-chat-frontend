@@ -405,7 +405,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             model: meta.modelId,
             prompt: meta.prompt,
             temperature: meta.temperature,
-            user_email: user_identifier || null,
+            user_email: userIdentifier || null,
             project_name: meta.projectName,
             folder_id: isUUID(meta.folderId ?? '') ? meta.folderId : null,
             created_at: new Date(),
