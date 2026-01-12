@@ -115,7 +115,7 @@
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.2.0",
     "keycloak-js": "^26.2.0",
-    "langchain": "^0.2.1",
+    "langchain": "^0.3.37",
     "langsmith": "^0.1.25",
     "lucide-react": "^0.447.0",
     "mantine-datatable": "^6.0.0",
