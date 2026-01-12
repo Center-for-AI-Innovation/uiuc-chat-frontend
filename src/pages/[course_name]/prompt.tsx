@@ -200,8 +200,11 @@ const CourseMain: NextPage = () => {
         .flatMap(([provider, config]) =>
           config.enabled && config.models && provider !== 'WebLLM'
             ? config.models
-                .filter((model) => model.enabled)
-                .filter((model) => model.id !== 'learnlm-1.5-pro-experimental')
+                .filter((model: AnySupportedModel) => model.enabled)
+                .filter(
+                  (model: AnySupportedModel) =>
+                    model.id !== 'learnlm-1.5-pro-experimental',
+                )
                 .map((model: AnySupportedModel) => ({
                   group: provider as ProviderNames,
                   value: model.id,
