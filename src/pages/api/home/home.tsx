@@ -476,7 +476,13 @@ const Home = ({
       // Add new conversation to the list
       updatedConversations = [updatedConversation, ...conversations]
     }
-    updateConversationMutation.mutate(updatedConversation)
+    const latestMessage =
+      updatedConversation.messages?.[updatedConversation.messages.length - 1] ??
+      null
+    updateConversationMutation.mutate({
+      conversation: updatedConversation,
+      message: latestMessage,
+    })
     dispatch({ field: 'conversations', value: updatedConversations })
   }
 
@@ -703,7 +709,7 @@ const Home = ({
             <div className="flex h-full w-full overflow-y-auto sm:pt-0">
               {/* {isDragging &&
                 VisionCapableModels.has(
-                  selectedConversation?.model.id as OpenAIModelID,
+                  selectedConversation?.model.id as any,
                 ) && (
                   <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
                     <GradientIconPhoto />

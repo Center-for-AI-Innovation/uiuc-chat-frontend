@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server'
 import type {
   ChatCompletionMessageParam,
   ChatCompletionTool,
+  ChatCompletionContentPart,
 } from 'openai/resources/chat/completions'
 import { type Conversation } from '~/types/chat'
+import { persistMessageServer } from '~/pages/api/conversation'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { withCourseAccessFromRequest } from '~/app/api/authorization'
@@ -20,13 +22,75 @@ const conversationToMessages = (
   const transformedData: ChatCompletionMessageParam[] = []
 
   inputData.messages.forEach((message) => {
-    const simpleMessage: ChatCompletionMessageParam = {
-      role: message.role,
-      content: Array.isArray(message.content)
-        ? (message.content[0]?.text ?? '')
-        : message.content,
+    if (Array.isArray(message.content)) {
+      // Handle array content (text, images, files)
+      const contentParts: ChatCompletionContentPart[] = []
+      let textParts: string[] = []
+
+      message.content.forEach((c) => {
+        if (c.type === 'text') {
+          const text = c.text || ''
+          if (text) {
+            textParts.push(text)
+          }
+        } else if (c.type === 'image_url' || c.type === 'tool_image_url') {
+          // If we have accumulated text, add it as a text part first
+          if (textParts.length > 0) {
+            contentParts.push({
+              type: 'text',
+              text: textParts.join(' '),
+            })
+            textParts = []
+          }
+          const imageUrl = c.image_url?.url || ''
+          if (imageUrl) {
+            contentParts.push({
+              type: 'image_url',
+              image_url: { url: imageUrl },
+            })
+          }
+        } else if (c.type === 'file') {
+          // Convert file content to text representation
+          textParts.push(
+            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+          )
+        }
+      })
+
+      // Add any remaining text parts
+      if (textParts.length > 0) {
+        contentParts.push({
+          type: 'text',
+          text: textParts.join(' '),
+        })
+      }
+
+      // If we have content parts (images or multiple text parts), use array format
+      // Otherwise, use string format for single text content
+      if (
+        contentParts.length > 1 ||
+        contentParts.some((p) => p.type === 'image_url')
+      ) {
+        transformedData.push({
+          role: message.role as 'user' | 'assistant' | 'system',
+          content: contentParts,
+        } as ChatCompletionMessageParam)
+      } else if (contentParts.length === 1 && contentParts[0]?.type === 'text') {
+        const firstPart = contentParts[0]
+        if (firstPart) {
+          transformedData.push({
+            role: message.role as 'user' | 'assistant' | 'system',
+            content: firstPart.text,
+          } as ChatCompletionMessageParam)
+        }
+      }
+    } else {
+      // Handle string content
+      transformedData.push({
+        role: message.role as 'user' | 'assistant' | 'system',
+        content: message.content as string,
+      } as ChatCompletionMessageParam)
     }
-    transformedData.push(simpleMessage)
   })
 
   return transformedData
@@ -39,24 +103,61 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     openaiKey,
     imageUrls = [],
     imageDescription = '',
+    // Optional parameters for OpenAI-compatible providers
+    providerBaseUrl,
+    apiKey,
+    modelId,
   }: {
     tools: ChatCompletionTool[]
     conversation: Conversation
     imageUrls?: string[]
     imageDescription?: string
-    openaiKey: string
+    openaiKey?: string
+    providerBaseUrl?: string
+    apiKey?: string
+    modelId?: string
   } = await req.json()
 
-  // console.log('Received request with openaiKey:', openaiKey)
-  let decryptedKey = openaiKey
-    ? await decryptKeyIfNeeded(openaiKey)
-    : process.env.VLADS_OPENAI_KEY
-
-  if (!decryptedKey?.startsWith('sk-')) {
-    decryptedKey = process.env.VLADS_OPENAI_KEY as string
+  const lastMessage = conversation.messages[conversation.messages.length - 1]
+  if (!lastMessage) {
+    return NextResponse.json(
+      { error: 'Conversation missing last message' },
+      { status: 400 },
+    )
   }
 
-  // console.log('Using key for function calling:', decryptedKey)
+  if (imageUrls.length > 0 && imageDescription) {
+    lastMessage.imageDescription = imageDescription
+    lastMessage.imageUrls = imageUrls
+    await persistMessageServer({
+      conversation,
+      message: lastMessage,
+      courseName: conversation.projectName ?? '',
+      userIdentifier: conversation.userEmail ?? '',
+    })
+  }
+
+  const isOpenAICompatible = !!(providerBaseUrl && apiKey && modelId)
+
+  // Get API key - prefer OpenAI-compatible if provided, otherwise use OpenAI key
+  let decryptedKey: string
+  if (isOpenAICompatible) {
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'Missing required parameter: apiKey' },
+        { status: 400 },
+      )
+    }
+    decryptedKey = await decryptKeyIfNeeded(apiKey)
+  } else {
+    decryptedKey = openaiKey
+      ? await decryptKeyIfNeeded(openaiKey)
+      : process.env.VLADS_OPENAI_KEY || ''
+
+    if (!decryptedKey?.startsWith('sk-')) {
+      decryptedKey = process.env.VLADS_OPENAI_KEY as string
+    }
+  }
 
   // Format messages
   const message_to_send: ChatCompletionMessageParam[] =
@@ -76,7 +177,18 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     if (message_to_send.length > 0) {
       const lastMessage = message_to_send[message_to_send.length - 1]
       if (lastMessage) {
-        lastMessage.content += `\n\n${imageInfo}`
+        if (typeof lastMessage.content === 'string') {
+          lastMessage.content += `\n\n${imageInfo}`
+        } else if (Array.isArray(lastMessage.content)) {
+          const lastTextPart = [...lastMessage.content]
+            .reverse()
+            .find((p): p is ChatCompletionContentPart & { type: 'text' } => p.type === 'text')
+          if (lastTextPart) {
+            lastTextPart.text += `\n\n${imageInfo}`
+          } else {
+            lastMessage.content.push({ type: 'text', text: imageInfo })
+          }
+        }
       }
     } else {
       message_to_send.push({
@@ -86,15 +198,49 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     }
   }
 
+  // Determine API URL and model
+  if (isOpenAICompatible && (!providerBaseUrl || !modelId)) {
+    return NextResponse.json(
+      { error: 'Missing required parameters: providerBaseUrl or modelId' },
+      { status: 400 },
+    )
+  }
+  let apiUrl: string
+  let isOpenRouter = false
+  if (isOpenAICompatible) {
+    // Remove trailing slash if present, then append /chat/completions
+    const baseUrl = providerBaseUrl!.replace(/\/$/, '')
+    apiUrl = `${baseUrl}/chat/completions`
+    // Check if this is OpenRouter using proper hostname parsing
+    try {
+      const parsedUrl = new URL(providerBaseUrl!)
+      const hostname = parsedUrl.hostname.toLowerCase()
+      isOpenRouter = hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
+    } catch { /* invalid URL */ }
+  } else {
+    apiUrl = 'https://api.openai.com/v1/chat/completions'
+  }
+  // OpenRouter requires lowercase model IDs
+  const model = isOpenAICompatible 
+    ? (isOpenRouter ? modelId!.toLowerCase() : modelId) 
+    : 'gpt-4.1'
+
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${decryptedKey}`,
+    }
+    // OpenRouter requires these headers
+    if (isOpenRouter) {
+      headers['HTTP-Referer'] = 'https://chat.illinois.edu'
+      headers['X-Title'] = 'Illinois Chat'
+    }
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${decryptedKey}`,
-      },
+      headers,
       body: JSON.stringify({
-        model: 'gpt-4.1',
+        model: model,
         messages: message_to_send,
         tools: tools,
         stream: false,
@@ -102,30 +248,38 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     })
 
     if (!response.ok) {
-      console.log('OpenAI API error:', response.status, response.statusText)
+      let errorBody = ''
+      try {
+        errorBody = await response.text()
+      } catch {}
+      const apiName = isOpenAICompatible
+        ? 'OpenAI-compatible API'
+        : 'OpenAI API'
+      console.error(`${apiName} error:`, response.status, response.statusText, errorBody)
       return NextResponse.json(
-        { error: `OpenAI API error: ${response.status}` },
+        { error: `${apiName} error: ${response.status}` },
         { status: response.status },
       )
     }
 
     const data = await response.json()
+    const apiName = isOpenAICompatible ? 'OpenAI-compatible API' : 'OpenAI'
 
     if (!data.choices) {
-      console.log('No response from OpenAI')
+      console.error(`No response from ${apiName}`)
       return NextResponse.json(
-        { error: 'No response from OpenAI' },
+        { error: `No response from ${apiName}` },
         { status: 500 },
       )
     }
 
     if (!data.choices[0]?.message.tool_calls) {
-      console.log('No tool calls from OpenAI')
+      const modelContent = data.choices[0]?.message?.content || ''
       return NextResponse.json({
         choices: [
           {
             message: {
-              content: 'No tools invoked by OpenAI',
+              content: modelContent,
               role: 'assistant',
             },
           },
@@ -134,6 +288,14 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     }
 
     const toolCalls = data.choices[0].message.tool_calls
+
+    lastMessage.tools = toolCalls as any
+    await persistMessageServer({
+      conversation,
+      message: lastMessage,
+      courseName: conversation.projectName ?? '',
+      userIdentifier: conversation.userEmail ?? '',
+    })
 
     return NextResponse.json({
       choices: [
@@ -147,6 +309,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
       ],
     })
   } catch (error) {
+    console.error('Error in openaiFunctionCall:', error)
     return NextResponse.json(
       {
         error:

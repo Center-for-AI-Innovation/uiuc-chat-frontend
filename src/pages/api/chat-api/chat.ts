@@ -33,6 +33,7 @@ import {
 } from '~/utils/functionCalling/handleFunctionCalling'
 import {
   type AllLLMProviders,
+  type AnySupportedModel,
   type GenericSupportedModel,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
@@ -295,20 +296,36 @@ export default async function chat(
   // Handle tools
   let updatedConversation = conversation
   if (availableTools.length > 0) {
+    // Determine which provider's API key to use based on the selected model
+    let toolApiKey = llmProviders[ProviderNames.OpenAI]?.apiKey as string
+    // Check if model is from OpenAICompatible provider
+    const isOpenAICompatible =
+      llmProviders?.OpenAICompatible?.enabled &&
+      (llmProviders.OpenAICompatible.models || []).some(
+        (m: AnySupportedModel) =>
+          m.enabled && m.id.toLowerCase() === selectedModel.id.toLowerCase(),
+      )
+
+    if (isOpenAICompatible) {
+      toolApiKey = llmProviders[ProviderNames.OpenAICompatible]
+        ?.apiKey as string
+    }
+
     updatedConversation = await handleToolsServer(
       lastMessage,
       availableTools,
       imageUrls,
       imgDesc,
       conversation,
-      llmProviders[ProviderNames.OpenAI]?.apiKey as string,
+      toolApiKey,
       course_name,
       getBaseUrl(),
+      llmProviders,
     )
   }
 
   const chatBody: ChatBody = {
-    conversation,
+    conversation: updatedConversation,
     key: llmProviders[ProviderNames.OpenAI]?.apiKey as string,
     course_name,
     stream,
