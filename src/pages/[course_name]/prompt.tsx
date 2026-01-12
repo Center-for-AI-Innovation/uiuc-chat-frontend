@@ -61,7 +61,7 @@ import SettingsLayout, {
 import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
 import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
-import { type ChatBody } from '~/types/chat'
+import { type ChatBody, type Message, type Conversation } from '@/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import {
@@ -83,6 +83,7 @@ import {
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
+import { useTranslation } from 'next-i18next'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -199,8 +200,11 @@ const CourseMain: NextPage = () => {
         .flatMap(([provider, config]) =>
           config.enabled && config.models && provider !== 'WebLLM'
             ? config.models
-                .filter((model) => model.enabled)
-                .filter((model) => model.id !== 'learnlm-1.5-pro-experimental')
+                .filter((model: AnySupportedModel) => model.enabled)
+                .filter(
+                  (model: AnySupportedModel) =>
+                    model.id !== 'learnlm-1.5-pro-experimental',
+                )
                 .map((model: AnySupportedModel) => ({
                   group: provider as ProviderNames,
                   value: model.id,
@@ -226,7 +230,7 @@ const CourseMain: NextPage = () => {
 
     try {
       if (!llmProviders) {
-        showToastNotification(
+        showPromptToast(
           theme,
           'Configuration Error',
           'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
@@ -237,7 +241,7 @@ const CourseMain: NextPage = () => {
 
       const provider = getProviderFromModel(selectedModel, modelOptions)
       if (!llmProviders[provider]?.enabled) {
-        showToastNotification(
+        showPromptToast(
           theme,
           `${provider} Required`,
           `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
@@ -253,7 +257,7 @@ const CourseMain: NextPage = () => {
             !llmProviders[provider]?.secretAccessKey ||
             !llmProviders[provider]?.region
           ) {
-            showToastNotification(
+            showPromptToast(
               theme,
               `${provider} Credentials Required`,
               `The Optimize System Prompt feature requires AWS credentials (Access Key ID, Secret Access Key, and Region). Please add your AWS credentials on the LLM page in your course settings to use this feature.`,
@@ -262,7 +266,7 @@ const CourseMain: NextPage = () => {
             return
           }
         } else if (!llmProviders[provider]?.apiKey) {
-          showToastNotification(
+          showPromptToast(
             theme,
             `${provider} API Key Required`,
             `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
@@ -384,7 +388,7 @@ CRITICAL: The optimized prompt must:
 
       if (!response.ok) {
         const errorData = await response.json()
-        showToastNotification(
+        showPromptToast(
           theme,
           'Error',
           errorData.error || 'Failed to optimize prompt',
@@ -427,7 +431,7 @@ CRITICAL: The optimized prompt must:
       }
     } catch (error) {
       console.error('Error optimizing prompt:', error)
-      showToastNotification(
+      showPromptToast(
         theme,
         'Error',
         'Failed to optimize prompt. Please try again.',
@@ -651,7 +655,7 @@ CRITICAL: The optimized prompt must:
     try {
       const success = await callSetCourseMetadata(course_name, updatedMetadata)
       if (!success) {
-        showToastNotification(theme, 'Error', 'Failed to update settings', true)
+        showPromptToast(theme, 'Error', 'Failed to update settings', true)
         return
       }
 
@@ -691,7 +695,7 @@ CRITICAL: The optimized prompt must:
       }
 
       if (changes.length > 0) {
-        showToastNotification(
+        showPromptToast(
           theme,
           changes.join(' & '),
           'Settings have been saved successfully',
@@ -700,7 +704,7 @@ CRITICAL: The optimized prompt must:
       }
     } catch (error) {
       console.error('Error updating course settings:', error)
-      showToastNotification(theme, 'Error', 'Failed to update settings', true)
+      showPromptToast(theme, 'Error', 'Failed to update settings', true)
     }
   }
 
@@ -723,7 +727,7 @@ CRITICAL: The optimized prompt must:
 
   const handleCheckboxChange = async (updatedFields: PartialCourseMetadata) => {
     if (!courseMetadata || !course_name) {
-      showToastNotification(theme, 'Error', 'Failed to update settings', true)
+      showPromptToast(theme, 'Error', 'Failed to update settings', true)
       return
     }
 
@@ -760,7 +764,7 @@ CRITICAL: The optimized prompt must:
       navigator.clipboard
         .writeText(defaultPostPrompt)
         .then(() => {
-          showToastNotification(
+          showPromptToast(
             theme,
             'Copied',
             'Default post prompt system prompt copied to clipboard',
@@ -768,7 +772,7 @@ CRITICAL: The optimized prompt must:
         })
         .catch((err) => {
           console.error('Could not copy text: ', err)
-          showToastNotification(
+          showPromptToast(
             theme,
             'Error Copying',
             'Could not copy text to clipboard',
@@ -777,7 +781,7 @@ CRITICAL: The optimized prompt must:
         })
     } catch (error) {
       console.error('Error fetching default prompt:', error)
-      showToastNotification(
+      showPromptToast(
         theme,
         'Error Fetching',
         'Could not fetch default prompt',
@@ -2116,7 +2120,7 @@ CRITICAL: The optimized prompt must:
   )
 }
 
-export const showToastNotification = (
+export const showPromptToast = (
   theme: MantineTheme,
   title: string,
   message: string,
@@ -2184,7 +2188,7 @@ export const showToastOnPromptUpdate = (
       : 'The system prompt has been updated.'
   const isError = was_error
 
-  showToastNotification(theme, title, message, isError)
+  showPromptToast(theme, title, message, isError)
 }
 
 export default CourseMain
