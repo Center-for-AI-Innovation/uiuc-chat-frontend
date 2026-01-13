@@ -614,7 +614,7 @@ export const getDefaultPostPrompt = (): string => {
     systemPromptOnly: false,
     vector_search_rewrite_disabled: false,
     allow_logged_in_users: false,
-    is_frozen: false
+    is_frozen: false,
   }
 
   // Call getSystemPostPrompt with default values
