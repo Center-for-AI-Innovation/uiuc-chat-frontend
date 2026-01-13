@@ -8,7 +8,7 @@ import { useAuth } from 'react-oidc-context'
 import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -66,7 +66,7 @@ const CourseMain: NextPage = () => {
 
   if (!isSignedIn) {
     console.log('User not logged in', isSignedIn, isLoaded, projectName)
-    return <AuthComponent course_name={projectName as string} />
+    return <PermissionGate course_name={projectName as string} />
   }
 
   // Don't edit certain special pages (no context allowed)
