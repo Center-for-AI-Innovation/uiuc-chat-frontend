@@ -21,10 +21,10 @@ const ChatPage: NextPage = () => {
   const getCurrentPageName = () => {
     const raw = router.query.course_name
     return typeof raw === 'string'
-        ? raw
-        : Array.isArray(raw)
-          ? raw[0]
-          : undefined
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
   const courseName = getCurrentPageName() as string
   const [currentEmail, setCurrentEmail] = useState('')
@@ -212,7 +212,7 @@ const ChatPage: NextPage = () => {
           // Check if error has a status code (401, 403, or 404)
           const errorWithStatus = error as Error & { status?: number }
           const status = errorWithStatus.status
-          
+
           if (status === 401 || status === 403 || status === 404) {
             // Set error state to show PermissionGate with error message
             setIsAuthorized(false)
