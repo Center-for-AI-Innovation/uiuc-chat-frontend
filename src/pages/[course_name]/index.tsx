@@ -9,6 +9,7 @@ import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 const AUTH_ROUTES = ['sign-in', 'sign-up']
 
@@ -22,6 +23,7 @@ const IfCourseExists: NextPage = () => {
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
   const getCurrentPageName = () => {
     return router.query.course_name as string
@@ -29,25 +31,36 @@ const IfCourseExists: NextPage = () => {
 
   // Move all useEffect hooks before any conditional logic
   useEffect(() => {
-    if (!router.isReady && auth.isLoading) return
+    if (!router.isReady || auth.isLoading) return
 
     const fetchMetadata = async () => {
       const course_name = getCurrentPageName()
-      const metadata: CourseMetadata = await fetchCourseMetadata(course_name)
+      try {
+        const metadata: CourseMetadata = await fetchCourseMetadata(course_name)
 
-      if (metadata === null) {
-        await router.replace('/new?course_name=' + course_name)
-        return
-      }
+        if (metadata === null) {
+          setErrorType(404)
+          return
+        }
 
-      if (!metadata.is_private) {
-        // Public -- redirect as quickly as possible!
-        await router.replace(`/${course_name}/chat`)
-        return
+        if (!metadata.is_private) {
+          // Public -- redirect as quickly as possible!
+          await router.replace(`/${course_name}/chat`)
+          return
+        }
+        setCourseName(course_name)
+        setCourseMetadata(metadata)
+        setCourseMetadataIsLoaded(true)
+      } catch (error) {
+        console.error('Error fetching course metadata:', error)
+        // Check if error has a status code (401, 403, or 404)
+        const errorWithStatus = error as Error & { status?: number }
+        const status = errorWithStatus.status
+
+        if (status === 401 || status === 403 || status === 404) {
+          setErrorType(status as 401 | 403 | 404)
+        }
       }
-      setCourseName(course_name)
-      setCourseMetadata(metadata)
-      setCourseMetadataIsLoaded(true)
     }
 
     if (typeof course_name === 'string' && !AUTH_ROUTES.includes(course_name)) {
@@ -84,6 +97,15 @@ const IfCourseExists: NextPage = () => {
     courseMetadata,
     courseName,
   ])
+
+  if (errorType !== null) {
+    return (
+      <PermissionGate
+        course_name={course_name ? (course_name as string) : 'new'}
+        errorType={errorType}
+      />
+    )
+  }
 
   return (
     <MainPageBackground>
