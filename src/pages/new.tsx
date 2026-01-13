@@ -5,7 +5,7 @@ import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 import { useAuth } from 'react-oidc-context'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 const NewCoursePage = () => {
   const router = useRouter()
@@ -33,7 +33,7 @@ const NewCoursePage = () => {
       'NewCoursePage',
     )
     return (
-      <AuthComponent
+      <PermissionGate
         course_name={course_name ? (course_name as string) : 'new'}
       />
     )
