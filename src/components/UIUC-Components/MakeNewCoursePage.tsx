@@ -21,6 +21,7 @@ import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
 import GlobalFooter from './GlobalFooter'
+import UploadNotification, { type FileUpload } from './UploadNotification'
 
 import NewCourseNavigation from './MakeNewCoursePageSteps/NewCourseNavigation'
 
@@ -60,6 +61,9 @@ const MakeNewCoursePage = ({
     string[]
   >([])
   const [hasCreatedProject, setHasCreatedProject] = useState(false)
+  const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
+  const [showNotification, setShowNotification] = useState(false)
+  const [currentStep, setStep] = useState(0)
 
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
@@ -77,7 +81,29 @@ const MakeNewCoursePage = ({
     // `/new?course_name=mycourse` --> `new`
     return router.asPath.split('/')[1]?.split('?')[0] as string
   }
-  const [currentStep, setStep] = useState(0)
+
+  const handleSetUploadFiles = (
+    updateFn: React.SetStateAction<FileUpload[]>,
+  ) => {
+    setUploadFiles(updateFn)
+    setShowNotification(true)
+  }
+
+  const handleCloseNotification = () => {
+    setShowNotification(false)
+    setUploadFiles([])
+  }
+
+  // Check if any files are still in "uploading" status (not yet ingesting)
+  const hasFilesUploading = uploadFiles.some(
+    (file) => file.status === 'uploading',
+  )
+
+  // Check if we're on a step that should block navigation when uploading
+  const isUploadStep = currentStep === 1 // StepUpload
+  const isImportStep = currentStep === 2 // StepImport
+  const shouldBlockNavigation =
+    (isUploadStep || isImportStep) && hasFilesUploading
 
   const allSteps = [
     <StepCreate
@@ -89,8 +115,21 @@ const MakeNewCoursePage = ({
       onUpdateName={setProjectName}
       onUpdateDescription={setProjectDescription}
     />,
-    <StepUpload key="upload" project_name={projectName} />,
-    <StepImport key="import" project_name={projectName} />,
+    <StepUpload
+      key="upload"
+      project_name={projectName}
+      setUploadFiles={handleSetUploadFiles}
+      courseMetadata={
+        queryClient.getQueryData(['courseMetadata', projectName]) as
+          | CourseMetadata
+          | undefined
+      }
+    />,
+    <StepImport
+      key="import"
+      project_name={projectName}
+      setUploadFiles={handleSetUploadFiles}
+    />,
     <StepLLM key="llm" project_name={projectName} />,
     <StepPrompt key="prompt" project_name={projectName} />,
     <StepBranding key="branding" project_name={projectName} />,
@@ -228,15 +267,25 @@ const MakeNewCoursePage = ({
             <div className="step_container min-h-[16rem]">
               {allSteps[currentStep]}
             </div>
+            <UploadNotification
+              files={uploadFiles}
+              onClose={handleCloseNotification}
+              projectName={projectName}
+            />
             <Group position="apart" mt="xl">
               <Button
-                variant="default"
+                size="sm"
+                radius="sm"
+                classNames={componentClasses.button}
                 onClick={goToPreviousStep}
-                disabled={isFirstStep}
+                disabled={isFirstStep || shouldBlockNavigation}
               >
                 Back
               </Button>
               <Button
+                size="sm"
+                radius="sm"
+                classNames={componentClasses.buttonPrimary}
                 onClick={async () => {
                   if (currentStep === 0) {
                     if (!hasCreatedProject) {
@@ -269,6 +318,7 @@ const MakeNewCoursePage = ({
                 }}
                 disabled={
                   isLastStep ||
+                  shouldBlockNavigation ||
                   (currentStep === 0 &&
                     !hasCreatedProject &&
                     (projectName === '' || !isCourseAvailable || isLoading))
@@ -419,56 +469,6 @@ const MakeNewCoursePage = ({
                         >
                           Next: let&apos;s upload some documents
                         </Title>
-                        <Tooltip
-                          label={
-                            projectName === ''
-                              ? 'Add a project name above :)'
-                              : !isCourseAvailable
-                                ? 'This project name is already taken!'
-                                : ''
-                          }
-                          withArrow
-                          disabled={projectName !== '' && isCourseAvailable}
-                          styles={{
-                            tooltip: {
-                              color: 'var(--tooltip)',
-                              backgroundColor: 'var(--tooltip-background)',
-                            },
-                          }}
-                        >
-                          <span>
-                            <Button
-                              onClick={async (e) => {
-                                await handleSubmit(
-                                  projectName,
-                                  projectDescription,
-                                  current_user_email,
-                                  useIllinoisChatConfig, // isPrivate: illinois chat project default to private
-                                )
-                              }}
-                              size="sm"
-                              radius={'sm'}
-                              className={`${isCourseAvailable && projectName !== '' ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'}
-                        mt-2 min-w-[5-rem] transform overflow-ellipsis text-ellipsis p-2 focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
-                              // w={`${isSmallScreen ? '5rem' : '50%'}`}
-                              style={{
-                                alignSelf: 'flex-end',
-                              }}
-                              disabled={
-                                projectName === '' ||
-                                isLoading ||
-                                !isCourseAvailable
-                              }
-                              leftIcon={
-                                isLoading ? (
-                                  <Loader size="xs" color="white" />
-                                ) : null
-                              }
-                            >
-                              {isLoading ? 'Creating...' : 'Create'}
-                            </Button>
-                          </span>
-                        </Tooltip>
                       </Flex>
                     </Flex>
                   </Group>
@@ -484,6 +484,38 @@ const MakeNewCoursePage = ({
 }
 
 const componentClasses = {
+  button: {
+    root: `
+      !text-[--foreground-faded]
+      bg-transparent
+      border-[--background-faded]
+
+      hover:!text-[--dashboard-button]
+      hover:hover:bg-transparent
+      hover:hover:border-[--dashboard-button]
+
+      disabled:bg-transparent
+      disabled:border-[--button-disabled]
+      disabled:!text-[--button-disabled-text-color]
+    `,
+  },
+
+  buttonPrimary: {
+    root: `
+      !text-[--dashboard-button-foreground]
+      bg-[--dashboard-button]
+      border-[--dashboard-button]
+
+      hover:!text-[--dashboard-button-foreground]
+      hover:bg-[--dashboard-button-hover]
+      hover:border-[--dashboard-button-hover]
+
+      disabled:bg-transparent
+      disabled:border-[--button-disabled]
+      disabled:!text-[--button-disabled-text-color]
+    `,
+  },
+
   input: {
     label: 'font-semibold text-base text-[--foreground]',
     wrapper: '-ml-4',

@@ -185,31 +185,6 @@ const StepCreate = ({
             onChange={(e) => setProjectDescription(e.target.value)}
           />
         </div>
-
-        <div
-          className={`
-          create_navigation
-          mt-8 flex items-center justify-end
-          gap-2
-        `}
-        >
-          <Button
-            size="sm"
-            radius="sm"
-            leftIcon={isLoading ? <Loader size="xs" color="white" /> : null}
-            classNames={componentClasses.button}
-            disabled={projectName === '' || isLoading || !isCourseAvailable}
-            onClick={async (e) => {
-              await handleSubmit(
-                projectName,
-                projectDescription,
-                current_user_email,
-              )
-            }}
-          >
-            {isLoading ? 'Creating...' : 'Create'}
-          </Button>
-        </div>
       </div>
     </>
   )

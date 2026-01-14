@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import React from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { SimpleGrid } from '@mantine/core'
-//import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 import HeaderStepNavigation from './HeaderStepNavigation'
 
@@ -11,16 +10,15 @@ import CourseraIngestForm from '../CourseraIngestForm'
 import GitHubIngestForm from '../GitHubIngestForm'
 import MITIngestForm from '../MITIngestForm'
 import WebsiteIngestForm from '../WebsiteIngestForm'
+import { type FileUpload } from '../UploadNotification'
 
-const StepImport = ({ project_name }: { project_name: string }) => {
+interface StepImportProps {
+  project_name: string
+  setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
+}
+
+const StepImport = ({ project_name, setUploadFiles }: StepImportProps) => {
   const queryClient = useQueryClient()
-  const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
-
-  const handleSetUploadFiles = (
-    updateFn: React.SetStateAction<FileUpload[]>,
-  ) => {
-    setUploadFiles(updateFn)
-  }
 
   return (
     <>
@@ -45,25 +43,25 @@ const StepImport = ({ project_name }: { project_name: string }) => {
           >
             <CanvasIngestForm
               project_name={project_name}
-              setUploadFiles={handleSetUploadFiles}
+              setUploadFiles={setUploadFiles}
               queryClient={queryClient}
             />
 
             <WebsiteIngestForm
               project_name={project_name}
-              setUploadFiles={handleSetUploadFiles}
+              setUploadFiles={setUploadFiles}
               queryClient={queryClient}
             />
 
             <GitHubIngestForm
               project_name={project_name}
-              setUploadFiles={handleSetUploadFiles}
+              setUploadFiles={setUploadFiles}
               queryClient={queryClient}
             />
 
             <MITIngestForm
               project_name={project_name}
-              setUploadFiles={handleSetUploadFiles}
+              setUploadFiles={setUploadFiles}
               queryClient={queryClient}
             />
 
@@ -73,23 +71,6 @@ const StepImport = ({ project_name }: { project_name: string }) => {
       </div>
     </>
   )
-}
-
-const componentClasses = {
-  input: {
-    label: 'font-semibold text-base text-[--foreground]',
-    wrapper: '-ml-4',
-    input: `
-      mt-1
-
-      placeholder:text-[--foreground-faded]
-      text-[--foreground] bg-[--background]
-
-      border-[--foreground-faded] focus:border-[--foreground]
-      overflow-ellipsis
-    `,
-    description: 'text-sm text-[--foreground-faded]',
-  },
 }
 
 export default StepImport
