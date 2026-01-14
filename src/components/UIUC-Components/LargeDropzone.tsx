@@ -329,8 +329,7 @@ export function LargeDropzone({
       <div
         style={{
           display: 'flex',
-          flexDirection: is_new_course && !isSmallScreen ? 'row' : 'column',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
         }}
       >
         <div
@@ -454,16 +453,6 @@ export function LargeDropzone({
             </div>
           )} */}
         </div>
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'column',
-            textAlign: 'center',
-          }}
-        ></div>
       </div>
     </>
   )
