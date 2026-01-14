@@ -13,6 +13,29 @@ const bundleAnalyzerConfig = {
 /** @type {import("next").NextConfig} */
 const config = {
   i18n: nextI18NextConfig.i18n,
+  // Streamdown depends on a set of ESM-only remark/rehype packages; transpiling them
+  // avoids ERR_REQUIRE_ESM crashes during `/pages` SSR/static generation on Node 18/20.
+  transpilePackages: [
+    'streamdown',
+    'rehype-harden',
+    'rehype-katex',
+    'rehype-raw',
+    'rehype-sanitize',
+    'remark-cjk-friendly',
+    'remark-cjk-friendly-gfm-strikethrough',
+    'remark-gfm',
+    'remark-math',
+    'remark-parse',
+    'remark-rehype',
+    'unified',
+    'hast',
+    'hast-util-to-jsx-runtime',
+    'unist-util-visit',
+    'marked',
+    'mermaid',
+    'shiki',
+    'remend',
+  ],
   serverRuntimeConfig: {
     bodyParser: {
       sizeLimit: '100mb',
