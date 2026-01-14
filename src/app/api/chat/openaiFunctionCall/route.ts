@@ -75,7 +75,10 @@ const conversationToMessages = (
           role: message.role as 'user' | 'assistant' | 'system',
           content: contentParts,
         } as ChatCompletionMessageParam)
-      } else if (contentParts.length === 1 && contentParts[0]?.type === 'text') {
+      } else if (
+        contentParts.length === 1 &&
+        contentParts[0]?.type === 'text'
+      ) {
         const firstPart = contentParts[0]
         if (firstPart) {
           transformedData.push({
@@ -182,7 +185,10 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
         } else if (Array.isArray(lastMessage.content)) {
           const lastTextPart = [...lastMessage.content]
             .reverse()
-            .find((p): p is ChatCompletionContentPart & { type: 'text' } => p.type === 'text')
+            .find(
+              (p): p is ChatCompletionContentPart & { type: 'text' } =>
+                p.type === 'text',
+            )
           if (lastTextPart) {
             lastTextPart.text += `\n\n${imageInfo}`
           } else {
@@ -199,31 +205,34 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   }
 
   // Determine API URL and model
-  if (isOpenAICompatible && (!providerBaseUrl || !modelId)) {
+  let apiUrl = 'https://api.openai.com/v1/chat/completions'
+  let isOpenRouter = false
+  let model = 'gpt-4.1'
+
+  if (providerBaseUrl && apiKey && modelId) {
+    const baseUrl = providerBaseUrl.replace(/\/$/, '')
+    apiUrl = `${baseUrl}/chat/completions`
+
+    try {
+      const parsedUrl = new URL(providerBaseUrl)
+      const hostname = parsedUrl.hostname.toLowerCase()
+      isOpenRouter =
+        hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
+    } catch {
+      // ignore invalid URL
+    }
+
+    model = isOpenRouter ? modelId.toLowerCase() : modelId
+  } else if (isOpenAICompatible) {
+    // Defensive: should be unreachable given how isOpenAICompatible is computed
     return NextResponse.json(
-      { error: 'Missing required parameters: providerBaseUrl or modelId' },
+      {
+        error:
+          'Missing required parameters: providerBaseUrl, apiKey, or modelId',
+      },
       { status: 400 },
     )
   }
-  let apiUrl: string
-  let isOpenRouter = false
-  if (isOpenAICompatible) {
-    // Remove trailing slash if present, then append /chat/completions
-    const baseUrl = providerBaseUrl!.replace(/\/$/, '')
-    apiUrl = `${baseUrl}/chat/completions`
-    // Check if this is OpenRouter using proper hostname parsing
-    try {
-      const parsedUrl = new URL(providerBaseUrl!)
-      const hostname = parsedUrl.hostname.toLowerCase()
-      isOpenRouter = hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
-    } catch { /* invalid URL */ }
-  } else {
-    apiUrl = 'https://api.openai.com/v1/chat/completions'
-  }
-  // OpenRouter requires lowercase model IDs
-  const model = isOpenAICompatible 
-    ? (isOpenRouter ? modelId!.toLowerCase() : modelId) 
-    : 'gpt-4.1'
 
   try {
     const headers: Record<string, string> = {
@@ -255,7 +264,12 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
       const apiName = isOpenAICompatible
         ? 'OpenAI-compatible API'
         : 'OpenAI API'
-      console.error(`${apiName} error:`, response.status, response.statusText, errorBody)
+      console.error(
+        `${apiName} error:`,
+        response.status,
+        response.statusText,
+        errorBody,
+      )
       return NextResponse.json(
         { error: `${apiName} error: ${response.status}` },
         { status: response.status },
@@ -289,7 +303,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
 
     const toolCalls = data.choices[0].message.tool_calls
 
-    lastMessage.tools = toolCalls as any
+    lastMessage.tools = toolCalls as unknown as typeof lastMessage.tools
     await persistMessageServer({
       conversation,
       message: lastMessage,

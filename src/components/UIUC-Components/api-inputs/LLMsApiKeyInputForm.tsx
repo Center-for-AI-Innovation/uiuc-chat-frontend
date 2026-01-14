@@ -472,10 +472,12 @@ export default function APIKeyInputForm() {
           const provider =
             updatedProviders[providerKey as keyof AllLLMProviders]
           if (provider && provider.models) {
-            provider.models = provider.models.map((model: AnySupportedModel) => ({
-              ...model,
-              default: false,
-            }))
+            provider.models = provider.models.map(
+              (model: AnySupportedModel) => ({
+                ...model,
+                default: false,
+              }),
+            )
           }
         })
 

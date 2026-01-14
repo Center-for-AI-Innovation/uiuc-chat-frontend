@@ -392,9 +392,12 @@ export function createLogConversationPayload(
       const lastIndex = conversation.messages.length - 1
       const userMessage = conversation.messages[lastIndex - 1]
       const assistantMessage = conversation.messages[lastIndex]
-      
+
       // Only include both if we have a user->assistant pair
-      if (userMessage?.role === 'user' && assistantMessage?.role === 'assistant') {
+      if (
+        userMessage?.role === 'user' &&
+        assistantMessage?.role === 'assistant'
+      ) {
         messagesToInclude = [userMessage, assistantMessage]
       } else {
         // Fallback: just include the provided message
@@ -444,7 +447,6 @@ export function createLogConversationPayload(
 //     localStorage.setItem('conversationHistory', JSON.stringify(conversations))
 //   }
 // }
-
 
 export function reconstructConversation(
   conversation: Conversation | undefined | null,

@@ -1679,7 +1679,6 @@ export const ChatMessage = memo(
     const shouldShowSources =
       condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
 
-
     return (
       <>
         <div
@@ -2263,61 +2262,60 @@ export const ChatMessage = memo(
                   <div className="flex flex-col gap-2">
                     {/* Sources button */}
                     {shouldShowSources && (
-                        <div className="relative z-0 mb-1 flex justify-start">
-                          <button
-                            tabIndex={0}
-                            aria-label={
-                              'Open citations for ' +
-                              getContextsLength(message.contexts) +
-                              ' Source' +
-                              (getContextsLength(message.contexts) == 1
-                                ? ''
-                                : 's')
-                            }
-                            className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
-                            onClick={() => handleSourcesSidebarToggle(true)}
+                      <div className="relative z-0 mb-1 flex justify-start">
+                        <button
+                          tabIndex={0}
+                          aria-label={
+                            'Open citations for ' +
+                            getContextsLength(message.contexts) +
+                            ' Source' +
+                            (getContextsLength(message.contexts) == 1
+                              ? ''
+                              : 's')
+                          }
+                          className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
+                          onClick={() => handleSourcesSidebarToggle(true)}
+                        >
+                          <span
+                            className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
                           >
-                            <span
-                              className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
-                            >
-                              Sources
-                              <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
-                                {getContextsLength(displayContexts)}
-                              </span>
+                            Sources
+                            <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
+                              {getContextsLength(displayContexts)}
                             </span>
+                          </span>
 
-                            {sourceThumbnails.length > 0 && (
-                              <div className="flex items-center">
-                                <div className="ml-1 mr-1 h-4 border-l border-gray-300"></div>
-                                <div className="relative flex">
-                                  {sourceThumbnails.map((thumbnail, index) => (
-                                    <div
-                                      key={index}
-                                      className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
-                                      style={{
-                                        marginLeft:
-                                          index > 0 ? '-0.75rem' : '0',
-                                        zIndex: index,
-                                        transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                          {sourceThumbnails.length > 0 && (
+                            <div className="flex items-center">
+                              <div className="ml-1 mr-1 h-4 border-l border-gray-300"></div>
+                              <div className="relative flex">
+                                {sourceThumbnails.map((thumbnail, index) => (
+                                  <div
+                                    key={index}
+                                    className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
+                                    style={{
+                                      marginLeft: index > 0 ? '-0.75rem' : '0',
+                                      zIndex: index,
+                                      transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                                    }}
+                                  >
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
+                                    <img
+                                      src={thumbnail}
+                                      alt={`Source ${index + 1}`}
+                                      className="h-full w-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none'
                                       }}
-                                    >
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
-                                      <img
-                                        src={thumbnail}
-                                        alt={`Source ${index + 1}`}
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                          e.currentTarget.style.display = 'none'
-                                        }}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
+                                    />
+                                  </div>
+                                ))}
                               </div>
-                            )}
-                          </button>
-                        </div>
-                      )}
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Other buttons in their container */}
                     {!(

@@ -31,7 +31,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
   try {
     if (course_metadata == null) {
-      return res.status(404).json({ success: false, error: 'Project not found' })
+      return res
+        .status(404)
+        .json({ success: false, error: 'Project not found' })
     }
     res.status(200).json({ course_metadata: course_metadata })
   } catch (error) {

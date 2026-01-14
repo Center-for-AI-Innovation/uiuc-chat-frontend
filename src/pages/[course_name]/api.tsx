@@ -31,10 +31,10 @@ const ApiPage: NextPage = () => {
   const getCurrentPageName = () => {
     const raw = router.query.course_name
     return typeof raw === 'string'
-        ? raw
-        : Array.isArray(raw)
-          ? raw[0]
-          : undefined
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
   const courseName = getCurrentPageName() as string
 
@@ -45,8 +45,7 @@ const ApiPage: NextPage = () => {
       setIsLoading(true)
       try {
         // Check exists
-        const metadata: CourseMetadata =
-          await fetchCourseMetadata(courseName)
+        const metadata: CourseMetadata = await fetchCourseMetadata(courseName)
         if (metadata === null) {
           setErrorType(404)
           return
@@ -61,7 +60,7 @@ const ApiPage: NextPage = () => {
           setErrorType(status as 401 | 403 | 404)
         }
       } finally {
-      setIsLoading(false)
+        setIsLoading(false)
       }
     }
     fetchCourseData()

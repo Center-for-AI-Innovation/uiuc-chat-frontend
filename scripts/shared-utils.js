@@ -11,19 +11,19 @@ function getKeycloakBaseUrl(hostname = null, protocol = null) {
   if (typeof window === 'undefined') {
     return process.env.KEYCLOAK_BASE_URL || 'https://login.uiuc.chat/'
   }
-  
+
   // For browser environment
   if (hostname === 'localhost') {
     return 'http://localhost:8080/'
   }
-  
+
   if (hostname === 'uiuc.chat') {
     return 'https://login.uiuc.chat/'
   }
-  
+
   return `${protocol}://${hostname}/keycloak/`
 }
 
 module.exports = {
-  getKeycloakBaseUrl
+  getKeycloakBaseUrl,
 }

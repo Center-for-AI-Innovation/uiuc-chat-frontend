@@ -2,7 +2,6 @@ import { S3Client } from '@aws-sdk/client-s3'
 
 const region = process.env.AWS_REGION
 
-
 // S3 Client configuration
 let s3Client: S3Client | null = null
 if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
@@ -23,7 +22,6 @@ if (region && process.env.AWS_KEY && process.env.AWS_SECRET) {
 } else if (region) {
   s3Client = new S3Client({ region })
 }
-
 
 // MinIO Client configuration
 let vyriadMinioClient: S3Client | null = null
