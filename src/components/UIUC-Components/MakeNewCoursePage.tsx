@@ -27,7 +27,6 @@ import NewCourseNavigation from './MakeNewCoursePageSteps/NewCourseNavigation'
 
 import StepCreate from './MakeNewCoursePageSteps/StepCreate'
 import StepUpload from './MakeNewCoursePageSteps/StepUpload'
-import StepImport from './MakeNewCoursePageSteps/StepImport'
 import StepLLM from './MakeNewCoursePageSteps/StepLLM'
 import StepPrompt from './MakeNewCoursePageSteps/StepPrompt'
 import StepBranding from './MakeNewCoursePageSteps/StepBranding'
@@ -100,10 +99,8 @@ const MakeNewCoursePage = ({
   )
 
   // Check if we're on a step that should block navigation when uploading
-  const isUploadStep = currentStep === 1 // StepUpload
-  const isImportStep = currentStep === 2 // StepImport
-  const shouldBlockNavigation =
-    (isUploadStep || isImportStep) && hasFilesUploading
+  const isUploadStep = currentStep === 1 // StepUpload (combined with Import)
+  const shouldBlockNavigation = isUploadStep && hasFilesUploading
 
   const allSteps = [
     <StepCreate
@@ -124,11 +121,6 @@ const MakeNewCoursePage = ({
           | CourseMetadata
           | undefined
       }
-    />,
-    <StepImport
-      key="import"
-      project_name={projectName}
-      setUploadFiles={handleSetUploadFiles}
     />,
     <StepLLM key="llm" project_name={projectName} />,
     <StepPrompt key="prompt" project_name={projectName} />,
