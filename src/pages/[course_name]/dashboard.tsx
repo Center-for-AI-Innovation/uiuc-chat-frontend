@@ -5,9 +5,7 @@ import { useRouter } from 'next/router'
 
 import { useAuth } from 'react-oidc-context'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
-import {
-  LoadingPlaceholderForAdminPages,
-} from '~/components/UIUC-Components/MainPageBackground'
+import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -19,10 +17,10 @@ const CourseMain: NextPage = () => {
   const getCurrentPageName = () => {
     const raw = router.query.course_name
     return typeof raw === 'string'
-        ? raw
-        : Array.isArray(raw)
-          ? raw[0]
-          : undefined
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
   const courseName = getCurrentPageName() as string
 
@@ -30,7 +28,6 @@ const CourseMain: NextPage = () => {
   const [metadata, setMetadata] = useState<CourseMetadata | null>()
   const [isLoading, setIsLoading] = useState(true)
   const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
-
 
   useEffect(() => {
     if (!router.isReady || auth.isLoading) return
@@ -62,7 +59,7 @@ const CourseMain: NextPage = () => {
           setErrorType(status as 401 | 403 | 404)
         }
       } finally {
-      setIsLoading(false)
+        setIsLoading(false)
       }
     }
     fetchCourseData()

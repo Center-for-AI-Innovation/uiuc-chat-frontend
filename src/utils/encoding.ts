@@ -1,8 +1,8 @@
-import { Tiktoken } from '@dqbd/tiktoken';
-import cl100k_base from '@dqbd/tiktoken/encoders/cl100k_base.json';
+import { Tiktoken } from '@dqbd/tiktoken'
+import cl100k_base from '@dqbd/tiktoken/encoders/cl100k_base.json'
 
 // Use 'let' instead of 'const' since 'encoding' will be reassigned
-let encoding: Tiktoken | null = null;
+let encoding: Tiktoken | null = null
 
 export const initializeEncoding = (): void => {
   if (!encoding) {
@@ -11,14 +11,14 @@ export const initializeEncoding = (): void => {
       encoding = new Tiktoken(
         cl100k_base.bpe_ranks,
         cl100k_base.special_tokens,
-        cl100k_base.pat_str
-      );
+        cl100k_base.pat_str,
+      )
     } catch (error) {
-      console.error('Failed to initialize encoding:', error);
-      throw error;
+      console.error('Failed to initialize encoding:', error)
+      throw error
     }
   }
-};
+}
 
 // Export Tiktoken type and encoding instance for use in other modules
-export { Tiktoken, encoding };
+export { Tiktoken, encoding }
