@@ -1,6 +1,9 @@
 import { getCourseMetadata } from '~/pages/api/UIUC-api/getCourseMetadata'
 import { getModels } from '~/pages/api/models'
-import type { AllLLMProviders, GenericSupportedModel } from '~/utils/modelProviders/LLMProvider'
+import type {
+  AllLLMProviders,
+  GenericSupportedModel,
+} from '~/utils/modelProviders/LLMProvider'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 
 /**
@@ -12,7 +15,7 @@ export async function determineAndValidateModelServer(
   modelId: string,
   projectName: string,
 ): Promise<any> {
-  const modelsWithProviders = await getModels(projectName) as AllLLMProviders
+  const modelsWithProviders = (await getModels(projectName)) as AllLLMProviders
 
   const availableModels = Object.values(modelsWithProviders)
     .flatMap((provider) => provider?.models || [])

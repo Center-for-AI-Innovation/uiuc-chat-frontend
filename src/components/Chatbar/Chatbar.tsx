@@ -33,10 +33,10 @@ interface DownloadResult {
 }
 
 export const Chatbar = ({
-                          current_email,
-                          courseName,
-                          courseMetadata,
-                        }: {
+  current_email,
+  courseName,
+  courseMetadata,
+}: {
   current_email: string | undefined
   courseName: string | undefined
   courseMetadata?: CourseMetadata | null
@@ -381,18 +381,18 @@ export const Chatbar = ({
       }
     } else {
       defaultModelId &&
-      homeDispatch({
-        field: 'selectedConversation',
-        value: {
-          id: uuidv4(),
-          name: t('New Conversation'),
-          messages: [],
-          model: OpenAIModels[defaultModelId],
-          prompt: DEFAULT_SYSTEM_PROMPT,
-          temperature: DEFAULT_TEMPERATURE,
-          folderId: null,
-        },
-      })
+        homeDispatch({
+          field: 'selectedConversation',
+          value: {
+            id: uuidv4(),
+            name: t('New Conversation'),
+            messages: [],
+            model: OpenAIModels[defaultModelId],
+            prompt: DEFAULT_SYSTEM_PROMPT,
+            temperature: DEFAULT_TEMPERATURE,
+            folderId: null,
+          },
+        })
       localStorage.removeItem('selectedConversation')
     }
   }

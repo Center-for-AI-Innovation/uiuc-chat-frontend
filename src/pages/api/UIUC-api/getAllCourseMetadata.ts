@@ -76,7 +76,9 @@ export const getAllCourseMetadata = async (): Promise<
         }
         return { [key]: courseMetadata }
       })
-      .filter((item): item is { [key: string]: CourseMetadata } => item !== null)
+      .filter(
+        (item): item is { [key: string]: CourseMetadata } => item !== null,
+      )
     console.log('all_course_metadata', all_course_metadata)
 
     return all_course_metadata
