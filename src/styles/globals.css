@@ -863,7 +863,8 @@ a[data-footnote-backref] {
 }
 
 /* Styling for document buttons */
-.linkMarkDown button:not(.codeblock-button) {
+.linkMarkDown ol li > button:not(.codeblock-button),
+.linkMarkDown ul li > button:not(.codeblock-button) {
   height: 100px;
   width: 150px;
   text-align: center;
@@ -886,16 +887,13 @@ a[data-footnote-backref] {
 }
 
 /* Simple, consistent hover state for all document buttons */
-.linkMarkDown button:not(.codeblock-button):hover,
-.linkMarkDown button:not(.codeblock-button):focus {
+.linkMarkDown ol li > button:not(.codeblock-button):hover,
+.linkMarkDown ol li > button:not(.codeblock-button):focus,
+.linkMarkDown ul li > button:not(.codeblock-button):hover,
+.linkMarkDown ul li > button:not(.codeblock-button):focus {
   background-color: var(--dashboard-button-hover);
   cursor: pointer;
   /*  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); */
-}
-
-/* Visited state for document buttons */
-.linkMarkDown button:not(.codeblock-button):visited {
-  color: var(--dashboard-button);
 }
 
 .linkMarkDown ol:has(> li > button) {
