@@ -2487,15 +2487,11 @@ export const Chat = memo(
                 <ErrorMessageDiv error={modelError} />
               ) : (
                 <>
-                  <motion.div
+                  <div
                     key={selectedConversation?.id}
                     className="max-h-full"
                     ref={chatContainerRef}
                     onScroll={handleScroll}
-                    initial={{ opacity: 1 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.1 }}
                   >
                     {selectedConversation &&
                     selectedConversation.messages &&
@@ -2540,7 +2536,7 @@ export const Chat = memo(
                         />
                       </>
                     )}
-                  </motion.div>
+                  </div>
                 </>
               )}
             </div>
