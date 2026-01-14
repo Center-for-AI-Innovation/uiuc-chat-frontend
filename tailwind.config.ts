@@ -1,7 +1,10 @@
 import { type Config } from 'tailwindcss'
 
 export default {
-  content: ['./src/**/*.{js,ts,jsx,tsx}'],
+  content: [
+    './src/**/*.{js,ts,jsx,tsx}',
+    './node_modules/streamdown/dist/**/*.{js,cjs}',
+  ],
   darkMode: 'class', // 'media' or 'class' (media uses system settings, class uses .dark{} in globals.css)
   theme: {
     extend: {
