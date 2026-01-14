@@ -1580,3 +1580,40 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
     transform: scale(1);
   }
 }
+
+/* Streamdown fullscreen modal - ensure it appears above navbar (z-[999]) */
+[data-streamdown='mermaid-block'] .fixed.inset-0.z-50 {
+  z-index: 1000 !important;
+  padding: 5vh 5vw !important;
+}
+
+/* Make the modal content area smaller, not full viewport */
+[data-streamdown='mermaid-block'] .fixed.inset-0.z-50 > div {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: 100%;
+  height: 100%;
+  background: var(--background);
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  position: relative;
+  padding: 1rem;
+}
+
+/* Move close button inside the content area */
+[data-streamdown='mermaid-block'] .fixed.inset-0.z-50 > button {
+  position: absolute !important;
+  top: calc(5vh + 1rem) !important;
+  right: calc(5vw + 1rem) !important;
+  z-index: 1010 !important;
+  background: var(--background) !important;
+  border-radius: 0.5rem;
+  padding: 0.5rem !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Fix zoom controls being stretched by parent's [&>div]:h-full selector */
+[data-streamdown='mermaid-block'] .fixed .absolute.bottom-4.left-4 {
+  height: auto !important;
+  top: auto !important;
+}
