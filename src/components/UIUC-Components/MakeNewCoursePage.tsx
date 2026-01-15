@@ -6,11 +6,9 @@ import {
   Card,
   Flex,
   Group,
-  Loader,
   Textarea,
   TextInput,
   Title,
-  Tooltip,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { useQueryClient } from '@tanstack/react-query'
@@ -46,8 +44,6 @@ const MakeNewCoursePage = ({
   const auth = useAuth()
   const user_id = auth.user?.profile.email || current_user_email
 
-  const [canCreateProject, setCanCreateProject] = useState(false)
-
   const [projectName, setProjectName] = useState(project_name || '')
   const [projectDescription, setProjectDescription] = useState(
     project_description || '',
@@ -61,7 +57,6 @@ const MakeNewCoursePage = ({
   >([])
   const [hasCreatedProject, setHasCreatedProject] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
-  const [showNotification, setShowNotification] = useState(false)
   const [currentStep, setStep] = useState(0)
 
   const useIllinoisChatConfig = useMemo(() => {
@@ -85,11 +80,9 @@ const MakeNewCoursePage = ({
     updateFn: React.SetStateAction<FileUpload[]>,
   ) => {
     setUploadFiles(updateFn)
-    setShowNotification(true)
   }
 
   const handleCloseNotification = () => {
-    setShowNotification(false)
     setUploadFiles([])
   }
 
@@ -105,7 +98,6 @@ const MakeNewCoursePage = ({
   const allSteps = [
     <StepCreate
       key="create"
-      current_user_email={current_user_email}
       project_name={projectName}
       project_description={projectDescription}
       is_new_course={!hasCreatedProject}
@@ -228,10 +220,6 @@ const MakeNewCoursePage = ({
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const onLinkClick = (index: number) => {
-    setStep(index)
   }
 
   return (

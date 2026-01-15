@@ -1,27 +1,14 @@
-import Head from 'next/head'
 import { useEffect, useState } from 'react'
 
-import {
-  Button,
-  Card,
-  Flex,
-  Group,
-  Loader,
-  Textarea,
-  TextInput,
-  Title,
-  Tooltip,
-} from '@mantine/core'
+import { Textarea, TextInput } from '@mantine/core'
 //import { useMediaQuery } from '@mantine/hooks'
 //import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import router from 'next/router'
-import { createProject } from '~/pages/api/UIUC-api/createProject'
 
 import HeaderStepNavigation from './HeaderStepNavigation'
 
 const StepCreate = ({
   project_name,
-  current_user_email,
   is_new_course = true,
   project_description,
 
@@ -29,7 +16,6 @@ const StepCreate = ({
   onUpdateDescription,
 }: {
   project_name: string
-  current_user_email: string
   is_new_course?: boolean
   project_description?: string
 
@@ -44,7 +30,6 @@ const StepCreate = ({
   const [isCourseAvailable, setIsCourseAvailable] = useState<
     boolean | undefined
   >(undefined)
-  const [isLoading, setIsLoading] = useState(false)
   const [allExistingCourseNames, setAllExistingCourseNames] = useState<
     string[]
   >([])
@@ -60,7 +45,6 @@ const StepCreate = ({
     // `/new?course_name=mycourse` --> `new`
     return router.asPath.split('/')[1]?.split('?')[0] as string
   }
-  const [currentStep, setStep] = useState(0)
 
   //************** watchers **************
 
@@ -94,34 +78,6 @@ const StepCreate = ({
   useEffect(() => {
     checkCourseAvailability()
   }, [projectName, allExistingCourseNames])
-
-  //************** functions **************
-
-  const handleSubmit = async (
-    project_name: string,
-    project_description: string | undefined,
-    current_user_email: string,
-  ) => {
-    setIsLoading(true)
-    try {
-      const result = await createProject(
-        project_name,
-        project_description,
-        current_user_email,
-      )
-      console.log('Project created successfully:', result)
-      if (is_new_course) {
-        await router.push(`/${projectName}/dashboard`)
-        return
-      }
-    } catch (error) {
-      console.error('Error creating project:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  //**************  **************
 
   return (
     <>
