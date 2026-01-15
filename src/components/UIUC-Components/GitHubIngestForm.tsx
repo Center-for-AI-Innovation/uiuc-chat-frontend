@@ -239,7 +239,8 @@ export default function GitHubIngestForm({
                 return { ...file, status: 'complete' as const }
               }
 
-              return file
+              // Not in progress and not in completed = failed
+              return { ...file, status: 'error' as const }
             }
           }
           return file
@@ -366,8 +367,7 @@ export default function GitHubIngestForm({
         withBorder: true,
         loading: false,
       })
-      // return error
-      // throw error
+      throw error // Re-throw so handleIngest can update file status to 'error'
     }
   }
 

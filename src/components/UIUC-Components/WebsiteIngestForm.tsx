@@ -346,8 +346,7 @@ export default function WebsiteIngestForm({
         withBorder: true,
         loading: false,
       })
-      // return error
-      // throw error
+      throw error // Re-throw so handleIngest can update file status to 'error'
     }
   }
 

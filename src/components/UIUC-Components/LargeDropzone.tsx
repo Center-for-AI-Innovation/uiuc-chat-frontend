@@ -220,6 +220,12 @@ export function LargeDropzone({
           return { ok: true, s3_path: file.name }
         } catch (error) {
           console.error('Error during file upload or ingest:', error)
+          // Update file status to error so it doesn't block navigation
+          setUploadFiles((prev) =>
+            prev.map((f) =>
+              f.name === uniqueReadableFileName ? { ...f, status: 'error' } : f,
+            ),
+          )
           return { ok: false, s3_path: file.name }
         }
       }),

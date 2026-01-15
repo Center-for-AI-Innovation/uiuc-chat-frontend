@@ -57,13 +57,13 @@ export default function MITIngestForm({
     }
   }
 
-  const handleIngest = () => {
+  const handleIngest = async () => {
     setOpen(false)
     if (isUrlValid) {
       const newFile: FileUpload = {
         name: url,
         status: 'uploading',
-        type: 'github',
+        type: 'mit',
       }
       setUploadFiles((prevFiles) => [...prevFiles, newFile])
       setUploadFiles((prevFiles) =>
@@ -71,8 +71,30 @@ export default function MITIngestForm({
           file.name === url ? { ...file, status: 'ingesting' } : file,
         ),
       )
-      let data = null
-      data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
+      try {
+        const data = await downloadMITCourse(url, project_name, 'local_dir')
+        if (data) {
+          setUploadFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.name === url ? { ...file, status: 'complete' } : file,
+            ),
+          )
+        } else {
+          // downloadMITCourse returned null, treat as error
+          setUploadFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.name === url ? { ...file, status: 'error' } : file,
+            ),
+          )
+        }
+      } catch (error) {
+        console.error('Error during MIT course import:', error)
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'error' } : file,
+          ),
+        )
+      }
     } else {
       alert('Invalid URL (please include https://)')
     }
