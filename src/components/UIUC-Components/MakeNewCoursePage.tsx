@@ -28,6 +28,7 @@ import StepLLM from './MakeNewCoursePageSteps/StepLLM'
 import StepPrompt from './MakeNewCoursePageSteps/StepPrompt'
 import StepBranding from './MakeNewCoursePageSteps/StepBranding'
 import StepSuccess from './MakeNewCoursePageSteps/StepSuccess'
+import { useAuth } from 'react-oidc-context'
 
 const MakeNewCoursePage = ({
   project_name,
@@ -42,6 +43,8 @@ const MakeNewCoursePage = ({
 }) => {
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const queryClient = useQueryClient()
+  const auth = useAuth()
+  const user_id = auth.user?.profile.email || current_user_email
 
   const [canCreateProject, setCanCreateProject] = useState(false)
 
@@ -121,12 +124,15 @@ const MakeNewCoursePage = ({
     />,
     <StepLLM key="llm" project_name={projectName} />,
     <StepPrompt key="prompt" project_name={projectName} />,
-    <StepBranding key="branding" project_name={projectName} />,
+    <StepBranding
+      key="branding"
+      project_name={projectName}
+      user_id={user_id}
+    />,
     <StepSuccess key="success" project_name={projectName} />,
   ]
 
   const totalSteps = allSteps.length
-  const updateProject = (name: String, description: String) => {}
   const isFirstStep = currentStep === 0
   const isLastStep = currentStep === totalSteps - 1
 

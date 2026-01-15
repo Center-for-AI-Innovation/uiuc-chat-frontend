@@ -33,8 +33,8 @@ const StepCreate = ({
   is_new_course?: boolean
   project_description?: string
 
-  onUpdateName: Function
-  onUpdateDescription: Function
+  onUpdateName: (name: string) => void
+  onUpdateDescription: (description: string) => void
 }) => {
   //  const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [projectName, setProjectName] = useState(project_name || '')
@@ -149,7 +149,11 @@ const StepCreate = ({
             size={'md'}
             autoFocus
             withAsterisk
-            onInput={(e) => setProjectName(e.target.value.replaceAll(' ', '-'))}
+            onInput={(e) =>
+              setProjectName(
+                (e.target as HTMLInputElement).value.replaceAll(' ', '-'),
+              )
+            }
           />
 
           <div className="mt-1 min-h-[1.35rem] text-sm">

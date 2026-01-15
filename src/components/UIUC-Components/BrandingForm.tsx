@@ -26,20 +26,17 @@ import {
 } from '~/types/courseMetadata'
 import { callSetCourseMetadata, uploadToS3 } from '~/utils/apiUtils'
 
-const BrandingForm = ({ project_name }: { project_name: string }) => {
-  const initialMetadata = {}
-
+const BrandingForm = ({
+  project_name,
+  user_id,
+}: {
+  project_name: string
+  user_id: string
+}) => {
   const queryClient = useQueryClient()
-  const [introMessage, setIntroMessage] = useState(
-    initialMetadata?.course_intro_message || '',
-  )
+  const [introMessage, setIntroMessage] = useState('')
   const [isIntroMessageUpdated, setIsIntroMessageUpdated] = useState(false)
-  const [metadata, setMetadata] = useState(initialMetadata)
-
-  useEffect(() => {
-    // Set initial query data
-    queryClient.setQueryData(['courseMetadata', project_name], initialMetadata)
-  }, [])
+  const [metadata, setMetadata] = useState<CourseMetadata | null>(null)
 
   // Update local state when query data changes
   useEffect(() => {
@@ -47,9 +44,10 @@ const BrandingForm = ({ project_name }: { project_name: string }) => {
       const latestData = queryClient.getQueryData([
         'courseMetadata',
         project_name,
-      ])
+      ]) as CourseMetadata | undefined
       if (latestData) {
-        setMetadata(latestData as CourseMetadata)
+        setMetadata(latestData)
+        setIntroMessage(latestData.course_intro_message || '')
       }
     })
 
@@ -72,7 +70,11 @@ const BrandingForm = ({ project_name }: { project_name: string }) => {
     if (logo) {
       console.log('Uploading to s3')
 
-      const banner_s3_image = await uploadToS3(logo ?? null, project_name)
+      const banner_s3_image = await uploadToS3(
+        logo ?? null,
+        user_id,
+        project_name,
+      )
 
       if (banner_s3_image && metadata) {
         metadata.banner_image_s3 = banner_s3_image
@@ -194,12 +196,14 @@ const BrandingForm = ({ project_name }: { project_name: string }) => {
             {/* TODO: maybe change this to a button to trigger the upload like the other inputs? */}
             {/* TODO: show current logo and ability to remove logo */}
             <FileInput
-              placeholder="Select the logo to upload (.png, .jpg, or .gif)"
+              fileInputProps={{
+                accept: 'image/png,image/jpg,image/gif',
+                placeholder: 'Select the logo to upload (.png, .jpg, or .gif)',
+              }}
               classNames={{
                 input:
                   'text-[--foreground] border-[--dashboard-border] bg-[--background] focus:text-[#f00] hover:border-[--background-darker]',
               }}
-              rightSectionPointerEvents="all"
               rightSection={
                 <IconFileUpload
                   stroke={1}

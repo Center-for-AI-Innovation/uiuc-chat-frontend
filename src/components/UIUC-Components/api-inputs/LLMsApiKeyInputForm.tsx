@@ -726,34 +726,25 @@ export default function APIKeyInputForm({
             </Text>
             <div className="flex justify-center">
               {llmProviders && (
-                // @ts-ignore
-                <form.Field name="defaultModel">
-                  {(field) => (
-                    <NewModelDropdown
-                      value={
-                        findDefaultModel(llmProviders) as AnySupportedModel
-                      }
-                      onChange={(newDefaultModel) => {
-                        const modelWithProvider = {
-                          ...newDefaultModel,
-                          provider:
-                            (newDefaultModel as any).provider ||
-                            findDefaultModel(llmProviders)?.provider,
-                        }
-                        field.setValue(modelWithProvider)
-                        setDefaultModelAndUpdateProviders(
-                          modelWithProvider as AnySupportedModel & {
-                            provider: ProviderNames
-                          },
-                        )
-                        field.setValue(modelWithProvider)
-                        return form.handleSubmit()
-                      }}
-                      llmProviders={llmProviders}
-                      isSmallScreen={isSmallScreen}
-                    />
-                  )}
-                </form.Field>
+                <NewModelDropdown
+                  value={findDefaultModel(llmProviders) as AnySupportedModel}
+                  onChange={(newDefaultModel) => {
+                    const modelWithProvider = {
+                      ...newDefaultModel,
+                      provider:
+                        (newDefaultModel as any).provider ||
+                        findDefaultModel(llmProviders)?.provider,
+                    }
+                    setDefaultModelAndUpdateProviders(
+                      modelWithProvider as AnySupportedModel & {
+                        provider: ProviderNames
+                      },
+                    )
+                    return form.handleSubmit()
+                  }}
+                  llmProviders={llmProviders}
+                  isSmallScreen={isSmallScreen}
+                />
               )}
             </div>
           </div>
@@ -1001,37 +992,29 @@ export default function APIKeyInputForm({
                         <br />
                         <div className="flex justify-center">
                           {llmProviders && (
-                            // @ts-ignore - we don't really need this named functionality... gonna skip fixing this.
-                            <form.Field name="defaultModel">
-                              {(field) => (
-                                <NewModelDropdown
-                                  value={
-                                    findDefaultModel(
-                                      llmProviders,
-                                    ) as AnySupportedModel
-                                  }
-                                  onChange={(newDefaultModel) => {
-                                    const modelWithProvider = {
-                                      ...newDefaultModel,
-                                      provider:
-                                        (newDefaultModel as any).provider ||
-                                        findDefaultModel(llmProviders)
-                                          ?.provider,
-                                    }
-                                    field.setValue(modelWithProvider)
-                                    setDefaultModelAndUpdateProviders(
-                                      modelWithProvider as AnySupportedModel & {
-                                        provider: ProviderNames
-                                      },
-                                    )
-                                    field.setValue(modelWithProvider)
-                                    return form.handleSubmit()
-                                  }}
-                                  llmProviders={llmProviders}
-                                  isSmallScreen={isSmallScreen}
-                                />
-                              )}
-                            </form.Field>
+                            <NewModelDropdown
+                              value={
+                                findDefaultModel(
+                                  llmProviders,
+                                ) as AnySupportedModel
+                              }
+                              onChange={(newDefaultModel) => {
+                                const modelWithProvider = {
+                                  ...newDefaultModel,
+                                  provider:
+                                    (newDefaultModel as any).provider ||
+                                    findDefaultModel(llmProviders)?.provider,
+                                }
+                                setDefaultModelAndUpdateProviders(
+                                  modelWithProvider as AnySupportedModel & {
+                                    provider: ProviderNames
+                                  },
+                                )
+                                return form.handleSubmit()
+                              }}
+                              llmProviders={llmProviders}
+                              isSmallScreen={isSmallScreen}
+                            />
                           )}
                         </div>
                         <div className="pt-6"></div>

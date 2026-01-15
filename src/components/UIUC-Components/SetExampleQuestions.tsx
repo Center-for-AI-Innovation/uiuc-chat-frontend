@@ -72,9 +72,8 @@ export default function SetExampleQuestions({
       >
         {inputList.map((value, i) => {
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" key={i}>
               <TextInput
-                key={i}
                 // withAsterisk
                 name="question"
                 placeholder="Add sample queries to illustrate usage of your AI."
