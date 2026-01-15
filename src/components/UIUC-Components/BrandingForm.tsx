@@ -1,18 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import {
-  Button,
-  Card,
-  FileInput,
-  Flex,
-  Group,
-  Loader,
-  Text,
-  Textarea,
-  TextInput,
-  Title,
-  Tooltip,
-} from '@mantine/core'
+import { Button, FileInput, Textarea } from '@mantine/core'
 import { IconFileUpload } from '@tabler/icons-react'
 
 //import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -56,7 +44,7 @@ const BrandingForm = ({
     }
   }, [project_name, queryClient])
 
-  const onUploadLogo = async (logo: File) => {
+  const onUploadLogo = async (logo: File | null) => {
     /*
       lastModified: 1755022505000
       name: "logo.png"
@@ -221,24 +209,6 @@ const BrandingForm = ({
       </div>
     </>
   )
-}
-
-const componentClasses = {
-  button: {
-    root: `
-      !text-[--foreground-faded]
-      bg-transparent
-      border-[--background-faded]
-
-      hover:!text-[--dashboard-button]
-      hover:hover:bg-transparent
-      hover:hover:border-[--dashboard-button]
-
-      disabled:bg-transparent
-      disabled:border-[--button-disabled]
-      disabled:!text-[--button-disabled-text-color]
-    `,
-  },
 }
 
 export default BrandingForm

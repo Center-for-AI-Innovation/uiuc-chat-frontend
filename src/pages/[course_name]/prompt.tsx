@@ -157,6 +157,3 @@ const CourseMain: NextPage = () => {
 }
 
 export default CourseMain
-
-// Re-export helper functions for backward compatibility
-export { showToastNotification } from '~/components/UIUC-Components/PromptEditor'

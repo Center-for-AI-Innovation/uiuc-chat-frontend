@@ -101,7 +101,7 @@ export default function SetExampleQuestions({
               <Button
                 type="submit"
                 size={'xs'}
-                disabled={value == ''}
+                disabled={value === ''}
                 className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
                 onClick={async () => {}}
               >

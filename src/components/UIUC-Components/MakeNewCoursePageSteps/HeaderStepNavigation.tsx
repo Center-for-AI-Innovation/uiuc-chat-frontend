@@ -35,6 +35,4 @@ const HeaderStepNavigation = ({
   )
 }
 
-const componentClasses = {}
-
 export default HeaderStepNavigation
