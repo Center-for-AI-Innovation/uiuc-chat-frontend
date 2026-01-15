@@ -17,7 +17,13 @@ import {
 import HeaderStepNavigation from './HeaderStepNavigation'
 import BrandingForm from '../BrandingForm'
 
-const StepBranding = ({ project_name }: { project_name: string }) => {
+const StepBranding = ({
+  project_name,
+  user_id,
+}: {
+  project_name: string
+  user_id: string
+}) => {
   return (
     <>
       <div className="step">
@@ -31,7 +37,10 @@ const StepBranding = ({ project_name }: { project_name: string }) => {
         <div className="step_content">
           {/* TODO: move this into a separate component so it can be shared in wizard and the project /dashboard/ page */}
 
-          <BrandingForm project_name={project_name}></BrandingForm>
+          <BrandingForm
+            project_name={project_name}
+            user_id={user_id}
+          ></BrandingForm>
         </div>
       </div>
     </>
