@@ -22,8 +22,6 @@ import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 
-import NewCourseNavigation from './MakeNewCoursePageSteps/NewCourseNavigation'
-
 import StepCreate from './MakeNewCoursePageSteps/StepCreate'
 import StepUpload from './MakeNewCoursePageSteps/StepUpload'
 import StepLLM from './MakeNewCoursePageSteps/StepLLM'
@@ -294,6 +292,7 @@ const MakeNewCoursePage = ({
             <Button
               size="sm"
               radius="sm"
+              className={isLastStep ? 'opacity-0' : ''}
               classNames={componentClasses.buttonPrimary}
               onClick={async () => {
                 if (currentStep === 0) {
