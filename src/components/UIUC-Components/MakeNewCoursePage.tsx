@@ -264,210 +264,223 @@ const MakeNewCoursePage = ({
               onClose={handleCloseNotification}
               projectName={projectName}
             />
-            <Group position="apart" mt="xl">
-              <Button
-                size="sm"
-                radius="sm"
-                classNames={componentClasses.button}
-                onClick={goToPreviousStep}
-                disabled={isFirstStep || shouldBlockNavigation}
-              >
-                Back
-              </Button>
-              <Button
-                size="sm"
-                radius="sm"
-                classNames={componentClasses.buttonPrimary}
-                onClick={async () => {
-                  if (currentStep === 0) {
-                    if (!hasCreatedProject) {
-                      if (
-                        projectName === '' ||
-                        isLoading ||
-                        !isCourseAvailable
-                      ) {
-                        return
-                      }
-
-                      const isCreated = await handleSubmit(
-                        projectName,
-                        projectDescription,
-                        current_user_email,
-                        useIllinoisChatConfig,
-                      )
-
-                      if (!isCreated) {
-                        return
-                      }
-
-                      setHasCreatedProject(true)
-                    }
-                  }
-
-                  if (!isLastStep) {
-                    goToNextStep()
-                  }
-                }}
-                disabled={
-                  isLastStep ||
-                  shouldBlockNavigation ||
-                  (currentStep === 0 &&
-                    !hasCreatedProject &&
-                    (projectName === '' || !isCourseAvailable || isLoading))
-                }
-                loading={isLoading && currentStep === 0}
-              >
-                Next
-              </Button>
-            </Group>
           </Card>
+        </div>
 
-          <div className="hidden">
-            <Card
-              shadow="xs"
-              padding="none"
-              withBorder={false}
-              radius="lg"
-              // style={{ maxWidth: '85%', width: '100%', marginTop: '4%' }}
-              className="w-[96%] md:w-[90%] lg:max-w-[750px]"
-              style={{
-                backgroundColor: 'var(--dashboard-background-faded)',
-              }}
+        {/* Sticky Footer Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[--dashboard-border] bg-[--background]">
+          <div className="mx-auto flex max-w-[860px] items-center justify-between px-4 py-4">
+            <Button
+              size="sm"
+              radius="sm"
+              classNames={componentClasses.button}
+              onClick={goToPreviousStep}
+              disabled={isFirstStep || shouldBlockNavigation}
             >
-              <Flex direction={isSmallScreen ? 'column' : 'row'}>
+              Back
+            </Button>
+
+            {/* Pagination Dots */}
+            <div className="flex items-center gap-2">
+              {allSteps.map((_, index) => (
                 <div
-                  style={{
-                    flex: isSmallScreen ? '1 1 100%' : '1 1 60%',
-                    border: 'None',
-                    color: 'var(--foreground)',
-                  }}
-                  className="min-h-full bg-[--dashboard-background-faded]"
+                  key={index}
+                  className={`h-2 w-2 rounded-full transition-colors ${
+                    currentStep === index ? 'bg-[#13294B]' : 'bg-[#13294B]/40'
+                  }`}
+                />
+              ))}
+            </div>
+
+            <Button
+              size="sm"
+              radius="sm"
+              classNames={componentClasses.buttonPrimary}
+              onClick={async () => {
+                if (currentStep === 0) {
+                  if (!hasCreatedProject) {
+                    if (projectName === '' || isLoading || !isCourseAvailable) {
+                      return
+                    }
+
+                    const isCreated = await handleSubmit(
+                      projectName,
+                      projectDescription,
+                      current_user_email,
+                      useIllinoisChatConfig,
+                    )
+
+                    if (!isCreated) {
+                      return
+                    }
+
+                    setHasCreatedProject(true)
+                  }
+                }
+
+                if (!isLastStep) {
+                  goToNextStep()
+                }
+              }}
+              disabled={
+                isLastStep ||
+                shouldBlockNavigation ||
+                (currentStep === 0 &&
+                  !hasCreatedProject &&
+                  (projectName === '' || !isCourseAvailable || isLoading))
+              }
+              loading={isLoading && currentStep === 0}
+            >
+              Continue
+            </Button>
+          </div>
+        </div>
+
+        <div className="hidden">
+          <Card
+            shadow="xs"
+            padding="none"
+            withBorder={false}
+            radius="lg"
+            // style={{ maxWidth: '85%', width: '100%', marginTop: '4%' }}
+            className="w-[96%] md:w-[90%] lg:max-w-[750px]"
+            style={{
+              backgroundColor: 'var(--dashboard-background-faded)',
+            }}
+          >
+            <Flex direction={isSmallScreen ? 'column' : 'row'}>
+              <div
+                style={{
+                  flex: isSmallScreen ? '1 1 100%' : '1 1 60%',
+                  border: 'None',
+                  color: 'var(--foreground)',
+                }}
+                className="min-h-full bg-[--dashboard-background-faded]"
+              >
+                <Group
+                  m="2rem"
+                  align="center"
+                  style={{ justifyContent: 'center' }}
                 >
-                  <Group
-                    m="2rem"
-                    align="center"
-                    style={{ justifyContent: 'center' }}
+                  {/* Flex just to left align title. */}
+                  <Flex justify="flex-start" align="flex-start">
+                    <Title
+                      order={isSmallScreen ? 3 : 2}
+                      className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-3xl text-[--foreground]`}
+                    >
+                      {!is_new_course
+                        ? `${projectName}`
+                        : 'Create a new project'}
+                    </Title>
+                  </Flex>
+
+                  <Flex
+                    direction="column"
+                    gap="md"
+                    w={isSmallScreen ? '80%' : '60%'}
                   >
-                    {/* Flex just to left align title. */}
-                    <Flex justify="flex-start" align="flex-start">
-                      <Title
-                        order={isSmallScreen ? 3 : 2}
-                        className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-3xl text-[--foreground]`}
+                    <TextInput
+                      autoComplete="off"
+                      data-lpignore="true"
+                      data-form-type="other"
+                      styles={{
+                        input: {
+                          backgroundColor: 'var(--background)',
+                          paddingRight: '6rem',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          color:
+                            isCourseAvailable && projectName != ''
+                              ? 'var(--foreground)'
+                              : 'red',
+                          '&:focus-within': {
+                            borderColor:
+                              isCourseAvailable && projectName !== ''
+                                ? 'green'
+                                : 'red',
+                          },
+                          fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
+                          font: `${montserrat_paragraph.variable} font-montserratParagraph`,
+                        },
+                        label: {
+                          fontWeight: 'bold',
+                          fontSize: '1rem',
+                          color: 'var(--foreground)',
+                          marginBottom: '1rem',
+                        },
+                      }}
+                      placeholder="Project name"
+                      radius={'md'}
+                      type="text"
+                      value={projectName}
+                      label="What is the project name?"
+                      size={'lg'}
+                      disabled={!is_new_course}
+                      onChange={(e) =>
+                        setProjectName(e.target.value.replaceAll(' ', '-'))
+                      }
+                      autoFocus
+                      withAsterisk
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                      rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                    />
+
+                    <div className="text-sm text-[--foreground-faded]">
+                      The project name will be used as part of the unique url
+                      across the entire campus.
+                    </div>
+
+                    <Flex direction="row" align="flex-end">
+                      <label
+                        className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold text-[--foreground]`}
                       >
-                        {!is_new_course
-                          ? `${projectName}`
-                          : 'Create a new project'}
+                        What do you want to achieve?
+                      </label>
+                      <label
+                        className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-[--foreground-faded]`}
+                      >
+                        (optional)
+                      </label>
+                    </Flex>
+                    <Textarea
+                      placeholder="Describe your project, goals, expected impact etc..."
+                      radius={'md'}
+                      value={projectDescription}
+                      onChange={(e) => setProjectDescription(e.target.value)}
+                      size={'lg'}
+                      minRows={4}
+                      styles={{
+                        input: {
+                          color: 'var(--foreground)',
+                          backgroundColor: 'var(--background)',
+                          fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
+                          font: `${montserrat_paragraph.variable} font-montserratParagraph`,
+                          // borderColor: '#8e44ad', // Grape color
+                          '&:focus': {
+                            borderColor: 'var(--illinois-orange)', // Grape color when focused/selected
+                          },
+                        },
+                        label: {
+                          fontWeight: 'bold',
+                          color: 'var(--foreground)',
+                        },
+                      }}
+                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                    />
+                    <Flex direction={'row'}>
+                      <Title
+                        order={isSmallScreen ? 5 : 4}
+                        className={`w-full pr-2 pr-7 ${montserrat_paragraph.variable} mt-2 font-montserratParagraph text-sm text-[--foreground]`}
+                      >
+                        Next: let&apos;s upload some documents
                       </Title>
                     </Flex>
-
-                    <Flex
-                      direction="column"
-                      gap="md"
-                      w={isSmallScreen ? '80%' : '60%'}
-                    >
-                      <TextInput
-                        autoComplete="off"
-                        data-lpignore="true"
-                        data-form-type="other"
-                        styles={{
-                          input: {
-                            backgroundColor: 'var(--background)',
-                            paddingRight: '6rem',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            color:
-                              isCourseAvailable && projectName != ''
-                                ? 'var(--foreground)'
-                                : 'red',
-                            '&:focus-within': {
-                              borderColor:
-                                isCourseAvailable && projectName !== ''
-                                  ? 'green'
-                                  : 'red',
-                            },
-                            fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
-                            font: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                          },
-                          label: {
-                            fontWeight: 'bold',
-                            fontSize: '1rem',
-                            color: 'var(--foreground)',
-                            marginBottom: '1rem',
-                          },
-                        }}
-                        placeholder="Project name"
-                        radius={'md'}
-                        type="text"
-                        value={projectName}
-                        label="What is the project name?"
-                        size={'lg'}
-                        disabled={!is_new_course}
-                        onChange={(e) =>
-                          setProjectName(e.target.value.replaceAll(' ', '-'))
-                        }
-                        autoFocus
-                        withAsterisk
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                        rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
-                      />
-
-                      <div className="text-sm text-[--foreground-faded]">
-                        The project name will be used as part of the unique url
-                        across the entire campus.
-                      </div>
-
-                      <Flex direction="row" align="flex-end">
-                        <label
-                          className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold text-[--foreground]`}
-                        >
-                          What do you want to achieve?
-                        </label>
-                        <label
-                          className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-[--foreground-faded]`}
-                        >
-                          (optional)
-                        </label>
-                      </Flex>
-                      <Textarea
-                        placeholder="Describe your project, goals, expected impact etc..."
-                        radius={'md'}
-                        value={projectDescription}
-                        onChange={(e) => setProjectDescription(e.target.value)}
-                        size={'lg'}
-                        minRows={4}
-                        styles={{
-                          input: {
-                            color: 'var(--foreground)',
-                            backgroundColor: 'var(--background)',
-                            fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
-                            font: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                            // borderColor: '#8e44ad', // Grape color
-                            '&:focus': {
-                              borderColor: 'var(--illinois-orange)', // Grape color when focused/selected
-                            },
-                          },
-                          label: {
-                            fontWeight: 'bold',
-                            color: 'var(--foreground)',
-                          },
-                        }}
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                      />
-                      <Flex direction={'row'}>
-                        <Title
-                          order={isSmallScreen ? 5 : 4}
-                          className={`w-full pr-2 pr-7 ${montserrat_paragraph.variable} mt-2 font-montserratParagraph text-sm text-[--foreground]`}
-                        >
-                          Next: let&apos;s upload some documents
-                        </Title>
-                      </Flex>
-                    </Flex>
-                  </Group>
-                </div>
-              </Flex>
-            </Card>
-          </div>
+                  </Flex>
+                </Group>
+              </div>
+            </Flex>
+          </Card>
         </div>
         <GlobalFooter />
       </main>
@@ -478,13 +491,13 @@ const MakeNewCoursePage = ({
 const componentClasses = {
   button: {
     root: `
-      !text-[--foreground-faded]
+      !text-[#13294B]
       bg-transparent
-      border-[--background-faded]
+      border-[#13294B]
 
-      hover:!text-[--dashboard-button]
-      hover:hover:bg-transparent
-      hover:hover:border-[--dashboard-button]
+      hover:!text-[#13294B]
+      hover:bg-[#13294B]/10
+      hover:border-[#13294B]
 
       disabled:bg-transparent
       disabled:border-[--button-disabled]
@@ -494,17 +507,14 @@ const componentClasses = {
 
   buttonPrimary: {
     root: `
-      !text-[--dashboard-button-foreground]
-      bg-[--dashboard-button]
-      border-[--dashboard-button]
+      !text-white
+      bg-[#13294B]
 
-      hover:!text-[--dashboard-button-foreground]
-      hover:bg-[--dashboard-button-hover]
-      hover:border-[--dashboard-button-hover]
+      hover:!text-white
+      hover:bg-[#13294B]/90
 
-      disabled:bg-transparent
-      disabled:border-[--button-disabled]
-      disabled:!text-[--button-disabled-text-color]
+      disabled:bg-[#13294B]/50
+      disabled:!text-white/50
     `,
   },
 
