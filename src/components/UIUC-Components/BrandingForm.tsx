@@ -108,7 +108,7 @@ const BrandingForm = ({
               type="submit"
               size={'xs'}
               disabled={!isIntroMessageUpdated}
-              className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
+              className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-faded] disabled:opacity-50"
               onClick={async () => {
                 setIsIntroMessageUpdated(false)
 
