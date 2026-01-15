@@ -20,7 +20,6 @@ import { createProject } from '~/pages/api/UIUC-api/createProject'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
-import GlobalFooter from './GlobalFooter'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 
 import NewCourseNavigation from './MakeNewCoursePageSteps/NewCourseNavigation'
@@ -482,7 +481,6 @@ const MakeNewCoursePage = ({
             </Flex>
           </Card>
         </div>
-        <GlobalFooter />
       </main>
     </>
   )
