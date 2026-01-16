@@ -4,7 +4,7 @@ import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
 
-import { Card, Flex, Title, useMantineTheme } from '@mantine/core'
+import { Card, Flex, Title } from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
@@ -21,8 +21,7 @@ import SettingsLayout, {
 import PromptEditor from '~/components/UIUC-Components/PromptEditor'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
-import { useTranslation } from 'next-i18next'
-import { CourseMetadata } from '~/types/courseMetadata'
+import { type CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 
 const montserrat = Montserrat({
@@ -87,7 +86,6 @@ const CourseMain: NextPage = () => {
     }
     fetchCourseData()
   }, [router.isReady, auth.isLoading, courseName])
-
 
   if (!isLoaded || isLoading) {
     return <LoadingPlaceholderForAdminPages />

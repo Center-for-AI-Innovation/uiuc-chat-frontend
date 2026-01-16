@@ -11,6 +11,7 @@ import {
   Image,
   Indicator,
   List,
+  MantineTheme,
   Modal,
   Paper,
   Select,
@@ -109,6 +110,77 @@ const isApiKeyRequired = (provider: ProviderNames): boolean => {
   return providersRequiringApiKey.includes(provider)
 }
 
+export const showPromptToast = (
+  theme: MantineTheme,
+  title: string,
+  message: string,
+  isError = false,
+  icon?: React.ReactNode,
+) => {
+  // Calculate duration based on message length (minimum 5 seconds, add 1 second for every 20 characters)
+  const baseDuration = 5000
+  const durationPerChar = 50 // 50ms per character
+  const duration = Math.max(
+    baseDuration,
+    Math.min(15000, message.length * durationPerChar),
+  )
+
+  notifications.show({
+    withCloseButton: true,
+    autoClose: duration,
+    title: title,
+    message: message,
+    icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
+    styles: {
+      root: {
+        backgroundColor: 'var(--notification)', // Dark background to match the page
+        borderColor: isError ? '#E53935' : 'var(--notification-border)', // Red for errors,  for success
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderRadius: '8px', // Added rounded corners
+      },
+      title: {
+        color: 'var(--notification-title)', // White text for the title
+        fontWeight: 600,
+      },
+      description: {
+        color: 'var(--notification-message)', // Light gray text for the message
+      },
+      closeButton: {
+        color: 'var(--notification-title)', // White color for the close button
+        borderRadius: '4px', // Added rounded corners to close button
+        '&:hover': {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)', // Subtle hover effect
+        },
+      },
+      icon: {
+        backgroundColor: 'transparent', // Transparent background for the icon
+        color: isError ? '#E53935' : 'var(--notification-title)', // Icon color matches the border
+      },
+    },
+  })
+}
+
+export const showToastOnPromptUpdate = (
+  theme: MantineTheme,
+  was_error = false,
+  isReset = false,
+) => {
+  const title = was_error
+    ? 'Error Updating Prompt'
+    : isReset
+      ? 'Prompt Reset to Default'
+      : 'Prompt Updated Successfully'
+  const message = was_error
+    ? 'An error occurred while updating the prompt. Please try again.'
+    : isReset
+      ? 'The system prompt has been reset to default settings.'
+      : 'The system prompt has been updated.'
+  const isError = was_error
+
+  showPromptToast(theme, title, message, isError)
+}
+
 export const showToastNotification = (
   title: string,
   message: string,
@@ -196,7 +268,12 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const [vectorSearchRewrite, setVectorSearchRewrite] = useState(false)
 
   const courseMetadataRef = useRef<CourseMetadata | null>(null)
-  const initialSwitchStateRef = useRef({
+  const initialSwitchStateRef = useRef<{
+    guidedLearning: boolean
+    documentsOnly: boolean
+    systemPromptOnly: boolean
+    vectorSearchRewrite: boolean
+  }>({
     guidedLearning: false,
     documentsOnly: false,
     systemPromptOnly: false,
@@ -209,11 +286,13 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   }
 
   // Build model options from providers
-  const modelOptions: ModelOption[] = llmProviders
-    ? Object.entries(llmProviders)
+  const modelOptions = llmProviders
+    ? Object.entries(llmProviders as AllLLMProviders)
+        // Sort by LLM_PROVIDER_ORDER
         .sort(([providerA], [providerB]) => {
           const indexA = LLM_PROVIDER_ORDER.indexOf(providerA as ProviderNames)
           const indexB = LLM_PROVIDER_ORDER.indexOf(providerB as ProviderNames)
+          // Providers not in the order list will be placed at the end
           if (indexA === -1) return 1
           if (indexB === -1) return -1
           return indexA - indexB
@@ -221,8 +300,11 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         .flatMap(([provider, config]) =>
           config.enabled && config.models && provider !== 'WebLLM'
             ? config.models
-                .filter((model) => model.enabled)
-                .filter((model) => model.id !== 'learnlm-1.5-pro-experimental')
+                .filter((model: AnySupportedModel) => model.enabled)
+                .filter(
+                  (model: AnySupportedModel) =>
+                    model.id !== 'learnlm-1.5-pro-experimental',
+                )
                 .map((model: AnySupportedModel) => ({
                   group: provider as ProviderNames,
                   value: model.id,
@@ -230,8 +312,10 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
                   modelId: model.id,
                   selectedModelId: selectedModel,
                   modelType: provider,
-                  downloadSize: (model as any)?.downloadSize,
-                  vram_required_MB: (model as any)?.vram_required_MB,
+                  // @ts-ignore -- this being missing is fine
+                  downloadSize: model?.downloadSize,
+                  // @ts-ignore -- this being missing is fine
+                  vram_required_MB: model?.vram_required_MB,
                   extendedThinking:
                     (model as AnthropicModel)?.extendedThinking || false,
                 }))
@@ -311,73 +395,77 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
 
   useEffect(() => {
     courseMetadataRef.current = courseMetadata
+    if (courseMetadata) {
+      initialSwitchStateRef.current = {
+        guidedLearning: courseMetadata.guidedLearning || false,
+        documentsOnly: courseMetadata.documentsOnly || false,
+        systemPromptOnly: courseMetadata.systemPromptOnly || false,
+        vectorSearchRewrite: !courseMetadata.vector_search_rewrite_disabled,
+      }
+    }
   }, [courseMetadata])
 
   // Handle system prompt submission
-  const handleSystemPromptSubmit = async (newSystemPrompt?: string) => {
-    const promptToSave = newSystemPrompt ?? baseSystemPrompt
-    if (!courseMetadata || !project_name) return
-
-    const updatedMetadata = {
-      ...courseMetadata,
-      system_prompt: promptToSave,
-      guidedLearning,
-      documentsOnly,
-      systemPromptOnly,
+  const handleSystemPromptSubmit = async (
+    newSystemPrompt: string | undefined,
+  ) => {
+    let success = false
+    if (courseMetadata && project_name) {
+      const updatedCourseMetadata = {
+        ...courseMetadata,
+        system_prompt: newSystemPrompt, // Keep as is, whether it's an empty string or undefined
+        guidedLearning,
+        documentsOnly,
+        systemPromptOnly,
+      }
+      success = await callSetCourseMetadata(project_name, updatedCourseMetadata)
+      if (success) {
+        setCourseMetadata(updatedCourseMetadata)
+      }
     }
-
-    const success = await callSetCourseMetadata(project_name, updatedMetadata)
-    if (success) {
-      setCourseMetadata(updatedMetadata)
-      queryClient.setQueryData(
-        ['courseMetadata', project_name],
-        updatedMetadata,
-      )
-      showToastNotification(
-        'Prompt Updated',
-        'System prompt updated successfully',
-      )
+    if (!success) {
+      console.log('Error updating course metadata')
+      showToastOnPromptUpdate(theme, true)
     } else {
-      showToastNotification('Error', 'Failed to update system prompt', true)
+      showToastOnPromptUpdate(theme)
     }
   }
 
   // Reset system prompt
   const resetSystemPrompt = async () => {
-    if (!courseMetadata || !project_name) return
-
-    const updatedMetadata = {
-      ...courseMetadata,
-      system_prompt: null,
-      guidedLearning: false,
-      documentsOnly: false,
-      systemPromptOnly: false,
-    }
-
-    const success = await callSetCourseMetadata(project_name, updatedMetadata)
-    if (success) {
-      setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT ?? '')
-      setCourseMetadata(updatedMetadata as CourseMetadata)
-      setGuidedLearning(false)
-      setDocumentsOnly(false)
-      setSystemPromptOnly(false)
-      queryClient.setQueryData(
-        ['courseMetadata', project_name],
-        updatedMetadata,
+    if (courseMetadata && project_name) {
+      const updatedCourseMetadata = {
+        ...courseMetadata,
+        system_prompt: null, // Explicitly set to undefined
+        guidedLearning: false,
+        documentsOnly: false,
+        systemPromptOnly: false,
+      }
+      const success = await callSetCourseMetadata(
+        project_name,
+        updatedCourseMetadata,
       )
-      showToastNotification(
-        'Prompt Reset',
-        'System prompt has been reset to default',
-      )
+      if (!success) {
+        alert('Error resetting system prompt')
+        showToastOnPromptUpdate(theme, true, true)
+      } else {
+        setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT ?? '')
+        setCourseMetadata(updatedCourseMetadata)
+        setGuidedLearning(false)
+        setDocumentsOnly(false)
+        setSystemPromptOnly(false)
+        showToastOnPromptUpdate(theme, false, true)
+      }
     } else {
-      showToastNotification('Error', 'Failed to reset system prompt', true)
+      alert('Error resetting system prompt')
     }
   }
 
   // Update system prompt with toggle changes
-  const updateSystemPrompt = (updatedFields: PartialCourseMetadata) => {
+  const updateSystemPrompt = (updatedFields: Partial<CourseMetadata>) => {
     let newPrompt = baseSystemPrompt
 
+    // Handle Guided Learning prompt
     if (updatedFields.guidedLearning !== undefined) {
       if (updatedFields.guidedLearning) {
         if (!newPrompt.includes(GUIDED_LEARNING_PROMPT)) {
@@ -388,6 +476,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
       }
     }
 
+    // Handle Documents Only prompt
     if (updatedFields.documentsOnly !== undefined) {
       if (updatedFields.documentsOnly) {
         if (!newPrompt.includes(DOCUMENT_FOCUS_PROMPT)) {
@@ -413,11 +502,14 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     }
 
     const initialSwitchState = initialSwitchStateRef.current
+
     const hasChanges = (
       Object.keys(currentSwitchState) as Array<keyof typeof currentSwitchState>
     ).some((key) => currentSwitchState[key] !== initialSwitchState[key])
 
-    if (!hasChanges) return
+    if (!hasChanges) {
+      return
+    }
 
     const updatedMetadata = {
       ...courseMetadataRef.current,
@@ -430,61 +522,66 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     try {
       const success = await callSetCourseMetadata(project_name, updatedMetadata)
       if (!success) {
-        showToastNotification('Error', 'Failed to update settings', true)
+        showPromptToast(theme, 'Error', 'Failed to update settings', true)
         return
       }
 
       setCourseMetadata(updatedMetadata)
-      queryClient.setQueryData(
-        ['courseMetadata', project_name],
-        updatedMetadata,
-      )
       initialSwitchStateRef.current = currentSwitchState
 
+      const changes: string[] = []
       if (
         initialSwitchState.vectorSearchRewrite !==
         currentSwitchState.vectorSearchRewrite
       ) {
-        showToastNotification(
+        changes.push(
           `Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`,
-          'Settings have been saved successfully',
         )
       }
       if (
         initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning
       ) {
-        showToastNotification(
+        changes.push(
           `Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`,
-          'Settings have been saved successfully',
         )
       }
       if (
         initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly
       ) {
-        showToastNotification(
+        changes.push(
           `Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`,
-          'Settings have been saved successfully',
         )
       }
       if (
         initialSwitchState.systemPromptOnly !==
         currentSwitchState.systemPromptOnly
       ) {
-        showToastNotification(
+        changes.push(
           `Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
+        )
+      }
+
+      if (changes.length > 0) {
+        showPromptToast(
+          theme,
+          changes.join(' & '),
           'Settings have been saved successfully',
+          false,
         )
       }
     } catch (error) {
       console.error('Error updating course settings:', error)
-      showToastNotification('Error', 'Failed to update settings', true)
+      showPromptToast(theme, 'Error', 'Failed to update settings', true)
     }
   }
 
   const debouncedSaveSettings = useDebouncedCallback(saveSettings, 500)
 
-  const handleCheckboxChange = (updatedFields: PartialCourseMetadata) => {
-    if (!courseMetadata) return
+  const handleCheckboxChange = async (updatedFields: PartialCourseMetadata) => {
+    if (!courseMetadata || !project_name) {
+      showPromptToast(theme, 'Error', 'Failed to update settings', true)
+      return
+    }
 
     if ('guidedLearning' in updatedFields)
       setGuidedLearning(updatedFields.guidedLearning!)
@@ -534,14 +631,16 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
       navigator.clipboard
         .writeText(defaultPostPrompt)
         .then(() => {
-          showToastNotification(
+          showPromptToast(
+            theme,
             'Copied',
             'Default post prompt system prompt copied to clipboard',
           )
         })
         .catch((err) => {
           console.error('Could not copy text: ', err)
-          showToastNotification(
+          showPromptToast(
+            theme,
             'Error Copying',
             'Could not copy text to clipboard',
             true,
@@ -549,7 +648,8 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         })
     } catch (error) {
       console.error('Error fetching default prompt:', error)
-      showToastNotification(
+      showPromptToast(
+        theme,
         'Error Fetching',
         'Could not fetch default prompt',
         true,
@@ -558,46 +658,58 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   }
 
   // Handle prompt optimization
-  const handleSubmitPromptOptimization = async (e: React.FormEvent) => {
+  const handleSubmitPromptOptimization = async (e: any) => {
     e.preventDefault()
     setIsOptimizing(true)
     setMessages([])
 
     try {
       if (!llmProviders) {
-        showToastNotification(
+        showPromptToast(
+          theme,
           'Configuration Error',
-          'Provider configuration not loaded. Please refresh.',
+          'The Optimize System Prompt feature requires provider configuration to be loaded. Please refresh the page and try again.',
           true,
         )
-        setIsOptimizing(false)
         return
       }
 
       const provider = getProviderFromModel(selectedModel, modelOptions)
       if (!llmProviders[provider]?.enabled) {
-        showToastNotification(
+        showPromptToast(
+          theme,
           `${provider} Required`,
-          `Please enable ${provider} on the LLM page to use this feature.`,
+          `The Optimize System Prompt feature requires ${provider} to be enabled. Please enable ${provider} on the LLM page in your course settings to use this feature.`,
           true,
         )
-        setIsOptimizing(false)
         return
       }
 
-      if (
-        isApiKeyRequired(provider) &&
-        !(llmProviders[provider] as any)?.apiKey
-      ) {
-        showToastNotification(
-          `${provider} API Key Required`,
-          `Please add your ${provider} API key on the LLM page.`,
-          true,
-        )
-        setIsOptimizing(false)
-        return
+      if (isApiKeyRequired(provider)) {
+        if (provider === 'Bedrock') {
+          if (
+            !llmProviders[provider]?.accessKeyId ||
+            !llmProviders[provider]?.secretAccessKey ||
+            !llmProviders[provider]?.region
+          ) {
+            showPromptToast(
+              theme,
+              `${provider} Credentials Required`,
+              `The Optimize System Prompt feature requires AWS credentials (Access Key ID, Secret Access Key, and Region). Please add your AWS credentials on the LLM page in your course settings to use this feature.`,
+              true,
+            )
+            return
+          }
+        } else if (!llmProviders[provider]?.apiKey) {
+          showPromptToast(
+            theme,
+            `${provider} API Key Required`,
+            `The Optimize System Prompt feature requires a ${provider} API key. Please add your ${provider} API key on the LLM page in your course settings to use this feature.`,
+            true,
+          )
+          return
+        }
       }
-
       const systemPrompt = `You are an expert prompt engineer specializing in optimizing prompts with the ability to handle various different use cases. Your task is to analyze and enhance the provided system prompt while preserving its core functionality and improving its effectiveness.
 
 Key Objectives:
@@ -667,8 +779,16 @@ CRITICAL: The optimized prompt must:
           id: uuidv4(),
           name: 'Prompt Optimization',
           messages: [
-            { id: uuidv4(), role: 'system', content: systemPrompt },
-            { id: uuidv4(), role: 'user', content: baseSystemPrompt },
+            {
+              id: uuidv4(),
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              id: uuidv4(),
+              role: 'user',
+              content: baseSystemPrompt,
+            },
           ],
           model: {
             id: selectedModel || 'gpt-4',
@@ -684,10 +804,10 @@ CRITICAL: The optimized prompt must:
           prompt: baseSystemPrompt,
           temperature: 0.1,
           folderId: null,
-          userEmail: userEmail,
+          userEmail: user?.profile?.email,
         },
         llmProviders: llmProviders,
-        course_name: project_name,
+        course_name: courseName,
         mode: 'optimize_prompt',
         stream: true,
         key: '',
@@ -695,23 +815,27 @@ CRITICAL: The optimized prompt must:
 
       const response = await fetch('/api/allNewRoutingChat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(chatBody),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        showToastNotification(
+        showPromptToast(
+          theme,
           'Error',
           errorData.error || 'Failed to optimize prompt',
           true,
         )
-        setIsOptimizing(false)
         return
       }
 
       const reader = response.body?.getReader()
-      if (!reader) throw new Error('No reader available')
+      if (!reader) {
+        throw new Error('No reader available')
+      }
 
       let optimizedPrompt = ''
       const decoder = new TextDecoder()
@@ -724,22 +848,31 @@ CRITICAL: The optimized prompt must:
         const chunk = decoder.decode(value)
         optimizedPrompt += chunk
 
+        // Open modal and update UI state on first chunk of content
         if (isFirstChunk && chunk.trim()) {
           isFirstChunk = false
           open()
           setIsOptimizing(false)
         }
 
+        // Check if we're using a model that supports thinking tags
+        // Process the optimized prompt to remove <think> sections if using DeepSeek
         const processedPrompt = ReasoningCapableModels.has(selectedModel as any)
           ? removeThinkSections(optimizedPrompt)
           : optimizedPrompt
 
+        // Update messages state for real-time display
         setMessages([{ role: 'assistant', content: processedPrompt }])
       }
     } catch (error) {
       console.error('Error optimizing prompt:', error)
-      showToastNotification('Error', 'Failed to optimize prompt', true)
-      setIsOptimizing(false)
+      showPromptToast(
+        theme,
+        'Error',
+        'Failed to optimize prompt. Please try again.',
+        true,
+      )
+      setIsOptimizing(false) // Keep this here for error cases
     }
   }
 
@@ -786,18 +919,20 @@ CRITICAL: The optimized prompt must:
               className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
               p="md"
               sx={{
-                cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
-              onClick={() => setInsightsOpen(!insightsOpen)}
             >
               <Flex
+                role="button"
+                tabIndex={0}
                 align="center"
                 justify="space-between"
                 sx={{
+                  cursor: 'pointer',
                   padding: '4px 8px',
                   borderRadius: '8px',
                 }}
+                onClick={() => setInsightsOpen(!insightsOpen)}
               >
                 <Flex align="center" gap="md">
                   <IconBook
@@ -979,6 +1114,7 @@ CRITICAL: The optimized prompt must:
                                 }}
                               >
                                 <Image
+                                  aria-hidden="true"
                                   src={getModelLogo(props.modelType)}
                                   alt={`${props.modelType} logo`}
                                   width={20}
@@ -1158,6 +1294,7 @@ CRITICAL: The optimized prompt must:
                       icon={
                         selectedModel ? (
                           <Image
+                            aria-hidden="true"
                             src={getModelLogo(
                               modelOptions.find(
                                 (opt) => opt.value === selectedModel,
@@ -1221,6 +1358,8 @@ CRITICAL: The optimized prompt must:
                             data-right-sidebar-icon
                           >
                             <IconLayoutSidebarRight
+                              tabIndex={0}
+                              aria-label="Close Prompt Builder"
                               stroke={2}
                               className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                               onClick={() => setIsRightSideVisible(false)}
