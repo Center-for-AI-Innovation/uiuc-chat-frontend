@@ -1,4 +1,5 @@
 import { type Message } from '@/types/chat'
+import { createHeaders } from '~/utils/httpHeaders'
 
 export async function upsertMessageToServer(
   message: Message,
@@ -16,11 +17,11 @@ export async function upsertMessageToServer(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-user-email': user_email,
         },
         body: JSON.stringify({
           message,
           conversationId,
-          user_email,
           course_name,
         }),
       })
@@ -47,12 +48,14 @@ export async function upsertMessageToServer(
   }
 }
 
+// removed local createHeaders; use shared from ~/utils/httpHeaders
+
 // Keep the delete function but mark it as deprecated
 /** @deprecated Use upsertMessageToServer instead */
 export async function deleteMessagesFromServer(
   messageIds: string[],
-  user_email: string,
   course_name: string,
+  user_email?: string,
 ) {
   console.warn(
     'deleteMessagesFromServer is deprecated. Use upsertMessageToServer instead',
@@ -65,10 +68,8 @@ export async function deleteMessagesFromServer(
       console.log('In deleteMessagesFromServer')
       const response = await fetch(`/api/deleteMessages`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ messageIds, user_email, course_name }),
+        headers: createHeaders(user_email),
+        body: JSON.stringify({ messageIds, course_name }),
       })
 
       if (!response.ok) {

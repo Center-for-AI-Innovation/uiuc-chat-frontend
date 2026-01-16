@@ -1,9 +1,4 @@
-import {
-  type QueryClient,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import {
   type FolderInterface,
   type FolderWithConversation,
@@ -16,10 +11,11 @@ import {
 
 // const queryClient = useQueryClient();
 
-export function useFetchFolders(user_email: string) {
+export function useFetchFolders(user_email: string, course_name: string) {
   return useQuery({
-    queryKey: ['folders', user_email],
-    queryFn: async () => (user_email ? fetchFolders(user_email) : []),
+    queryKey: ['folders', course_name],
+    queryFn: async () =>
+      user_email ? fetchFolders(course_name, user_email) : [],
     enabled: !!user_email,
     refetchInterval: 20_000,
   })
@@ -31,32 +27,33 @@ export function useCreateFolder(
   course_name: string,
 ) {
   return useMutation({
-    mutationKey: ['createFolder', user_email],
+    mutationKey: ['createFolder', user_email, course_name],
     mutationFn: async (newFolder: FolderWithConversation) =>
-      saveFolderToServer(newFolder, user_email),
+      saveFolderToServer(newFolder, course_name, user_email),
     onMutate: async (newFolder: FolderWithConversation) => {
-      await queryClient.cancelQueries({ queryKey: ['folders', user_email] })
+      await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
-        ['folders', user_email],
-        (oldData: FolderInterface[]) => {
-          return [newFolder, ...oldData]
+        ['folders', course_name],
+        (oldData: FolderInterface[] | undefined) => {
+          const safeOld = Array.isArray(oldData) ? oldData : []
+          return [newFolder, ...safeOld]
         },
       )
 
-      const oldFolders = queryClient.getQueryData(['folders', user_email])
+      const oldFolders = queryClient.getQueryData(['folders', course_name])
 
       return { newFolder, oldFolders }
     },
     onError: (error, variables, context) => {
-      queryClient.setQueryData(['folders', user_email], context?.oldFolders)
+      queryClient.setQueryData(['folders', course_name], context?.oldFolders)
       console.error('Error saving updated folder to server:', error, context)
     },
     onSuccess: (data, variables, context) => {
       // No need to do anything here because the folders query will be invalidated
     },
     onSettled: (data, error, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['folders', user_email] })
+      queryClient.invalidateQueries({ queryKey: ['folders', course_name] })
     },
   })
 }
@@ -67,16 +64,17 @@ export function useUpdateFolder(
   course_name: string,
 ) {
   return useMutation({
-    mutationKey: ['updateFolder', user_email],
+    mutationKey: ['updateFolder', user_email, course_name],
     mutationFn: async (folder: FolderWithConversation) =>
-      saveFolderToServer(folder, user_email),
+      saveFolderToServer(folder, course_name, user_email),
     onMutate: async (updatedFolder: FolderWithConversation) => {
-      await queryClient.cancelQueries({ queryKey: ['folders', user_email] })
+      await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
-        ['folders', user_email],
-        (oldData: FolderWithConversation[]) => {
-          return oldData.map((f: FolderWithConversation) => {
+        ['folders', course_name],
+        (oldData: FolderWithConversation[] | undefined) => {
+          const safeOld = Array.isArray(oldData) ? oldData : []
+          return safeOld.map((f: FolderWithConversation) => {
             if (f.id === updatedFolder.id) {
               return updatedFolder
             }
@@ -85,21 +83,21 @@ export function useUpdateFolder(
         },
       )
 
-      const oldFolder = queryClient.getQueryData(['folders', user_email])
+      const oldFolder = queryClient.getQueryData(['folders', course_name])
 
       return { oldFolder, updatedFolder }
     },
     onError: (error, variables, context) => {
-      queryClient.setQueryData(['folders', user_email], context?.oldFolder)
+      queryClient.setQueryData(['folders', course_name], context?.oldFolder)
       console.error('Error saving updated folder to server:', error, context)
     },
     onSuccess: (data, variables, context) => {
       // No need to do anything here because the folders query will be invalidated
     },
     onSettled: (data, error, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['folders', user_email] })
+      queryClient.invalidateQueries({ queryKey: ['folders', course_name] })
       queryClient.invalidateQueries({
-        queryKey: ['conversationHistory', user_email, course_name],
+        queryKey: ['conversationHistory', course_name],
       })
     },
   })
@@ -111,36 +109,37 @@ export function useDeleteFolder(
   course_name: string,
 ) {
   return useMutation({
-    mutationKey: ['deleteFolder', user_email],
+    mutationKey: ['deleteFolder', user_email, course_name],
     mutationFn: async (deletedFolder: FolderWithConversation) =>
-      deleteFolderFromServer(deletedFolder),
+      deleteFolderFromServer(deletedFolder, course_name, user_email),
     onMutate: async (deletedFolder: FolderWithConversation) => {
-      await queryClient.cancelQueries({ queryKey: ['folders', user_email] })
+      await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
-        ['folders', user_email],
-        (oldData: FolderWithConversation[]) => {
-          return oldData.filter(
+        ['folders', course_name],
+        (oldData: FolderWithConversation[] | undefined) => {
+          const safeOld = Array.isArray(oldData) ? oldData : []
+          return safeOld.filter(
             (f: FolderWithConversation) => f.id !== deletedFolder.id,
           )
         },
       )
 
-      const oldFolder = queryClient.getQueryData(['folders', user_email])
+      const oldFolder = queryClient.getQueryData(['folders', course_name])
 
       return { oldFolder, deletedFolder }
     },
     onError: (error, variables, context) => {
-      queryClient.setQueryData(['folders', user_email], context?.oldFolder)
+      queryClient.setQueryData(['folders', course_name], context?.oldFolder)
       console.error('Error deleting folder from server:', error, context)
     },
     onSuccess: (data, variables, context) => {
       // No need to do anything here because the folders query will be invalidated
     },
     onSettled: (data, error, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['folders', user_email] })
+      queryClient.invalidateQueries({ queryKey: ['folders', course_name] })
       queryClient.invalidateQueries({
-        queryKey: ['conversationHistory', user_email, course_name],
+        queryKey: ['conversationHistory', course_name],
       })
     },
   })

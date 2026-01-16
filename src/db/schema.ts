@@ -89,7 +89,9 @@ export const fileUploads = pgTable('file_uploads', {
   base_url: text('base_url'),
   contexts: jsonb('contexts'),
   course_name: text('course_name'),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  created_at: timestamp('created_at', { withTimezone: true })
+    .defaultNow()
+    .notNull(),
   readable_filename: text('readable_filename'),
   s3_path: text('s3_path'),
   url: text('url'),
@@ -158,7 +160,7 @@ export const conversations = pgTable('conversations', {
   folder_id: uuid('folder_id'),
 })
 
-// Documents table 
+// Documents table
 export const documents = pgTable('documents', {
   id: serial('id').primaryKey(),
   s3_path: text('s3_path'),

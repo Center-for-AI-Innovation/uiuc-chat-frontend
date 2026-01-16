@@ -26,7 +26,11 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { useUpdateConversation } from '~/hooks/conversationQueries'
+import {
+  useFetchConversationHistory,
+  useFetchLastConversation,
+  useUpdateConversation,
+} from '~/hooks/conversationQueries'
 import {
   useCreateFolder,
   useDeleteFolder,
@@ -65,9 +69,6 @@ const Home = ({
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
-  // Make a new conversation if the current one isn't empty
-  const [hasMadeNewConvoAlready, setHasMadeNewConvoAlready] = useState(false)
-
   // Add these two new state setters
   const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
   const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
@@ -95,21 +96,18 @@ const Home = ({
     course_name,
   )
 
-  // const {
-  //   data: conversationHistory,
-  //   isFetched: isConversationHistoryFetched,
-  //   isLoading: isLoadingConversationHistory,
-  //   error: errorConversationHistory,
-  //   refetch: refetchConversationHistory,
-  // } = useFetchConversationHistory(current_email as string)
-
   const {
     data: foldersData,
     isFetched: isFoldersFetched,
     isLoading: isLoadingFolders,
-    error: errorFolders,
-    refetch: refetchFolders,
-  } = useFetchFolders(current_email as string)
+  } = useFetchFolders(current_email as string, course_name as string)
+
+  // fetch last conversation to get the temperature
+  const {
+    data: lastConversation,
+    isFetched: isLastConversationFetched,
+    isLoading: isLastConversationLoading,
+  } = useFetchLastConversation(course_name, current_email)
 
   const stopConversationRef = useRef<boolean>(false)
   const getModels = useCallback(
@@ -147,12 +145,9 @@ const Home = ({
       folders,
       conversations,
       selectedConversation,
-      prompts,
-      temperature,
       llmProviders,
       documentGroups,
       tools,
-      searchTerm,
     },
     dispatch,
   } = contextValue
@@ -237,32 +232,6 @@ const Home = ({
     setOpenaiModel()
     setIsLoading(false)
   }, [course_metadata, apiKey])
-
-  // ---- Set up conversations and folders ----
-  // useEffect(() => {
-  //   // console.log("In useEffect for selectedConversation, home.tsx, selectedConversation: ", selectedConversation)
-  //   // ALWAYS make a new convo if current one isn't empty
-  //   if (!selectedConversation) return
-  //   if (hasMadeNewConvoAlready) return
-  //   setHasMadeNewConvoAlready(true)
-
-  //   // if (selectedConversation?.messages.length > 0) {
-  //   handleNewConversation()
-  //   // }
-  // }, [selectedConversation, conversations])
-
-  // useEffect(() => {
-  //   if (isConversationHistoryFetched && !isLoadingConversationHistory) {
-  //     // fetchData()
-  //     console.log(
-  //       'conversationHistory storing in react context: ',
-  //       conversationHistory,
-  //     )
-  //     dispatch({ field: 'conversations', value: conversationHistory })
-  //     // Should we save the conversation history to local storage? This usually exceeds the limit.
-  //     // localStorage.setItem('conversationHistory', JSON.stringify(conversationHistory))
-  //   }
-  // }, [conversationHistory])
 
   useEffect(() => {
     if (isFoldersFetched && !isLoadingFolders) {
@@ -381,8 +350,6 @@ const Home = ({
       return
     }
 
-    const lastConversation = conversations[conversations.length - 1]
-
     // Determine the model to use for the new conversation
     const model = selectBestModel(llmProviders)
 
@@ -399,7 +366,11 @@ const Home = ({
       messages: [],
       model: model,
       prompt: DEFAULT_SYSTEM_PROMPT,
-      temperature: selectBestTemperature(lastConversation, model, llmProviders),
+      temperature: selectBestTemperature(
+        lastConversation,
+        selectedConversation,
+        llmProviders,
+      ),
       folderId: null,
       userEmail: current_email,
       projectName: course_name,
@@ -505,7 +476,13 @@ const Home = ({
       // Add new conversation to the list
       updatedConversations = [updatedConversation, ...conversations]
     }
-    updateConversationMutation.mutate(updatedConversation)
+    const latestMessage =
+      updatedConversation.messages?.[updatedConversation.messages.length - 1] ??
+      null
+    updateConversationMutation.mutate({
+      conversation: updatedConversation,
+      message: latestMessage,
+    })
     dispatch({ field: 'conversations', value: updatedConversations })
   }
 
@@ -567,8 +544,6 @@ const Home = ({
     )
     dispatch({ field: 'tools', value: tools })
   }
-  const [isDragging, setIsDragging] = useState<boolean>(false)
-  const [dragEnterCounter, setDragEnterCounter] = useState(0)
 
   const GradientIconPhoto = () => (
     <svg
@@ -597,62 +572,6 @@ const Home = ({
     </svg>
   )
 
-  // EFFECTS for file drag and drop --------------------------------------------
-  useEffect(() => {
-    const handleDocumentDragOver = (e: DragEvent) => {
-      e.preventDefault()
-    }
-
-    const handleDocumentDragEnter = (e: DragEvent) => {
-      setDragEnterCounter((prev) => prev + 1)
-      setIsDragging(true)
-    }
-
-    const handleDocumentDragLeave = (e: DragEvent) => {
-      e.preventDefault()
-      setDragEnterCounter((prev) => prev - 1)
-      if (dragEnterCounter === 1 || e.relatedTarget === null) {
-        setIsDragging(false)
-      }
-    }
-
-    const handleDocumentDrop = (e: DragEvent) => {
-      e.preventDefault()
-      setIsDragging(false)
-      setDragEnterCounter(0)
-    }
-
-    const handleDocumentKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsDragging(false)
-        setDragEnterCounter(0)
-      }
-    }
-
-    const handleMouseOut = (e: MouseEvent) => {
-      if (!e.relatedTarget) {
-        setIsDragging(false)
-        setDragEnterCounter(0)
-      }
-    }
-
-    document.addEventListener('dragover', handleDocumentDragOver)
-    document.addEventListener('dragenter', handleDocumentDragEnter)
-    document.addEventListener('dragleave', handleDocumentDragLeave)
-    document.addEventListener('drop', handleDocumentDrop)
-    document.addEventListener('keydown', handleDocumentKeyDown)
-    window.addEventListener('mouseout', handleMouseOut)
-
-    return () => {
-      document.removeEventListener('dragover', handleDocumentDragOver)
-      document.removeEventListener('dragenter', handleDocumentDragEnter)
-      document.removeEventListener('dragleave', handleDocumentDragLeave)
-      document.removeEventListener('drop', handleDocumentDrop)
-      document.removeEventListener('keydown', handleDocumentKeyDown)
-      window.removeEventListener('mouseout', handleMouseOut)
-    }
-  }, [])
-
   useEffect(() => {
     if (window.innerWidth < 640) {
       dispatch({ field: 'showChatbar', value: false })
@@ -673,6 +592,8 @@ const Home = ({
 
   useEffect(() => {
     const initialSetup = async () => {
+      // Don't run initial setup until conversation history is loaded into context
+      if (!isLastConversationFetched || isLastConversationLoading) return
       if (isInitialSetupDone) return
 
       if (window.innerWidth < 640) {
@@ -684,10 +605,13 @@ const Home = ({
         dispatch({ field: 'showChatbar', value: showChatbar === 'true' })
       }
 
-      const selectedConversation = localStorage.getItem('selectedConversation')
-      if (selectedConversation) {
-        const parsedSelectedConversation: Conversation =
-          JSON.parse(selectedConversation)
+      const selectedConversationString = localStorage.getItem(
+        'selectedConversation',
+      )
+      if (selectedConversationString) {
+        const parsedSelectedConversation: Conversation = JSON.parse(
+          selectedConversationString,
+        )
         if (parsedSelectedConversation.projectName === course_name) {
           const cleanedSelectedConversation = cleanSelectedConversation(
             parsedSelectedConversation,
@@ -720,7 +644,13 @@ const Home = ({
     if (!isInitialSetupDone) {
       initialSetup()
     }
-  }, [dispatch, llmProviders, current_email]) // ! serverSidePluginKeysSet, removed
+  }, [
+    dispatch,
+    llmProviders,
+    current_email,
+    isLastConversationFetched,
+    isLastConversationLoading,
+  ]) // ! serverSidePluginKeysSet, removed
   // }, [defaultModelId, dispatch, serverSidePluginKeysSet, models, conversations]) // original!
 
   if (isLoading || !isInitialSetupDone) {
@@ -777,9 +707,9 @@ const Home = ({
             <Navbar isPlain={false} />
 
             <div className="flex h-full w-full overflow-y-auto sm:pt-0">
-              {isDragging &&
+              {/* {isDragging &&
                 VisionCapableModels.has(
-                  selectedConversation?.model.id as OpenAIModelID,
+                  selectedConversation?.model.id as any,
                 ) && (
                   <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
                     <GradientIconPhoto />
@@ -787,7 +717,7 @@ const Home = ({
                       Drop your image here!
                     </span>
                   </div>
-                )}
+                )} */}
 
               <Chatbar
                 current_email={current_email}

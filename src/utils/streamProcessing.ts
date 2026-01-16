@@ -2,14 +2,14 @@ import { type CoreMessage } from 'ai'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import posthog from 'posthog-js'
 import { v4 as uuidv4 } from 'uuid'
-import { runBedrockChat } from '~/app/api/chat/bedrock/route'
-import { runGeminiChat } from '~/app/api/chat/gemini/route'
-import { runSambaNovaChat } from '~/app/api/chat/sambanova/route'
+import { runBedrockChat } from '~/app/utils/bedrock'
+import { runGeminiChat } from '~/utils/modelProviders/routes/gemini'
+import { runSambaNovaChat } from '~/app/utils/sambanova'
 import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
-import { fetchContexts } from '~/pages/api/getContexts'
-import { fetchMQRContexts }from '~/pages/api/getContextsMQR'
+import { runOpenAICompatibleChat } from '~/app/utils/openaiCompatible'
+import { fetchContexts, fetchMQRContexts } from '~/utils/fetchContexts'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   type ChatApiBody,
@@ -21,6 +21,7 @@ import {
 } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { getBaseUrl } from '~/utils/apiUtils'
+import { createLogConversationPayload } from '~/utils/app/conversation'
 import {
   type AllLLMProviders,
   AllSupportedModels,
@@ -30,6 +31,7 @@ import {
   type GenericSupportedModel,
   type NCSAHostedVLMProvider,
   type OllamaProvider,
+  type OpenAICompatibleProvider,
   ProviderNames,
   type SambaNovaProvider,
   VisionCapableModels,
@@ -381,10 +383,7 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
       Array.isArray(message.content) &&
       message.content.some((content) => content.type === 'image_url'),
   )
-  if (
-    hasImageContent &&
-    !VisionCapableModels.has(body.model as OpenAIModelID)
-  ) {
+  if (hasImageContent && !VisionCapableModels.has(body.model as any)) {
     throw new Error(
       `The selected model '${body.model}' does not support vision capabilities. Use one of these: ${Array.from(VisionCapableModels).join(', ')}`,
     )
@@ -423,7 +422,11 @@ export const handleContextSearch = async (
   documentGroups: string[],
 ): Promise<ContextWithMetadata[]> => {
   // Check if this message already has contexts (from file upload)
-  if (message.contexts && Array.isArray(message.contexts) && message.contexts.length > 0) {
+  if (
+    message.contexts &&
+    Array.isArray(message.contexts) &&
+    message.contexts.length > 0
+  ) {
     return message.contexts
   }
   if (courseName !== 'gpt4') {
@@ -635,20 +638,23 @@ export async function updateConversationInDatabase(
   // Log conversation
   try {
     const baseUrl = await getBaseUrl()
-    const response = await fetch(
-      `${baseUrl}/api/UIUC-api/logConversation`,
-      {
+    const latestMessage =
+      conversation.messages?.[conversation.messages.length - 1] ?? null
+    if (latestMessage) {
+      await fetch(`${baseUrl}/api/UIUC-api/logConversation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          course_name: course_name,
-          conversation: conversation,
-        }),
-      },
-    )
-    // const data = await response.json()
+        body: JSON.stringify(
+          createLogConversationPayload(
+            course_name,
+            conversation,
+            latestMessage,
+          ),
+        ),
+      })
+    }
   } catch (error) {
     console.error('Error setting course data:', error)
     // return false
@@ -763,17 +769,19 @@ function convertMessagesToVercelAISDKv3(
     } else if (Array.isArray(message.content)) {
       // Handle both text and file content
       const textParts: string[] = []
-      
+
       message.content.forEach((c) => {
         if (c.type === 'text') {
           textParts.push(c.text || '')
         } else if (c.type === 'file') {
           // Convert file content to text representation for commercial models
-          textParts.push(`[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`)
+          textParts.push(
+            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+          )
         }
         // Note: image_url and other content types may need special handling
       })
-      
+
       content = textParts.join('\n')
     } else {
       content = message.content as string
@@ -820,6 +828,19 @@ export const routeModelRequest = async (
   })
 
   if (
+    chatBody?.llmProviders?.OpenAICompatible?.enabled &&
+    (chatBody.llmProviders.OpenAICompatible.models || []).some(
+      (m) =>
+        m.enabled &&
+        m.id.toLowerCase() === selectedConversation.model.id.toLowerCase(),
+    )
+  ) {
+    return await runOpenAICompatibleChat(
+      selectedConversation,
+      chatBody.llmProviders.OpenAICompatible as OpenAICompatibleProvider,
+      chatBody.stream,
+    )
+  } else if (
     Object.values(NCSAHostedVLMModelID).includes(
       selectedConversation.model.id as any,
     )

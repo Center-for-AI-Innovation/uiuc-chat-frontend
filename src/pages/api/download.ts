@@ -3,8 +3,11 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
-const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
+export default withCourseAccessFromRequest('any')(handler)
+
+async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
     const { filePath, courseName, fileName } = req.body as {
       filePath: string
@@ -83,5 +86,3 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
     }
   }
 }
-
-export default handler

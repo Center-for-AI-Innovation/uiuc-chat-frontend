@@ -221,6 +221,8 @@ const SourcesSidebar = ({
         <div className="flex-1 overflow-y-auto">{renderContent()}</div>
 
         <button
+          tabIndex={0}
+          aria-label="Close Citations"
           className={`absolute right-[270px] top-5 z-50 h-7 w-7 text-[--foreground-faded] hover:text-[--foreground] sm:top-0.5 sm:h-8 sm:w-8`}
           onClick={handleClose}
         >

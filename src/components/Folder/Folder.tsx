@@ -20,6 +20,8 @@ import HomeContext from '~/pages/api/home/home.context'
 
 import SidebarActionButton from '@/components/Buttons/SidebarActionButton'
 
+import { Tooltip } from '@mantine/core'
+
 interface Props {
   currentFolder: FolderInterface
   searchTerm: string
@@ -102,6 +104,7 @@ const Folder = ({
               <IconCaretRight size={18} />
             )}
             <input
+              aria-label="Rename Folder Input"
               className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-neutral-400 bg-transparent text-left text-[12.5px] leading-3 text-white outline-none focus:border-neutral-100"
               type="text"
               value={renameValue}
@@ -112,7 +115,9 @@ const Folder = ({
           </div>
         ) : (
           <button
-            className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm text-[--foreground] transition-colors duration-200 hover:bg-[--background-faded]`}
+            tabIndex={0}
+            aria-label={isOpen ? 'Close Folder' : 'Open Folder'}
+            className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 pr-14 text-sm text-[--foreground] transition-colors duration-200 hover:bg-[--background-faded]`}
             onClick={() => setIsOpen(!isOpen)}
             onDrop={(e) => dropHandler(e)}
             onDragOver={allowDrop}
@@ -124,16 +129,23 @@ const Folder = ({
             ) : (
               <IconCaretRight size={18} />
             )}
-
-            <div className="relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3">
-              {currentFolder.name}
-            </div>
+            <Tooltip
+              label={currentFolder.name}
+              position="top-end"
+              withArrow
+              multiline
+            >
+              <div className="relative max-h-5 min-w-0 flex-1 truncate text-ellipsis whitespace-nowrap break-all text-left text-sm leading-3">
+                {currentFolder.name}
+              </div>
+            </Tooltip>
           </button>
         )}
 
         {(isDeleting || isRenaming) && (
           <div className="absolute right-1 z-10 flex">
             <SidebarActionButton
+              ariaLabel={isDeleting ? 'Confirm Delete' : 'Confirm Rename'}
               handleClick={(e) => {
                 e.stopPropagation()
 
@@ -153,6 +165,7 @@ const Folder = ({
               />
             </SidebarActionButton>
             <SidebarActionButton
+              ariaLabel="Cancel"
               handleClick={(e) => {
                 e.stopPropagation()
                 setIsDeleting(false)
@@ -170,6 +183,7 @@ const Folder = ({
         {!isDeleting && !isRenaming && (
           <div className="absolute right-1 z-10 flex">
             <SidebarActionButton
+              ariaLabel="Edit Folder"
               handleClick={(e) => {
                 e.stopPropagation()
                 setIsRenaming(true)
@@ -179,6 +193,7 @@ const Folder = ({
               <IconPencil size={18} />
             </SidebarActionButton>
             <SidebarActionButton
+              ariaLabel="Delete Folder"
               handleClick={(e) => {
                 e.stopPropagation()
                 setIsDeleting(true)

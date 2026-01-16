@@ -152,6 +152,9 @@ export const OpenAIStream = async (
         OPENAI_ORGANIZATION && {
           'OpenAI-Organization': OPENAI_ORGANIZATION,
         }),
+      ...(apiType === ProviderNames.NCSAHostedVLM && {
+        Authorization: `Bearer ${provider!.apiKey}`,
+      }),
     },
     method: 'POST',
     body: body,
@@ -160,22 +163,28 @@ export const OpenAIStream = async (
   const encoder = new TextEncoder()
   const decoder = new TextDecoder()
 
-  if (res.status !== 200) {
-    const result = await res.json()
-    if (result.error) {
+  if (!res.ok) {
+    const raw = await res.text() // always consume body as text once
+    let parsed: any = null
+
+    try {
+      parsed = JSON.parse(raw)
+    } catch {
+      // not JSON, ignore
+    }
+
+    if (parsed?.error) {
       throw new OpenAIError(
-        result.error.message,
-        result.error.type,
-        result.error.param,
-        result.error.code,
-      )
-    } else {
-      throw new Error(
-        `OpenAI API returned an error: ${
-          decoder.decode(result?.value) || result.statusText
-        }`,
+        parsed.error.message,
+        parsed.error.type,
+        parsed.error.param,
+        parsed.error.code,
       )
     }
+
+    throw new Error(
+      `OpenAI API returned an error (${res.status}): ${parsed?.message || raw || res.statusText}`,
+    )
   }
 
   if (stream) {

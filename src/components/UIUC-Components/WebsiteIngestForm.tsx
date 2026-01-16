@@ -51,10 +51,6 @@ export default function WebsiteIngestForm({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
-  const useIllinoisChatConfig = useMemo(() => {
-    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
-  }, [])
-
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -143,6 +139,12 @@ export default function WebsiteIngestForm({
           maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
           scrapeStrategy,
         )
+        // Transition to 'ingesting' status after API call succeeds
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'ingesting' } : file,
+          ),
+        )
       } catch (error: unknown) {
         console.error('Error while scraping web:', error)
         setUploadFiles((prevFiles) =>
@@ -200,20 +202,38 @@ export default function WebsiteIngestForm({
       ) => {
         return currentFiles.map((file) => {
           if (file.type !== 'webscrape') return file
+          const fileUrl = file.url ?? ''
 
           const isStillIngesting = docsInProgress.some(
-            (doc) => doc.base_url === file.name,
+            (doc) =>
+              doc.base_url === file.name ||
+              (file.isBaseUrl && doc.base_url === file.url),
           )
 
           if (file.status === 'uploading' && isStillIngesting) {
             return { ...file, status: 'ingesting' as const }
           } else if (file.status === 'ingesting') {
             if (!isStillIngesting) {
+              // Check if any child URLs are still in progress
+              const childFiles = currentFiles.filter(
+                (f) => f.url && f.url !== fileUrl && f.url.startsWith(fileUrl),
+              )
+              const allChildrenDone =
+                childFiles.length === 0 ||
+                childFiles.every(
+                  (f) => f.status === 'complete' || f.status === 'error',
+                )
+
               const isInCompletedDocs = docsData?.documents?.some(
-                (doc: { url: string }) => doc.url === file.url,
+                (doc: { url: string; base_url?: string }) =>
+                  doc.url === file.url ||
+                  (file.isBaseUrl && doc.base_url === file.url),
               )
 
-              if (isInCompletedDocs) {
+              if (file.isBaseUrl && allChildrenDone && isInCompletedDocs) {
+                // Base URL can only complete if all children done
+                return { ...file, status: 'complete' as const }
+              } else if (!file.isBaseUrl && isInCompletedDocs) {
                 return { ...file, status: 'complete' as const }
               }
 
@@ -368,7 +388,12 @@ export default function WebsiteIngestForm({
           }
         }}
       >
-        <DialogTrigger asChild>
+        <DialogTrigger
+          asChild
+          role="link"
+          tabIndex={0}
+          className="focus:bg-[--dashboard-background-dark]"
+        >
           <Card
             className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[--dashboard-border] bg-transparent px-6 py-4 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
@@ -414,15 +439,6 @@ export default function WebsiteIngestForm({
                     event.preventDefault()
                   }}
                 >
-                  {useIllinoisChatConfig && (
-                    <Text
-                      style={{ color: 'red', fontSize: '16px' }}
-                      className={`${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      Coming soon! Contact us if interested.
-                    </Text>
-                  )}
-
                   <Input
                     icon={icon}
                     className="w-full rounded-full"
@@ -450,7 +466,6 @@ export default function WebsiteIngestForm({
                     onChange={(e) => {
                       handleUrlChange(e)
                     }}
-                    disabled={useIllinoisChatConfig} // Disable if using Illinois Chat config
                   />
                   <div className="pb-2 pt-2">
                     <Tooltip
@@ -506,7 +521,6 @@ export default function WebsiteIngestForm({
                               width: '100%',
                             },
                           }}
-                          disabled={useIllinoisChatConfig}
                         />
                       </div>
                     </Tooltip>

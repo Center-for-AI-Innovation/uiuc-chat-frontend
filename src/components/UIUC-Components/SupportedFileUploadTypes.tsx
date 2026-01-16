@@ -109,14 +109,15 @@ const useStyles = createStyles((theme) => ({
 const SupportedFileUploadTypes = () => {
   const { classes, theme } = useStyles()
   // className={classes.wrapper}
+  // FIXME: disable audio and video temporarily until figure out Whisper model
   const fileTypes: FileType[] = [
     { icon: IconFileTypePdf, label: 'PDF', color: 'text-red-500' },
     { icon: IconFileTypeDocx, label: 'Word', color: 'text-blue-500' },
     { icon: IconFileTypePpt, label: 'PPT', color: 'text-orange-500' },
     { icon: IconFileTypeXls, label: 'Excel', color: 'text-green-500' },
-    { icon: IconVideo, label: 'Video', color: 'text-purple-500' },
+    // { icon: IconVideo, label: 'Video', color: 'text-purple-500' },
     { icon: IconPhoto, label: 'Image', color: 'text-pink-500' },
-    { icon: IconMusic, label: 'Audio', color: 'text-yellow-500' },
+    // { icon: IconMusic, label: 'Audio', color: 'text-yellow-500' },
     { icon: IconCode, label: 'Code', color: 'text-cyan-500' },
     {
       icon: IconFileTypeTxt,
@@ -138,7 +139,7 @@ const SupportedFileUploadTypes = () => {
 
             return (
               <Tooltip key={index}>
-                <TooltipTrigger>
+                <TooltipTrigger tabIndex={-1}>
                   <motion.div
                     whileHover={{ scale: 1.1 }}
                     className="flex flex-col items-center"

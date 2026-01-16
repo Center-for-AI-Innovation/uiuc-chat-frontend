@@ -3,11 +3,10 @@
 import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
-import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 
 import { Card, Flex, Title, useMantineTheme } from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
@@ -22,6 +21,9 @@ import SettingsLayout, {
 import PromptEditor from '~/components/UIUC-Components/PromptEditor'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
+import { useTranslation } from 'next-i18next'
+import { CourseMetadata } from '~/types/courseMetadata'
+import { fetchCourseMetadata } from '~/utils/apiUtils'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -29,13 +31,17 @@ const montserrat = Montserrat({
 })
 
 const CourseMain: NextPage = () => {
-  const theme = useMantineTheme()
   const router = useRouter()
 
-  const GetCurrentPageName = () => {
-    return router.query.course_name as string
+  const getCurrentPageName = () => {
+    const raw = router.query.course_name
+    return typeof raw === 'string'
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
-  const course_name = GetCurrentPageName() as string
+  const courseName = getCurrentPageName() as string
 
   const auth = useAuth()
   const isLoaded = !auth.isLoading
@@ -46,31 +52,50 @@ const CourseMain: NextPage = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   useEffect(() => {
+    if (!router.isReady || auth.isLoading) return
     const fetchCourseData = async () => {
-      if (course_name === undefined) {
-        return
-      }
+      setIsLoading(true)
       const response = await fetch(
-        `/api/UIUC-api/getCourseExists?course_name=${course_name}`,
+        `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
       )
       const data = await response.json()
       setCourseExists(data)
-      setIsLoading(false)
+      try {
+        const fetchedMetadata: CourseMetadata = (await fetchCourseMetadata(
+          courseName,
+        )) as CourseMetadata
+        if (fetchedMetadata === null) {
+          setErrorType(404)
+          return
+        }
+      } catch (error) {
+        console.error(error)
+
+        const errorWithStatus = error as Error & { status?: number }
+        const status = errorWithStatus.status
+        if (status === 401 || status === 403 || status === 404) {
+          setErrorType(status as 401 | 403 | 404)
+        }
+      } finally {
+        setIsLoading(false)
+      }
     }
     fetchCourseData()
-  }, [router.isReady, course_name])
+  }, [router.isReady, auth.isLoading, courseName])
+
 
   if (!isLoaded || isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
 
   if (!isSignedIn) {
-    console.log('User not logged in', isSignedIn, isLoaded, course_name)
-    return <AuthComponent course_name={course_name} />
+    console.log('User not logged in', isSignedIn, isLoaded, courseName)
+    return <PermissionGate course_name={courseName} />
   }
 
   const user_emails = user?.profile?.email ? [user.profile.email] : []
@@ -98,11 +123,12 @@ const CourseMain: NextPage = () => {
 
   // Don't edit certain special pages (no context allowed)
   if (
-    course_name.toLowerCase() == 'gpt4' ||
-    course_name.toLowerCase() == 'global' ||
-    course_name.toLowerCase() == 'extreme'
+    courseName &&
+    (courseName.toLowerCase() == 'gpt4' ||
+      courseName.toLowerCase() == 'global' ||
+      courseName.toLowerCase() == 'extreme')
   ) {
-    return <CannotEditGPT4Page course_name={course_name as string} />
+    return <CannotEditGPT4Page course_name={courseName as string} />
   }
 
   if (courseExists === null) {
@@ -113,18 +139,18 @@ const CourseMain: NextPage = () => {
     )
   }
 
-  if (courseExists === false) {
+  if (errorType !== null) {
     return (
-      <MakeNewCoursePage
-        project_name={course_name as string}
-        current_user_email={user_emails[0] as string}
+      <PermissionGate
+        course_name={courseName ? (courseName as string) : 'new'}
+        errorType={errorType}
       />
     )
   }
 
   return (
     <SettingsLayout
-      course_name={course_name}
+      course_name={courseName}
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}
     >
@@ -142,7 +168,7 @@ const CourseMain: NextPage = () => {
               }}
             >
               <PromptEditor
-                project_name={course_name}
+                project_name={courseName}
                 isEmbedded={false}
                 showHeader={true}
                 userEmail={user?.profile?.email as string}
@@ -150,8 +176,9 @@ const CourseMain: NextPage = () => {
             </Card>
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }

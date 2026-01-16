@@ -113,6 +113,7 @@ export default function SetExampleQuestions({
         {/*
         <Group position="right" mt="md">
           <Button
+            tabIndex={0}
             className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
             type="submit"
           >
