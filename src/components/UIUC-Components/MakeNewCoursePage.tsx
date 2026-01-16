@@ -1,21 +1,10 @@
 import Head from 'next/head'
 import React, { useMemo, useState } from 'react'
 
-import {
-  Button,
-  Card,
-  Flex,
-  Group,
-  Loader,
-  Textarea,
-  TextInput,
-  Title,
-  Tooltip,
-} from '@mantine/core'
-import { useDebouncedValue, useMediaQuery } from '@mantine/hooks'
+import { Button, Card } from '@mantine/core'
+import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { createProject } from '~/utils/apiUtils'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -41,7 +30,6 @@ const MakeNewCoursePage = ({
   is_new_course?: boolean
   project_description?: string
 }) => {
-  const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const queryClient = useQueryClient()
   const auth = useAuth()
   const user_id = auth.user?.profile.email || current_user_email
@@ -63,7 +51,7 @@ const MakeNewCoursePage = ({
   const [debouncedProjectName] = useDebouncedValue(projectName, 500)
 
   // Check project name availability using React Query
-  const { data: courseExists, isLoading: isCheckingAvailability } =
+  const { data: courseExists, isFetching: isCheckingAvailability } =
     useQuery<boolean>({
       queryKey: ['projectNameAvailability', debouncedProjectName],
       queryFn: async () => {
@@ -92,9 +80,10 @@ const MakeNewCoursePage = ({
           ? false
           : undefined
 
-  // Check if we're waiting for debounce (user typed but debounce hasn't completed)
-  // This handles cases where user types, backspaces, or changes the input while debounce is in progress
-  const isWaitingForDebounce = projectName !== debouncedProjectName
+  // Check if we're waiting for debounce or API response
+  const isWaitingForAvailabilityCheck =
+    (projectName !== debouncedProjectName && projectName.length > 0) ||
+    isCheckingAvailability
 
   const handleSetUploadFiles = (
     updateFn: React.SetStateAction<FileUpload[]>,
@@ -121,6 +110,8 @@ const MakeNewCoursePage = ({
       project_name={projectName}
       project_description={projectDescription}
       is_new_course={!hasCreatedProject}
+      isCourseAvailable={isCourseAvailable}
+      isCheckingAvailability={isWaitingForAvailabilityCheck}
       onUpdateName={setProjectName}
       onUpdateDescription={setProjectDescription}
     />,
@@ -241,9 +232,9 @@ const MakeNewCoursePage = ({
           autoClose: 5000,
         })
       }
+      return false
     } finally {
       setIsLoading(false)
-      return false
     }
   }
 
@@ -316,7 +307,12 @@ const MakeNewCoursePage = ({
               onClick={async () => {
                 if (currentStep === 0) {
                   if (!hasCreatedProject) {
-                    if (projectName === '' || isLoading || !isCourseAvailable) {
+                    if (
+                      projectName === '' ||
+                      isLoading ||
+                      !isCourseAvailable ||
+                      isWaitingForAvailabilityCheck
+                    ) {
                       return
                     }
 
@@ -344,232 +340,16 @@ const MakeNewCoursePage = ({
                 shouldBlockNavigation ||
                 (currentStep === 0 &&
                   !hasCreatedProject &&
-                  (projectName === '' || !isCourseAvailable || isLoading))
+                  (projectName === '' ||
+                    !isCourseAvailable ||
+                    isLoading ||
+                    isWaitingForAvailabilityCheck))
               }
               loading={isLoading && currentStep === 0}
             >
               Continue
             </Button>
           </div>
-        </div>
-
-        <div className="hidden">
-          <Card
-            shadow="xs"
-            padding="none"
-            withBorder={false}
-            radius="lg"
-            // style={{ maxWidth: '85%', width: '100%', marginTop: '4%' }}
-            className="w-[96%] md:w-[90%] lg:max-w-[750px]"
-            style={{
-              backgroundColor: 'var(--dashboard-background-faded)',
-            }}
-          >
-            <Flex direction={isSmallScreen ? 'column' : 'row'}>
-              <div
-                style={{
-                  flex: isSmallScreen ? '1 1 100%' : '1 1 60%',
-                  border: 'None',
-                  color: 'var(--foreground)',
-                }}
-                className="min-h-full bg-[--dashboard-background-faded]"
-              >
-                <Group
-                  m="2rem"
-                  align="center"
-                  style={{ justifyContent: 'center' }}
-                >
-                  {/* Flex just to left align title. */}
-                  <Flex justify="flex-start" align="flex-start">
-                    <Title
-                      order={isSmallScreen ? 3 : 2}
-                      className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-3xl text-[--foreground]`}
-                    >
-                      {!is_new_course
-                        ? `${projectName}`
-                        : 'Create a new project'}
-                    </Title>
-                  </Flex>
-
-                  <Flex
-                    direction="column"
-                    gap="md"
-                    w={isSmallScreen ? '80%' : '60%'}
-                  >
-                    <TextInput
-                      autoComplete="off"
-                      data-lpignore="true"
-                      data-form-type="other"
-                      styles={{
-                        input: {
-                          backgroundColor: 'var(--background)',
-                          paddingRight: '6rem',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          color: isCheckingAvailability
-                            ? 'var(--foreground)'
-                            : isCourseAvailable && projectName != ''
-                              ? 'var(--foreground)'
-                              : projectName !== '' &&
-                                  isCourseAvailable === false
-                                ? 'red'
-                                : 'var(--foreground)',
-                          '&:focus-within': {
-                            borderColor: isCheckingAvailability
-                              ? 'var(--foreground)'
-                              : isCourseAvailable && projectName !== ''
-                                ? 'green'
-                                : projectName !== '' &&
-                                    isCourseAvailable === false
-                                  ? 'red'
-                                  : 'var(--foreground)',
-                          },
-                          fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
-                          font: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                        },
-                        label: {
-                          fontWeight: 'bold',
-                          fontSize: '1rem',
-                          color: 'var(--foreground)',
-                          marginBottom: '1rem',
-                        },
-                      }}
-                      placeholder="Project name"
-                      radius={'md'}
-                      type="text"
-                      value={projectName}
-                      label="What is the project name?"
-                      size={'lg'}
-                      disabled={!is_new_course}
-                      onChange={(e) =>
-                        setProjectName(e.target.value.replaceAll(' ', '-'))
-                      }
-                      autoFocus
-                      withAsterisk
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                      rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
-                      rightSection={
-                        isCheckingAvailability && projectName.length > 0 ? (
-                          <Loader size="xs" />
-                        ) : null
-                      }
-                    />
-
-                    <div className="text-sm text-[--foreground-faded]">
-                      The project name will be used as part of the unique url
-                      across the entire campus.
-                    </div>
-
-                    <Flex direction="row" align="flex-end">
-                      <label
-                        className={`${montserrat_paragraph.variable} mt-4 font-montserratParagraph font-bold text-[--foreground]`}
-                      >
-                        What do you want to achieve?
-                      </label>
-                      <label
-                        className={`${montserrat_paragraph.variable} mt-5 pl-2 font-montserratParagraph text-[--foreground-faded]`}
-                      >
-                        (optional)
-                      </label>
-                    </Flex>
-                    <Textarea
-                      placeholder="Describe your project, goals, expected impact etc..."
-                      radius={'md'}
-                      value={projectDescription}
-                      onChange={(e) => setProjectDescription(e.target.value)}
-                      size={'lg'}
-                      minRows={4}
-                      styles={{
-                        input: {
-                          color: 'var(--foreground)',
-                          backgroundColor: 'var(--background)',
-                          fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
-                          font: `${montserrat_paragraph.variable} font-montserratParagraph`,
-                          // borderColor: '#8e44ad', // Grape color
-                          '&:focus': {
-                            borderColor: 'var(--illinois-orange)', // Grape color when focused/selected
-                          },
-                        },
-                        label: {
-                          fontWeight: 'bold',
-                          color: 'var(--foreground)',
-                        },
-                      }}
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                    />
-                    <Flex direction={'row'}>
-                      <Title
-                        order={isSmallScreen ? 5 : 4}
-                        className={`w-full pr-2 pr-7 ${montserrat_paragraph.variable} mt-2 font-montserratParagraph text-sm text-[--foreground]`}
-                      >
-                        Next: let&apos;s upload some documents
-                      </Title>
-                      <Tooltip
-                        label={
-                          projectName === ''
-                            ? 'Add a project name above :)'
-                            : isWaitingForDebounce || isCheckingAvailability
-                              ? 'Checking availability...'
-                              : !isCourseAvailable
-                                ? 'This project name is already taken!'
-                                : ''
-                        }
-                        withArrow
-                        disabled={
-                          projectName !== '' &&
-                          !isWaitingForDebounce &&
-                          !isCheckingAvailability &&
-                          isCourseAvailable
-                        }
-                        styles={{
-                          tooltip: {
-                            color: 'var(--tooltip)',
-                            backgroundColor: 'var(--tooltip-background)',
-                          },
-                        }}
-                      >
-                        <span>
-                          <Button
-                            onClick={async (e) => {
-                              await handleSubmit(
-                                projectName,
-                                projectDescription,
-                                current_user_email,
-                                useIllinoisChatConfig, // isPrivate: illinois chat project default to private
-                              )
-                            }}
-                            size="sm"
-                            radius={'sm'}
-                            className={`${isCourseAvailable && projectName !== '' && !isCheckingAvailability && !isWaitingForDebounce ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'}
-                        mt-2 min-w-[5-rem] transform overflow-ellipsis text-ellipsis p-2 focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
-                            // w={`${isSmallScreen ? '5rem' : '50%'}`}
-                            style={{
-                              alignSelf: 'flex-end',
-                            }}
-                            disabled={
-                              projectName === '' ||
-                              isLoading ||
-                              isWaitingForDebounce ||
-                              isCheckingAvailability ||
-                              !isCourseAvailable
-                            }
-                            leftIcon={
-                              isLoading ? (
-                                <Loader size="xs" color="white" />
-                              ) : null
-                            }
-                          >
-                            {isLoading ? 'Creating...' : 'Create'}
-                          </Button>
-                        </span>
-                      </Tooltip>
-                    </Flex>
-                  </Flex>
-                </Group>
-              </div>
-            </Flex>
-          </Card>
         </div>
       </main>
     </>
@@ -604,21 +384,6 @@ const componentClasses = {
       disabled:bg-[#13294B]/50
       disabled:!text-white/50
     `,
-  },
-
-  input: {
-    label: 'font-semibold text-base text-[--foreground]',
-    wrapper: '-ml-4',
-    input: `
-      mt-1
-
-      placeholder:text-[--foreground-faded]
-      text-[--foreground] bg-[--background]
-
-      border-[--foreground-faded] focus:border-[--foreground]
-      overflow-ellipsis
-    `,
-    description: 'text-sm text-[--foreground-faded]',
   },
 }
 

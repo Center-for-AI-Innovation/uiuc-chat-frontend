@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { Textarea, TextInput } from '@mantine/core'
-//import { useMediaQuery } from '@mantine/hooks'
-//import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import router from 'next/router'
+import { Loader, Textarea, TextInput } from '@mantine/core'
 
 import HeaderStepNavigation from './HeaderStepNavigation'
 
@@ -11,6 +8,8 @@ const StepCreate = ({
   project_name,
   is_new_course = true,
   project_description,
+  isCourseAvailable,
+  isCheckingAvailability,
 
   onUpdateName,
   onUpdateDescription,
@@ -18,66 +17,24 @@ const StepCreate = ({
   project_name: string
   is_new_course?: boolean
   project_description?: string
+  isCourseAvailable?: boolean
+  isCheckingAvailability?: boolean
 
   onUpdateName: (name: string) => void
   onUpdateDescription: (description: string) => void
 }) => {
-  //  const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const [projectName, setProjectName] = useState(project_name || '')
   const [projectDescription, setProjectDescription] = useState(
     project_description || '',
   )
-  const [isCourseAvailable, setIsCourseAvailable] = useState<
-    boolean | undefined
-  >(undefined)
-  const [allExistingCourseNames, setAllExistingCourseNames] = useState<
-    string[]
-  >([])
-  const checkCourseAvailability = () => {
-    const courseExists =
-      projectName != '' &&
-      allExistingCourseNames &&
-      allExistingCourseNames.includes(projectName)
-    setIsCourseAvailable(!courseExists)
-  }
-  const checkIfNewCoursePage = () => {
-    // `/new` --> `new`
-    // `/new?course_name=mycourse` --> `new`
-    return router.asPath.split('/')[1]?.split('?')[0] as string
-  }
-
-  //************** watchers **************
 
   useEffect(() => {
     onUpdateName(projectName)
   }, [projectName])
+
   useEffect(() => {
     onUpdateDescription(projectDescription)
   }, [projectDescription])
-
-  useEffect(() => {
-    // only run when creating new courses.. otherwise VERY wasteful on DB.
-    if (checkIfNewCoursePage() == 'new') {
-      async function fetchGetAllCourseNames() {
-        const response = await fetch(`/api/UIUC-api/getAllCourseNames`)
-
-        if (response.ok) {
-          const data = await response.json()
-          setAllExistingCourseNames(data.all_course_names)
-        } else {
-          console.error(`Error fetching course metadata: ${response.status}`)
-        }
-      }
-
-      fetchGetAllCourseNames().catch((error) => {
-        console.error(error)
-      })
-    }
-  }, [])
-
-  useEffect(() => {
-    checkCourseAvailability()
-  }, [projectName, allExistingCourseNames])
 
   return (
     <>
@@ -120,12 +77,21 @@ const StepCreate = ({
                   {window.location.origin}/{projectName}
                 </div>
 
-                {isCourseAvailable && projectName && (
-                  <div className="text-green-500">(url available)</div>
+                {isCheckingAvailability && (
+                  <div className="flex items-center gap-1 text-[--foreground-faded]">
+                    <Loader size="xs" />
+                    <span>(checking...)</span>
+                  </div>
                 )}
-                {(!isCourseAvailable || !projectName) && (
-                  <div className="text-[--error]">(url not available)</div>
-                )}
+                {!isCheckingAvailability &&
+                  isCourseAvailable &&
+                  projectName && (
+                    <div className="text-green-500">(url available)</div>
+                  )}
+                {!isCheckingAvailability &&
+                  (!isCourseAvailable || !projectName) && (
+                    <div className="text-[--error]">(url not available)</div>
+                  )}
               </div>
             )}
           </div>
@@ -151,22 +117,6 @@ const StepCreate = ({
 }
 
 const componentClasses = {
-  button: {
-    root: `
-      !text-[--dashboard-button-foreground]
-      bg-[--dashboard-button]
-      border-[--dashboard-button]
-
-      hover:!text-[--dashboard-button-foreground]
-      hover:bg-[--dashboard-button-hover]
-      hover:border-[--dashboard-button-hover]
-
-      disabled:bg-transparent
-      disabled:border-[--button-disabled]
-      disabled:!text-[--button-disabled-text-color]
-    `,
-  },
-
   input: {
     label: 'font-semibold text-base text-[--foreground]',
     wrapper: '-ml-3',
