@@ -558,7 +558,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         currentSwitchState.systemPromptOnly
       ) {
         changes.push(
-          `Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
+          `Bypass Illinois Chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
         )
       }
 
@@ -755,7 +755,7 @@ Key Objectives:
 7. Technical Requirements:
    - Keep all special syntax and formatting intact
    - Preserve any API-specific formatting
-   - Maintain compatibility with UIUC.chat's citation system (OPTIONAL, ONLY IF APPLICABLE and mentioned in the original prompt)
+   - Maintain compatibility with Illinois Chat's citation system (OPTIONAL, ONLY IF APPLICABLE and mentioned in the original prompt)
    - Ensure proper handling of code blocks and markdown
 
 Output Format:
@@ -770,7 +770,7 @@ Return ONLY the optimized system prompt with no additional commentary. The promp
 CRITICAL: The optimized prompt must:
 - Preserve ALL core functionality from the original
 - Enhance clarity and effectiveness
-- Maintain compatibility with UIUC.chat's features (OPTIONAL, ONLY IF APPLICABLE and mentioned in the original prompt)
+- Maintain compatibility with Illinois Chat's features (OPTIONAL, ONLY IF APPLICABLE and mentioned in the original prompt)
 - Support both RAG and non-RAG interactions appropriately
 - Keep any existing citation or formatting requirements
 - SHOULD NOT MENTION SPECIAL MODE HANDLING OR OPTIONAL SECTIONS IF THEY ARE NOT EXPLICITLY PRESENT IN THE ORIGINAL PROMPT
@@ -1674,7 +1674,7 @@ CRITICAL: The optimized prompt must:
                   />
 
                   <CustomSwitch
-                    label="Bypass UIUC.chat's internal prompting"
+                    label="Bypass Illinois Chat's internal prompting"
                     tooltip="Full control over bot behavior without internal prompting."
                     checked={systemPromptOnly}
                     onChange={(value: boolean) =>
@@ -1685,7 +1685,7 @@ CRITICAL: The optimized prompt must:
                   {systemPromptOnly && (
                     <div className="ml-[82px]">
                       <CustomCopyButton
-                        label="Copy UIUC.chat's internal prompt"
+                        label="Copy Illinois Chat's internal prompt"
                         tooltip="Get our default internal prompting as a starting point."
                         onClick={handleCopyDefaultPrompt}
                       />
@@ -1980,7 +1980,7 @@ CRITICAL: The optimized prompt must:
 
               <CustomSwitch
                 label="Smart Document Search"
-                tooltip="When enabled, UIUC.chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
+                tooltip="When enabled, Illinois Chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
                 checked={vectorSearchRewrite}
                 onChange={(value: boolean) => {
                   handleSettingChange({
@@ -2042,7 +2042,7 @@ CRITICAL: The optimized prompt must:
                   />
 
                   <CustomSwitch
-                    label="Bypass UIUC.chat's internal prompting"
+                    label="Bypass Illinois Chat's internal prompting"
                     tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
                     checked={systemPromptOnly}
                     onChange={(value: boolean) =>
@@ -2058,7 +2058,7 @@ CRITICAL: The optimized prompt must:
                       className="mt-[-4px] pl-[82px]"
                     >
                       <CustomCopyButton
-                        label="Copy UIUC.chat's internal prompt"
+                        label="Copy Illinois Chat's internal prompt"
                         tooltip="You can use and customize our default internal prompting to suit your needs. Note, only the specific citation formatting described will work with our citation 'find and replace' system. This provides a solid starting point for defining AI behavior in raw prompt mode."
                         onClick={handleCopyDefaultPrompt}
                       />
