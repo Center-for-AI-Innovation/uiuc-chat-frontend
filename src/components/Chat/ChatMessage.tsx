@@ -43,13 +43,17 @@ import HomeContext from '~/pages/api/home/home.context'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
+import { generateSecureKey } from '~/utils/cryptoRandom'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
 import { ImagePreview } from './ImagePreview'
 import MessageActions from './MessageActions'
 import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 
-import { saveConversationToServer } from '@/utils/app/conversation'
+import {
+  saveConversationToServer,
+  createLogConversationPayload,
+} from '@/utils/app/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -117,15 +121,32 @@ const FileCard: React.FC<{
     const iconProps = { size: 20 }
 
     if (type?.includes('pdf') || extension === 'pdf') {
-      return <IconFileTypePdf {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+      return (
+        <IconFileTypePdf
+          {...iconProps}
+          style={{ color: 'var(--illinois-orange)' }}
+        />
+      )
     }
     if (type?.includes('doc') || extension === 'docx' || extension === 'doc') {
-      return <IconFileTypeDocx {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+      return (
+        <IconFileTypeDocx
+          {...iconProps}
+          style={{ color: 'var(--illinois-orange)' }}
+        />
+      )
     }
     if (type?.includes('text') || extension === 'txt') {
-      return <IconFileTypeTxt {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+      return (
+        <IconFileTypeTxt
+          {...iconProps}
+          style={{ color: 'var(--illinois-orange)' }}
+        />
+      )
     }
-    return <IconFile {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+    return (
+      <IconFile {...iconProps} style={{ color: 'var(--illinois-orange)' }} />
+    )
   }
 
   const truncateFileName = (name: string, maxLength = 30) => {
@@ -163,7 +184,7 @@ const FileCard: React.FC<{
       }}
     >
       {getFileIcon(fileName, fileType)}
-      <span 
+      <span
         style={{
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -217,7 +238,7 @@ const FilePreviewModal: React.FC<{
 
   // Handle PDFs and Office documents that can be displayed in iframes
   const isPdf =
-    fileType?.includes('pdf') || 
+    fileType?.includes('pdf') ||
     fileName.toLowerCase().match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx)$/i)
   const isTextFile =
     fileType?.includes('text') ||
@@ -236,9 +257,9 @@ const FilePreviewModal: React.FC<{
   useEffect(() => {
     if (isTextFile && actualFileUrl && isOpen) {
       fetch(actualFileUrl)
-        .then(response => response.text())
-        .then(text => setTextContent(text))
-        .catch(error => {
+        .then((response) => response.text())
+        .then((text) => setTextContent(text))
+        .catch((error) => {
           console.error('Failed to load text content:', error)
           setTextContent('Failed to load file content')
         })
@@ -255,7 +276,9 @@ const FilePreviewModal: React.FC<{
       <Modal.Overlay className="modal-overlay-common" />
       <Modal.Content className="modal-common">
         <Modal.Header className="modal-header-common">
-          <Modal.Title className={`modal-title-common ${montserrat_heading.variable} font-montserratHeading`}>
+          <Modal.Title
+            className={`modal-title-common ${montserrat_heading.variable} font-montserratHeading`}
+          >
             {fileName}
           </Modal.Title>
           <Modal.CloseButton
@@ -283,8 +306,6 @@ const FilePreviewModal: React.FC<{
     </Modal.Root>
   )
 }
-
-
 
 // Add context for managing the active sources sidebar
 const SourcesSidebarContext = createContext<{
@@ -334,7 +355,7 @@ export interface Props {
   ) => void
   context?: ContextWithMetadata[]
   contentRenderer?: (message: Message) => JSX.Element
-      onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
+  onImageUrlsUpdate?: (message: Message, messageIndex: number) => void
   courseName: string
 }
 
@@ -398,19 +419,27 @@ function getFileType(s3Path?: string, url?: string) {
 
 function isFilePreviewable(fileName: string, fileType?: string): boolean {
   const extension = fileName.split('.').pop()?.toLowerCase()
-  
+
   // PDFs can be previewed
   if (fileType?.includes('pdf') || extension === 'pdf') {
     return true
   }
-  
+
   // Text files can be previewed
-  if (fileType?.includes('text') || extension === 'txt' || extension === 'md' || 
-      extension === 'html' || extension === 'xml' || extension === 'csv' || 
-      extension === 'py' || extension === 'srt' || extension === 'vtt') {
+  if (
+    fileType?.includes('text') ||
+    extension === 'txt' ||
+    extension === 'md' ||
+    extension === 'html' ||
+    extension === 'xml' ||
+    extension === 'csv' ||
+    extension === 'py' ||
+    extension === 'srt' ||
+    extension === 'vtt'
+  ) {
     return true
   }
-  
+
   // Office documents and other files cannot be previewed
   return false
 }
@@ -471,6 +500,51 @@ export const ChatMessage = memo(
 
     // Remove the local state for sources sidebar and use only context
     const isSourcesSidebarOpen = activeSidebarMessageId === message.id
+
+    // State to hold the contexts to display (either from this message or previous user message)
+    const [displayContexts, setDisplayContexts] = useState<
+      ContextWithMetadata[]
+    >([])
+
+    // Check if we should use the previous user message's context
+    useEffect(() => {
+      // Only run this logic if:
+      // 1. Current message is an assistant message
+      // 2. Current message has no contexts or empty contexts array
+      if (
+        message.role === 'assistant' &&
+        (!message.contexts ||
+          !Array.isArray(message.contexts) ||
+          message.contexts.length === 0)
+      ) {
+        // Check if there's a previous message
+        if (
+          selectedConversation &&
+          selectedConversation.messages &&
+          messageIndex > 0
+        ) {
+          const previousMessage =
+            selectedConversation.messages[messageIndex - 1]
+
+          // Check if previous message is a user message and has contexts
+          if (
+            previousMessage &&
+            previousMessage.role === 'user' &&
+            Array.isArray(previousMessage.contexts) &&
+            previousMessage.contexts.length > 0
+          ) {
+            // Use the previous user message's contexts
+            setDisplayContexts(previousMessage.contexts)
+            return
+          }
+        }
+      }
+
+      // Otherwise, use the current message's contexts (or empty array)
+      setDisplayContexts(
+        Array.isArray(message.contexts) ? message.contexts : [],
+      )
+    }, [message.role, message.contexts, messageIndex, selectedConversation])
 
     useEffect(() => {
       // Close Sources sidebar if right sidebar is opened
@@ -592,7 +666,10 @@ export const ChatMessage = memo(
         }
       }
       // Call fetchUrl for all messages that contain images
-      if (Array.isArray(message.content) && message.content.some(content => content.type === 'image_url')) {
+      if (
+        Array.isArray(message.content) &&
+        message.content.some((content) => content.type === 'image_url')
+      ) {
         fetchUrl()
       }
     }, [message.content, messageIndex, isRunningTool])
@@ -638,11 +715,15 @@ export const ChatMessage = memo(
 
       if (selectedConversation && onEdit) {
         let editedContent: string | Content[]
-        
+
         if (Array.isArray(message.content)) {
           // Preserve file and image content, only update text content
-          const nonTextContent = message.content.filter(content => content.type !== 'text')
-          const newTextContent = trimmedContent ? [{ type: 'text' as MessageType, text: trimmedContent }] : []
+          const nonTextContent = message.content.filter(
+            (content) => content.type !== 'text',
+          )
+          const newTextContent = trimmedContent
+            ? [{ type: 'text' as MessageType, text: trimmedContent }]
+            : []
           editedContent = [...newTextContent, ...nonTextContent]
         } else {
           // If it's a simple string message, just use the edited text
@@ -659,11 +740,36 @@ export const ChatMessage = memo(
             msg.id === message.id ? editedMessage : msg,
           ),
         }
-        saveConversationToServer(updatedConversation).catch(
-          (error: Error) => {
-            console.error('Error saving edited message to server:', error)
-          },
-        )
+        const latestMessage =
+          updatedConversation.messages?.[
+            updatedConversation.messages.length - 1
+          ] ?? null
+
+        saveConversationToServer(
+          updatedConversation,
+          courseName,
+          latestMessage,
+        ).catch((error: Error) => {
+          console.error('Error saving edited message to server:', error)
+        })
+
+        if (latestMessage) {
+          fetch('/api/UIUC-api/logConversation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+              createLogConversationPayload(
+                courseName,
+                updatedConversation,
+                latestMessage,
+              ),
+            ),
+          }).catch((error) => {
+            console.error('Error logging conversation delta:', error)
+          })
+        }
       }
       setIsEditing(false)
     }
@@ -787,7 +893,7 @@ export const ChatMessage = memo(
           }
           return path
         }
-        
+
         // It's a URL, try to parse it
         const urlObject = new URL(url)
         let path = urlObject.pathname
@@ -866,12 +972,12 @@ export const ChatMessage = memo(
 
       const loadThumbnails = async () => {
         // Early return if contexts is undefined, null, or not an array
-        if (!Array.isArray(message.contexts) || message.contexts.length === 0)
+        if (!Array.isArray(displayContexts) || displayContexts.length === 0)
           return
 
         // Track unique sources to avoid duplicates
         const seenSources = new Set<string>()
-        const uniqueContexts = message.contexts.filter((context) => {
+        const uniqueContexts = displayContexts.filter((context) => {
           const sourceKey = context.s3_path || context.url
           if (!sourceKey || seenSources.has(sourceKey)) return false
           seenSources.add(sourceKey)
@@ -923,7 +1029,7 @@ export const ChatMessage = memo(
       return () => {
         isMounted = false
       }
-    }, [message.contexts, courseName])
+    }, [displayContexts, courseName])
 
     // Add new function to replace expired links in text
     async function replaceExpiredLinksInText(
@@ -1193,7 +1299,7 @@ export const ChatMessage = memo(
 
                   return !inline ? (
                     <CodeBlock
-                      key={Math.random()}
+                      key={generateSecureKey()}
                       language={(match && match[1]) || ''}
                       value={String(children).replace(/\n$/, '')}
                       style={{
@@ -1219,124 +1325,124 @@ export const ChatMessage = memo(
                     </code>
                   )
                 },
-              p({ node, children }) {
-                return (
-                  <p
-                    className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
-                  >
-                    {children}
-                  </p>
-                )
-              },
-              ul({ children }) {
-                return (
-                  <ul
-                    className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
-                  >
-                    {children}
-                  </ul>
-                )
-              },
-              ol({ children }) {
-                return (
-                  <ol
-                    className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
-                  >
-                    {children}
-                  </ol>
-                )
-              },
-              li({ children }) {
-                return (
-                  <li
-                    className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
-                  >
-                    {children}
-                  </li>
-                )
-              },
-              table({ children }) {
-                return (
-                  <table className="border-collapse border border-black px-3 py-1 dark:border-white">
-                    {children}
-                  </table>
-                )
-              },
-              th({ children }) {
-                return (
-                  <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
-                    {children}
-                  </th>
-                )
-              },
-              td({ children }) {
-                return (
-                  <td className="break-words border border-black px-3 py-1 dark:border-white">
-                    {children}
-                  </td>
-                )
-              },
-              h1({ node, children }) {
-                return (
-                  <h1
-                    className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    {children}
-                  </h1>
-                )
-              },
-              h2({ node, children }) {
-                return (
-                  <h2
-                    className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    {children}
-                  </h2>
-                )
-              },
-              h3({ node, children }) {
-                return (
-                  <h3
-                    className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    {children}
-                  </h3>
-                )
-              },
-              h4({ node, children }) {
-                return (
-                  <h4
-                    className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    {children}
-                  </h4>
-                )
-              },
-              h5({ node, children }) {
-                return (
-                  <h5
-                    className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    {children}
-                  </h5>
-                )
-              },
-              h6({ node, children }) {
-                return (
-                  <h6
-                    className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    {children}
-                  </h6>
-                )
-              },
-              a({ node, className, children, ...props }) {
-                return <MarkdownLink {...props}>{children}</MarkdownLink>
-              },
-            }}
-          >
-            {contentToRender}
-          </MemoizedReactMarkdown>
+                p({ node, children }) {
+                  return (
+                    <p
+                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
+                    >
+                      {children}
+                    </p>
+                  )
+                },
+                ul({ children }) {
+                  return (
+                    <ul
+                      className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                    >
+                      {children}
+                    </ul>
+                  )
+                },
+                ol({ children }) {
+                  return (
+                    <ol
+                      className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
+                    >
+                      {children}
+                    </ol>
+                  )
+                },
+                li({ children }) {
+                  return (
+                    <li
+                      className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
+                    >
+                      {children}
+                    </li>
+                  )
+                },
+                table({ children }) {
+                  return (
+                    <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                      {children}
+                    </table>
+                  )
+                },
+                th({ children }) {
+                  return (
+                    <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
+                      {children}
+                    </th>
+                  )
+                },
+                td({ children }) {
+                  return (
+                    <td className="break-words border border-black px-3 py-1 dark:border-white">
+                      {children}
+                    </td>
+                  )
+                },
+                h1({ node, children }) {
+                  return (
+                    <h1
+                      className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h1>
+                  )
+                },
+                h2({ node, children }) {
+                  return (
+                    <h2
+                      className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h2>
+                  )
+                },
+                h3({ node, children }) {
+                  return (
+                    <h3
+                      className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h3>
+                  )
+                },
+                h4({ node, children }) {
+                  return (
+                    <h4
+                      className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h4>
+                  )
+                },
+                h5({ node, children }) {
+                  return (
+                    <h5
+                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h5>
+                  )
+                },
+                h6({ node, children }) {
+                  return (
+                    <h6
+                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                    >
+                      {children}
+                    </h6>
+                  )
+                },
+                a({ node, className, children, ...props }) {
+                  return <MarkdownLink {...props}>{children}</MarkdownLink>
+                },
+              }}
+            >
+              {contentToRender}
+            </MemoizedReactMarkdown>
           )}
         </>
       )
@@ -1532,7 +1638,12 @@ export const ChatMessage = memo(
         // For non-previewable files, trigger direct download
         if (fileUrl) {
           try {
-            const presignedUrl = await fetchPresignedUrl(fileUrl, courseName, undefined, fileName)
+            const presignedUrl = await fetchPresignedUrl(
+              fileUrl,
+              courseName,
+              undefined,
+              fileName,
+            )
             if (presignedUrl) {
               const link = document.createElement('a')
               link.href = presignedUrl
@@ -1554,6 +1665,19 @@ export const ChatMessage = memo(
         fileName: '',
       })
     }
+    const condArrayIsArray = Array.isArray(displayContexts)
+    const condHasContexts = condArrayIsArray && displayContexts.length > 0
+
+    const condIsStreamingAndLastMsg =
+      messageIsStreaming &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
+    const condLoadingAndLastMsg =
+      loading &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
+    const shouldShowSources =
+      condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
 
     return (
       <>
@@ -1583,6 +1707,7 @@ export const ChatMessage = memo(
                   {isEditing ? (
                     <div className="flex w-full flex-col">
                       <textarea
+                        aria-label="Edit message"
                         ref={textareaRef}
                         className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
                         value={messageContent}
@@ -1649,8 +1774,12 @@ export const ChatMessage = memo(
                                 {message.content
                                   .filter((item) => item.type === 'file')
                                   .map((content, index) => {
-                                    const fileName = content.fileName || 'Unknown file'
-                                    const isPreviewable = isFilePreviewable(fileName, content.fileType)
+                                    const fileName =
+                                      content.fileName || 'Unknown file'
+                                    const isPreviewable = isFilePreviewable(
+                                      fileName,
+                                      content.fileType,
+                                    )
                                     return (
                                       <div key={index} className="mb-2">
                                         <FileCard
@@ -1678,10 +1807,10 @@ export const ChatMessage = memo(
                                   .map((content, index) => {
                                     // Try to get the processed URL from imageUrls state first
                                     const imageUrlsArray = Array.from(imageUrls)
-                                    const processedUrl = imageUrlsArray[index] || content.image_url?.url
-                                    
+                                    const processedUrl =
+                                      imageUrlsArray[index] ||
+                                      content.image_url?.url
 
-                                    
                                     return (
                                       <div
                                         key={index}
@@ -2107,6 +2236,8 @@ export const ChatMessage = memo(
                             }}
                           >
                             <button
+                              tabIndex={0}
+                              aria-label="Edit Message"
                               className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
                                 ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
                               onClick={toggleEditing}
@@ -2130,64 +2261,61 @@ export const ChatMessage = memo(
                   {/* Action Buttons Container */}
                   <div className="flex flex-col gap-2">
                     {/* Sources button */}
-                    {Array.isArray(message.contexts) &&
-                      message.contexts.length > 0 &&
-                      !(
-                        messageIsStreaming &&
-                        messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1
-                      ) &&
-                      !(
-                        loading &&
-                        messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1
-                      ) && (
-                        <div className="relative z-0 mb-1 flex justify-start">
-                          <button
-                            className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
-                            onClick={() => handleSourcesSidebarToggle(true)}
+                    {shouldShowSources && (
+                      <div className="relative z-0 mb-1 flex justify-start">
+                        <button
+                          tabIndex={0}
+                          aria-label={
+                            'Open citations for ' +
+                            getContextsLength(message.contexts) +
+                            ' Source' +
+                            (getContextsLength(message.contexts) == 1
+                              ? ''
+                              : 's')
+                          }
+                          className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
+                          onClick={() => handleSourcesSidebarToggle(true)}
+                        >
+                          <span
+                            className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
                           >
-                            <span
-                              className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
-                            >
-                              Sources
-                              <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
-                                {getContextsLength(message.contexts)}
-                              </span>
+                            Sources
+                            <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
+                              {getContextsLength(displayContexts)}
                             </span>
+                          </span>
 
-                            {sourceThumbnails.length > 0 && (
-                              <div className="flex items-center">
-                                <div className="ml-1 mr-1 h-4 border-l border-gray-300"></div>
-                                <div className="relative flex">
-                                  {sourceThumbnails.map((thumbnail, index) => (
-                                    <div
-                                      key={index}
-                                      className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
-                                      style={{
-                                        marginLeft:
-                                          index > 0 ? '-0.75rem' : '0',
-                                        zIndex: index,
-                                        transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                          {sourceThumbnails.length > 0 && (
+                            <div className="flex items-center">
+                              <div className="ml-1 mr-1 h-4 border-l border-gray-300"></div>
+                              <div className="relative flex">
+                                {sourceThumbnails.map((thumbnail, index) => (
+                                  <div
+                                    key={index}
+                                    className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
+                                    style={{
+                                      marginLeft: index > 0 ? '-0.75rem' : '0',
+                                      zIndex: index,
+                                      transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                                    }}
+                                  >
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
+                                    <img
+                                      src={thumbnail}
+                                      alt={`Source ${index + 1}`}
+                                      className="h-full w-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none'
                                       }}
-                                    >
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
-                                      <img
-                                        src={thumbnail}
-                                        alt={`Source ${index + 1}`}
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                          e.currentTarget.style.display = 'none'
-                                        }}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
+                                    />
+                                  </div>
+                                ))}
                               </div>
-                            )}
-                          </button>
-                        </div>
-                      )}
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Other buttons in their container */}
                     {!(
@@ -2229,7 +2357,7 @@ export const ChatMessage = memo(
         {isSourcesSidebarOpen && (
           <SourcesSidebar
             isOpen={isSourcesSidebarOpen}
-            contexts={Array.isArray(message.contexts) ? message.contexts : []}
+            contexts={Array.isArray(displayContexts) ? displayContexts : []}
             onClose={handleSourcesSidebarClose}
             hideRightSidebarIcon={isAnySidebarOpen}
             courseName={courseName}

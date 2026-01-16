@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import { verifyTokenAsync } from './keycloakClient'
 import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
+import { AuthenticatedUser } from '~/middleware'
 
 function getTokenFromCookies(req: NextApiRequest): string | null {
   const raw = req.cookies['access_token']
@@ -9,31 +10,9 @@ function getTokenFromCookies(req: NextApiRequest): string | null {
   return raw
 }
 
-function peekIssuer(token: string): string {
-  const [, p] = token.split('.')
-  if (!p) return ''
-  const payload = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'))
-  return String(payload.iss || '').replace(/\/$/, '')
-}
-
-export interface AuthenticatedUser {
-  sub: string
-  email: string
-  preferred_username: string
-  given_name?: string
-  family_name?: string
-  realm_access?: {
-    roles: string[]
-  }
-  resource_access?: {
-    [key: string]: {
-      roles: string[]
-    }
-  }
-}
-
 export interface AuthenticatedRequest extends NextApiRequest {
   user?: AuthenticatedUser
+  courseName?: string
 }
 
 // Middleware to verify JWT token
@@ -53,8 +32,6 @@ export function withAuth(
 
       const rawHost = req.headers['x-forwarded-host'] ?? req.headers['host']
       const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost
-
-      console.log('Host value:', hostValue)
 
       // Fallback to 'localhost' if undefined
       const hostname = (hostValue ?? 'localhost').split(':')[0]

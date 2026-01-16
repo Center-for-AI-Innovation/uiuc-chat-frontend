@@ -6,15 +6,17 @@ import {
   Card,
   Flex,
   Group,
+  Loader,
   Textarea,
   TextInput,
   Title,
 } from '@mantine/core'
-import { useMediaQuery } from '@mantine/hooks'
-import { useQueryClient } from '@tanstack/react-query'
+import { useDebouncedValue, useMediaQuery } from '@mantine/hooks'
+import { notifications } from '@mantine/notifications'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import router from 'next/router'
-import { createProject } from '~/pages/api/UIUC-api/createProject'
+import { createProject } from '~/utils/apiUtils'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
@@ -48,9 +50,6 @@ const MakeNewCoursePage = ({
   const [projectDescription, setProjectDescription] = useState(
     project_description || '',
   )
-  const [isCourseAvailable, setIsCourseAvailable] = useState<
-    boolean | undefined
-  >(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const [allExistingCourseNames, setAllExistingCourseNames] = useState<
     string[]
@@ -63,6 +62,46 @@ const MakeNewCoursePage = ({
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
 
+  // Debounce project name input to avoid excessive API calls
+  const [debouncedProjectName] = useDebouncedValue(projectName, 500)
+
+  // Check project name availability using React Query
+  const {
+    data: courseExists,
+    isLoading: isCheckingAvailability,
+    isError: isAvailabilityError,
+  } = useQuery<boolean>({
+    queryKey: ['projectNameAvailability', debouncedProjectName],
+    queryFn: async () => {
+      if (!debouncedProjectName || debouncedProjectName.length === 0) {
+        return false
+      }
+      const response = await fetch(
+        `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(debouncedProjectName)}`,
+      )
+      if (!response.ok) {
+        throw new Error('Failed to check project name availability')
+      }
+      return response.json() as Promise<boolean>
+    },
+    enabled: debouncedProjectName.length > 0 && is_new_course,
+    retry: 1,
+  })
+
+  // Calculate availability: course exists = not available
+  const isCourseAvailable =
+    debouncedProjectName.length === 0
+      ? undefined
+      : courseExists === false
+        ? true
+        : courseExists === true
+          ? false
+          : undefined
+
+  // Check if we're waiting for debounce (user typed but debounce hasn't completed)
+  // This handles cases where user types, backspaces, or changes the input while debounce is in progress
+  const isWaitingForDebounce = projectName !== debouncedProjectName
+  
   const checkCourseAvailability = () => {
     const courseExists =
       projectName != '' &&
@@ -216,7 +255,34 @@ const MakeNewCoursePage = ({
       return true
     } catch (error) {
       console.error('Error creating project:', error)
-      return false
+      // Handle specific error cases
+      const err = error as Error & { status?: number; error?: string }
+      if (err.status === 409) {
+        // Project name already exists - race condition caught by server
+        notifications.show({
+          title: 'Project name already taken',
+          message:
+            err.message ||
+            `A project with the name "${project_name}" already exists. Please choose a different name.`,
+          color: 'red',
+          autoClose: 5000,
+        })
+        // Invalidate the query to refresh availability check
+        // This will trigger a re-check of the project name
+        queryClient.invalidateQueries({
+          queryKey: ['projectNameAvailability', project_name],
+        })
+      } else {
+        // Other errors
+        notifications.show({
+          title: 'Failed to create project',
+          message:
+            err.message ||
+            'An error occurred while creating the project. Please try again.',
+          color: 'red',
+          autoClose: 5000,
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -382,15 +448,23 @@ const MakeNewCoursePage = ({
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
-                          color:
-                            isCourseAvailable && projectName != ''
+                          color: isCheckingAvailability
+                            ? 'var(--foreground)'
+                            : isCourseAvailable && projectName != ''
                               ? 'var(--foreground)'
-                              : 'red',
+                              : projectName !== '' &&
+                                  isCourseAvailable === false
+                                ? 'red'
+                                : 'var(--foreground)',
                           '&:focus-within': {
-                            borderColor:
-                              isCourseAvailable && projectName !== ''
+                            borderColor: isCheckingAvailability
+                              ? 'var(--foreground)'
+                              : isCourseAvailable && projectName !== ''
                                 ? 'green'
-                                : 'red',
+                                : projectName !== '' &&
+                                    isCourseAvailable === false
+                                  ? 'red'
+                                  : 'var(--foreground)',
                           },
                           fontSize: isSmallScreen ? '12px' : '16px', // Added text styling
                           font: `${montserrat_paragraph.variable} font-montserratParagraph`,
@@ -416,6 +490,11 @@ const MakeNewCoursePage = ({
                       withAsterisk
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       rightSectionWidth={isSmallScreen ? 'auto' : 'auto'}
+                      rightSection={
+                        isCheckingAvailability && projectName.length > 0 ? (
+                          <Loader size="xs" />
+                        ) : null
+                      }
                     />
 
                     <div className="text-sm text-[--foreground-faded]">
@@ -467,6 +546,65 @@ const MakeNewCoursePage = ({
                       >
                         Next: let&apos;s upload some documents
                       </Title>
+                      <Tooltip
+                        label={
+                          projectName === ''
+                            ? 'Add a project name above :)'
+                            : isWaitingForDebounce || isCheckingAvailability
+                              ? 'Checking availability...'
+                              : !isCourseAvailable
+                                ? 'This project name is already taken!'
+                                : ''
+                        }
+                        withArrow
+                        disabled={
+                          projectName !== '' &&
+                          !isWaitingForDebounce &&
+                          !isCheckingAvailability &&
+                          isCourseAvailable
+                        }
+                        styles={{
+                          tooltip: {
+                            color: 'var(--tooltip)',
+                            backgroundColor: 'var(--tooltip-background)',
+                          },
+                        }}
+                      >
+                        <span>
+                          <Button
+                            onClick={async (e) => {
+                              await handleSubmit(
+                                projectName,
+                                projectDescription,
+                                current_user_email,
+                                useIllinoisChatConfig, // isPrivate: illinois chat project default to private
+                              )
+                            }}
+                            size="sm"
+                            radius={'sm'}
+                            className={`${isCourseAvailable && projectName !== '' && !isCheckingAvailability && !isWaitingForDebounce ? 'bg-[--illinois-orange] text-white hover:bg-[--illinois-orange] hover:text-white' : 'disabled:bg-[--button-disabled] disabled:text-[--button-disabled-text-color]'}
+                        mt-2 min-w-[5-rem] transform overflow-ellipsis text-ellipsis p-2 focus:shadow-none focus:outline-none lg:min-w-[8rem]`}
+                            // w={`${isSmallScreen ? '5rem' : '50%'}`}
+                            style={{
+                              alignSelf: 'flex-end',
+                            }}
+                            disabled={
+                              projectName === '' ||
+                              isLoading ||
+                              isWaitingForDebounce ||
+                              isCheckingAvailability ||
+                              !isCourseAvailable
+                            }
+                            leftIcon={
+                              isLoading ? (
+                                <Loader size="xs" color="white" />
+                              ) : null
+                            }
+                          >
+                            {isLoading ? 'Creating...' : 'Create'}
+                          </Button>
+                        </span>
+                      </Tooltip>
                     </Flex>
                   </Flex>
                 </Group>
@@ -475,6 +613,8 @@ const MakeNewCoursePage = ({
           </Card>
         </div>
       </main>
+
+      <GlobalFooter />
     </>
   )
 }

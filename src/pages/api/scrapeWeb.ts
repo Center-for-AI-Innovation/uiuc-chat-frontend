@@ -1,6 +1,7 @@
 import { type NextApiResponse } from 'next'
-import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import axios from 'axios'
+import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 interface ScrapeRequestBody {
   url: string | null
@@ -9,7 +10,7 @@ interface ScrapeRequestBody {
   scrapeStrategy: string
 }
 
-export default withAuth(handler)
+export default withCourseOwnerOrAdminAccess()(handler)
 
 const formatUrl = (url: string) => {
   if (!/^https?:\/\//i.test(url)) {

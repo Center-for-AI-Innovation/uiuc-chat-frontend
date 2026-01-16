@@ -89,6 +89,10 @@ const useStyles = createStyles((theme) => ({
       textDecoration: 'none',
     },
 
+    '&:focus': {
+      outline: '2px solid var(--dashboard-button)',
+    },
+
     '&[data-active="true"]': {
       color: 'var(--navbar-active)',
       /*      borderBottom: '2px solid var(--navbar-hover)',*/
@@ -194,9 +198,9 @@ const styles = {
 function Logo() {
   return (
     <div className="flex-1">
-      <Link href="/">
+      <Link href="/" tabIndex={0} aria-label="Home Page">
         <div
-          className={`ms-4 flex items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
+          className={`ms-4 flex items-center gap-0 font-bold ${montserrat_heading.variable} font-montserratHeading`}
         >
           <div style={{ width: '2.5rem', height: '2.5rem' }}>
             <img
@@ -206,12 +210,9 @@ function Logo() {
               alt="Illinois Logo"
             />
           </div>
-          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
-            Illinois
-          </div>
-          <br />
-          <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[1.8rem]">
-            Chat
+
+          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange-branding] sm:ml-2 sm:text-[1.8rem]">
+            Illinois <span className="text-[--foreground]">Chat</span>
           </div>
         </div>
       </Link>
@@ -266,9 +267,16 @@ function NavigationContent({
     <>
       <Transition transition="pop-top-right" duration={200} mounted={opened}>
         {(styles) => (
-          <Paper className={classes.dropdown} style={styles}>
+          <Paper
+            className={classes.dropdown}
+            style={styles}
+            role="navigation"
+            aria-label="Main"
+          >
             {items.map((item, index) => (
               <Link
+                role="button"
+                tabIndex={0}
                 key={index}
                 href={item.link}
                 onClick={() => onLinkClick()}
@@ -283,10 +291,17 @@ function NavigationContent({
         )}
       </Transition>
 
-      <Container className={classes.inner} style={{ paddingLeft: '0px' }}>
+      <Container
+        className={classes.inner}
+        style={{ paddingLeft: '0px' }}
+        role="navigation"
+        aria-label="Main"
+      >
         <div className={classes.links}>
           {items.map((item, index) => (
             <Link
+              role="button"
+              tabIndex={0}
               key={index}
               href={item.link}
               onClick={() => onLinkClick()}
@@ -301,6 +316,9 @@ function NavigationContent({
       </Container>
 
       <Burger
+        role="button"
+        tabIndex={0}
+        aria-label="Toggle Menu"
         opened={opened}
         onClick={onToggle}
         className={classes.burger}

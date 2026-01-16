@@ -1,11 +1,13 @@
 import { type NextApiResponse } from 'next'
-import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { db, folders } from '~/db/dbClient'
 import { type FolderWithConversation } from '@/types/folder'
 import { type Database } from 'database.types'
 import { convertDBToChatConversation } from './conversation'
 import { type NewFolders } from '~/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { eq, desc, and } from 'drizzle-orm'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
+import { getUserIdentifier } from '~/pages/api/_utils/userIdentifier'
 
 type Folder = Database['public']['Tables']['folders']['Row']
 
@@ -26,7 +28,7 @@ export function convertDBFolderToChatFolder(
   }
 }
 
-export default withAuth(handler)
+export default withCourseAccessFromRequest('any')(handler)
 
 export function convertChatFolderToDBFolder(
   folder: FolderWithConversation,
@@ -44,15 +46,20 @@ export function convertChatFolderToDBFolder(
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
+  const userIdentifier = getUserIdentifier(req)
+  if (!userIdentifier) {
+    return res.status(400).json({
+      error: 'No valid user identifier provided',
+      message:
+        'Cannot perform folder operation without a valid user identifier',
+    })
+  }
 
   switch (method) {
     case 'POST':
-      const {
-        folder,
-        email,
-      }: { folder: FolderWithConversation; email: string } = req.body
+      const { folder }: { folder: FolderWithConversation } = req.body
       //   Convert folder to DB type
-      const dbFolder = convertChatFolderToDBFolder(folder, email)
+      const dbFolder = convertChatFolderToDBFolder(folder, userIdentifier)
 
       try {
         // Insert or update folder using DrizzleORM
@@ -79,16 +86,10 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       break
 
     case 'GET':
-      const { user_email } = req.query
       try {
-        if (!user_email || typeof user_email !== 'string') {
-          res.status(400).json({ error: 'No valid email address provided' })
-          return
-        }
-
         // Query folders and their related conversations and messages using DrizzleORM
         const fetchedFolders = await db.query.folders.findMany({
-          where: eq(folders.user_email, user_email),
+          where: eq(folders.user_email, userIdentifier),
           orderBy: desc(folders.created_at),
           with: {
             conversations: {
@@ -150,9 +151,29 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       }
       try {
         // Delete folder
-        await db.delete(folders).where(eq(folders.id, deletedFolderId))
+        if (deletedFolderId && userIdentifier) {
+          const deleted = await db
+            .delete(folders)
+            .where(
+              and(
+                eq(folders.id, deletedFolderId),
+                eq(folders.user_email, userIdentifier),
+              ),
+            )
+            .returning({ id: folders.id })
 
-        res.status(200).json({ message: 'Folder deleted successfully' })
+          if (deleted.length === 0) {
+            return res
+              .status(403)
+              .json({ error: 'Not allowed to delete this folder' })
+          }
+          res.status(200).json({ message: 'Folder deleted successfully' })
+        } else {
+          res.status(400).json({
+            error: 'Invalid user identifier or invalid request parameters',
+          })
+          return
+        }
       } catch (error) {
         res.status(500).json({ error: 'Error deleting folder' })
         console.error('Error deleting folder:', error)

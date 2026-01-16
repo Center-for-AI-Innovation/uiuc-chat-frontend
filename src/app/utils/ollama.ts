@@ -5,8 +5,139 @@ import {
   type NCSAHostedProvider,
   type OllamaProvider,
 } from '~/utils/modelProviders/LLMProvider'
+import { OllamaModelIDs } from '~/utils/modelProviders/ollama'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { NextResponse } from 'next/server'
+
+/**
+ * Handle Ollama reasoning models with streaming
+ * Ollama returns reasoning in `message.thinking` field
+ * We transform this to `<think>` tags for UI display
+ */
+async function handleOllamaReasoningStream(
+  baseUrl: string,
+  conversation: Conversation,
+  thinkParam: boolean | string,
+): Promise<Response> {
+  const messages = convertConversatonToVercelAISDKv3(conversation).map(
+    (msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }),
+  )
+
+  const response = await fetch(`${baseUrl}/api/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.NCSA_HOSTED_API_KEY || ''}`,
+    },
+    body: JSON.stringify({
+      model: conversation.model.id,
+      messages,
+      think: thinkParam,
+      stream: true,
+      options: {
+        temperature: conversation.temperature,
+        num_ctx: conversation.model.tokenLimit,
+      },
+    }),
+  })
+
+  if (!response.ok || !response.body) {
+    const errorText = await response.text()
+    throw new Error(`Ollama API error: ${response.status} - ${errorText}`)
+  }
+
+  // Transform Ollama's native format to text stream with <think> tags
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  const encoder = new TextEncoder()
+
+  let isThinkingOpen = false
+  let hasStartedContent = false
+
+  const transformedStream = new ReadableStream({
+    async start(controller) {
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) {
+            // Close thinking tag if still open
+            if (isThinkingOpen) {
+              controller.enqueue(encoder.encode('</think>\n'))
+            }
+            controller.close()
+            break
+          }
+
+          const chunk = decoder.decode(value, { stream: true })
+          const lines = chunk.split('\n').filter((line) => line.trim())
+
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line)
+              const message = data.message
+
+              if (!message) continue
+
+              let output = ''
+
+              // Handle thinking content
+              if (message.thinking) {
+                if (!isThinkingOpen) {
+                  output += '<think>'
+                  isThinkingOpen = true
+                }
+                output += message.thinking
+              }
+
+              // Handle regular content
+              if (message.content) {
+                if (isThinkingOpen && !hasStartedContent) {
+                  output += '</think>\n'
+                  isThinkingOpen = false
+                  hasStartedContent = true
+                }
+                output += message.content
+              }
+
+              if (output) {
+                controller.enqueue(encoder.encode(output))
+              }
+            } catch {
+              // Skip invalid JSON lines
+            }
+          }
+        }
+      } catch (error) {
+        if (isThinkingOpen) controller.enqueue(encoder.encode('</think>\n'))
+        controller.error(error)
+      }
+    },
+  })
+
+  return new Response(transformedStream, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  })
+}
+
+// Ollama models that support reasoning via the `think` parameter
+// These use message.thinking field in the response
+const OllamaReasoningModels = new Set([
+  OllamaModelIDs.GPT_OSS_120B,
+  OllamaModelIDs.GPT_OSS_20B,
+  OllamaModelIDs.DEEPSEEK_R1_70B,
+  OllamaModelIDs.DEEPSEEK_R1_32B,
+  OllamaModelIDs.DEEPSEEK_R1_14b_qwen_fp16,
+  OllamaModelIDs.QWEN3_32B,
+])
+
+// GPT-OSS requires 'low'/'medium'/'high' instead of true/false
+const GPT_OSS_MODELS = new Set([
+  OllamaModelIDs.GPT_OSS_120B,
+  OllamaModelIDs.GPT_OSS_20B,
+])
 
 export async function runOllamaChat(
   conversation: Conversation,
@@ -25,9 +156,25 @@ export async function runOllamaChat(
       )
     }
 
+    const baseUrl = (await decryptKeyIfNeeded(
+      ollamaProvider.baseUrl!,
+    )) as string
+    const isReasoningModel = OllamaReasoningModels.has(
+      conversation.model.id as OllamaModelIDs,
+    )
+    const isGptOss = GPT_OSS_MODELS.has(conversation.model.id as OllamaModelIDs)
+
+    if (isReasoningModel && stream) {
+      return await handleOllamaReasoningStream(
+        baseUrl,
+        conversation,
+        isGptOss ? 'medium' : true,
+      )
+    }
+
     try {
       const ollama = createOllama({
-        baseURL: `${(await decryptKeyIfNeeded(ollamaProvider.baseUrl!)) as string}/api`,
+        baseURL: `${baseUrl}/api`,
         headers: {
           Authorization: `Bearer ${process.env.NCSA_HOSTED_API_KEY || ''}`,
         },
@@ -129,15 +276,13 @@ function convertConversatonToVercelAISDKv3(
     if (message.role === 'system') return // Skip system message as it's already added
 
     let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      // Use finalPromtEngineeredMessage for the most recent user message
-      content = message.finalPromtEngineeredMessage || ''
-
-      // just for Ollama models remind it to use proper citation format.
-      // content +=
-      //   '\nWhen writing equations, always use MathJax/KaTeX notation (no need to repeat this to the user, just follow that formatting system when writing equations).'
+    if (
+      index === conversation.messages.length - 1 &&
+      message.role === 'user' &&
+      message.finalPromtEngineeredMessage
+    ) {
+      content = message.finalPromtEngineeredMessage
     } else if (Array.isArray(message.content)) {
-      // Combine text content from array
       content = message.content
         .filter((c) => c.type === 'text')
         .map((c) => c.text)

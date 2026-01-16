@@ -126,7 +126,7 @@ type FileUploadStatus = {
 }
 
 interface Props {
-  onSend: (message: Message, plugin: Plugin | null) => void
+  onSend: (message: Message, plugin: Plugin | null) => Promise<void>
   onScrollDownClick: () => void
   stopConversationRef: MutableRefObject<boolean>
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>
@@ -427,11 +427,20 @@ export const ChatInput = ({
       contexts: allFileContexts.length > 0 ? allFileContexts : undefined,
     }
 
-    // Use the onSend prop to send the structured message
+    // Clear the composer immediately so the text disappears
+    setContent('')
+    setInputContent('')
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'inherit'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      textareaRef.current.style.overflow =
+        textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
+    }
+
+    // Send the message
     onSend(messageForChat, plugin)
 
     // Reset states
-    setContent('')
     setPlugin(null)
     setFileUploads([]) // Clear file uploads after sending message
 
@@ -470,7 +479,7 @@ export const ChatInput = ({
     setShowPromptList(false)
   }
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = async (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (showPromptList) {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
@@ -1181,6 +1190,7 @@ export const ChatInput = ({
                 <IconPaperclip size={20} />
               </button>
               <input
+                aria-label="Upload files"
                 type="file"
                 multiple
                 ref={fileUploadRef}
@@ -1212,7 +1222,7 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={'Message UIUC.chat'}
+                placeholder={'Message Illinois Chat'}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
@@ -1225,6 +1235,8 @@ export const ChatInput = ({
 
               {/* Send button */}
               <button
+                tabIndex={0}
+                aria-label="Send"
                 className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center justify-center rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
                 onClick={handleSend}
                 style={{ pointerEvents: 'auto' }}
@@ -1266,6 +1278,8 @@ export const ChatInput = ({
             {showScrollDownButton && (
               <div className="absolute bottom-2 right-10 lg:-right-10 lg:bottom-0">
                 <button
+                  tabIndex={0}
+                  aria-label="Scroll Down"
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
                   onClick={onScrollDownClick}
                   style={{ pointerEvents: 'auto' }}
@@ -1303,6 +1317,9 @@ export const ChatInput = ({
           </div>
 
           <Text
+            role="button"
+            tabIndex={0}
+            aria-label="Chat Settings"
             size={isSmallScreen ? '10px' : 'xs'}
             className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
             onClick={handleTextClick}

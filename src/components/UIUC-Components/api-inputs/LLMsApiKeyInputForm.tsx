@@ -40,6 +40,7 @@ import {
   type NCSAHostedVLMProvider,
   type OllamaProvider,
   type OpenAIProvider,
+  type OpenAICompatibleProvider,
   type ProviderNames,
   type SambaNovaProvider,
   type WebLLMProvider,
@@ -55,6 +56,7 @@ import NCSAHostedLLmsProviderInput from './providers/NCSAHostedProviderInput'
 import NCSAHostedVLMProviderInput from './providers/NCSAHostedVLMProviderInput'
 import OllamaProviderInput from './providers/OllamaProviderInput'
 import OpenAIProviderInput from './providers/OpenAIProviderInput'
+import OpenAICompatibleProviderInput from './providers/OpenAICompatibleProviderInput'
 import SambaNovaProviderInput from './providers/SambaNovaProviderInput'
 import WebLLMProviderInput from './providers/WebLLMProviderInput'
 
@@ -123,15 +125,15 @@ export const APIKeyInput = ({
             }}
           />
           <ActionIcon
+            aria-label="Clear"
             size="xs"
-            color="red"
             onClick={(e) => {
               e.preventDefault()
               field.handleChange('')
               field.form.handleSubmit()
             }}
             type="submit"
-            className="hover:bg-[red] hover:text-[white]"
+            className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] hover:text-[white]"
             style={{ marginLeft: '8px' }}
           >
             <IconX size={12} />
@@ -244,7 +246,7 @@ const NewModelDropdown: React.FC<{
           })
           .flatMap(
             ([_, provider]) =>
-              provider.models?.map((model) => ({
+              provider.models?.map((model: AnySupportedModel) => ({
                 value: model.id,
                 label: model.name,
                 // @ts-ignore -- this being missing is fine
@@ -372,6 +374,7 @@ export const ModelItem = forwardRef<
             <div>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <Image
+                  aria-hidden="true"
                   src={getModelLogo(modelType) || ''}
                   alt={`${modelType} logo`}
                   width={20}
@@ -402,7 +405,7 @@ export function findDefaultModel(
     const provider = providers[providerKey as keyof typeof providers]
     if (provider && provider.models) {
       const currentDefaultModel = provider.models.find(
-        (model) => model.default === true,
+        (model: AnySupportedModel) => model.default === true,
       )
       if (currentDefaultModel) {
         return {
@@ -476,10 +479,12 @@ export default function APIKeyInputForm({
           const provider =
             updatedProviders[providerKey as keyof AllLLMProviders]
           if (provider && provider.models) {
-            provider.models = provider.models.map((model) => ({
-              ...model,
-              default: false,
-            }))
+            provider.models = provider.models.map(
+              (model: AnySupportedModel) => ({
+                ...model,
+                default: false,
+              }),
+            )
           }
         })
 
@@ -847,7 +852,7 @@ export default function APIKeyInputForm({
                               Closed source LLMs
                             </Title>
                             <Text
-                              className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                              className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground-faded]`}
                               size="md"
                             >
                               The best performers, but you gotta pay their
@@ -872,6 +877,13 @@ export default function APIKeyInputForm({
                               <OpenAIProviderInput
                                 provider={
                                   llmProviders?.OpenAI as OpenAIProvider
+                                }
+                                form={form}
+                                isLoading={isLoadingLLMProviders}
+                              />
+                              <OpenAICompatibleProviderInput
+                                provider={
+                                  llmProviders?.OpenAICompatible as OpenAICompatibleProvider
                                 }
                                 form={form}
                                 isLoading={isLoadingLLMProviders}
@@ -910,7 +922,7 @@ export default function APIKeyInputForm({
                               Open source LLMs
                             </Title>
                             <Text
-                              className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                              className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph text-[--foreground-faded]`}
                               size="md"
                             >
                               Your weights, your rules.
@@ -1131,8 +1143,9 @@ export default function APIKeyInputForm({
             </div> */}
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }
