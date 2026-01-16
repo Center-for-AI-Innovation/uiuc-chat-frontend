@@ -418,8 +418,15 @@ export function findDefaultModel(
   return undefined
 }
 
-export default function APIKeyInputForm() {
-  const projectName = GetCurrentPageName()
+export default function APIKeyInputForm({
+  projectName: projectNameProp,
+  isEmbedded = false,
+}: {
+  projectName?: string
+  isEmbedded?: boolean
+} = {}) {
+  const routerProjectName = GetCurrentPageName()
+  const projectName = projectNameProp || routerProjectName
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
@@ -595,6 +602,166 @@ export default function APIKeyInputForm() {
   //     </div>
   //   )
   // }
+
+  // Embedded form content for wizard steps
+  const formContent = (
+    <div className="llm-providers-form">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 16,
+          }}
+        >
+          <Title
+            className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
+            order={4}
+          >
+            Closed source LLMs
+          </Title>
+          <Text
+            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+            size="sm"
+          >
+            The best performers, but you gotta pay their prices and follow their
+            rules.
+          </Text>
+          <Flex
+            direction={{ base: 'column', '75rem': 'row' }}
+            wrap="wrap"
+            justify="flex-start"
+            align="flex-start"
+            className="gap-4"
+            w={'100%'}
+          >
+            <AnthropicProviderInput
+              provider={llmProviders?.Anthropic as AnthropicProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <OpenAIProviderInput
+              provider={llmProviders?.OpenAI as OpenAIProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <AzureProviderInput
+              provider={llmProviders?.Azure as AzureProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <BedrockProviderInput
+              provider={llmProviders?.Bedrock as BedrockProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <GeminiProviderInput
+              provider={llmProviders?.Gemini as GeminiProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <SambaNovaProviderInput
+              provider={llmProviders?.SambaNova as SambaNovaProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+          </Flex>
+          <Title
+            className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
+            order={4}
+          >
+            Open source LLMs
+          </Title>
+          <Text
+            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+            size="sm"
+          >
+            Your weights, your rules.
+          </Text>
+          <Flex
+            direction={{ base: 'column', '75rem': 'row' }}
+            wrap="wrap"
+            justify="flex-start"
+            align="flex-start"
+            className="gap-4"
+            w={'100%'}
+          >
+            <NCSAHostedLLmsProviderInput
+              provider={llmProviders?.NCSAHosted as NCSAHostedProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <NCSAHostedVLMProviderInput
+              provider={llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <OllamaProviderInput
+              provider={llmProviders?.Ollama as OllamaProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <WebLLMProviderInput
+              provider={llmProviders?.WebLLM as WebLLMProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+          </Flex>
+
+          {/* Default Model Section */}
+          <div className="mt-6 rounded-lg border border-[--dashboard-border] bg-[--dashboard-sidebar-background] p-4">
+            <Title
+              className={`${montserrat_heading.variable} mb-2 font-montserratHeading text-[--foreground]`}
+              order={4}
+            >
+              Default Model
+            </Title>
+            <Text
+              className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph`}
+              size="sm"
+            >
+              Choose the default model for your chatbot. Users can still
+              override this default.
+            </Text>
+            <div className="flex justify-center">
+              {llmProviders && (
+                <NewModelDropdown
+                  value={findDefaultModel(llmProviders) as AnySupportedModel}
+                  onChange={(newDefaultModel) => {
+                    const modelWithProvider = {
+                      ...newDefaultModel,
+                      provider:
+                        (newDefaultModel as any).provider ||
+                        findDefaultModel(llmProviders)?.provider,
+                    }
+                    setDefaultModelAndUpdateProviders(
+                      modelWithProvider as AnySupportedModel & {
+                        provider: ProviderNames
+                      },
+                    )
+                    return form.handleSubmit()
+                  }}
+                  llmProviders={llmProviders}
+                  isSmallScreen={isSmallScreen}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  )
+
+  // Return embedded form content without page layout
+  if (isEmbedded) {
+    return formContent
+  }
 
   return (
     <SettingsLayout
@@ -837,37 +1004,29 @@ export default function APIKeyInputForm() {
                         <br />
                         <div className="flex justify-center">
                           {llmProviders && (
-                            // @ts-ignore - we don't really need this named functionality... gonna skip fixing this.
-                            <form.Field name="defaultModel">
-                              {(field) => (
-                                <NewModelDropdown
-                                  value={
-                                    findDefaultModel(
-                                      llmProviders,
-                                    ) as AnySupportedModel
-                                  }
-                                  onChange={(newDefaultModel) => {
-                                    const modelWithProvider = {
-                                      ...newDefaultModel,
-                                      provider:
-                                        (newDefaultModel as any).provider ||
-                                        findDefaultModel(llmProviders)
-                                          ?.provider,
-                                    }
-                                    field.setValue(modelWithProvider)
-                                    setDefaultModelAndUpdateProviders(
-                                      modelWithProvider as AnySupportedModel & {
-                                        provider: ProviderNames
-                                      },
-                                    )
-                                    field.setValue(modelWithProvider)
-                                    return form.handleSubmit()
-                                  }}
-                                  llmProviders={llmProviders}
-                                  isSmallScreen={isSmallScreen}
-                                />
-                              )}
-                            </form.Field>
+                            <NewModelDropdown
+                              value={
+                                findDefaultModel(
+                                  llmProviders,
+                                ) as AnySupportedModel
+                              }
+                              onChange={(newDefaultModel) => {
+                                const modelWithProvider = {
+                                  ...newDefaultModel,
+                                  provider:
+                                    (newDefaultModel as any).provider ||
+                                    findDefaultModel(llmProviders)?.provider,
+                                }
+                                setDefaultModelAndUpdateProviders(
+                                  modelWithProvider as AnySupportedModel & {
+                                    provider: ProviderNames
+                                  },
+                                )
+                                return form.handleSubmit()
+                              }}
+                              llmProviders={llmProviders}
+                              isSmallScreen={isSmallScreen}
+                            />
                           )}
                         </div>
                         <div className="pt-6"></div>
