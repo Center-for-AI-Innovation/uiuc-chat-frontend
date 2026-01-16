@@ -30,6 +30,7 @@ const StepUpload = ({
 
   // Default metadata for new courses when none is provided
   const defaultMetadata: CourseMetadata = {
+    is_frozen: false,
     course_owner: auth.user?.profile.email || '',
     course_admins: [],
     approved_emails_list: [],

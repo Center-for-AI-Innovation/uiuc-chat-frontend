@@ -57,6 +57,7 @@ import {
   warningLargeModelIds,
 } from '~/utils/modelProviders/ConfigWebLLM'
 import {
+  BedrockProvider,
   LLM_PROVIDER_ORDER,
   ProviderNames,
   ReasoningCapableModels,
@@ -687,10 +688,11 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
 
       if (isApiKeyRequired(provider)) {
         if (provider === 'Bedrock') {
+          const bedrockProvider = llmProviders[provider] as BedrockProvider
           if (
-            !llmProviders[provider]?.accessKeyId ||
-            !llmProviders[provider]?.secretAccessKey ||
-            !llmProviders[provider]?.region
+            !bedrockProvider?.accessKeyId ||
+            !bedrockProvider?.secretAccessKey ||
+            !bedrockProvider?.region
           ) {
             showPromptToast(
               theme,
@@ -804,10 +806,10 @@ CRITICAL: The optimized prompt must:
           prompt: baseSystemPrompt,
           temperature: 0.1,
           folderId: null,
-          userEmail: user?.profile?.email,
+          userEmail: userEmail,
         },
         llmProviders: llmProviders,
-        course_name: courseName,
+        course_name: project_name,
         mode: 'optimize_prompt',
         stream: true,
         key: '',
@@ -1413,7 +1415,7 @@ CRITICAL: The optimized prompt must:
                       radius="md"
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       type="button"
-                      onClick={() => handleSystemPromptSubmit()}
+                      onClick={() => handleSystemPromptSubmit(baseSystemPrompt)}
                       sx={() => ({
                         backgroundColor: `var(--dashboard-button) !important`,
                         border: 'none',
