@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import {
   Button,
@@ -10,12 +10,12 @@ import {
   Textarea,
   TextInput,
   Title,
+  Tooltip,
 } from '@mantine/core'
 import { useDebouncedValue, useMediaQuery } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import router from 'next/router'
 import { createProject } from '~/utils/apiUtils'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -51,9 +51,6 @@ const MakeNewCoursePage = ({
     project_description || '',
   )
   const [isLoading, setIsLoading] = useState(false)
-  const [allExistingCourseNames, setAllExistingCourseNames] = useState<
-    string[]
-  >([])
   const [hasCreatedProject, setHasCreatedProject] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
   const [currentStep, setStep] = useState(0)
@@ -66,27 +63,24 @@ const MakeNewCoursePage = ({
   const [debouncedProjectName] = useDebouncedValue(projectName, 500)
 
   // Check project name availability using React Query
-  const {
-    data: courseExists,
-    isLoading: isCheckingAvailability,
-    isError: isAvailabilityError,
-  } = useQuery<boolean>({
-    queryKey: ['projectNameAvailability', debouncedProjectName],
-    queryFn: async () => {
-      if (!debouncedProjectName || debouncedProjectName.length === 0) {
-        return false
-      }
-      const response = await fetch(
-        `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(debouncedProjectName)}`,
-      )
-      if (!response.ok) {
-        throw new Error('Failed to check project name availability')
-      }
-      return response.json() as Promise<boolean>
-    },
-    enabled: debouncedProjectName.length > 0 && is_new_course,
-    retry: 1,
-  })
+  const { data: courseExists, isLoading: isCheckingAvailability } =
+    useQuery<boolean>({
+      queryKey: ['projectNameAvailability', debouncedProjectName],
+      queryFn: async () => {
+        if (!debouncedProjectName || debouncedProjectName.length === 0) {
+          return false
+        }
+        const response = await fetch(
+          `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(debouncedProjectName)}`,
+        )
+        if (!response.ok) {
+          throw new Error('Failed to check project name availability')
+        }
+        return response.json() as Promise<boolean>
+      },
+      enabled: debouncedProjectName.length > 0 && is_new_course,
+      retry: 1,
+    })
 
   // Calculate availability: course exists = not available
   const isCourseAvailable =
@@ -101,19 +95,6 @@ const MakeNewCoursePage = ({
   // Check if we're waiting for debounce (user typed but debounce hasn't completed)
   // This handles cases where user types, backspaces, or changes the input while debounce is in progress
   const isWaitingForDebounce = projectName !== debouncedProjectName
-  
-  const checkCourseAvailability = () => {
-    const courseExists =
-      projectName != '' &&
-      allExistingCourseNames &&
-      allExistingCourseNames.includes(projectName)
-    setIsCourseAvailable(!courseExists)
-  }
-  const checkIfNewCoursePage = () => {
-    // `/new` --> `new`
-    // `/new?course_name=mycourse` --> `new`
-    return router.asPath.split('/')[1]?.split('?')[0] as string
-  }
 
   const handleSetUploadFiles = (
     updateFn: React.SetStateAction<FileUpload[]>,
@@ -175,30 +156,6 @@ const MakeNewCoursePage = ({
     setStep((prevStep) => Math.min(prevStep + 1, totalSteps - 1))
   }
 
-  useEffect(() => {
-    // only run when creating new courses.. otherwise VERY wasteful on DB.
-    if (checkIfNewCoursePage() == 'new') {
-      async function fetchGetAllCourseNames() {
-        const response = await fetch(`/api/UIUC-api/getAllCourseNames`)
-
-        if (response.ok) {
-          const data = await response.json()
-          setAllExistingCourseNames(data.all_course_names)
-        } else {
-          console.error(`Error fetching course metadata: ${response.status}`)
-        }
-      }
-
-      fetchGetAllCourseNames().catch((error) => {
-        console.error(error)
-      })
-    }
-  }, [])
-
-  useEffect(() => {
-    checkCourseAvailability()
-  }, [projectName, allExistingCourseNames])
-
   const handleSubmit = async (
     project_name: string,
     project_description: string | undefined,
@@ -229,6 +186,7 @@ const MakeNewCoursePage = ({
             metadataError,
           )
           const fallbackMetadata: CourseMetadata = {
+            is_frozen: false,
             is_private: Boolean(is_private),
             course_owner: current_user_email,
             course_admins: [],
@@ -285,6 +243,7 @@ const MakeNewCoursePage = ({
       }
     } finally {
       setIsLoading(false)
+      return false
     }
   }
 
@@ -613,8 +572,6 @@ const MakeNewCoursePage = ({
           </Card>
         </div>
       </main>
-
-      <GlobalFooter />
     </>
   )
 }
