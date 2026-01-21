@@ -3,11 +3,7 @@ import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/comple
 import posthog from 'posthog-js'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
 import type { ToolOutput } from '~/types/chat'
-import {
-  type Conversation,
-  type Message,
-  type UIUCTool,
-} from '~/types/chat'
+import { type Conversation, type Message, type UIUCTool } from '~/types/chat'
 import {
   type N8NParameter,
   type N8nWorkflow,
@@ -28,7 +24,7 @@ export async function handleFunctionCall(
   try {
     // Convert UIUCTool to OpenAICompatibleTool
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
-    
+
     const url = base_url
       ? `${base_url}/api/chat/openaiFunctionCall`
       : '/api/chat/openaiFunctionCall'
@@ -101,7 +97,9 @@ export async function handleFunctionCall(
 
     // Update the message object with the array of tool invocations
     // In agent mode (iterative), append to existing tools; otherwise replace
-    message.tools = message.tools ? [...message.tools, ...validUiucToolsToRun] : [...validUiucToolsToRun]
+    message.tools = message.tools
+      ? [...message.tools, ...validUiucToolsToRun]
+      : [...validUiucToolsToRun]
     selectedConversation.messages[selectedConversation.messages.length - 1] =
       message
     console.log(
@@ -430,40 +428,44 @@ export function getOpenAIToolFromUIUCTool(
   tools: UIUCTool[],
 ): OpenAICompatibleTool[] {
   return tools.map((tool) => {
+    const properties = tool.inputParameters?.properties
+    const parameters: OpenAICompatibleTool['function']['parameters'] =
+      properties
+        ? {
+            type: 'object' as const,
+            properties: Object.keys(properties).reduce(
+              (acc, key) => {
+                const param = properties[key]
+                acc[key] = {
+                  type:
+                    param?.type === 'number'
+                      ? 'number'
+                      : param?.type === 'Boolean'
+                        ? 'Boolean'
+                        : 'string',
+                  description: param?.description,
+                  enum: param?.enum,
+                }
+                return acc
+              },
+              {} as {
+                [key: string]: {
+                  type: 'string' | 'number' | 'Boolean'
+                  description?: string
+                  enum?: string[]
+                }
+              },
+            ),
+            required: tool.inputParameters?.required ?? [],
+          }
+        : undefined
+
     return {
       type: 'function',
       function: {
         name: tool.name,
         description: tool.description,
-        parameters: tool.inputParameters
-          ? {
-              type: 'object',
-              properties: Object.keys(tool.inputParameters.properties).reduce(
-                (acc, key) => {
-                  const param = tool.inputParameters?.properties[key]
-                  acc[key] = {
-                    type:
-                      param?.type === 'number'
-                        ? 'number'
-                        : param?.type === 'Boolean'
-                          ? 'Boolean'
-                          : 'string',
-                    description: param?.description,
-                    enum: param?.enum,
-                  }
-                  return acc
-                },
-                {} as {
-                  [key: string]: {
-                    type: 'string' | 'number' | 'Boolean'
-                    description?: string
-                    enum?: string[]
-                  }
-                },
-              ),
-              required: tool.inputParameters.required,
-            }
-          : undefined,
+        parameters,
       },
     }
   })
