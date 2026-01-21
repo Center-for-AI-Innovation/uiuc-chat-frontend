@@ -370,4 +370,3 @@ export const createProject = async (
     throw error
   }
 }
-
