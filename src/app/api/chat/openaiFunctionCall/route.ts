@@ -97,7 +97,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
         Authorization: `Bearer ${decryptedKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4.1',
+        model: 'gpt-5.2',
         messages: message_to_send,
         tools: tools,
         stream: false,
