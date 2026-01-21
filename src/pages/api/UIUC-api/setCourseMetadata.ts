@@ -71,7 +71,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       systemPromptOnly,
       vector_search_rewrite_disabled,
       allow_logged_in_users,
-      is_frozen
+      is_frozen,
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
     const redisClient = await ensureRedisConnected()
