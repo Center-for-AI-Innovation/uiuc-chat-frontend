@@ -135,15 +135,15 @@ const isApiKeyRequired = (provider: ProviderNames): boolean => {
 const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
   const router = useRouter()
-  
+
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
   const getCurrentPageName = () => {
     const raw = router.query.course_name
     return typeof raw === 'string'
-        ? raw
-        : Array.isArray(raw)
-          ? raw[0]
-          : undefined
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
   const courseName = getCurrentPageName() as string
 
@@ -177,7 +177,6 @@ const CourseMain: NextPage = () => {
     getInitialCollapsedState(),
   )
   const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
-
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
@@ -841,8 +840,8 @@ CRITICAL: The optimized prompt must:
   if (
     courseName &&
     (courseName.toLowerCase() == 'gpt4' ||
-    courseName.toLowerCase() == 'global' ||
-    courseName.toLowerCase() == 'extreme')
+      courseName.toLowerCase() == 'global' ||
+      courseName.toLowerCase() == 'extreme')
   ) {
     return <CannotEditGPT4Page course_name={courseName as string} />
   }
