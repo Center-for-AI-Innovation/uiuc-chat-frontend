@@ -40,7 +40,7 @@ import { useRouter } from 'next/router'
 import {
   type CourseDocument,
   type DocumentGroup,
-} from 'src/types/courseMaterials'
+} from '~/types/courseMaterials'
 import {
   useAppendToDocGroup,
   useGetDocumentGroups,
@@ -548,6 +548,14 @@ export function ProjectFilesTable({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {tabValue !== 'failed' && (
+              <Button
+                onClick={() => setExportModalOpened(true)}
+                className={`w-full border-0 bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} font-montserratParagraph focus:outline-none focus:ring-0`}
+              >
+                Export
+              </Button>
+            )}
             {tabValue !== 'failed' && selectedRecords.length > 0 && (
               <Paper className="w-full bg-transparent sm:w-auto">
                 <div className="relative mb-2 flex w-full flex-col items-start gap-4 sm:flex-row sm:items-center">
@@ -1220,6 +1228,7 @@ export function ProjectFilesTable({
                             size="sm"
                             variant="subtle"
                             color="green"
+                            aria-label="View document"
                             onClick={() => openModal('view')}
                           >
                             <IconEye size={16} />
@@ -1228,6 +1237,7 @@ export function ProjectFilesTable({
                             size="sm"
                             variant="subtle"
                             color="red"
+                            aria-label="Delete document"
                             onClick={() => openModal('delete')}
                           >
                             <IconTrash size={16} />
