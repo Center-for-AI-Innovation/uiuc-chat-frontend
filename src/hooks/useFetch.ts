@@ -12,15 +12,15 @@ export const useFetch = () => {
   const handleFetch = async (
     url: string,
     request: any,
-    signal?: AbortSignal,
   ) => {
-    const requestUrl = request?.params ? `${url}${request.params}` : url
+    const { params, signal, ...requestWithoutParams } = request ?? {}
+    const requestUrl = params ? `${url}${params}` : url
 
-    const requestBody = request?.body
-      ? request.body instanceof FormData
-        ? { ...request, body: request.body }
-        : { ...request, body: JSON.stringify(request.body) }
-      : request
+    const requestBody = requestWithoutParams?.body
+      ? requestWithoutParams.body instanceof FormData
+        ? { ...requestWithoutParams, body: requestWithoutParams.body }
+        : { ...requestWithoutParams, body: JSON.stringify(requestWithoutParams.body) }
+      : requestWithoutParams
 
     const headers = {
       ...(request?.headers
@@ -39,26 +39,32 @@ export const useFetch = () => {
 
         const headers = response.headers
 
-        const result =
-          contentType &&
-          (contentType?.indexOf('application/json') !== -1 ||
-            contentType?.indexOf('text/plain') !== -1)
-            ? response.json()
-            : contentDisposition?.indexOf('attachment') !== -1
-              ? response.blob()
-              : response
+        const isJsonLike =
+          contentType?.includes('application/json') ||
+          contentType?.includes('text/plain')
+        const isAttachment = contentDisposition?.includes('attachment')
+
+        const result = isJsonLike
+          ? response.json()
+          : isAttachment
+            ? response.blob()
+            : response
 
         return result
       })
       .catch(async (err) => {
-        const contentType = err.headers.get('content-type')
+        const headers = (err as any)?.headers
+        const contentType = headers?.get?.('content-type')
 
-        const errResult =
-          contentType && contentType?.indexOf('application/problem+json') !== -1
-            ? await err.json()
-            : err
+        if (
+          contentType &&
+          contentType.indexOf('application/problem+json') !== -1 &&
+          typeof (err as any)?.json === 'function'
+        ) {
+          throw await (err as any).json()
+        }
 
-        throw errResult
+        throw err
       })
   }
 
