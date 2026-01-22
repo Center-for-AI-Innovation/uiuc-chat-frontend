@@ -1,6 +1,6 @@
 // src/pages/api/chat-api/keys/generate.ts
 
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import type { NextApiResponse } from 'next'
 import posthog from 'posthog-js'
 import { v4 as uuidv4 } from 'uuid'
@@ -45,11 +45,11 @@ async function handler(
 
     console.log('Generating API key for user email:', email)
 
-    // Check if the user already has an API key
+    // Check if the user already has an API key (active or inactive).
     const keys = await db
       .select({ key: apiKeys.key, is_active: apiKeys.is_active })
       .from(apiKeys)
-      .where(and(eq(apiKeys.email, email), eq(apiKeys.is_active, true)))
+      .where(eq(apiKeys.email, email))
 
     if (!keys) {
       console.error('Error retrieving API keys from DB')
@@ -58,7 +58,7 @@ async function handler(
 
     console.log('Existing keys found:', keys.length)
 
-    if (keys.length > 0 && keys[0]?.is_active) {
+    if (keys.some((k) => k.is_active)) {
       console.log('User already has an active API key')
       return res.status(409).json({ error: 'User already has an API key' })
     }
