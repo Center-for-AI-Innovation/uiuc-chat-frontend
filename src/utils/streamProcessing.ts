@@ -1,4 +1,4 @@
-import { type CoreMessage } from 'ai'
+import { type ModelMessage } from 'ai'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import posthog from 'posthog-js'
 import { v4 as uuidv4 } from 'uuid'
@@ -76,7 +76,10 @@ export async function processChunkWithStateMachine(
   citationLinkCache: Map<number, string>,
   courseName: string,
   /** Optional server-side presigned URL generator (bypasses API auth) */
-  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
+  serverPresignedUrlFn?: (
+    filePath: string,
+    courseName: string,
+  ) => Promise<string | null>,
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -752,8 +755,8 @@ export const getOpenAIKey = (
 // Helper function to convert conversation to Vercel AI SDK v3 format
 function convertMessagesToVercelAISDKv3(
   conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
+): ModelMessage[] {
+  const coreMessages: ModelMessage[] = []
 
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,
