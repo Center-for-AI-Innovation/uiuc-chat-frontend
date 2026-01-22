@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/completions'
+import type {
+  ChatCompletionMessageFunctionToolCall,
+  ChatCompletionMessageToolCall,
+} from 'openai/resources/chat/completions'
 import posthog from 'posthog-js'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
 import type { ToolOutput } from '~/types/chat'
@@ -53,8 +56,12 @@ export async function handleFunctionCall(
       return []
     }
 
-    const openaiResponse: ChatCompletionMessageToolCall[] =
+    const openaiResponseAll: ChatCompletionMessageToolCall[] =
       openaiFunctionCallResponse.choices?.[0]?.message?.tool_calls || []
+    const openaiResponse = openaiResponseAll.filter(
+      (toolCall): toolCall is ChatCompletionMessageFunctionToolCall =>
+        toolCall.type === 'function',
+    )
     console.log('OpenAI tools to run: ', openaiResponse)
 
     // Map tool into UIUCTool, parse arguments, and add invocation ID

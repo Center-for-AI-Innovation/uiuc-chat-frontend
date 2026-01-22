@@ -3,6 +3,7 @@
 
 import type {
   ChatCompletionMessageParam,
+  ChatCompletionMessageFunctionToolCall,
   ChatCompletionMessageToolCall,
   ChatCompletionTool,
 } from 'openai/resources/chat/completions'
@@ -197,7 +198,12 @@ export async function selectToolsServer(
       .tool_calls as ChatCompletionMessageToolCall[]
 
     // Map OpenAI tool calls back to UIUCTool format
-    const mappedTools = toolCalls.map((openaiTool): UIUCTool | null => {
+    const functionToolCalls = toolCalls.filter(
+      (toolCall): toolCall is ChatCompletionMessageFunctionToolCall =>
+        toolCall.type === 'function',
+    )
+
+    const mappedTools = functionToolCalls.map((openaiTool): UIUCTool | null => {
       const baseTool = availableTools.find(
         (availableTool) => availableTool.name === openaiTool.function.name,
       )
