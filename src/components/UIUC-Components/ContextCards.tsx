@@ -75,6 +75,27 @@ const getEffectivePageNumber = (context: ContextWithMetadata): string => {
   return ''
 }
 
+// Helper function to check if file is a video
+const isVideoFile = (s3_path: string | undefined): boolean => {
+  if (!s3_path) return false
+  return /\.(mp4|mov|avi|webm|mkv)$/i.test(s3_path)
+}
+
+// Helper function to format seconds to MM:SS or HH:MM:SS
+const formatSecondsToTime = (seconds: number | string): string => {
+  const sec = typeof seconds === 'string' ? parseFloat(seconds) : seconds
+  if (isNaN(sec)) return ''
+
+  const hours = Math.floor(sec / 3600)
+  const minutes = Math.floor((sec % 3600) / 60)
+  const secs = Math.floor(sec % 60)
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+  return `${minutes}:${secs.toString().padStart(2, '0')}`
+}
+
 function DynamicMaterialsCard(context: ContextWithMetadata) {
   console.log('DynamicMaterialsCard rendering context:', {
     readable_filename: context.readable_filename,
@@ -93,9 +114,17 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
     } else if (context.s3_path) {
       const effectivePageNumber = getEffectivePageNumber(context)
       fetchPresignedUrl(context.s3_path).then((url) => {
-        setPresignedUrl(
-          url + (effectivePageNumber ? `#page=${effectivePageNumber}` : ''),
-        )
+        if (isVideoFile(context.s3_path)) {
+          // Video: use #t=X to jump to X seconds
+          setPresignedUrl(
+            url + (effectivePageNumber ? `#t=${effectivePageNumber}` : ''),
+          )
+        } else {
+          // PDF: use #page=X to jump to page X
+          setPresignedUrl(
+            url + (effectivePageNumber ? `#page=${effectivePageNumber}` : ''),
+          )
+        }
       })
     }
 
@@ -186,7 +215,9 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
                   variant="dimmed"
                   weight={400}
                 >
-                  Page {effectivePageNumber}
+                  {isVideoFile(context.s3_path)
+                    ? formatSecondsToTime(effectivePageNumber)
+                    : `Page ${effectivePageNumber}`}
                 </Text>
               ) : (
                 <>{/* NO PAGE NUMBER sorry :( */}</>
