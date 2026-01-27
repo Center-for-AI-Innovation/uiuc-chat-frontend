@@ -5,7 +5,6 @@ import { fireEvent, screen } from '@testing-library/react'
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
 
 vi.mock('framer-motion', () => {
-  const React = require('react')
   const motion = new Proxy(
     {},
     {
@@ -43,4 +42,3 @@ describe('DocumentGroupsCard', () => {
     expect(screen.queryByText(/Document Groups help you organize/i)).toBeNull()
   })
 })
-
