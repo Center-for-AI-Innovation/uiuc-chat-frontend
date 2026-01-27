@@ -3,8 +3,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 
 vi.mock('recharts', () => {
-  const Stub = (name: string) => (props: any) =>
-    React.createElement('div', { 'data-testid': `recharts-${name}`, ...props })
+  const Stub = (name: string) => {
+    const Component = (props: any) =>
+      React.createElement('div', { 'data-testid': `recharts-${name}`, ...props })
+    Component.displayName = `Recharts.${name}`
+    return Component
+  }
   return {
     __esModule: true,
     ResponsiveContainer: Stub('ResponsiveContainer'),

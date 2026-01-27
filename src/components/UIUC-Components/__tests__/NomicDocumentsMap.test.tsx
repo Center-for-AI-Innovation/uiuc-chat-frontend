@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 
 vi.mock('framer-motion', () => {
-  const React = require('react')
   const motion = new Proxy(
     {},
     {
@@ -68,4 +67,3 @@ describe('NomicDocumentsMap', () => {
     ).toBeInTheDocument()
   })
 })
-

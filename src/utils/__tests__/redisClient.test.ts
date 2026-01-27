@@ -2,12 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 describe('redisClient', () => {
   it('connects only when not already open and logs errors once', async () => {
-    const onHandlers: Record<string, Function> = {}
+    const onHandlers: Record<string, (...args: unknown[]) => void> = {}
     const connect = vi.fn().mockResolvedValue(undefined)
     const fakeClient = {
       isOpen: false,
       connect,
-      on: (event: string, cb: Function) => {
+      on: (event: string, cb: (...args: unknown[]) => void) => {
         onHandlers[event] = cb
       },
     } as any

@@ -30,9 +30,17 @@ vi.mock('@mantine/dropzone', () => {
       </div>
     )
   }
-  Dropzone.Accept = ({ children }: any) => <div>{children}</div>
-  Dropzone.Reject = ({ children }: any) => <div>{children}</div>
-  Dropzone.Idle = ({ children }: any) => <div>{children}</div>
+  const Accept = ({ children }: any) => <div>{children}</div>
+  Accept.displayName = 'Dropzone.Accept'
+  Dropzone.Accept = Accept
+
+  const Reject = ({ children }: any) => <div>{children}</div>
+  Reject.displayName = 'Dropzone.Reject'
+  Dropzone.Reject = Reject
+
+  const Idle = ({ children }: any) => <div>{children}</div>
+  Idle.displayName = 'Dropzone.Idle'
+  Dropzone.Idle = Idle
   return { Dropzone }
 })
 
