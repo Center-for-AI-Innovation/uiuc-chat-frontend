@@ -10,14 +10,15 @@ export function useUpdateFolder(
   return useMutation({
     mutationKey: ['updateFolder', user_email, course_name],
     mutationFn: async (folder: FolderWithConversation) =>
-      saveFolderToServer(folder, course_name),
+      saveFolderToServer(folder, course_name, user_email),
     onMutate: async (updatedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
         ['folders', course_name],
-        (oldData: FolderWithConversation[]) => {
-          return oldData.map((f: FolderWithConversation) => {
+        (oldData: FolderWithConversation[] | undefined) => {
+          const safeOld = Array.isArray(oldData) ? oldData : []
+          return safeOld.map((f: FolderWithConversation) => {
             if (f.id === updatedFolder.id) {
               return updatedFolder
             }

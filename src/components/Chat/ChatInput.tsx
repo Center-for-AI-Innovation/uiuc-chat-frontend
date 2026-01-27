@@ -1,4 +1,3 @@
-// chatinput.tsx
 import {
   type Content,
   type Message,
@@ -1147,6 +1146,8 @@ export const ChatInput = ({
                             prev.filter((_, i) => i !== index),
                           )
                         }}
+                        title="Remove file"
+                        aria-label="Remove file"
                         style={{
                           marginLeft: '8px',
                           color: 'var(--foreground-faded)',
