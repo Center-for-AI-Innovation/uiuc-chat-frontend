@@ -131,7 +131,7 @@ type FileUploadStatus = {
 }
 
 interface Props {
-  onSend: (message: Message, plugin: Plugin | null) => void
+  onSend: (message: Message, plugin: Plugin | null) => Promise<void>
   onScrollDownClick: () => void
   stopConversationRef: MutableRefObject<boolean>
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>
@@ -435,11 +435,20 @@ export const ChatInput = ({
       contexts: allFileContexts.length > 0 ? allFileContexts : undefined,
     }
 
-    // Use the onSend prop to send the structured message
+    // Clear the composer immediately so the text disappears
+    setContent('')
+    setInputContent('')
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'inherit'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      textareaRef.current.style.overflow =
+        textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
+    }
+
+    // Send the message
     onSend(messageForChat, plugin)
 
     // Reset states
-    setContent('')
     setPlugin(null)
     setFileUploads([]) // Clear file uploads after sending message
 
@@ -478,7 +487,7 @@ export const ChatInput = ({
     setShowPromptList(false)
   }
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = async (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (showPromptList) {
       if (e.key === 'ArrowDown') {
         e.preventDefault()

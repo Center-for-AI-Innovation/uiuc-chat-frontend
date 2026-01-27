@@ -1,12 +1,23 @@
 // @utils/app/conversation
-import { type Conversation, type ConversationPage } from '@/types/chat'
-import posthog from 'posthog-js'
-import { cleanConversationHistory } from '@/utils/app/clean'
+import {
+  type Conversation,
+  type ConversationPage,
+  type Message,
+  type SaveConversationDelta,
+  type ConversationMeta,
+  type ContextWithMetadata,
+} from '@/types/chat'
+import { cleanConversationHistory } from './clean'
+import { createHeaders } from '~/utils/httpHeaders'
+
+// Helper function to create headers with PostHog ID and user email
+// removed local createHeaders; use shared from ~/utils/httpHeaders
 
 export async function fetchConversationHistory(
   searchTerm: string,
   courseName: string,
   pageParam: number,
+  userEmail?: string,
 ): Promise<ConversationPage> {
   let finalResponse: ConversationPage = {
     conversations: [],
@@ -17,9 +28,7 @@ export async function fetchConversationHistory(
       `/api/conversation?searchTerm=${searchTerm}&courseName=${courseName}&pageParam=${pageParam}`,
       {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: createHeaders(userEmail),
       },
     )
 
@@ -70,6 +79,7 @@ export async function fetchConversationHistory(
 
 export async function fetchLastConversation(
   courseName: string,
+  userEmail?: string,
 ): Promise<Conversation | null> {
   try {
     // Grab the first page; server already orders by updated_at DESC in your SQL,
@@ -77,7 +87,7 @@ export async function fetchLastConversation(
       `/api/conversation?searchTerm=&courseName=${encodeURIComponent(courseName)}&pageParam=0`,
       {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: createHeaders(userEmail),
       },
     )
 
@@ -100,13 +110,12 @@ export async function fetchLastConversation(
 export const deleteConversationFromServer = async (
   id: string,
   course_name: string,
+  userEmail?: string,
 ) => {
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createHeaders(userEmail),
       body: JSON.stringify({ id, course_name }),
     })
 
@@ -118,13 +127,14 @@ export const deleteConversationFromServer = async (
   }
 }
 
-export const deleteAllConversationsFromServer = async (course_name: string) => {
+export const deleteAllConversationsFromServer = async (
+  course_name: string,
+  userEmail?: string,
+) => {
   try {
     const response = await fetch('/api/conversation', {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: createHeaders(userEmail),
       body: JSON.stringify({ course_name }),
     })
 
@@ -265,132 +275,216 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
   return successful
 }
 
-export const saveConversations = (conversations: Conversation[]) => {
-  /*
-  Note: This function is a workaround for the issue where localStorage is full and cannot save new conversation history.
-  TODO: show a modal/pop-up asking user to export them before it gets deleted?
-  */
+const clearSingleOldestConversation = () => {
+  console.debug('CLEARING OLDEST CONVERSATIONS to free space in local storage.')
 
-  try {
-    localStorage.setItem('conversationHistory', JSON.stringify(conversations))
-  } catch (error) {
-    // Handle localStorage quota exceeded error
-    if (
-      error instanceof DOMException &&
-      (error.name === 'QuotaExceededError' ||
-        error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-        error.code === 22 ||
-        error.code === 1014)
-    ) {
-      console.warn(
-        'localStorage quota exceeded in saveConversations, saving minimal conversation data instead',
+  const existingConversations = JSON.parse(
+    localStorage.getItem('conversationHistory') || '[]',
+  )
+
+  // let existingConversations = JSON.parse(localStorage.getItem('conversationHistory') || '[]');
+  while (existingConversations.length > 0) {
+    existingConversations.shift() // Remove the oldest conversation
+    try {
+      localStorage.setItem(
+        'conversationHistory',
+        JSON.stringify(existingConversations),
       )
-
-      // Create minimal versions of the conversations with just essential data
-      const minimalConversations = conversations.map((conversation) => ({
-        id: conversation.id,
-        name: conversation.name,
-        model: conversation.model,
-        temperature: conversation.temperature,
-        folderId: conversation.folderId,
-        userEmail: conversation.userEmail,
-        projectName: conversation.projectName,
-        createdAt: conversation.createdAt,
-        updatedAt: conversation.updatedAt,
-      }))
-
-      try {
-        // Try to save the minimal versions
-        localStorage.setItem(
-          'conversationHistory',
-          JSON.stringify(minimalConversations),
-        )
-      } catch (minimalError) {
-        // If even minimal versions fail, try to save just the most recent conversations
-        console.warn(
-          'Failed to save minimal conversation data, trying to save only recent conversations',
-        )
-
-        // Try with just the 5 most recent conversations
-        const recentMinimalConversations = minimalConversations.slice(-5)
-
-        try {
-          localStorage.setItem(
-            'conversationHistory',
-            JSON.stringify(recentMinimalConversations),
-          )
-        } catch (recentError) {
-          // If that still fails, log the error
-          console.error(
-            'Failed to save even recent minimal conversation data to localStorage',
-            recentError,
-          )
-
-          // Track the error in analytics
-          posthog.capture('local_storage_full', {
-            course_name:
-              conversations?.slice(-1)[0]?.messages?.[0]?.contexts?.[0]
-                ?.course_name || 'Unknown Course',
-            user_email:
-              conversations?.slice(-1)[0]?.userEmail || 'Unknown Email',
-            inSaveConversations: true,
-          })
-        }
-      }
-    } else {
-      // Some other error occurred
-      console.error('Error saving conversations to localStorage:', error)
-
-      // Track the error in analytics
-      posthog.capture('local_storage_full', {
-        course_name:
-          conversations?.slice(-1)[0]?.messages?.[0]?.contexts?.[0]
-            ?.course_name || 'Unknown Course',
-        user_email: conversations?.slice(-1)[0]?.userEmail || 'Unknown Email',
-        inSaveConversations: true,
-      })
+      break // Exit loop if setItem succeeds
+    } catch (error) {
+      continue // Try removing another conversation
     }
   }
 }
 
+export interface SaveConversationOptions {
+  forceFullPayload?: boolean
+}
+
 export async function saveConversationToServer(
   conversation: Conversation,
-  course_name: string,
+  courseName: string,
+  message: Message | null,
+  options: SaveConversationOptions = {},
 ) {
-  const MAX_RETRIES = 3
-  let retryCount = 0
+  try {
+    const payload: Record<string, unknown> = { course_name: courseName }
 
-  while (retryCount < MAX_RETRIES) {
-    try {
-      console.debug('Saving conversation to server:', conversation)
-      const response = await fetch('/api/conversation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ conversation, course_name }),
-      })
+    if (message && !options.forceFullPayload) {
+      payload.delta = createSaveDeltaPayload(conversation, message)
+    } else {
+      payload.conversation = conversation
+    }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
-        const errorMessage = errorData?.error || response.statusText
-        throw new Error(`Error saving conversation: ${errorMessage}`)
-      }
+    const response = await fetch('/api/conversation', {
+      method: 'POST',
+      headers: createHeaders(conversation.userEmail),
+      body: JSON.stringify(payload),
+    })
 
-      return response.json()
-    } catch (error: any) {
-      console.error(
-        `Error saving conversation (attempt ${retryCount + 1}/${MAX_RETRIES}):`,
-        error,
+    if (!response.ok) {
+      throw new Error('Failed to save conversation to server')
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error saving conversation to server:', error)
+    throw error
+  }
+}
+
+export const saveConversations = (conversations: Conversation[]) => {
+  try {
+    localStorage.setItem('conversationHistory', JSON.stringify(conversations))
+  } catch (error) {
+    console.error('Error saving conversations to localStorage:', error)
+  }
+}
+
+export function createSaveDeltaPayload(
+  conversation: Conversation,
+  message: Message | null,
+  earliestEditedMessageId?: string,
+): SaveConversationDelta {
+  const meta: ConversationMeta = {
+    id: conversation.id,
+    name: conversation.name,
+    modelId: conversation.model.id,
+    prompt: conversation.prompt,
+    temperature: conversation.temperature,
+    projectName: conversation.projectName,
+    folderId: conversation.folderId || null,
+    userEmail: conversation.userEmail ?? null,
+  }
+
+  const messagesDelta: Message[] = message ? [message] : []
+
+  return {
+    conversation: meta,
+    messagesDelta,
+    earliestEditedMessageId,
+  }
+}
+
+export function createLogConversationPayload(
+  courseName: string,
+  conversation: Conversation,
+  message: Message | null,
+  earliestEditedMessageId?: string,
+) {
+  if (message) {
+    let messagesToInclude: Message[] = []
+
+    if (earliestEditedMessageId && conversation.messages) {
+      // Edit case: include all messages from edit point onwards
+      const editIndex = conversation.messages.findIndex(
+        (m) => m.id === earliestEditedMessageId,
       )
-      if (error.code === 'ECONNRESET' && retryCount < MAX_RETRIES - 1) {
-        retryCount++
-        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount)) // Exponential backoff
-        continue
+      if (editIndex >= 0) {
+        messagesToInclude = conversation.messages.slice(editIndex)
+      } else {
+        messagesToInclude = [message]
       }
-      throw error
+    } else if (conversation.messages && conversation.messages.length >= 2) {
+      // Normal case: include the user message that triggered this response + the assistant response
+      // The user message is the second-to-last, assistant is last
+      const lastIndex = conversation.messages.length - 1
+      const userMessage = conversation.messages[lastIndex - 1]
+      const assistantMessage = conversation.messages[lastIndex]
+
+      // Only include both if we have a user->assistant pair
+      if (
+        userMessage?.role === 'user' &&
+        assistantMessage?.role === 'assistant'
+      ) {
+        messagesToInclude = [userMessage, assistantMessage]
+      } else {
+        // Fallback: just include the provided message
+        messagesToInclude = [message]
+      }
+    } else {
+      // Single message or fallback
+      messagesToInclude = [message]
+    }
+
+    const meta: ConversationMeta = {
+      id: conversation.id,
+      name: conversation.name,
+      modelId: conversation.model.id,
+      prompt: conversation.prompt,
+      temperature: conversation.temperature,
+      projectName: conversation.projectName,
+      folderId: conversation.folderId || null,
+      userEmail: conversation.userEmail ?? null,
+    }
+
+    return {
+      course_name: courseName,
+      delta: {
+        conversation: meta,
+        messagesDelta: messagesToInclude,
+        earliestEditedMessageId,
+      } as SaveConversationDelta,
     }
   }
+
+  return {
+    course_name: courseName,
+    conversation,
+  }
+}
+
+// Old method without error handling
+// export const saveConversations = (conversations: Conversation[]) => {
+//   try {
+//     localStorage.setItem('conversationHistory', JSON.stringify(conversations))
+//   } catch (e) {
+//     console.error(
+//       'Error saving conversation history. Clearing storage, then setting convo. Error:',
+//       e,
+//     )
+//     localStorage.setItem('conversationHistory', JSON.stringify(conversations))
+//   }
+// }
+
+export function reconstructConversation(
+  conversation: Conversation | undefined | null,
+  fallback?: Conversation,
+): Conversation | undefined {
+  const source = conversation ?? fallback
+  if (!source) return undefined
+
+  const cloned = JSON.parse(JSON.stringify(source)) as Conversation
+
+  if (!Array.isArray(cloned.messages)) {
+    cloned.messages = []
+  }
+
+  cloned.messages = cloned.messages.map((message) => {
+    const normalizedMessage = { ...message }
+
+    if (Array.isArray(normalizedMessage.contexts)) {
+      normalizedMessage.contexts = normalizedMessage.contexts.filter(
+        (context): context is ContextWithMetadata => context !== null,
+      )
+    }
+
+    if (Array.isArray(normalizedMessage.tools)) {
+      normalizedMessage.tools = normalizedMessage.tools.map((tool) => {
+        const normalizedTool = { ...tool }
+        if (Array.isArray(normalizedTool.contexts)) {
+          normalizedTool.contexts = normalizedTool.contexts.filter(
+            (context): context is ContextWithMetadata => context !== null,
+          )
+        }
+        return normalizedTool
+      })
+    }
+
+    return normalizedMessage
+  })
+
+  return cloned
 }
 
 export async function logConversationToServer(

@@ -105,7 +105,7 @@ const Home = ({
     data: lastConversation,
     isFetched: isLastConversationFetched,
     isLoading: isLastConversationLoading,
-  } = useFetchLastConversation(course_name)
+  } = useFetchLastConversation(course_name, current_email)
 
   const stopConversationRef = useRef<boolean>(false)
   const getModels = useCallback(
@@ -476,7 +476,13 @@ const Home = ({
       // Add new conversation to the list
       updatedConversations = [updatedConversation, ...conversations]
     }
-    updateConversationMutation.mutate(updatedConversation) // BG: should it be here?
+    const latestMessage =
+      updatedConversation.messages?.[updatedConversation.messages.length - 1] ??
+      null
+    updateConversationMutation.mutate({
+      conversation: updatedConversation,
+      message: latestMessage,
+    })
     dispatch({ field: 'conversations', value: updatedConversations })
   }
 
@@ -701,6 +707,18 @@ const Home = ({
             <Navbar isPlain={false} />
 
             <div className="flex h-full w-full overflow-y-auto sm:pt-0">
+              {/* {isDragging &&
+                VisionCapableModels.has(
+                  selectedConversation?.model.id as any,
+                ) && (
+                  <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
+                    <GradientIconPhoto />
+                    <span className="text-3xl font-extrabold text-[--foreground]">
+                      Drop your image here!
+                    </span>
+                  </div>
+                )} */}
+
               <Chatbar
                 current_email={current_email}
                 courseName={course_name}

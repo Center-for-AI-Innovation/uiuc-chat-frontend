@@ -10,6 +10,7 @@ import {
   type BedrockProvider,
   type GeminiProvider,
   type SambaNovaProvider,
+  type OpenAICompatibleProvider,
   ProviderNames,
   type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
@@ -18,7 +19,8 @@ import { getAzureModels } from '~/utils/modelProviders/azure'
 import { getAnthropicModels } from '~/utils/modelProviders/routes/anthropic'
 import { getWebLLMModels } from '~/utils/modelProviders/WebLLM'
 import { type NextApiRequest, type NextApiResponse } from 'next'
-import { withAuth, AuthenticatedRequest } from '~/utils/authMiddleware'
+import { AuthenticatedRequest } from '~/utils/authMiddleware'
+import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { getNCSAHostedModels } from '~/utils/modelProviders/NCSAHosted'
 import { getOpenAIModels } from '~/utils/modelProviders/routes/openai'
 import { ensureRedisConnected } from '~/utils/redisClient'
@@ -26,6 +28,7 @@ import { getNCSAHostedVLMModels } from '~/utils/modelProviders/types/NCSAHostedV
 import { getBedrockModels } from '~/utils/modelProviders/routes/bedrock'
 import { getGeminiModels } from '~/utils/modelProviders/routes/gemini'
 import { getSambaNovaModels } from '~/utils/modelProviders/routes/sambanova'
+import { getOpenAICompatibleModels } from '~/utils/modelProviders/routes/openaiCompatible'
 
 export async function getModels(
   projectName: string,
@@ -43,11 +46,12 @@ export async function getModels(
   // Define a function to create a placeholder provider with default values
   const createPlaceholderProvider = (
     providerName: ProviderNames,
-  ): LLMProvider => ({
-    provider: providerName,
-    enabled: true,
-    models: [],
-  })
+  ): LLMProvider =>
+    ({
+      provider: providerName,
+      enabled: true,
+      models: [],
+    }) as LLMProvider
 
   // Ensure all providers are defined
   const allProviderNames = Object.values(ProviderNames)
@@ -116,6 +120,11 @@ export async function getModels(
           llmProvider as SambaNovaProvider,
         )
         break
+      case ProviderNames.OpenAICompatible:
+        allLLMProviders[providerName] = await getOpenAICompatibleModels(
+          llmProvider as OpenAICompatibleProvider,
+        )
+        break
       default:
         console.warn(`Unhandled provider: ${providerName}`)
     }
@@ -145,4 +154,4 @@ async function handler(
   }
 }
 
-export default withAuth(handler)
+export default withCourseAccessFromRequest('any')(handler)

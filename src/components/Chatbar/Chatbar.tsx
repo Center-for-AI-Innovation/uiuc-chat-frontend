@@ -129,9 +129,12 @@ export const Chatbar = ({
           conversation.userEmail = current_email
           conversation.projectName = courseName
           try {
+            const latestMessage =
+              conversation.messages?.[conversation.messages.length - 1] ?? null
             const response = await saveConversationToServer(
               conversation,
               courseName,
+              latestMessage,
             )
             console.log('Response from saveConversationToServer: ', response)
           } catch (error: any) {

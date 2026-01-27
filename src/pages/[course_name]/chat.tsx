@@ -12,13 +12,19 @@ import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
+import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()
   const router = useRouter()
   const getCurrentPageName = () => {
-    return router.query.course_name as string
+    const raw = router.query.course_name
+    return typeof raw === 'string'
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
   const courseName = getCurrentPageName() as string
   const [currentEmail, setCurrentEmail] = useState('')
@@ -32,6 +38,7 @@ const ChatPage: NextPage = () => {
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
   const [documentCount, setDocumentCount] = useState<number | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
   const { course_name } = router.query
 
   // UseEffect to check URL parameters
@@ -63,24 +70,42 @@ const ChatPage: NextPage = () => {
       }
 
       // Fetch course metadata
-      const metadataResponse = await fetch(
-        `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
-      )
-      const metadataData = await metadataResponse.json()
+      try {
+        const metadataResponse = await fetch(
+          `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
+        )
 
-      // Log original course metadata settings without modifying them
-      if (metadataData.course_metadata) {
-        console.log('Course metadata settings:', {
-          guidedLearning: metadataData.course_metadata.guidedLearning,
-          documentsOnly: metadataData.course_metadata.documentsOnly,
-          systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
-          system_prompt: metadataData.course_metadata.system_prompt,
-        })
+        if (!metadataResponse.ok) {
+          const status = metadataResponse.status
+          if (status === 401 || status === 403 || status === 404) {
+            setErrorType(status as 401 | 403 | 404)
+            setIsCourseMetadataLoading(false)
+            setIsLoading(false)
+            return
+          }
+          throw new Error(`Failed to fetch course metadata: ${status}`)
+        }
+
+        const metadataData = await metadataResponse.json()
+
+        // Log original course metadata settings without modifying them
+        if (metadataData.course_metadata) {
+          console.log('Course metadata settings:', {
+            guidedLearning: metadataData.course_metadata.guidedLearning,
+            documentsOnly: metadataData.course_metadata.documentsOnly,
+            systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
+            system_prompt: metadataData.course_metadata.system_prompt,
+          })
+        }
+
+        setCourseMetadata(metadataData.course_metadata)
+        setIsCourseMetadataLoading(false)
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Error fetching course metadata:', error)
+        setIsCourseMetadataLoading(false)
+        setIsLoading(false)
       }
-
-      setCourseMetadata(metadataData.course_metadata)
-      setIsCourseMetadataLoading(false)
-      setIsLoading(false)
     }
     fetchData()
   }, [courseName, urlGuidedLearning, urlDocumentsOnly, urlSystemPromptOnly])
@@ -123,6 +148,12 @@ const ChatPage: NextPage = () => {
             return
           }
 
+          // Check if course is frozen/archived
+          if (metadata.is_frozen === true) {
+            router.replace(`/${courseName}/not_authorized`)
+            return
+          }
+
           // Check if course is public
           if (!metadata.is_private) {
             setIsAuthorized(true)
@@ -141,8 +172,13 @@ const ChatPage: NextPage = () => {
                 const postHogUser = JSON.parse(postHogUserObj)
                 setCurrentEmail(postHogUser.distinct_id)
               } else {
-                // When user is not logged in and posthog user is not found
-                setCurrentEmail('')
+                // Generate a unique identifier for unauthenticated users
+                let anonymousId = localStorage.getItem('anonymous_user_id')
+                if (!anonymousId) {
+                  anonymousId = generateAnonymousUserId()
+                  localStorage.setItem('anonymous_user_id', anonymousId)
+                }
+                setCurrentEmail(anonymousId)
               }
             }
             return
@@ -173,7 +209,18 @@ const ChatPage: NextPage = () => {
           setIsAuthorized(true)
         } catch (error) {
           console.error('Authorization check failed:', error)
-          setIsAuthorized(false)
+          // Check if error has a status code (401, 403, or 404)
+          const errorWithStatus = error as Error & { status?: number }
+          const status = errorWithStatus.status
+
+          if (status === 401 || status === 403 || status === 404) {
+            // Set error state to show PermissionGate with error message
+            setIsAuthorized(false)
+            // Store error type in state to pass to PermissionGate
+            setErrorType(status as 401 | 403 | 404)
+          } else {
+            setIsAuthorized(false)
+          }
         }
       }
     }
@@ -189,8 +236,17 @@ const ChatPage: NextPage = () => {
     )
   }
 
+  if (errorType !== null) {
+    return (
+      <PermissionGate
+        course_name={course_name ? (course_name as string) : 'new'}
+        errorType={errorType}
+      />
+    )
+  }
+
   // redirect to login page if needed
-  if (!auth.isAuthenticated) {
+  if (!auth.isAuthenticated && courseMetadata?.is_private) {
     console.log(
       'User not logged in',
       auth.isAuthenticated,
@@ -198,7 +254,7 @@ const ChatPage: NextPage = () => {
       'NewCoursePage',
     )
     return (
-      <AuthComponent
+      <PermissionGate
         course_name={course_name ? (course_name as string) : 'new'}
       />
     )
@@ -209,8 +265,7 @@ const ChatPage: NextPage = () => {
       {!isLoading &&
         !auth.isLoading &&
         router.isReady &&
-        ((currentEmail && currentEmail !== '') ||
-          !courseMetadata?.is_private) &&
+        currentEmail !== undefined &&
         courseMetadata && (
           <Home
             current_email={currentEmail || ''}
@@ -225,17 +280,17 @@ const ChatPage: NextPage = () => {
           />
         )}
       {isLoading ||
-        !currentEmail ||
-        (currentEmail === '' && (
-          <MainPageBackground>
-            <div
-              className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
-            >
-              <span className="mr-2">Warming up the knowledge engines...</span>
-              <LoadingSpinner size="sm" />
-            </div>
-          </MainPageBackground>
-        ))}
+      (!currentEmail && courseMetadata?.is_private) ||
+      (currentEmail === '' && courseMetadata?.is_private) ? (
+        <MainPageBackground>
+          <div
+            className={`flex items-center justify-center font-montserratHeading ${montserrat_heading.variable}`}
+          >
+            <span className="mr-2">Warming up the knowledge engines...</span>
+            <LoadingSpinner size="sm" />
+          </div>
+        </MainPageBackground>
+      ) : null}
     </>
   )
 }

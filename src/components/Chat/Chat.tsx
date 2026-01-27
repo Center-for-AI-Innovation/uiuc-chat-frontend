@@ -85,6 +85,7 @@ import {
   handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
+import { createLogConversationPayload } from '@/utils/app/conversation'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -126,7 +127,7 @@ export const Chat = memo(
 
     const [enabledDocumentGroups, setEnabledDocumentGroups] = useState<
       string[]
-    >([])
+    >(['All Documents']) // Default to 'All Documents' so retrieval can work immediately
     const [enabledTools, setEnabledTools] = useState<string[]>([])
 
     const logConversationMutation = useLogConversation(getCurrentPageName())
@@ -213,6 +214,7 @@ export const Chat = memo(
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const editedMessageIdRef = useRef<string | undefined>(undefined)
     const updateConversationMutation = useUpdateConversation(
       currentEmail,
       queryClient,
@@ -272,8 +274,32 @@ export const Chat = memo(
       )
     }, [tools])
 
-    const onMessageReceived = async (conversation: Conversation) => {
-      await logConversationMutation.mutateAsync(conversation)
+    const onMessageReceived = async (
+      conversation: Conversation,
+      message: Message,
+      earliestEditedMessageId?: string,
+    ) => {
+      // Log conversation to database
+      try {
+        const response = await fetch(`/api/UIUC-api/logConversation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(
+            createLogConversationPayload(
+              getCurrentPageName(),
+              conversation,
+              message,
+              earliestEditedMessageId,
+            ),
+          ),
+        })
+        // const data = await response.json()
+        // return data.success
+      } catch (error) {
+        console.error('Error setting course data:', error)
+      }
     }
 
     const resetMessageStates = () => {
@@ -353,14 +379,17 @@ export const Chat = memo(
           return
         }
 
-        let updatedConversation: Conversation
-        if (deleteCount) {
-          // FIXED: Don't clear contexts if they come from a file upload
-          const isFileUploadMessage =
-            Array.isArray(message.content) &&
-            message.content.some(
-              (c) => typeof c === 'object' && c.type === 'file',
-            )
+          let updatedConversation: Conversation
+          if (deleteCount) {
+            // Track the edited message ID for logging purposes
+            editedMessageIdRef.current = message.id
+
+            // FIXED: Don't clear contexts if they come from a file upload
+            const isFileUploadMessage =
+              Array.isArray(message.content) &&
+              message.content.some(
+                (c) => typeof c === 'object' && c.type === 'file',
+              )
 
           if (!isFileUploadMessage) {
             message.contexts = []
@@ -397,6 +426,9 @@ export const Chat = memo(
             deletedMessages: messagesToDelete,
           })
         } else {
+            // Clear edited message ID for non-edit sends
+            editedMessageIdRef.current = undefined
+
           updatedConversation = {
             ...selectedConversation,
             messages: [...(selectedConversation.messages || []), message],
@@ -419,20 +451,19 @@ export const Chat = memo(
                 ? contentText.substring(0, 30) + '...'
                 : contentText
 
-            updatedConversation = {
-              ...updatedConversation,
-              name: customName,
+              updatedConversation = {
+                ...updatedConversation,
+                name: customName,
+              }
             }
           }
-        }
-        handleUpdateConversation(updatedConversation, {
-          key: 'messages',
-          value: updatedConversation.messages,
-        })
-        updateConversationMutation.mutate(updatedConversation)
-        homeDispatch({ field: 'loading', value: true })
-        homeDispatch({ field: 'messageIsStreaming', value: true })
-        const controller = new AbortController()
+          handleUpdateConversation(updatedConversation, {
+            key: 'messages',
+            value: updatedConversation.messages,
+          })
+          homeDispatch({ field: 'loading', value: true })
+          homeDispatch({ field: 'messageIsStreaming', value: true })
+          const controller = new AbortController()
 
         let imgDesc = ''
         let imageUrls: string[] = []
@@ -834,29 +865,32 @@ export const Chat = memo(
           homeDispatch({ field: 'isRetrievalLoading', value: false })
         }
 
-        // Action 3: Tool Execution
-        if (tools.length > 0) {
-          try {
-            homeDispatch({ field: 'isRouting', value: true })
-            // Check if any tools need to be run
-            const uiucToolsToRun = await handleFunctionCall(
-              message,
-              tools,
-              imageUrls,
-              imgDesc,
-              updatedConversation,
-              getOpenAIKey(llmProviders, courseMetadata, apiKey),
-            )
-            homeDispatch({ field: 'isRouting', value: false })
-            if (uiucToolsToRun.length > 0) {
-              homeDispatch({ field: 'isRunningTool', value: true })
-              // Run the tools
-              await handleToolCall(
-                uiucToolsToRun,
+          // Action 3: Tool Execution
+          if (tools.length > 0) {
+            try {
+              homeDispatch({ field: 'isRouting', value: true })
+              // Check if any tools need to be run
+              const uiucToolsToRun = await handleFunctionCall(
+                message,
+                tools,
+                imageUrls,
+                imgDesc,
                 updatedConversation,
+                getOpenAIKey(llmProviders, courseMetadata, apiKey),
                 courseName,
+                undefined,
+                llmProviders,
               )
-            }
+              homeDispatch({ field: 'isRouting', value: false })
+              if (uiucToolsToRun.length > 0) {
+                homeDispatch({ field: 'isRunningTool', value: true })
+                // Run the tools
+                await handleToolCall(
+                  uiucToolsToRun,
+                  updatedConversation,
+                  courseName,
+                )
+              }
 
             homeDispatch({ field: 'isRunningTool', value: false })
           } catch (error) {
@@ -1057,21 +1091,20 @@ export const Chat = memo(
                 text += chunkValue
               }
 
-              if (isFirst) {
-                // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
-                isFirst = false
-                const updatedMessages: Message[] = [
-                  ...updatedConversation.messages,
-                  {
-                    id: uuidv4(),
-                    role: 'assistant',
-                    content: chunkValue,
-                    contexts: message.contexts,
-                    feedback: message.feedback,
-                    wasQueryRewritten: message.wasQueryRewritten,
-                    queryRewriteText: message.queryRewriteText,
-                  },
-                ]
+                if (isFirst) {
+                  // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
+                  isFirst = false
+                  const updatedMessages: Message[] = [
+                    ...updatedConversation.messages,
+                    {
+                      id: uuidv4(),
+                      role: 'assistant',
+                      content: chunkValue,
+                      feedback: message.feedback,
+                      wasQueryRewritten: message.wasQueryRewritten,
+                      queryRewriteText: message.queryRewriteText,
+                    },
+                  ]
 
                 // console.log('updatedMessages with queryRewrite info:', updatedMessages)
 
@@ -1142,23 +1175,51 @@ export const Chat = memo(
             throw new Error('LLM response stream ended before it was done.')
           }
 
-          try {
-            // This is after the response is done streaming
-            console.debug(
-              'updatedConversation after streaming:',
-              updatedConversation,
-            )
-            handleUpdateConversation(updatedConversation, {
-              key: 'messages',
-              value: updatedConversation.messages,
-            })
-            updateConversationMutation.mutate(updatedConversation)
-            console.debug(
-              'updatedConversation after mutation:',
-              updatedConversation,
-            )
+            homeDispatch({ field: 'messageIsStreaming', value: false })
 
-            onMessageReceived(updatedConversation) // kastan here, trying to save message AFTER done streaming. This only saves the user message...
+            try {
+              // This is after the response is done streaming
+              console.debug(
+                'updatedConversation after streaming:',
+                updatedConversation,
+              )
+              handleUpdateConversation(updatedConversation, {
+                key: 'messages',
+                value: updatedConversation.messages,
+              })
+              // Here, we want to persist the full streamed assistant message, not the initial user message.
+              // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
+              const streamedAssistantMessage =
+                updatedConversation.messages?.[
+                  updatedConversation.messages.length - 1
+                ] ?? message
+
+              if (streamedAssistantMessage.role === 'assistant') {
+                await updateConversationMutation.mutateAsync({
+                  conversation: updatedConversation,
+                  message: streamedAssistantMessage,
+                })
+              } else {
+                // Fallback: do not trigger mutation if it's not an assistant message
+                console.warn(
+                  'Attempted to persist a non-assistant message after stream:',
+                  streamedAssistantMessage,
+                )
+              }
+              console.debug(
+                'updatedConversation after mutation:',
+                updatedConversation,
+              )
+
+              if (streamedAssistantMessage) {
+                onMessageReceived(
+                  updatedConversation,
+                  streamedAssistantMessage,
+                  editedMessageIdRef.current,
+                )
+                // Clear the ref after logging
+                editedMessageIdRef.current = undefined
+              }
 
             // } else {
             //   onMessageReceived(updatedConversation)
@@ -1859,10 +1920,31 @@ export const Chat = memo(
           })
 
           // Update database
-          await updateConversationMutation.mutateAsync(updatedConversation)
+          const latestMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? null
 
           // Log to database
-          await logConversationMutation.mutateAsync(updatedConversation)
+          const latestAssistantMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? null
+          if (latestAssistantMessage) {
+            await fetch('/api/UIUC-api/logConversation', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(
+                createLogConversationPayload(
+                  getCurrentPageName(),
+                  updatedConversation,
+                  latestAssistantMessage,
+                ),
+              ),
+            })
+          }
         } catch (error) {
           homeDispatch({
             field: 'conversations',
@@ -1953,7 +2035,7 @@ export const Chat = memo(
                               key={index}
                               message={message}
                               messageIndex={index}
-                              onEdit={(editedMessage) => {
+                              onEdit={async (editedMessage) => {
                                 handleSend(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
@@ -1990,7 +2072,7 @@ export const Chat = memo(
               <ChatInput
                 stopConversationRef={stopConversationRef}
                 textareaRef={textareaRef}
-                onSend={(message, plugin) => {
+                onSend={(message, plugin) =>
                   handleSend(
                     message,
                     0,
@@ -1999,7 +2081,7 @@ export const Chat = memo(
                     enabledDocumentGroups,
                     llmProviders,
                   )
-                }}
+                }
                 onScrollDownClick={handleScrollDown}
                 showScrollDownButton={showScrollDownButton}
                 onRegenerate={() => handleRegenerate()}
