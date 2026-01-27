@@ -50,12 +50,31 @@ export interface Message {
   latestSystemMessage?: string
   finalPromtEngineeredMessage?: string // after all prompt enginering, to generate final response.
   responseTimeSec?: number
+  imageDescription?: string
+  imageUrls?: string[]
   conversation_id?: string
   created_at?: string
   updated_at?: string
   feedback?: MessageFeedback
   wasQueryRewritten?: boolean
   queryRewriteText?: string
+}
+
+export interface ConversationMeta {
+  id: string
+  name: string
+  modelId: string
+  prompt: string
+  temperature: number
+  projectName?: string
+  folderId: string | null
+  userEmail?: string | null
+}
+
+export interface SaveConversationDelta {
+  conversation: ConversationMeta
+  messagesDelta: Message[]
+  earliestEditedMessageId?: string
 }
 
 export type MessageFeedback = {
