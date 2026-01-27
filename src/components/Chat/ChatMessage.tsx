@@ -9,14 +9,7 @@ import React, {
   createContext,
   useContext as useReactContext,
 } from 'react'
-import {
-  Text,
-  createStyles,
-  Badge,
-  Tooltip,
-  Modal,
-  Button,
-} from '@mantine/core'
+import { Text, createStyles, Badge, Tooltip, Modal } from '@mantine/core'
 import {
   IconCheck,
   IconEdit,
@@ -26,8 +19,6 @@ import {
   IconFileTypePdf,
   IconFileTypeDocx,
   IconFileTypeTxt,
-  IconFileTypeXls,
-  IconFileTypePpt,
   IconFile,
   IconEye,
 } from '@tabler/icons-react'
@@ -53,7 +44,7 @@ import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 import {
   saveConversationToServer,
   createLogConversationPayload,
-} from '@/utils/app/conversation'
+} from '@/hooks/__internal__/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'

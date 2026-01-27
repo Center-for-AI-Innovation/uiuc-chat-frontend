@@ -7,7 +7,7 @@ import {
   type ConversationMeta,
   type ContextWithMetadata,
 } from '@/types/chat'
-import { cleanConversationHistory } from './clean'
+import { cleanConversationHistory } from '@/utils/app/clean'
 import { createHeaders } from '~/utils/httpHeaders'
 
 // Helper function to create headers with PostHog ID and user email
