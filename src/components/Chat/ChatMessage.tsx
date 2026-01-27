@@ -43,13 +43,17 @@ import HomeContext from '~/pages/api/home/home.context'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
+import { generateSecureKey } from '~/utils/cryptoRandom'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
 import { ImagePreview } from './ImagePreview'
 import MessageActions from './MessageActions'
 import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 
-import { saveConversationToServer } from '@/hooks/__internal__/conversation'
+import {
+  saveConversationToServer,
+  createLogConversationPayload,
+} from '@/utils/app/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -497,6 +501,51 @@ export const ChatMessage = memo(
     // Remove the local state for sources sidebar and use only context
     const isSourcesSidebarOpen = activeSidebarMessageId === message.id
 
+    // State to hold the contexts to display (either from this message or previous user message)
+    const [displayContexts, setDisplayContexts] = useState<
+      ContextWithMetadata[]
+    >([])
+
+    // Check if we should use the previous user message's context
+    useEffect(() => {
+      // Only run this logic if:
+      // 1. Current message is an assistant message
+      // 2. Current message has no contexts or empty contexts array
+      if (
+        message.role === 'assistant' &&
+        (!message.contexts ||
+          !Array.isArray(message.contexts) ||
+          message.contexts.length === 0)
+      ) {
+        // Check if there's a previous message
+        if (
+          selectedConversation &&
+          selectedConversation.messages &&
+          messageIndex > 0
+        ) {
+          const previousMessage =
+            selectedConversation.messages[messageIndex - 1]
+
+          // Check if previous message is a user message and has contexts
+          if (
+            previousMessage &&
+            previousMessage.role === 'user' &&
+            Array.isArray(previousMessage.contexts) &&
+            previousMessage.contexts.length > 0
+          ) {
+            // Use the previous user message's contexts
+            setDisplayContexts(previousMessage.contexts)
+            return
+          }
+        }
+      }
+
+      // Otherwise, use the current message's contexts (or empty array)
+      setDisplayContexts(
+        Array.isArray(message.contexts) ? message.contexts : [],
+      )
+    }, [message.role, message.contexts, messageIndex, selectedConversation])
+
     useEffect(() => {
       // Close Sources sidebar if right sidebar is opened
       if (isRightSideVisible) {
@@ -691,11 +740,36 @@ export const ChatMessage = memo(
             msg.id === message.id ? editedMessage : msg,
           ),
         }
-        saveConversationToServer(updatedConversation, courseName).catch(
-          (error: Error) => {
-            console.error('Error saving edited message to server:', error)
-          },
-        )
+        const latestMessage =
+          updatedConversation.messages?.[
+            updatedConversation.messages.length - 1
+          ] ?? null
+
+        saveConversationToServer(
+          updatedConversation,
+          courseName,
+          latestMessage,
+        ).catch((error: Error) => {
+          console.error('Error saving edited message to server:', error)
+        })
+
+        if (latestMessage) {
+          fetch('/api/UIUC-api/logConversation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(
+              createLogConversationPayload(
+                courseName,
+                updatedConversation,
+                latestMessage,
+              ),
+            ),
+          }).catch((error) => {
+            console.error('Error logging conversation delta:', error)
+          })
+        }
       }
       setIsEditing(false)
     }
@@ -898,12 +972,12 @@ export const ChatMessage = memo(
 
       const loadThumbnails = async () => {
         // Early return if contexts is undefined, null, or not an array
-        if (!Array.isArray(message.contexts) || message.contexts.length === 0)
+        if (!Array.isArray(displayContexts) || displayContexts.length === 0)
           return
 
         // Track unique sources to avoid duplicates
         const seenSources = new Set<string>()
-        const uniqueContexts = message.contexts.filter((context) => {
+        const uniqueContexts = displayContexts.filter((context) => {
           const sourceKey = context.s3_path || context.url
           if (!sourceKey || seenSources.has(sourceKey)) return false
           seenSources.add(sourceKey)
@@ -955,7 +1029,7 @@ export const ChatMessage = memo(
       return () => {
         isMounted = false
       }
-    }, [message.contexts, courseName])
+    }, [displayContexts, courseName])
 
     // Add new function to replace expired links in text
     async function replaceExpiredLinksInText(
@@ -1225,7 +1299,7 @@ export const ChatMessage = memo(
 
                   return !inline ? (
                     <CodeBlock
-                      key={Math.random()}
+                      key={generateSecureKey()}
                       language={(match && match[1]) || ''}
                       value={String(children).replace(/\n$/, '')}
                       style={{
@@ -1591,6 +1665,19 @@ export const ChatMessage = memo(
         fileName: '',
       })
     }
+    const condArrayIsArray = Array.isArray(displayContexts)
+    const condHasContexts = condArrayIsArray && displayContexts.length > 0
+
+    const condIsStreamingAndLastMsg =
+      messageIsStreaming &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
+    const condLoadingAndLastMsg =
+      loading &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
+    const shouldShowSources =
+      condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
 
     return (
       <>
@@ -2174,73 +2261,61 @@ export const ChatMessage = memo(
                   {/* Action Buttons Container */}
                   <div className="flex flex-col gap-2">
                     {/* Sources button */}
-                    {Array.isArray(message.contexts) &&
-                      message.contexts.length > 0 &&
-                      !(
-                        messageIsStreaming &&
-                        messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1
-                      ) &&
-                      !(
-                        loading &&
-                        messageIndex ===
-                          (selectedConversation?.messages.length ?? 0) - 1
-                      ) && (
-                        <div className="relative z-0 mb-1 flex justify-start">
-                          <button
-                            tabIndex={0}
-                            aria-label={
-                              'Open citations for ' +
-                              getContextsLength(message.contexts) +
-                              ' Source' +
-                              (getContextsLength(message.contexts) == 1
-                                ? ''
-                                : 's')
-                            }
-                            className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
-                            onClick={() => handleSourcesSidebarToggle(true)}
+                    {shouldShowSources && (
+                      <div className="relative z-0 mb-1 flex justify-start">
+                        <button
+                          tabIndex={0}
+                          aria-label={
+                            'Open citations for ' +
+                            getContextsLength(message.contexts) +
+                            ' Source' +
+                            (getContextsLength(message.contexts) == 1
+                              ? ''
+                              : 's')
+                          }
+                          className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
+                          onClick={() => handleSourcesSidebarToggle(true)}
+                        >
+                          <span
+                            className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
                           >
-                            <span
-                              className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
-                            >
-                              Sources
-                              <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
-                                {getContextsLength(message.contexts)}
-                              </span>
+                            Sources
+                            <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
+                              {getContextsLength(displayContexts)}
                             </span>
+                          </span>
 
-                            {sourceThumbnails.length > 0 && (
-                              <div className="flex items-center">
-                                <div className="ml-1 mr-1 h-4 border-l border-gray-300"></div>
-                                <div className="relative flex">
-                                  {sourceThumbnails.map((thumbnail, index) => (
-                                    <div
-                                      key={index}
-                                      className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
-                                      style={{
-                                        marginLeft:
-                                          index > 0 ? '-0.75rem' : '0',
-                                        zIndex: index,
-                                        transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                          {sourceThumbnails.length > 0 && (
+                            <div className="flex items-center">
+                              <div className="ml-1 mr-1 h-4 border-l border-gray-300"></div>
+                              <div className="relative flex">
+                                {sourceThumbnails.map((thumbnail, index) => (
+                                  <div
+                                    key={index}
+                                    className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
+                                    style={{
+                                      marginLeft: index > 0 ? '-0.75rem' : '0',
+                                      zIndex: index,
+                                      transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                                    }}
+                                  >
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
+                                    <img
+                                      src={thumbnail}
+                                      alt={`Source ${index + 1}`}
+                                      className="h-full w-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none'
                                       }}
-                                    >
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
-                                      <img
-                                        src={thumbnail}
-                                        alt={`Source ${index + 1}`}
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                          e.currentTarget.style.display = 'none'
-                                        }}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
+                                    />
+                                  </div>
+                                ))}
                               </div>
-                            )}
-                          </button>
-                        </div>
-                      )}
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Other buttons in their container */}
                     {!(
@@ -2282,7 +2357,7 @@ export const ChatMessage = memo(
         {isSourcesSidebarOpen && (
           <SourcesSidebar
             isOpen={isSourcesSidebarOpen}
-            contexts={Array.isArray(message.contexts) ? message.contexts : []}
+            contexts={Array.isArray(displayContexts) ? displayContexts : []}
             onClose={handleSourcesSidebarClose}
             hideRightSidebarIcon={isAnySidebarOpen}
             courseName={courseName}

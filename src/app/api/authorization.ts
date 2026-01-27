@@ -12,269 +12,106 @@ export async function getCourseMetadata(
   try {
     const redisClient = await ensureRedisConnected()
     const rawMetadata = await redisClient.hGet('course_metadatas', courseName)
-    return rawMetadata ? (JSON.parse(rawMetadata) as CourseMetadata) : null
+    const course_metadata: CourseMetadata | null = rawMetadata
+      ? JSON.parse(rawMetadata)
+      : null
+
+    // Use value as-is; Redis-stored JSON should already have correct boolean
+    return course_metadata
   } catch (error) {
-    console.error('Error fetching course metadata:', error)
+    console.error('Error occurred while fetching courseMetadata', error)
     return null
   }
 }
 
-// Check if user is a course admin
-export function isCourseAdmin(
-  user: AuthenticatedUser,
-  courseMetadata: CourseMetadata,
-): boolean {
-  if (!user.email) return false
-  return courseMetadata.course_admins?.includes(user.email) || false
-}
-
-// Check if user is the course owner
-export function isCourseOwner(
-  user: AuthenticatedUser,
-  courseMetadata: CourseMetadata,
-): boolean {
-  if (!user.email) return false
-  return courseMetadata.course_owner === user.email
-}
-
-// Check if user is an approved user for the course
-export function isApprovedUser(
-  user: AuthenticatedUser,
-  courseMetadata: CourseMetadata,
-): boolean {
-  if (!user.email) return false
-  return courseMetadata.approved_emails_list?.includes(user.email) || false
-}
-
-// Check if user has any access to the course (admin, owner, or approved user)
+// Helper function to check if user has access to a course
 export function hasCourseAccess(
   user: AuthenticatedUser,
   courseMetadata: CourseMetadata,
 ): boolean {
-  return (
-    isCourseOwner(user, courseMetadata) ||
-    isCourseAdmin(user, courseMetadata) ||
-    isApprovedUser(user, courseMetadata) ||
-    courseMetadata.allow_logged_in_users === true
-  )
-}
-
-// Check if user is a regular user (not admin or owner) but has course access
-export function isCourseRegularUser(
-  user: AuthenticatedUser,
-  courseMetadata: CourseMetadata,
-): boolean {
-  return (
-    hasCourseAccess(user, courseMetadata) &&
-    !isCourseOwner(user, courseMetadata) &&
-    !isCourseAdmin(user, courseMetadata)
-  )
-}
-
-// Middleware for course-based access control
-export function withCourseAccess(courseName: string) {
-  return function (
-    handler: (
-      req: AuthenticatedRequest,
-    ) => Promise<NextResponse> | NextResponse,
-  ) {
-    return withAppRouterAuth(async (req: AuthenticatedRequest) => {
-      if (!req.user) {
-        return NextResponse.json(
-          { error: 'User not authenticated' },
-          { status: 401 },
-        )
-      }
-      // Get course metadata
-      const courseMetadata = await getCourseMetadata(courseName)
-      if (!courseMetadata) {
-        return NextResponse.json(
-          {
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
-          },
-          { status: 404 },
-        )
-      }
-
-      if (!hasCourseAccess(req.user, courseMetadata)) {
-        return NextResponse.json(
-          {
-            error: 'Access denied',
-            message: `You don't have access to course '${courseName}'`,
-          },
-          { status: 403 },
-        )
-      }
-
-      // Attach course context for downstream handler
-      ;(req as any).courseName = courseName
-
-      return handler(req)
-    })
+  // Check if user is admin
+  if (courseMetadata.course_admins?.includes(user.email)) {
+    return true
   }
-}
 
-// Middleware for course admin access only
-export function withCourseAdminAccess(courseName: string) {
-  return function (
-    handler: (
-      req: AuthenticatedRequest,
-    ) => Promise<NextResponse> | NextResponse,
-  ) {
-    return withAppRouterAuth(async (req: AuthenticatedRequest) => {
-      if (!req.user) {
-        return NextResponse.json(
-          { error: 'User not authenticated' },
-          { status: 401 },
-        )
-      }
-      // Get course metadata
-      const courseMetadata = await getCourseMetadata(courseName)
-      if (!courseMetadata) {
-        return NextResponse.json(
-          {
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
-          },
-          { status: 404 },
-        )
-      }
-
-      // Check if user is course admin or owner or if logged-in users are allowed
-      if (
-        !isCourseOwner(req.user, courseMetadata) &&
-        !isCourseAdmin(req.user, courseMetadata)
-      ) {
-        return NextResponse.json(
-          {
-            error: 'Insufficient permissions',
-            message: `This action requires admin access to course '${courseName}'`,
-          },
-          { status: 403 },
-        )
-      }
-
-      // Attach course context for downstream handler
-      ;(req as any).courseName = courseName
-
-      return handler(req)
-    })
+  // Check if user is course owner
+  if (user.email === courseMetadata.course_owner) {
+    return true
   }
-}
 
-// Middleware for course owner access only
-export function withCourseOwnerAccess(courseName: string) {
-  return function (
-    handler: (
-      req: AuthenticatedRequest,
-    ) => Promise<NextResponse> | NextResponse,
-  ) {
-    return withAppRouterAuth(async (req: AuthenticatedRequest) => {
-      if (!req.user) {
-        return NextResponse.json(
-          { error: 'User not authenticated' },
-          { status: 401 },
-        )
-      }
-
-      // Get course metadata
-      const courseMetadata = await getCourseMetadata(courseName)
-      if (!courseMetadata) {
-        return NextResponse.json(
-          {
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
-          },
-          { status: 404 },
-        )
-      }
-
-      // Check if user is course owner
-      if (!isCourseOwner(req.user, courseMetadata)) {
-        return NextResponse.json(
-          {
-            error: 'Insufficient permissions',
-            message: `This action requires admin access to course '${courseName}'`,
-          },
-          { status: 403 },
-        )
-      }
-
-      // Attach course context for downstream handler
-      ;(req as any).courseName = courseName
-
-      return handler(req)
-    })
+  // Check if user is in the course's allowed users list
+  if (courseMetadata.approved_emails_list?.includes(user.email)) {
+    return true
   }
+
+  // check if all logged in users have access
+  if (courseMetadata.allow_logged_in_users) {
+    return true
+  }
+
+  return false
 }
 
 // Utility function to extract course name from request (query params, body, or headers)
 export async function extractCourseName(
   req: NextRequest,
-  parsedBody?: any,
 ): Promise<string | null> {
-  // 1) From query params
-  const fromQuery =
-    req.nextUrl.searchParams.get('courseName') ??
-    req.nextUrl.searchParams.get('course_name') ??
-    req.nextUrl.searchParams.get('projectName') ??
-    req.nextUrl.searchParams.get('project_name')
-  if (fromQuery) return fromQuery
+  // Try to get course name from various sources
+  const url = new URL(req.url)
+  let courseName =
+    url.searchParams.get('courseName') ||
+    url.searchParams.get('course_name') ||
+    url.searchParams.get('projectName') ||
+    url.searchParams.get('project_name') ||
+    req.headers.get('x-course-name') ||
+    req.headers.get('x-project_name') ||
+    null
 
-  // 2) From headers
-  const fromHeader =
-    req.headers.get('x-course-name') || req.headers.get('x-project-name')
-  if (fromHeader) return fromHeader
-
-  // 3) body only if we were given it
-  if (parsedBody && typeof parsedBody === 'object') {
-    return (
-      parsedBody.courseName ??
-      parsedBody.course_name ??
-      parsedBody.projectName ??
-      parsedBody.project_name ??
-      null
-    )
+  // If not found in query params or headers, try to extract from body
+  if (!courseName && req.method === 'POST') {
+    try {
+      const body = await req.clone().json()
+      courseName =
+        body.course_name ||
+        body.courseName ||
+        body.project_name ||
+        body.projectName ||
+        null
+    } catch (error) {
+      // Ignore body parsing errors
+    }
   }
 
-  return null
+  return courseName
 }
 
 // Middleware that automatically extracts course name and applies access control
 export function withCourseAccessFromRequest(
-  accessLevel: 'any' | 'admin' | 'owner' = 'any',
+  access:
+    | 'any'
+    | 'admin'
+    | 'owner'
+    | Partial<
+        Record<
+          'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS',
+          'any' | 'admin' | 'owner'
+        >
+      >,
 ) {
   return function (
     handler: (
       req: AuthenticatedRequest,
     ) => Promise<NextResponse> | NextResponse,
   ) {
-    return withAppRouterAuth(async (req: AuthenticatedRequest) => {
-      if (!req.user) {
-        return NextResponse.json(
-          { error: 'User not authenticated' },
-          { status: 401 },
-        )
-      }
-
-      // Parse once (if JSON) and stash for downstream
-      let parsedForAuth: any | undefined
-      const ct = req.headers.get('content-type') ?? ''
-      if (ct.includes('application/json')) {
-        parsedForAuth = await req.clone().json()
-        ;(req as any).__parsedBody = parsedForAuth
-      }
-
-      // Extract course name from request
-      const courseName = await extractCourseName(req, parsedForAuth)
+    return async (req: AuthenticatedRequest) => {
+      const courseName = await extractCourseName(req)
       if (!courseName) {
-        return NextResponse.json(
-          {
+        return new NextResponse(
+          JSON.stringify({
             error: 'Course name required',
             message:
               'Course name must be provided in query params, body, or headers',
-          },
+          }),
           { status: 400 },
         )
       }
@@ -284,50 +121,98 @@ export function withCourseAccessFromRequest(
       if (!courseMetadata) {
         return NextResponse.json(
           {
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
+            error: 'Project not found',
+            message: `Project '${courseName}' does not exist`,
           },
           { status: 404 },
         )
       }
 
-      // Check access based on level
-      let hasAccess = false
-      switch (accessLevel) {
-        case 'owner':
-          hasAccess = isCourseOwner(req.user, courseMetadata)
-          break
-        case 'admin':
-          hasAccess =
-            isCourseOwner(req.user, courseMetadata) ||
-            isCourseAdmin(req.user, courseMetadata)
-          break
-        case 'any':
-        default:
-          hasAccess = hasCourseAccess(req.user, courseMetadata)
-          break
-      }
-
-      if (!hasAccess) {
-        const accessLevelText =
-          accessLevel === 'owner'
-            ? 'owner'
-            : accessLevel === 'admin'
-              ? 'admin'
-              : 'user'
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
         return NextResponse.json(
           {
-            error: 'Access denied',
-            message: `This action requires ${accessLevelText} access to course '${courseName}'`,
+            error: 'Project is temporarily frozen by the administrator',
+            message: `Project '${courseName}' has been temporarily frozen by the administrator`,
           },
           { status: 403 },
         )
       }
 
-      // Attach course context for downstream handler
-      ;(req as any).courseName = courseName
+      // Determine required access level for this request
+      const method = req.method as
+        | 'GET'
+        | 'POST'
+        | 'PUT'
+        | 'PATCH'
+        | 'DELETE'
+        | 'HEAD'
+        | 'OPTIONS'
+      const requiredAccess =
+        typeof access === 'string' ? access : access[method] || 'any'
 
-      return handler(req)
-    })
+      // For public courses, allow unauthenticated access if access level is 'any'
+      if (!courseMetadata.is_private && requiredAccess === 'any') {
+        // Add course context to request
+        ;(req as any).courseName = courseName
+        return await handler(req)
+      }
+
+      // For private courses or higher access levels, require authentication
+      return withAppRouterAuth(async (req: AuthenticatedRequest) => {
+        if (!req.user) {
+          return new NextResponse(
+            JSON.stringify({ error: 'User not authenticated' }),
+            { status: 401 },
+          )
+        }
+
+        // Check course access for private courses
+        if (
+          courseMetadata.is_private &&
+          !hasCourseAccess(req.user, courseMetadata)
+        ) {
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Access denied',
+              message: `You don't have access to course '${courseName}'`,
+            }),
+            { status: 403 },
+          )
+        }
+
+        // Check specific access level
+        if (
+          requiredAccess === 'admin' &&
+          !courseMetadata.course_admins?.includes(req.user.email)
+        ) {
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Access denied',
+              message: 'This action requires admin access',
+            }),
+            { status: 403 },
+          )
+        }
+
+        if (
+          requiredAccess === 'owner' &&
+          req.user.email !== courseMetadata.course_owner
+        ) {
+          return new NextResponse(
+            JSON.stringify({
+              error: 'Access denied',
+              message: 'This action requires course owner access',
+            }),
+            { status: 403 },
+          )
+        }
+
+        // Add course context to request
+        ;(req as any).courseName = courseName
+
+        return await handler(req)
+      })(req)
+    }
   }
 }

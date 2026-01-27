@@ -23,7 +23,10 @@ function serializeError(err: any) {
   }
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
   const checks: Record<string, { status: string; error?: string }> = {
     app: { status: 'ok' },
   }

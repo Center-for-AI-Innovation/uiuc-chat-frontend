@@ -80,29 +80,31 @@ const convertConversationToOpenAIMessages = (
     const strippedMessage = { ...message }
     // When content is an array
     if (Array.isArray(strippedMessage.content)) {
-      strippedMessage.content = strippedMessage.content.map((content, contentIndex) => {
-        // Convert tool_image_url to image_url for OpenAI
-        if (content.type === 'tool_image_url') {
-          content.type = 'image_url'
-        }
-        // Handle file content for OpenAI - convert to text representation
-        else if (content.type === 'file') {
-          return {
-            type: 'text',
-            text: `[File: ${content.fileName || 'unknown'} (${content.fileType || 'unknown type'}, ${content.fileSize ? Math.round(content.fileSize / 1024) + 'KB' : 'unknown size'})]`
+      strippedMessage.content = strippedMessage.content.map(
+        (content, contentIndex) => {
+          // Convert tool_image_url to image_url for OpenAI
+          if (content.type === 'tool_image_url') {
+            content.type = 'image_url'
           }
-        }
-        // Add final prompt to last message
-        if (
-          content.type === 'text' &&
-          messageIndex === messages.length - 1 &&
-          !content.text?.startsWith('Image description:')
-        ) {
-          // console.debug('Replacing the text: ', content.text)
-          content.text = strippedMessage.finalPromtEngineeredMessage
-        }
-        return content
-      })
+          // Handle file content for OpenAI - convert to text representation
+          else if (content.type === 'file') {
+            return {
+              type: 'text',
+              text: `[File: ${content.fileName || 'unknown'} (${content.fileType || 'unknown type'}, ${content.fileSize ? Math.round(content.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+            }
+          }
+          // Add final prompt to last message
+          if (
+            content.type === 'text' &&
+            messageIndex === messages.length - 1 &&
+            !content.text?.startsWith('Image description:')
+          ) {
+            // console.debug('Replacing the text: ', content.text)
+            content.text = strippedMessage.finalPromtEngineeredMessage
+          }
+          return content
+        },
+      )
     } else {
       // When content is a string
       // Add final prompt to last message

@@ -44,7 +44,12 @@ export const ChatFolders = ({
         value: folder.id,
       })
       conversation.folderId = folder.id
-      updateConversationMutation.mutate(conversation)
+      const latestMessage =
+        conversation.messages?.[conversation.messages.length - 1] ?? null
+      updateConversationMutation.mutate({
+        conversation,
+        message: latestMessage,
+      })
     }
   }
 
