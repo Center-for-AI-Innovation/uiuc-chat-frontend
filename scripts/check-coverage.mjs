@@ -1,7 +1,16 @@
 import fs from 'node:fs'
 
+/**
+ * @typedef {{ file: string; lf: number; lh: number }} LcovFile
+ */
+
+/**
+ * @param {string} text
+ * @returns {LcovFile[]}
+ */
 function parseLcov(text) {
   const records = text.split('end_of_record\n').filter(Boolean)
+  /** @type {LcovFile[]} */
   const perFile = []
 
   for (const rec of records) {
@@ -19,6 +28,11 @@ function parseLcov(text) {
   return perFile
 }
 
+/**
+ * @param {LcovFile[]} perFile
+ * @param {string} prefix
+ * @returns {{ lh: number; lf: number; pct: number }}
+ */
 function sumPrefix(perFile, prefix) {
   let lf = 0
   let lh = 0
@@ -31,6 +45,9 @@ function sumPrefix(perFile, prefix) {
   return { lh, lf, pct }
 }
 
+/**
+ * @param {number} p
+ */
 function formatPct(p) {
   return `${p.toFixed(2)}%`
 }
@@ -73,4 +90,3 @@ for (const b of optional) {
 }
 
 process.exit(failed ? 1 : 0)
-
