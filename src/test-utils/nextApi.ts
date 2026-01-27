@@ -20,13 +20,13 @@ export function createMockReq(overrides: MockNextApiRequest = {}) {
 }
 
 export function createMockRes() {
-  const res: Partial<NextApiResponse> & {
+  const res = {} as Partial<NextApiResponse> & {
     status: ReturnType<typeof vi.fn>
     json: ReturnType<typeof vi.fn>
     send: ReturnType<typeof vi.fn>
     end: ReturnType<typeof vi.fn>
     setHeader: ReturnType<typeof vi.fn>
-  } = {}
+  }
 
   res.status = vi.fn().mockReturnValue(res)
   res.json = vi.fn().mockReturnValue(res)
@@ -36,4 +36,3 @@ export function createMockRes() {
 
   return res as any
 }
-
