@@ -6,14 +6,18 @@ import userEvent from '@testing-library/user-event'
 vi.mock('recharts', () => {
   const Stub =
     (name: string, callProps?: (props: any) => void) =>
-    (props: any) => {
-      try {
-        callProps?.(props)
-      } catch {
-        // ignore
+    (() => {
+      const Component = (props: any) => {
+        try {
+          callProps?.(props)
+        } catch {
+          // ignore
+        }
+        return React.createElement('div', { 'data-recharts': name }, props.children)
       }
-      return React.createElement('div', { 'data-recharts': name }, props.children)
-    }
+      Component.displayName = `Recharts.${name}`
+      return Component
+    })()
 
   return {
     __esModule: true,

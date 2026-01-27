@@ -66,8 +66,12 @@ vi.mock('mantine-datatable', () => ({
 }))
 
 vi.mock('recharts', () => {
-  const Stub = (name: string) => (props: any) =>
-    React.createElement('div', { 'data-recharts': name, ...props })
+  const Stub = (name: string) => {
+    const Component = (props: any) =>
+      React.createElement('div', { 'data-recharts': name, ...props })
+    Component.displayName = `Recharts.${name}`
+    return Component
+  }
   return {
     __esModule: true,
     ResponsiveContainer: Stub('ResponsiveContainer'),

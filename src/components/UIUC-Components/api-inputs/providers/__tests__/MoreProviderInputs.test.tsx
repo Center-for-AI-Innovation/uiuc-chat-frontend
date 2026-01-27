@@ -32,7 +32,7 @@ import OpenAIProviderInput from '../OpenAIProviderInput'
 import SambaNovaProviderInput from '../SambaNovaProviderInput'
 import WebLLMProviderInput from '../WebLLMProviderInput'
 
-function makeFormHarness(defaultValues: any, onSubmit: () => Promise<void> | void) {
+function useFormHarness(defaultValues: any, onSubmit: () => Promise<void> | void) {
   return useForm({
     defaultValues,
     onSubmit: async () => {
@@ -137,7 +137,7 @@ describe('Provider inputs (coverage)', () => {
     const onSubmit = vi.fn()
 
     function AnthropicHarness({ enabled }: { enabled: boolean }) {
-      const form = makeFormHarness(
+      const form = useFormHarness(
         {
           providers: {
             Anthropic: { enabled, apiKey: 'sk-anth' },
@@ -155,7 +155,7 @@ describe('Provider inputs (coverage)', () => {
     }
 
     function AzureHarness({ enabled }: { enabled: boolean }) {
-      const form = makeFormHarness(
+      const form = useFormHarness(
         {
           providers: {
             Azure: {
@@ -177,7 +177,7 @@ describe('Provider inputs (coverage)', () => {
     }
 
     function GeminiHarness({ enabled }: { enabled: boolean }) {
-      const form = makeFormHarness(
+      const form = useFormHarness(
         {
           providers: {
             Gemini: { enabled, apiKey: 'sk-gem' },
@@ -237,7 +237,7 @@ describe('Provider inputs (coverage)', () => {
       baseUrl?: string
       error?: string
     }) {
-      const form = makeFormHarness(
+      const form = useFormHarness(
         {
           providers: {
             Ollama: { enabled, baseUrl: baseUrl ?? 'http://localhost:11434' },
@@ -255,7 +255,7 @@ describe('Provider inputs (coverage)', () => {
     }
 
     function NCSAHostedHarness({ enabled }: { enabled: boolean }) {
-      const form = makeFormHarness(
+      const form = useFormHarness(
         { providers: { NCSAHosted: { enabled } } },
         onSubmit,
       )
@@ -269,7 +269,7 @@ describe('Provider inputs (coverage)', () => {
     }
 
     function NCSAHostedVLMHarness({ enabled }: { enabled: boolean }) {
-      const form = makeFormHarness(
+      const form = useFormHarness(
         { providers: { NCSAHostedVLM: { enabled } } },
         onSubmit,
       )
@@ -283,7 +283,7 @@ describe('Provider inputs (coverage)', () => {
     }
 
     function WebLLMHarness({ enabled }: { enabled: boolean }) {
-      const form = makeFormHarness({ providers: { WebLLM: { enabled } } }, onSubmit)
+      const form = useFormHarness({ providers: { WebLLM: { enabled } } }, onSubmit)
       return (
         <WebLLMProviderInput
           provider={{ enabled } as any}
@@ -294,7 +294,7 @@ describe('Provider inputs (coverage)', () => {
     }
 
     function OpenAIHarness({ enabled }: { enabled: boolean }) {
-      const form = makeFormHarness(
+      const form = useFormHarness(
         { providers: { OpenAI: { enabled, apiKey: 'sk-openai' } } },
         onSubmit,
       )
@@ -314,7 +314,7 @@ describe('Provider inputs (coverage)', () => {
       enabled: boolean
       apiKey?: string
     }) {
-      const form = makeFormHarness(
+      const form = useFormHarness(
         { providers: { SambaNova: { enabled, apiKey: apiKey ?? '' } } },
         onSubmit,
       )
