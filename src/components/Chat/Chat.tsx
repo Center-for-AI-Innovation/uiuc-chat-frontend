@@ -85,7 +85,7 @@ import {
   handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
-import { createLogConversationPayload } from '@/utils/app/conversation'
+import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -379,17 +379,17 @@ export const Chat = memo(
           return
         }
 
-          let updatedConversation: Conversation
-          if (deleteCount) {
-            // Track the edited message ID for logging purposes
-            editedMessageIdRef.current = message.id
+        let updatedConversation: Conversation
+        if (deleteCount) {
+          // Track the edited message ID for logging purposes
+          editedMessageIdRef.current = message.id
 
-            // FIXED: Don't clear contexts if they come from a file upload
-            const isFileUploadMessage =
-              Array.isArray(message.content) &&
-              message.content.some(
-                (c) => typeof c === 'object' && c.type === 'file',
-              )
+          // FIXED: Don't clear contexts if they come from a file upload
+          const isFileUploadMessage =
+            Array.isArray(message.content) &&
+            message.content.some(
+              (c) => typeof c === 'object' && c.type === 'file',
+            )
 
           if (!isFileUploadMessage) {
             message.contexts = []
@@ -426,8 +426,8 @@ export const Chat = memo(
             deletedMessages: messagesToDelete,
           })
         } else {
-            // Clear edited message ID for non-edit sends
-            editedMessageIdRef.current = undefined
+          // Clear edited message ID for non-edit sends
+          editedMessageIdRef.current = undefined
 
           updatedConversation = {
             ...selectedConversation,
@@ -451,19 +451,19 @@ export const Chat = memo(
                 ? contentText.substring(0, 30) + '...'
                 : contentText
 
-              updatedConversation = {
-                ...updatedConversation,
-                name: customName,
-              }
+            updatedConversation = {
+              ...updatedConversation,
+              name: customName,
             }
           }
-          handleUpdateConversation(updatedConversation, {
-            key: 'messages',
-            value: updatedConversation.messages,
-          })
-          homeDispatch({ field: 'loading', value: true })
-          homeDispatch({ field: 'messageIsStreaming', value: true })
-          const controller = new AbortController()
+        }
+        handleUpdateConversation(updatedConversation, {
+          key: 'messages',
+          value: updatedConversation.messages,
+        })
+        homeDispatch({ field: 'loading', value: true })
+        homeDispatch({ field: 'messageIsStreaming', value: true })
+        const controller = new AbortController()
 
         let imgDesc = ''
         let imageUrls: string[] = []
@@ -865,32 +865,32 @@ export const Chat = memo(
           homeDispatch({ field: 'isRetrievalLoading', value: false })
         }
 
-          // Action 3: Tool Execution
-          if (tools.length > 0) {
-            try {
-              homeDispatch({ field: 'isRouting', value: true })
-              // Check if any tools need to be run
-              const uiucToolsToRun = await handleFunctionCall(
-                message,
-                tools,
-                imageUrls,
-                imgDesc,
+        // Action 3: Tool Execution
+        if (tools.length > 0) {
+          try {
+            homeDispatch({ field: 'isRouting', value: true })
+            // Check if any tools need to be run
+            const uiucToolsToRun = await handleFunctionCall(
+              message,
+              tools,
+              imageUrls,
+              imgDesc,
+              updatedConversation,
+              getOpenAIKey(llmProviders, courseMetadata, apiKey),
+              courseName,
+              undefined,
+              llmProviders,
+            )
+            homeDispatch({ field: 'isRouting', value: false })
+            if (uiucToolsToRun.length > 0) {
+              homeDispatch({ field: 'isRunningTool', value: true })
+              // Run the tools
+              await handleToolCall(
+                uiucToolsToRun,
                 updatedConversation,
-                getOpenAIKey(llmProviders, courseMetadata, apiKey),
                 courseName,
-                undefined,
-                llmProviders,
               )
-              homeDispatch({ field: 'isRouting', value: false })
-              if (uiucToolsToRun.length > 0) {
-                homeDispatch({ field: 'isRunningTool', value: true })
-                // Run the tools
-                await handleToolCall(
-                  uiucToolsToRun,
-                  updatedConversation,
-                  courseName,
-                )
-              }
+            }
 
             homeDispatch({ field: 'isRunningTool', value: false })
           } catch (error) {
@@ -1091,20 +1091,20 @@ export const Chat = memo(
                 text += chunkValue
               }
 
-                if (isFirst) {
-                  // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
-                  isFirst = false
-                  const updatedMessages: Message[] = [
-                    ...updatedConversation.messages,
-                    {
-                      id: uuidv4(),
-                      role: 'assistant',
-                      content: chunkValue,
-                      feedback: message.feedback,
-                      wasQueryRewritten: message.wasQueryRewritten,
-                      queryRewriteText: message.queryRewriteText,
-                    },
-                  ]
+              if (isFirst) {
+                // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
+                isFirst = false
+                const updatedMessages: Message[] = [
+                  ...updatedConversation.messages,
+                  {
+                    id: uuidv4(),
+                    role: 'assistant',
+                    content: chunkValue,
+                    feedback: message.feedback,
+                    wasQueryRewritten: message.wasQueryRewritten,
+                    queryRewriteText: message.queryRewriteText,
+                  },
+                ]
 
                 // console.log('updatedMessages with queryRewrite info:', updatedMessages)
 
@@ -1175,51 +1175,51 @@ export const Chat = memo(
             throw new Error('LLM response stream ended before it was done.')
           }
 
-            homeDispatch({ field: 'messageIsStreaming', value: false })
+          homeDispatch({ field: 'messageIsStreaming', value: false })
 
-            try {
-              // This is after the response is done streaming
-              console.debug(
-                'updatedConversation after streaming:',
-                updatedConversation,
-              )
-              handleUpdateConversation(updatedConversation, {
-                key: 'messages',
-                value: updatedConversation.messages,
+          try {
+            // This is after the response is done streaming
+            console.debug(
+              'updatedConversation after streaming:',
+              updatedConversation,
+            )
+            handleUpdateConversation(updatedConversation, {
+              key: 'messages',
+              value: updatedConversation.messages,
+            })
+            // Here, we want to persist the full streamed assistant message, not the initial user message.
+            // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
+            const streamedAssistantMessage =
+              updatedConversation.messages?.[
+                updatedConversation.messages.length - 1
+              ] ?? message
+
+            if (streamedAssistantMessage.role === 'assistant') {
+              await updateConversationMutation.mutateAsync({
+                conversation: updatedConversation,
+                message: streamedAssistantMessage,
               })
-              // Here, we want to persist the full streamed assistant message, not the initial user message.
-              // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
-              const streamedAssistantMessage =
-                updatedConversation.messages?.[
-                  updatedConversation.messages.length - 1
-                ] ?? message
-
-              if (streamedAssistantMessage.role === 'assistant') {
-                await updateConversationMutation.mutateAsync({
-                  conversation: updatedConversation,
-                  message: streamedAssistantMessage,
-                })
-              } else {
-                // Fallback: do not trigger mutation if it's not an assistant message
-                console.warn(
-                  'Attempted to persist a non-assistant message after stream:',
-                  streamedAssistantMessage,
-                )
-              }
-              console.debug(
-                'updatedConversation after mutation:',
-                updatedConversation,
+            } else {
+              // Fallback: do not trigger mutation if it's not an assistant message
+              console.warn(
+                'Attempted to persist a non-assistant message after stream:',
+                streamedAssistantMessage,
               )
+            }
+            console.debug(
+              'updatedConversation after mutation:',
+              updatedConversation,
+            )
 
-              if (streamedAssistantMessage) {
-                onMessageReceived(
-                  updatedConversation,
-                  streamedAssistantMessage,
-                  editedMessageIdRef.current,
-                )
-                // Clear the ref after logging
-                editedMessageIdRef.current = undefined
-              }
+            if (streamedAssistantMessage) {
+              onMessageReceived(
+                updatedConversation,
+                streamedAssistantMessage,
+                editedMessageIdRef.current,
+              )
+              // Clear the ref after logging
+              editedMessageIdRef.current = undefined
+            }
 
             // } else {
             //   onMessageReceived(updatedConversation)

@@ -10,14 +10,15 @@ export function useDeleteFolder(
   return useMutation({
     mutationKey: ['deleteFolder', user_email, course_name],
     mutationFn: async (deletedFolder: FolderWithConversation) =>
-      deleteFolderFromServer(deletedFolder, course_name),
+      deleteFolderFromServer(deletedFolder, course_name, user_email),
     onMutate: async (deletedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
         ['folders', course_name],
-        (oldData: FolderWithConversation[]) => {
-          return oldData.filter(
+        (oldData: FolderWithConversation[] | undefined) => {
+          const safeOld = Array.isArray(oldData) ? oldData : []
+          return safeOld.filter(
             (f: FolderWithConversation) => f.id !== deletedFolder.id,
           )
         },

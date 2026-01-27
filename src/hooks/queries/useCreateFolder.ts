@@ -13,14 +13,15 @@ export function useCreateFolder(
   return useMutation({
     mutationKey: ['createFolder', user_email, course_name],
     mutationFn: async (newFolder: FolderWithConversation) =>
-      saveFolderToServer(newFolder, course_name),
+      saveFolderToServer(newFolder, course_name, user_email),
     onMutate: async (newFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
       queryClient.setQueryData(
         ['folders', course_name],
-        (oldData: FolderInterface[]) => {
-          return [newFolder, ...oldData]
+        (oldData: FolderInterface[] | undefined) => {
+          const safeOld = Array.isArray(oldData) ? oldData : []
+          return [newFolder, ...safeOld]
         },
       )
 

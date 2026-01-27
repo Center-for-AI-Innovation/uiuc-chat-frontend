@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { ConversationPage } from '~/types/chat'
+import { type ConversationPage } from '~/types/chat'
 import { fetchConversationHistory } from '@/hooks/__internal__/conversation'
 
 export function useFetchConversationHistory(
@@ -10,22 +10,22 @@ export function useFetchConversationHistory(
   // Ensure searchTerm is initialized even if undefined
   const normalizedSearchTerm = searchTerm || ''
 
-  // Move the type checking outside of Boolean to handle each case explicitly
-  const isValidEmail = typeof user_email === 'string' && user_email.length > 0
+  // For public courses, allow unauthenticated access
   const isValidCourse = typeof courseName === 'string' && courseName.length > 0
-  const isEnabled = isValidEmail && isValidCourse
+  const isEnabled = isValidCourse // Remove email requirement for public courses
 
   return useInfiniteQuery({
     queryKey: ['conversationHistory', courseName, normalizedSearchTerm],
     queryFn: ({ pageParam = 0 }) => {
       // Additional runtime check to prevent invalid calls
-      if (!isValidEmail || !isValidCourse) {
-        throw new Error('Invalid email or course name')
+      if (!isValidCourse) {
+        throw new Error('Invalid course name')
       }
       return fetchConversationHistory(
         normalizedSearchTerm,
         courseName!,
         pageParam,
+        user_email,
       )
     },
     initialPageParam: 0,
