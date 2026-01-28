@@ -7,7 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
+import { cn } from "@/components/shadcn/lib/utils";
 import {
   BrainIcon,
   ChevronDownIcon,
