@@ -15,7 +15,7 @@ import {
   IconChevronDown,
   IconInfoCircle,
 } from '@tabler/icons-react'
-import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
 import { type AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -47,7 +47,7 @@ export default function APIRequestBuilder({
   const [streamEnabled, setStreamEnabled] = useState(true)
   const [temperature, setTemperature] = useState(0.1)
 
-  const { data: llmProviders } = useGetProjectLLMProviders({
+  const { data: llmProviders } = useFetchLLMProviders({
     projectName: course_name,
   })
 

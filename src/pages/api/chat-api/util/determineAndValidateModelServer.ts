@@ -1,4 +1,3 @@
-import { getCourseMetadata } from '~/pages/api/UIUC-api/getCourseMetadata'
 import { getModels } from '~/pages/api/models'
 import type {
   AllLLMProviders,
