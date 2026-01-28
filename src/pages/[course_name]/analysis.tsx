@@ -5,8 +5,6 @@ import { useRouter } from 'next/router'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
-import { type CourseMetadata } from '~/types/courseMetadata'
 import { useAuth } from 'react-oidc-context'
 
 const CourseMain: NextPage = () => {

@@ -11,7 +11,7 @@ import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
@@ -28,11 +28,6 @@ const ChatPage: NextPage = () => {
   }
   const courseName = getCurrentPageName() as string
   const [currentEmail, setCurrentEmail] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
-  const [isCourseMetadataLoading, setIsCourseMetadataLoading] = useState(true)
   const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
   const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
@@ -41,74 +36,66 @@ const ChatPage: NextPage = () => {
   const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
   const { course_name } = router.query
 
-  // UseEffect to check URL parameters
+  // Use React Query hook to fetch course metadata
+  const {
+    data: courseMetadata,
+    isLoading: isCourseMetadataLoading,
+    error: courseMetadataError,
+  } = useFetchCourseMetadata({
+    courseName,
+    enabled: router.isReady && Boolean(courseName),
+  })
+
+  // UseEffect to check URL parameters and handle redirects
   useEffect(() => {
-    const fetchData = async () => {
-      if (!router.isReady) return
+    if (!router.isReady) return
 
-      // Get URL parameters
-      const urlParams = new URLSearchParams(window.location.search)
-      const guidedLearning = urlParams.get('guidedLearning') === 'true'
-      const documentsOnly = urlParams.get('documentsOnly') === 'true'
-      const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true'
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search)
+    const guidedLearning = urlParams.get('guidedLearning') === 'true'
+    const documentsOnly = urlParams.get('documentsOnly') === 'true'
+    const systemPromptOnly = urlParams.get('systemPromptOnly') === 'true'
 
-      // Update the state with URL parameters
-      setUrlGuidedLearning(guidedLearning)
-      setUrlDocumentsOnly(documentsOnly)
-      setUrlSystemPromptOnly(systemPromptOnly)
+    // Update the state with URL parameters
+    setUrlGuidedLearning(guidedLearning)
+    setUrlDocumentsOnly(documentsOnly)
+    setUrlSystemPromptOnly(systemPromptOnly)
 
-      setIsLoading(true)
-      setIsCourseMetadataLoading(true)
+    // Special case: Cropwizard redirect
+    if (
+      courseName &&
+      ['cropwizard', 'cropwizard-1.0', 'cropwizard-1'].includes(
+        courseName.toLowerCase(),
+      )
+    ) {
+      router.push(`/cropwizard-1.5`)
+    }
+  }, [router.isReady, courseName])
 
-      // Special case: Cropwizard redirect
-      if (
-        ['cropwizard', 'cropwizard-1.0', 'cropwizard-1'].includes(
-          courseName.toLowerCase(),
-        )
-      ) {
-        await router.push(`/cropwizard-1.5`)
-      }
-
-      // Fetch course metadata
-      try {
-        const metadataResponse = await fetch(
-          `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
-        )
-
-        if (!metadataResponse.ok) {
-          const status = metadataResponse.status
-          if (status === 401 || status === 403 || status === 404) {
-            setErrorType(status as 401 | 403 | 404)
-            setIsCourseMetadataLoading(false)
-            setIsLoading(false)
-            return
-          }
-          throw new Error(`Failed to fetch course metadata: ${status}`)
-        }
-
-        const metadataData = await metadataResponse.json()
-
-        // Log original course metadata settings without modifying them
-        if (metadataData.course_metadata) {
-          console.log('Course metadata settings:', {
-            guidedLearning: metadataData.course_metadata.guidedLearning,
-            documentsOnly: metadataData.course_metadata.documentsOnly,
-            systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
-            system_prompt: metadataData.course_metadata.system_prompt,
-          })
-        }
-
-        setCourseMetadata(metadataData.course_metadata)
-        setIsCourseMetadataLoading(false)
-        setIsLoading(false)
-      } catch (error) {
-        console.error('Error fetching course metadata:', error)
-        setIsCourseMetadataLoading(false)
-        setIsLoading(false)
+  // Handle course metadata error states
+  useEffect(() => {
+    if (courseMetadataError) {
+      console.error('Error fetching course metadata:', courseMetadataError)
+      // Check if error has a status code (401, 403, or 404)
+      const errorWithStatus = courseMetadataError as Error & { status?: number }
+      const status = errorWithStatus.status
+      if (status === 401 || status === 403 || status === 404) {
+        setErrorType(status as 401 | 403 | 404)
       }
     }
-    fetchData()
-  }, [courseName, urlGuidedLearning, urlDocumentsOnly, urlSystemPromptOnly])
+  }, [courseMetadataError])
+
+  // Log course metadata settings when loaded
+  useEffect(() => {
+    if (courseMetadata) {
+      console.log('Course metadata settings:', {
+        guidedLearning: courseMetadata.guidedLearning,
+        documentsOnly: courseMetadata.documentsOnly,
+        systemPromptOnly: courseMetadata.systemPromptOnly,
+        system_prompt: courseMetadata.system_prompt,
+      })
+    }
+  }, [courseMetadata])
 
   // UseEffect to fetch document count in the background
   useEffect(() => {
@@ -128,105 +115,96 @@ const ChatPage: NextPage = () => {
     fetchDocumentCount()
   }, [courseName])
 
-  // UseEffect to check user permissions and fetch user email
+  // UseEffect to check user permissions and set user email
   useEffect(() => {
-    const checkAuthorization = async () => {
-      // console.log('Starting authorization check', {
-      //   isAuthLoading: auth.isLoading,
-      //   isRouterReady: router.isReady,
-      //   authUser: auth.user?.profile.email || 'No user email',
-      // })
+    // Wait for auth and course metadata to be ready
+    if (auth.isLoading || isCourseMetadataLoading || !router.isReady) {
+      return
+    }
 
-      if (!auth.isLoading && router.isReady) {
-        const courseName = router.query.course_name as string
-        try {
-          // Fetch course metadata
-          const metadata = await fetchCourseMetadata(courseName)
+    // If no metadata, redirect to new course page
+    if (!courseMetadata && !courseMetadataError) {
+      router.replace(`/new?course_name=${courseName}`)
+      return
+    }
 
-          if (!metadata) {
-            router.replace(`/new?course_name=${courseName}`)
-            return
+    // If there was an error fetching metadata, it's handled in the error useEffect
+    if (courseMetadataError) {
+      setIsAuthorized(false)
+      return
+    }
+
+    if (!courseMetadata) {
+      return
+    }
+
+    // Check if course is frozen/archived
+    if (courseMetadata.is_frozen === true) {
+      router.replace(`/${courseName}/not_authorized`)
+      return
+    }
+
+    // Check if course is public
+    if (!courseMetadata.is_private) {
+      setIsAuthorized(true)
+
+      // Set email for public access
+      if (auth.user?.profile.email) {
+        setCurrentEmail(auth.user.profile.email)
+      } else {
+        // Use PostHog ID when user is not logged in for public courses
+        const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
+        const postHogUserObj = localStorage.getItem('ph_' + key + '_posthog')
+
+        if (postHogUserObj) {
+          const postHogUser = JSON.parse(postHogUserObj)
+          setCurrentEmail(postHogUser.distinct_id)
+        } else {
+          // Generate a unique identifier for unauthenticated users
+          let anonymousId = localStorage.getItem('anonymous_user_id')
+          if (!anonymousId) {
+            anonymousId = generateAnonymousUserId()
+            localStorage.setItem('anonymous_user_id', anonymousId)
           }
-
-          // Check if course is frozen/archived
-          if (metadata.is_frozen === true) {
-            router.replace(`/${courseName}/not_authorized`)
-            return
-          }
-
-          // Check if course is public
-          if (!metadata.is_private) {
-            setIsAuthorized(true)
-
-            // Set email for public access
-            if (auth.user?.profile.email) {
-              setCurrentEmail(auth.user.profile.email)
-            } else {
-              // Use PostHog ID when user is not logged in for public courses
-              const key = process.env.NEXT_PUBLIC_POSTHOG_KEY as string
-              const postHogUserObj = localStorage.getItem(
-                'ph_' + key + '_posthog',
-              )
-
-              if (postHogUserObj) {
-                const postHogUser = JSON.parse(postHogUserObj)
-                setCurrentEmail(postHogUser.distinct_id)
-              } else {
-                // Generate a unique identifier for unauthenticated users
-                let anonymousId = localStorage.getItem('anonymous_user_id')
-                if (!anonymousId) {
-                  anonymousId = generateAnonymousUserId()
-                  localStorage.setItem('anonymous_user_id', anonymousId)
-                }
-                setCurrentEmail(anonymousId)
-              }
-            }
-            return
-          } else {
-            // For private courses, user must be authenticated
-            if (!auth.isAuthenticated) {
-              router.replace(`/${courseName}/not_authorized`)
-              return
-            }
-
-            // Set email for authenticated users
-            if (auth.user?.profile.email) {
-              setCurrentEmail(auth.user.profile.email)
-            } else {
-              console.error('Authenticated user has no email')
-              router.replace(`/${courseName}/not_authorized`)
-              return
-            }
-          }
-
-          const permission = get_user_permission(metadata, auth)
-
-          if (permission === 'no_permission') {
-            router.replace(`/${courseName}/not_authorized`)
-            return
-          }
-
-          setIsAuthorized(true)
-        } catch (error) {
-          console.error('Authorization check failed:', error)
-          // Check if error has a status code (401, 403, or 404)
-          const errorWithStatus = error as Error & { status?: number }
-          const status = errorWithStatus.status
-
-          if (status === 401 || status === 403 || status === 404) {
-            // Set error state to show PermissionGate with error message
-            setIsAuthorized(false)
-            // Store error type in state to pass to PermissionGate
-            setErrorType(status as 401 | 403 | 404)
-          } else {
-            setIsAuthorized(false)
-          }
+          setCurrentEmail(anonymousId)
         }
+      }
+      return
+    } else {
+      // For private courses, user must be authenticated
+      if (!auth.isAuthenticated) {
+        router.replace(`/${courseName}/not_authorized`)
+        return
+      }
+
+      // Set email for authenticated users
+      if (auth.user?.profile.email) {
+        setCurrentEmail(auth.user.profile.email)
+      } else {
+        console.error('Authenticated user has no email')
+        router.replace(`/${courseName}/not_authorized`)
+        return
       }
     }
 
-    checkAuthorization()
-  }, [auth.isLoading, auth.isAuthenticated, router.isReady, auth, router])
+    const permission = get_user_permission(courseMetadata, auth)
+
+    if (permission === 'no_permission') {
+      router.replace(`/${courseName}/not_authorized`)
+      return
+    }
+
+    setIsAuthorized(true)
+  }, [
+    auth.isLoading,
+    auth.isAuthenticated,
+    auth.user?.profile.email,
+    router.isReady,
+    courseMetadata,
+    isCourseMetadataLoading,
+    courseMetadataError,
+    courseName,
+  ])
 
   if (auth.isLoading) {
     return (
@@ -262,7 +240,7 @@ const ChatPage: NextPage = () => {
 
   return (
     <>
-      {!isLoading &&
+      {!isCourseMetadataLoading &&
         !auth.isLoading &&
         router.isReady &&
         currentEmail !== undefined &&
@@ -279,7 +257,7 @@ const ChatPage: NextPage = () => {
             }}
           />
         )}
-      {isLoading ||
+      {isCourseMetadataLoading ||
       (!currentEmail && courseMetadata?.is_private) ||
       (currentEmail === '' && courseMetadata?.is_private) ? (
         <MainPageBackground>
