@@ -15,10 +15,7 @@ export async function upsertMessageToServer(
       console.log('In upsertMessageToServer')
       const response = await fetch('/api/messages/upsert', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': user_email,
-        },
+        headers: createHeaders(user_email),
         body: JSON.stringify({
           message,
           conversationId,
