@@ -19,7 +19,6 @@ import {
   IconExternalLink,
 } from '@tabler/icons-react'
 
-import { type CourseMetadata } from '~/types/courseMetadata'
 import { CannotEditCourse } from './CannotEditCourse'
 
 import { notifications } from '@mantine/notifications'
@@ -37,7 +36,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 
@@ -62,9 +61,6 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
 
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
   const [currentEmail, setCurrentEmail] = useState('')
   const [n8nApiKeyTextbox, setN8nApiKeyTextbox] = useState('')
   const [n8nApiKey, setN8nApiKey] = useState('')
@@ -78,6 +74,11 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
 
   // Get responsive card width classes
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
+
+  const { data: courseMetadata } = useFetchCourseMetadata({
+    courseName: currentPageName,
+    enabled: Boolean(currentPageName) && !auth.isLoading,
+  })
 
   const {
     data: flows_table,
@@ -250,30 +251,12 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     getApiKey()
   }, [currentPageName])
 
+  // Set current email when auth is ready
   useEffect(() => {
-    const fetchData = async () => {
-      const userEmail = auth.user?.profile.email
-      setCurrentEmail(userEmail as string)
-
-      try {
-        const metadata: CourseMetadata = (await fetchCourseMetadata(
-          currentPageName,
-        )) as CourseMetadata
-
-        if (metadata && metadata.is_private) {
-          metadata.is_private = JSON.parse(
-            metadata.is_private as unknown as string,
-          )
-        }
-        setCourseMetadata(metadata)
-      } catch (error) {
-        console.error(error)
-        // alert('An error occurred while fetching course metadata. Please try again later.')
-      }
+    if (!auth.isLoading && auth.user?.profile.email) {
+      setCurrentEmail(auth.user.profile.email)
     }
-
-    fetchData()
-  }, [currentPageName, !auth.isLoading])
+  }, [auth.isLoading, auth.user?.profile.email])
 
   const errorFetchingWorkflowsToast = () => {
     notifications.show({

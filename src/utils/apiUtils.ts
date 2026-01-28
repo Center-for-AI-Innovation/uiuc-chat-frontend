@@ -155,51 +155,6 @@ export async function fetchPresignedUrl(
   }
 }
 
-/**
- * Fetches metadata for a specific course.
- * @param {string} course_name - The name of the course.
- * @returns {Promise<any>} - A promise that resolves to the course metadata.
- */
-export async function fetchCourseMetadata(course_name: string): Promise<any> {
-  try {
-    const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${course_name}`
-    const response = await fetch(endpoint)
-
-    if (!response.ok) {
-      const error = new Error(
-        `Error fetching course metadata: ${response.statusText || response.status}`,
-      ) as Error & { status?: number }
-      error.status = response.status
-      throw error
-    }
-
-    const data = await response.json()
-    if (data.success === false) {
-      const error = new Error(
-        data.message || 'An error occurred while fetching course metadata',
-      ) as Error & { status?: number }
-      // Try to infer status from error message or default to 500
-      error.status = data.status || 500
-      throw error
-    }
-
-    if (
-      data.course_metadata &&
-      typeof data.course_metadata.is_private === 'string'
-    ) {
-      data.course_metadata.is_private =
-        data.course_metadata.is_private.toLowerCase() === 'true'
-    }
-
-    // Note: allow_logged_in_users is stored as a boolean in Redis
-
-    return data.course_metadata
-  } catch (error) {
-    console.error('Error fetching course metadata', { course_name, error })
-    throw error
-  }
-}
-
 export function convertConversatonToVercelAISDKv3(
   conversation: Conversation,
 ): CoreMessage[] {
@@ -318,7 +273,6 @@ export default {
   callSetCourseMetadata,
   uploadToS3,
   fetchPresignedUrl,
-  fetchCourseMetadata,
 }
 /**
  * Create a new project

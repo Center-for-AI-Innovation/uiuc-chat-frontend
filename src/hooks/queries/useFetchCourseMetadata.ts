@@ -10,7 +10,7 @@ interface UseFetchCourseMetadataOptions extends FetchCourseMetadataVariables {
   enabled?: boolean
 }
 
-async function fetchCourseMetadata({
+export async function fetchCourseMetadataFn({
   courseName,
 }: FetchCourseMetadataVariables): Promise<CourseMetadata> {
   const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${courseName}`
@@ -47,7 +47,7 @@ export function useFetchCourseMetadata({
 }: UseFetchCourseMetadataOptions) {
   return useQuery({
     queryKey: ['courseMetadata', courseName],
-    queryFn: () => fetchCourseMetadata({ courseName }),
+    queryFn: () => fetchCourseMetadataFn({ courseName }),
     retry: 1,
     enabled: enabled && Boolean(courseName),
   })

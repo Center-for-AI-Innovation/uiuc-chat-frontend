@@ -9,7 +9,7 @@ import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/Ma
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
@@ -25,55 +25,51 @@ const CourseMain: NextPage = () => {
   const courseName = getCurrentPageName() as string
 
   const auth = useAuth()
-  const [metadata, setMetadata] = useState<CourseMetadata | null>()
-  const [isLoading, setIsLoading] = useState(true)
   const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
+  const {
+    data: metadata,
+    isLoading: isFetchingMetadata,
+    error,
+  } = useFetchCourseMetadata({
+    courseName: courseName || '',
+    enabled: router.isReady && !auth.isLoading && Boolean(courseName),
+  })
+
+  // Handle error states from the hook
   useEffect(() => {
-    if (!router.isReady || auth.isLoading) return
-    const fetchCourseData = async () => {
-      setIsLoading(true)
-      try {
-        const local_metadata: CourseMetadata = (await fetchCourseMetadata(
-          courseName,
-        )) as CourseMetadata
-
-        if (local_metadata == null) {
-          setErrorType(404)
-          return
-        }
-
-        if (local_metadata && local_metadata.is_private) {
-          local_metadata.is_private = JSON.parse(
-            local_metadata.is_private as unknown as string,
-          )
-        }
-        setMetadata(local_metadata)
-      } catch (error) {
-        console.error(error)
-        // alert('An error occurred while fetching course metadata. Please try again later.')
-
-        const errorWithStatus = error as Error & { status?: number }
-        const status = errorWithStatus.status
-        if (status === 401 || status === 403 || status === 404) {
-          setErrorType(status as 401 | 403 | 404)
-        }
-      } finally {
-        setIsLoading(false)
+    if (error) {
+      console.error(error)
+      const errorWithStatus = error as Error & { status?: number }
+      const status = errorWithStatus.status
+      if (status === 401 || status === 403 || status === 404) {
+        setErrorType(status as 401 | 403 | 404)
       }
     }
-    fetchCourseData()
-  }, [router.isReady, auth.isLoading, courseName])
+  }, [error])
 
+  // Check for 404 when metadata is null after loading completes
   useEffect(() => {
-    if (!router.isReady) return
-    if (auth.isLoading) return
-    if (!metadata) return
-    if (metadata == null) return
+    if (
+      !isFetchingMetadata &&
+      router.isReady &&
+      !auth.isLoading &&
+      courseName &&
+      metadata === undefined &&
+      !error
+    ) {
+      setErrorType(404)
+    }
+  }, [
+    isFetchingMetadata,
+    router.isReady,
+    auth.isLoading,
+    courseName,
+    metadata,
+    error,
+  ])
 
-    // Everything is loaded
-    setIsLoading(false)
-  }, [router.isReady, auth.isLoading, metadata])
+  const isLoading = !router.isReady || auth.isLoading || isFetchingMetadata
 
   if (isLoading) {
     return <LoadingPlaceholderForAdminPages />

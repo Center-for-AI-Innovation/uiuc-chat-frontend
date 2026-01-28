@@ -23,7 +23,7 @@ import {
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useEffect, useState } from 'react'
 import { type AuthContextProps } from 'react-oidc-context'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
 
@@ -45,21 +45,12 @@ const ApiKeyManagement = ({
   const [apiKey, setApiKey] = useState<string | null>(null)
   const baseUrl = process.env.VERCEL_URL || window.location.origin
   const [loading, setLoading] = useState(true)
-  const [metadata, setMetadata] = useState<{ system_prompt?: string }>()
   const [insightsOpen, setInsightsOpen] = useState(false)
 
-  useEffect(() => {
-    const getMetadata = async () => {
-      try {
-        const courseMetadata = await fetchCourseMetadata(course_name)
-        setMetadata(courseMetadata)
-      } catch (error) {
-        console.error('Error fetching course metadata:', error)
-      }
-    }
-
-    getMetadata()
-  }, [course_name])
+  const { data: metadata } = useFetchCourseMetadata({
+    courseName: course_name,
+    enabled: Boolean(course_name),
+  })
   type Language = 'curl' | 'python' | 'node'
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('curl')
