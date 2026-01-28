@@ -14,6 +14,7 @@ import { llmConvoMonitor } from '~/db/schema'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { AllSupportedModels } from '~/utils/modelProviders/LLMProvider'
+import { eq } from 'drizzle-orm'
 
 export const config = {
   api: {
@@ -74,7 +75,75 @@ const logConversation = async (
         .json({ error: 'No supported models available for logging' })
     }
 
-    const minimalConversation: Conversation = {
+    // Fetch existing conversation from database to merge with delta
+    const conversationId = baseMeta.id
+    let existingConversation: Conversation | null = null
+
+    try {
+      const existingRecord = await db
+        .select()
+        .from(llmConvoMonitor)
+        .where(eq(llmConvoMonitor.convo_id, conversationId))
+        .limit(1)
+
+      if (existingRecord.length > 0 && existingRecord[0]?.convo) {
+        existingConversation = existingRecord[0].convo as Conversation
+      }
+    } catch (error) {
+      console.error('Error fetching existing conversation for merge:', error)
+      // Continue with delta-only conversation if fetch fails
+    }
+
+    // Merge delta messages with existing messages
+    const deltaMessages =
+      messagesDelta && messagesDelta.length > 0
+        ? (messagesDelta as Message[])
+        : message
+          ? [message]
+          : []
+
+    let mergedMessages: Message[] = []
+    if (existingConversation?.messages && Array.isArray(existingConversation.messages) && existingConversation.messages.length > 0) {
+      // Start with existing messages
+      mergedMessages = [...existingConversation.messages]
+
+      // Handle edit case: if earliestEditedMessageId is provided, truncate messages from that point
+      if (delta.earliestEditedMessageId) {
+        const editIndex = mergedMessages.findIndex(
+          (m) => m.id === delta.earliestEditedMessageId
+        )
+        if (editIndex >= 0) {
+          // Keep only messages BEFORE the edited message (truncate from edit point onwards)
+          mergedMessages = mergedMessages.slice(0, editIndex)
+        }
+      }
+
+      // Merge delta messages: replace existing messages with same ID, append new ones
+      for (const deltaMsg of deltaMessages) {
+        if (!deltaMsg.id) {
+          // Skip messages without IDs (shouldn't happen, but be safe)
+          continue
+        }
+        const existingIndex = mergedMessages.findIndex((m) => m.id === deltaMsg.id)
+        if (existingIndex >= 0) {
+          // Replace existing message (in place, preserving order)
+          mergedMessages[existingIndex] = deltaMsg
+        } else {
+          // Append new message
+          mergedMessages.push(deltaMsg)
+        }
+      }
+
+      // Note: We intentionally do NOT sort here. The merge logic preserves order:
+      // - Existing messages maintain their original order
+      // - Delta messages are appended in the order they appear in conversation.messages
+      // Sorting by created_at can scramble order if timestamps are missing or inconsistent
+    } else {
+      // No existing messages, use delta messages only
+      mergedMessages = deltaMessages
+    }
+
+    const mergedConversation: Conversation = {
       id: baseMeta.id,
       name: baseMeta.name,
       model: resolvedModel,
@@ -83,15 +152,10 @@ const logConversation = async (
       userEmail: baseMeta.userEmail || undefined,
       projectName: baseMeta.projectName,
       folderId: baseMeta.folderId,
-      messages:
-        messagesDelta && messagesDelta.length > 0
-          ? (messagesDelta as Message[])
-          : message
-            ? [message]
-            : [],
+      messages: mergedMessages,
     }
 
-    sanitizedConversation = sanitizeForLogging(minimalConversation)
+    sanitizedConversation = sanitizeForLogging(mergedConversation)
   } else if (conversation) {
     sanitizedConversation = sanitizeForLogging(conversation)
   }
