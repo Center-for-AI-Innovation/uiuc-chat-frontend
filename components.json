@@ -14,5 +14,8 @@
   "aliases": {
     "components": "@/components/shadcn",
     "utils": "@/components/shadcn/lib/utils"
+  },
+  "registries": {
+    "@ai-elements": "https://registry.ai-sdk.dev/{name}.json"
   }
 }
