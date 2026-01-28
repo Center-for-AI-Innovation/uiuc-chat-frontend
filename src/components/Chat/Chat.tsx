@@ -208,6 +208,7 @@ export const Chat = memo(
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const editedMessageIdRef = useRef<string | undefined>(undefined)
     const updateConversationMutation = useUpdateConversation(
       currentEmail,
       queryClient,
@@ -270,6 +271,7 @@ export const Chat = memo(
     const onMessageReceived = async (
       conversation: Conversation,
       message: Message,
+      earliestEditedMessageId?: string,
     ) => {
       // Log conversation to database
       try {
@@ -283,6 +285,7 @@ export const Chat = memo(
               getCurrentPageName(),
               conversation,
               message,
+              earliestEditedMessageId,
             ),
           ),
         })
@@ -380,6 +383,9 @@ export const Chat = memo(
 
           let updatedConversation: Conversation
           if (deleteCount) {
+            // Track the edited message ID for logging purposes
+            editedMessageIdRef.current = message.id
+
             // FIXED: Don't clear contexts if they come from a file upload
             const isFileUploadMessage =
               Array.isArray(message.content) &&
@@ -422,6 +428,9 @@ export const Chat = memo(
               deletedMessages: messagesToDelete,
             })
           } else {
+            // Clear edited message ID for non-edit sends
+            editedMessageIdRef.current = undefined
+
             updatedConversation = {
               ...selectedConversation,
               messages: [...(selectedConversation.messages || []), message],
@@ -1040,7 +1049,9 @@ export const Chat = memo(
                   updatedConversation,
                   getOpenAIKey(llmProviders, courseMetadata, apiKey),
                   courseName,
-                )
+                  undefined,
+                llmProviders,
+              )
                 homeDispatch({ field: 'isRouting', value: false })
 
                 const selectionMetadata: AgentEventMetadata = {
@@ -1629,6 +1640,8 @@ export const Chat = memo(
               info: 'Assistant response generated.',
             })
 
+            homeDispatch({ field: 'messageIsStreaming', value: false })
+
             try {
               // This is after the response is done streaming
               console.debug(
@@ -1684,7 +1697,10 @@ export const Chat = memo(
                 onMessageReceived(
                   updatedConversation,
                   streamedAssistantMessage,
+                  editedMessageIdRef.current,
                 )
+                // Clear the ref after logging
+                editedMessageIdRef.current = undefined
               }
 
               // } else {
@@ -1719,7 +1735,6 @@ export const Chat = memo(
               // })
               // console.log('updatedConversations: ', updatedConversations)
               // saveConversations(updatedConversations)
-              homeDispatch({ field: 'messageIsStreaming', value: false })
             } catch (error) {
               console.error('An error occurred: ', error)
               updateFinalEventStatus('error', {
