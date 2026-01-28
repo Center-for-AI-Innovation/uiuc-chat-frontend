@@ -403,7 +403,8 @@ export const Chat = memo(
               : message.content
 
             const updatedMessages = [...(selectedConversation.messages || [])]
-            const messagesToDelete = updatedMessages.slice(0, deleteCount)
+            // Delete the most recent messages that we're truncating from the conversation.
+            const messagesToDelete = updatedMessages.slice(-deleteCount)
             for (let i = 0; i < deleteCount; i++) {
               updatedMessages.pop()
             }
