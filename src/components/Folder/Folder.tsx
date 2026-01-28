@@ -117,7 +117,7 @@ const Folder = ({
           <button
             tabIndex={0}
             aria-label={isOpen ? 'Close Folder' : 'Open Folder'}
-            className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 pr-14 text-sm text-[--foreground] transition-colors duration-200 hover:bg-[--background-faded]`}
+            className={`flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-sm text-[--foreground] transition-colors duration-200 hover:bg-[--background-faded]`}
             onClick={() => setIsOpen(!isOpen)}
             onDrop={(e) => dropHandler(e)}
             onDragOver={allowDrop}

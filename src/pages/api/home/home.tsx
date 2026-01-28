@@ -26,17 +26,15 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import {
-  useFetchConversationHistory,
-  useFetchLastConversation,
-  useUpdateConversation,
-} from '~/hooks/conversationQueries'
-import {
-  useCreateFolder,
-  useDeleteFolder,
-  useFetchFolders,
-  useUpdateFolder,
-} from '~/hooks/folderQueries'
+
+import { useFetchLastConversation } from '@/hooks/queries/useFetchLastConversation'
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+
+import { useDeleteFolder } from '@/hooks/queries/useDeleteFolder'
+import { useUpdateFolder } from '@/hooks/queries/useUpdateFolder'
+import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
+import { useCreateFolder } from '@/hooks/queries/useCreateFolder'
+
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
@@ -219,6 +217,7 @@ const Home = ({
       try {
         if (!course_metadata) return
 
+        //TODO(BG): can be replaced with react query call
         const models = await getModels({
           projectName: course_name,
         })
@@ -395,6 +394,7 @@ const Home = ({
     }
   }
 
+  // save conversation to localStorage and send update to server
   const handleUpdateConversation = (
     conversation: Conversation,
     data: KeyValuePair,
