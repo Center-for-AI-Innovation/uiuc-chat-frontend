@@ -1,4 +1,3 @@
-// chatinput.tsx
 import {
   type Content,
   type Message,
@@ -63,7 +62,8 @@ import {
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
-import { ContextWithMetadata } from '~/types/chat'
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
+import { type ChatBody, ContextWithMetadata } from '~/types/chat'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -121,7 +121,11 @@ const ALLOWED_FILE_EXTENSIONS = [
 type FileUploadStatus = {
   file: File
   status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error'
+
+  // BG: url for image file
   url?: string
+
+  // BG: contexts for non-image file
   contexts?: ContextWithMetadata[]
 }
 
@@ -260,6 +264,7 @@ export const ChatInput = ({
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
   const fileUploadRef = useRef<HTMLInputElement | null>(null)
   const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
+  const { mutateAsync: routeChatAsync } = useRouteChat()
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -336,7 +341,7 @@ export const ChatInput = ({
       (fu) =>
         fu.status === 'processing' ||
         fu.status === 'uploading' ||
-        fu.status === 'uploaded',
+        fu.status === 'uploaded', // BG: haven't finished processing the file
     )
 
     if (messageIsStreaming || hasProcessingFiles) {
@@ -356,6 +361,7 @@ export const ChatInput = ({
     const allFileContexts: ContextWithMetadata[] = []
 
     if (fileUploads.length > 0) {
+      // BG: removable?
       const pendingFiles = fileUploads.filter((fu) => fu.status !== 'completed')
 
       if (pendingFiles.length > 0) {
@@ -365,6 +371,7 @@ export const ChatInput = ({
         )
         return
       }
+      // END BG
 
       // Create file content for the message (files are already processed)
       fileContent = fileUploads
@@ -564,27 +571,16 @@ export const ChatInput = ({
       return
     }
 
-    try {
-      const response = await fetch('/api/allNewRoutingChat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversation: selectedConversation,
-          course_name: courseName,
-          stream: true,
-        }),
-      })
+    const chatBody: ChatBody = {
+      conversation: selectedConversation ?? undefined,
+      course_name: courseName,
+      stream: true,
+      key: '',
+      mode: 'chat',
+    }
 
-      if (!response.ok) {
-        const errorResponse = await response.json()
-        const errorMessage =
-          errorResponse.error ||
-          'An error occurred while processing your request'
-        showErrorToast(errorMessage)
-        return
-      }
+    try {
+      await routeChatAsync(chatBody)
     } catch (error) {
       console.error('Error in chat submission:', error)
       showErrorToast(
@@ -711,6 +707,8 @@ export const ChatInput = ({
           conversation = await createNewConversation(courseName, homeDispatch)
         }
 
+        // image file returns a presigned URL for display
+        // non-image file returns a context from context search service
         if (isImageFile) {
           console.log('=== FILE UPLOAD STEP 4A: Processing image file ===')
           // For image files, generate a presigned URL for display
@@ -1148,6 +1146,8 @@ export const ChatInput = ({
                             prev.filter((_, i) => i !== index),
                           )
                         }}
+                        title="Remove file"
+                        aria-label="Remove file"
                         style={{
                           marginLeft: '8px',
                           color: 'var(--foreground-faded)',
