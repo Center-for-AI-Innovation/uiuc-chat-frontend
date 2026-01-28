@@ -19,6 +19,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       .from(messages)
       .where(eq(messages.id, message.id))
       .limit(1)
+    const existingRecord = existingMessage[0]
 
     // Get the latest message's timestamp for this conversation
     const latestMessage = await db
@@ -31,32 +32,24 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const dbMessage = convertChatToDBMessage(message, conversationId)
 
     // If this is a new message, ensure its timestamp is after the latest message
-    if (!existingMessage && latestMessage?.[0]?.created_at) {
+    if (!existingRecord && latestMessage?.[0]?.created_at) {
       const latestTime = new Date(latestMessage[0].created_at).getTime()
-      dbMessage.created_at = new Date(latestTime + 1000).toISOString()
-      dbMessage.updated_at = dbMessage.created_at
-    }
-
-    const dbNewMessage: NewMessages = {
-      ...dbMessage,
-      created_at: new Date(dbMessage.created_at),
-      updated_at: dbMessage.updated_at ? new Date(dbMessage.updated_at) : null,
+      dbMessage.created_at = new Date(latestTime + 1000)
+      dbMessage.updated_at = new Date(dbMessage.created_at)
     }
 
     // If message exists, update it. If not, insert it.
     try {
       const result = await db
         .insert(messages)
-        .values([dbNewMessage])
+        .values([dbMessage])
         .onConflictDoUpdate({
           target: [messages.id],
           set: {
             content_text: dbMessage.content_text,
             role: dbMessage.role,
-            created_at: new Date(dbMessage.created_at),
-            updated_at: dbMessage.updated_at
-              ? new Date(dbMessage.updated_at)
-              : null,
+            created_at: dbMessage.created_at,
+            updated_at: dbMessage.updated_at ?? new Date(),
           },
         })
     } catch (error: any) {
@@ -65,7 +58,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     // If this was an edit of an existing message, we need to handle following messages
-    if (existingMessage) {
+    if (existingRecord) {
       const followingMessages = await db
         .select({ id: messages.id })
         .from(messages)
@@ -74,7 +67,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             eq(messages.conversation_id, conversationId),
             gt(
               messages.created_at,
-              existingMessage[0]?.created_at ?? new Date(0),
+              existingRecord?.created_at ?? new Date(0),
             ),
           ),
         )
