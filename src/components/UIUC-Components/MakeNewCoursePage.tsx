@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import { useRouter } from 'next/router'
 import React, { useMemo, useState } from 'react'
 
 import { Button, Card } from '@mantine/core'
@@ -31,6 +32,7 @@ const MakeNewCoursePage = ({
   project_description?: string
 }) => {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const auth = useAuth()
   const user_id = auth.user?.profile.email || current_user_email
 
@@ -299,56 +301,89 @@ const MakeNewCoursePage = ({
               ))}
             </div>
 
-            <Button
-              size="sm"
-              radius="sm"
-              className={isLastStep ? 'opacity-0' : ''}
-              classNames={componentClasses.buttonPrimary}
-              onClick={async () => {
-                if (currentStep === 0) {
-                  if (!hasCreatedProject) {
-                    if (
-                      projectName === '' ||
-                      isLoading ||
-                      !isCourseAvailable ||
-                      isWaitingForAvailabilityCheck
-                    ) {
-                      return
-                    }
+            <div className="flex items-center gap-3">
+              <Button
+                size="sm"
+                radius="sm"
+                className={isLastStep ? 'opacity-0' : ''}
+                classNames={componentClasses.buttonPrimary}
+                onClick={async () => {
+                  if (currentStep === 0) {
+                    if (!hasCreatedProject) {
+                      if (
+                        projectName === '' ||
+                        isLoading ||
+                        !isCourseAvailable ||
+                        isWaitingForAvailabilityCheck
+                      ) {
+                        return
+                      }
 
+                      const isCreated = await handleSubmit(
+                        projectName,
+                        projectDescription,
+                        current_user_email,
+                        useIllinoisChatConfig,
+                      )
+
+                      if (!isCreated) {
+                        return
+                      }
+
+                      setHasCreatedProject(true)
+                    }
+                  }
+
+                  if (!isLastStep) {
+                    goToNextStep()
+                  }
+                }}
+                disabled={
+                  isLastStep ||
+                  shouldBlockNavigation ||
+                  (currentStep === 0 &&
+                    !hasCreatedProject &&
+                    (projectName === '' ||
+                      !isCourseAvailable ||
+                      isLoading ||
+                      isWaitingForAvailabilityCheck))
+                }
+                loading={isLoading && currentStep === 0}
+              >
+                Continue
+              </Button>
+
+              <Button
+                size="sm"
+                radius="sm"
+                classNames={componentClasses.button}
+                disabled={
+                  isLoading ||
+                  (projectName === '' && !hasCreatedProject) ||
+                  (!hasCreatedProject &&
+                    (!isCourseAvailable || isWaitingForAvailabilityCheck))
+                }
+                onClick={async () => {
+                  if (!hasCreatedProject) {
                     const isCreated = await handleSubmit(
                       projectName,
                       projectDescription,
                       current_user_email,
                       useIllinoisChatConfig,
                     )
-
-                    if (!isCreated) {
-                      return
+                    if (isCreated) {
+                      setHasCreatedProject(true)
+                      router.push(`/${projectName}/chat`)
                     }
-
-                    setHasCreatedProject(true)
+                  } else {
+                    router.push(`/${projectName}/chat`)
                   }
-                }
-
-                if (!isLastStep) {
-                  goToNextStep()
-                }
-              }}
-              disabled={
-                isLastStep ||
-                shouldBlockNavigation ||
-                (currentStep === 0 &&
-                  !hasCreatedProject &&
-                  (projectName === '' ||
-                    !isCourseAvailable ||
-                    isLoading ||
-                    isWaitingForAvailabilityCheck))
-              }
-              loading={isLoading && currentStep === 0}
-            >
-              Continue
-            </Button>
+                }}
+                loading={isLoading && !hasCreatedProject}
+              >
+                Start Chatting
+              </Button>
+            </div>
           </div>
         </div>
       </main>
