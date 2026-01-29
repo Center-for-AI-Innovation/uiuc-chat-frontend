@@ -4,7 +4,6 @@ import { type NextPage } from 'next'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 import React, { useEffect, useRef, useState } from 'react'
-import MakeNewCoursePage from '~/components/UIUC-Components/MakeNewCoursePage'
 
 import {
   Button,
@@ -27,7 +26,7 @@ import {
   type MantineTheme,
 } from '@mantine/core'
 import { useAuth } from 'react-oidc-context'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import {
@@ -63,7 +62,7 @@ import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type ChatBody, type Message, type Conversation } from '@/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { callSetCourseMetadata, fetchCourseMetadata } from '~/utils/apiUtils'
 import {
   DEFAULT_SYSTEM_PROMPT,
   DOCUMENT_FOCUS_PROMPT,
@@ -106,10 +105,6 @@ interface LLMConfig {
   models?: LLMModel[]
 }
 
-interface LLMProviders {
-  [key: string]: LLMConfig
-}
-
 interface ModelOption {
   group: ProviderNames
   value: string
@@ -141,11 +136,16 @@ const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
   const router = useRouter()
 
-  const GetCurrentPageName = () => {
-    return router.query.course_name as string
-  }
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
-  const course_name = GetCurrentPageName() as string
+  const getCurrentPageName = () => {
+    const raw = router.query.course_name
+    return typeof raw === 'string'
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
+  }
+  const courseName = getCurrentPageName() as string
 
   const auth = useAuth()
   const isLoaded = !auth.isLoading
@@ -176,6 +176,7 @@ const CourseMain: NextPage = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
@@ -372,7 +373,7 @@ CRITICAL: The optimized prompt must:
           userEmail: user?.profile?.email,
         },
         llmProviders: llmProviders,
-        course_name: course_name,
+        course_name: courseName,
         mode: 'optimize_prompt',
         stream: true,
         key: '',
@@ -458,7 +459,7 @@ CRITICAL: The optimized prompt must:
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ projectName: course_name }),
+          body: JSON.stringify({ projectName: courseName }),
         })
         if (!response.ok) throw new Error('Failed to fetch providers')
         const providers = await response.json()
@@ -467,10 +468,10 @@ CRITICAL: The optimized prompt must:
         console.error('Error fetching LLM providers:', error)
       }
     }
-    if (course_name) {
+    if (courseName) {
       fetchProviders()
     }
-  }, [course_name])
+  }, [courseName])
   // Updated state variables for checkboxes
   const [guidedLearning, setGuidedLearning] = useState(false)
   const [documentsOnly, setDocumentsOnly] = useState(false)
@@ -485,34 +486,46 @@ CRITICAL: The optimized prompt must:
   }, [courseMetadata])
 
   useEffect(() => {
+    if (!router.isReady || auth.isLoading) return
     const fetchCourseData = async () => {
-      if (course_name === undefined) {
-        return
-      }
+      setIsLoading(true)
       const response = await fetch(
-        `/api/UIUC-api/getCourseExists?course_name=${course_name}`,
+        `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
       )
       const data = await response.json()
       setCourseExists(data)
-      const response_metadata = await fetch(
-        `/api/UIUC-api/getCourseMetadata?course_name=${course_name}`,
-      )
-      const fetchedMetadata = (await response_metadata.json()).course_metadata
-      setCourseMetadata(fetchedMetadata)
-      setBaseSystemPrompt(
-        fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
-      )
+      try {
+        const fetchedMetadata: CourseMetadata = (await fetchCourseMetadata(
+          courseName,
+        )) as CourseMetadata
+        if (fetchedMetadata === null) {
+          setErrorType(404)
+          return
+        }
+        setCourseMetadata(fetchedMetadata)
+        setBaseSystemPrompt(
+          fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
+        )
 
-      // Initialize all state variables
-      setGuidedLearning(fetchedMetadata.guidedLearning || false)
-      setDocumentsOnly(fetchedMetadata.documentsOnly || false)
-      setSystemPromptOnly(fetchedMetadata.systemPromptOnly || false)
-      setVectorSearchRewrite(!fetchedMetadata.vector_search_rewrite_disabled)
+        // Initialize all state variables
+        setGuidedLearning(fetchedMetadata.guidedLearning || false)
+        setDocumentsOnly(fetchedMetadata.documentsOnly || false)
+        setSystemPromptOnly(fetchedMetadata.systemPromptOnly || false)
+        setVectorSearchRewrite(!fetchedMetadata.vector_search_rewrite_disabled)
+      } catch (error) {
+        console.error(error)
 
-      setIsLoading(false)
+        const errorWithStatus = error as Error & { status?: number }
+        const status = errorWithStatus.status
+        if (status === 401 || status === 403 || status === 404) {
+          setErrorType(status as 401 | 403 | 404)
+        }
+      } finally {
+        setIsLoading(false)
+      }
     }
     fetchCourseData()
-  }, [router.isReady, course_name])
+  }, [router.isReady, auth.isLoading, courseName])
 
   useEffect(() => {
     setInput(baseSystemPrompt)
@@ -522,7 +535,7 @@ CRITICAL: The optimized prompt must:
     newSystemPrompt: string | undefined,
   ) => {
     let success = false
-    if (courseMetadata && course_name) {
+    if (courseMetadata && courseName) {
       const updatedCourseMetadata = {
         ...courseMetadata,
         system_prompt: newSystemPrompt, // Keep as is, whether it's an empty string or undefined
@@ -530,7 +543,7 @@ CRITICAL: The optimized prompt must:
         documentsOnly,
         systemPromptOnly,
       }
-      success = await callSetCourseMetadata(course_name, updatedCourseMetadata)
+      success = await callSetCourseMetadata(courseName, updatedCourseMetadata)
       if (success) {
         setCourseMetadata(updatedCourseMetadata)
       }
@@ -544,7 +557,7 @@ CRITICAL: The optimized prompt must:
   }
 
   const resetSystemPrompt = async () => {
-    if (courseMetadata && course_name) {
+    if (courseMetadata && courseName) {
       const updatedCourseMetadata = {
         ...courseMetadata,
         system_prompt: null, // Explicitly set to undefined
@@ -553,7 +566,7 @@ CRITICAL: The optimized prompt must:
         systemPromptOnly: false,
       }
       const success = await callSetCourseMetadata(
-        course_name,
+        courseName,
         updatedCourseMetadata,
       )
       if (!success) {
@@ -625,7 +638,7 @@ CRITICAL: The optimized prompt must:
   }, [courseMetadata])
 
   const saveSettings = async () => {
-    if (!courseMetadataRef.current || !course_name) return
+    if (!courseMetadataRef.current || !courseName) return
 
     const currentSwitchState = {
       guidedLearning,
@@ -653,7 +666,7 @@ CRITICAL: The optimized prompt must:
     } as CourseMetadata
 
     try {
-      const success = await callSetCourseMetadata(course_name, updatedMetadata)
+      const success = await callSetCourseMetadata(courseName, updatedMetadata)
       if (!success) {
         showPromptToast(theme, 'Error', 'Failed to update settings', true)
         return
@@ -726,7 +739,7 @@ CRITICAL: The optimized prompt must:
   }
 
   const handleCheckboxChange = async (updatedFields: PartialCourseMetadata) => {
-    if (!courseMetadata || !course_name) {
+    if (!courseMetadata || !courseName) {
       showPromptToast(theme, 'Error', 'Failed to update settings', true)
       return
     }
@@ -795,8 +808,8 @@ CRITICAL: The optimized prompt must:
   }
 
   if (!isSignedIn) {
-    console.log('User not logged in', isSignedIn, isLoaded, course_name)
-    return <AuthComponent course_name={course_name} />
+    console.log('User not logged in', isSignedIn, isLoaded, courseName)
+    return <PermissionGate course_name={courseName} />
   }
 
   const user_emails = user?.profile?.email ? [user.profile.email] : []
@@ -825,11 +838,12 @@ CRITICAL: The optimized prompt must:
 
   // Don't edit certain special pages (no context allowed)
   if (
-    course_name.toLowerCase() == 'gpt4' ||
-    course_name.toLowerCase() == 'global' ||
-    course_name.toLowerCase() == 'extreme'
+    courseName &&
+    (courseName.toLowerCase() == 'gpt4' ||
+      courseName.toLowerCase() == 'global' ||
+      courseName.toLowerCase() == 'extreme')
   ) {
-    return <CannotEditGPT4Page course_name={course_name as string} />
+    return <CannotEditGPT4Page course_name={courseName as string} />
   }
 
   if (courseExists === null) {
@@ -840,18 +854,18 @@ CRITICAL: The optimized prompt must:
     )
   }
 
-  if (courseExists === false) {
+  if (errorType !== null) {
     return (
-      <MakeNewCoursePage
-        project_name={course_name as string}
-        current_user_email={user_emails[0] as string}
+      <PermissionGate
+        course_name={courseName ? (courseName as string) : 'new'}
+        errorType={errorType}
       />
     )
   }
 
   return (
     <SettingsLayout
-      course_name={course_name}
+      course_name={courseName}
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}
     >
@@ -890,12 +904,12 @@ CRITICAL: The optimized prompt must:
                         <Title
                           order={3}
                           className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
-                            course_name.length > 40
+                            courseName.length > 40
                               ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
                               : ''
                           }`}
                         >
-                          {course_name}
+                          {courseName}
                         </Title>
                       </div>
                     </div>
@@ -2085,7 +2099,7 @@ CRITICAL: The optimized prompt must:
                               <LinkGeneratorModal
                                 opened={linkGeneratorOpened}
                                 onClose={closeLinkGenerator}
-                                course_name={course_name}
+                                course_name={courseName}
                                 currentSettings={{
                                   guidedLearning,
                                   documentsOnly,
