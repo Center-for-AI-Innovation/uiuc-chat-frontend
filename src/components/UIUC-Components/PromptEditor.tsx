@@ -1207,7 +1207,7 @@ CRITICAL: The optimized prompt must:
                         input: {
                           color: 'var(--foreground)',
                           backgroundColor: 'var(--background)',
-                          border: 'none',
+                          borderColor: 'var(--button)',
                           '&:focus': {
                             borderColor: '#6e56cf',
                           },
@@ -1319,6 +1319,8 @@ CRITICAL: The optimized prompt must:
                           />
                         ) : null
                       }
+                      dropdownPosition="bottom"
+                      withinPortal
                     />
                     <Tooltip
                       label="The selected model will be used when Optimizing System Prompt"
