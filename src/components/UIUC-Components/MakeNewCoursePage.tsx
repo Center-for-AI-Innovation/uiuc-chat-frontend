@@ -262,7 +262,7 @@ const MakeNewCoursePage = ({
           <Card
             padding="none"
             withBorder={true}
-            radius="md"
+            radius="lg"
             className="mt-16 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
           >
             <div className="step_container min-h-[16rem]">
