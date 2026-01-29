@@ -1,5 +1,4 @@
-import { type CoreMessage, streamText } from 'ai'
-import { smoothStream } from 'ai'
+import { streamText, smoothStream, type ModelMessage } from 'ai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { type Conversation } from '~/types/chat'
 import {
@@ -392,11 +391,11 @@ async function handleStreamingResponse(commonParams: any): Promise<Response> {
   const stream = new ReadableStream({
     async start(controller) {
       if (!first.done && first.value.type === 'text-delta') {
-        controller.enqueue(encoder.encode(first.value.textDelta))
+        controller.enqueue(encoder.encode(first.value.text))
       }
       for await (const part of { [Symbol.asyncIterator]: () => iterator }) {
         if (part.type === 'error') throw part.error
-        if (part.type === 'text-delta') controller.enqueue(encoder.encode(part.textDelta))
+        if (part.type === 'text-delta') controller.enqueue(encoder.encode(part.text))
       }
       controller.close()
     },
@@ -504,8 +503,10 @@ async function handleNonStreamingResponse(
   )
 }
 
-function convertConversationToVercelAISDKv3(conversation: Conversation): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
+function convertConversationToVercelAISDKv3(
+  conversation: Conversation,
+): ModelMessage[] {
+  const coreMessages: ModelMessage[] = []
 
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,
@@ -524,64 +525,56 @@ function convertConversationToVercelAISDKv3(conversation: Conversation): CoreMes
       index === conversation.messages.length - 1 && message.role === 'user'
 
     if (Array.isArray(message.content)) {
-      const contentParts: Array<
-        | string
-        | { type: 'image_url'; image_url: { url: string } }
-        | { type: 'text'; text: string }
-      > = []
+      if (message.role === 'user') {
+        const userParts: Array<{ type: 'text'; text: string } | { type: 'image'; image: URL }> =
+          []
 
-      message.content.forEach((c) => {
-        if (c.type === 'text') {
-          const text = isLastUserMessage
-            ? message.finalPromtEngineeredMessage || c.text || ''
-            : c.text || ''
-          if (text) contentParts.push(text)
-        } else if (c.type === 'image_url' || c.type === 'tool_image_url') {
-          const imageUrl = c.image_url?.url || ''
-          if (imageUrl) {
-            contentParts.push({ type: 'image_url', image_url: { url: imageUrl } })
-          }
-        } else if (c.type === 'file') {
-          contentParts.push(
-            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
-          )
-        }
-      })
-
-      const hasImages = contentParts.some(
-        (part) => typeof part === 'object' && part.type === 'image_url',
-      )
-
-      if (hasImages || contentParts.length > 1) {
-        const formattedContent: Array<
-          | { type: 'text'; text: string }
-          | { type: 'image_url'; image_url: { url: string } }
-        > = []
-        contentParts.forEach((part) => {
-          if (typeof part === 'string') {
-            formattedContent.push({ type: 'text', text: part })
-          } else if (part.type === 'image_url') {
-            formattedContent.push(part)
-          } else if (part.type === 'text') {
-            formattedContent.push(part)
+        message.content.forEach((c) => {
+          if (c.type === 'text') {
+            const text = isLastUserMessage
+              ? message.finalPromtEngineeredMessage || c.text || ''
+              : c.text || ''
+            if (text) userParts.push({ type: 'text', text })
+          } else if (c.type === 'image_url' || c.type === 'tool_image_url') {
+            const imageUrl = c.image_url?.url || ''
+            if (imageUrl) {
+              try {
+                userParts.push({ type: 'image', image: new URL(imageUrl) })
+              } catch {
+                userParts.push({ type: 'text', text: `[Image: ${imageUrl}]` })
+              }
+            }
+          } else if (c.type === 'file') {
+            userParts.push({
+              type: 'text',
+              text: `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+            })
           }
         })
-        coreMessages.push({
-          role: message.role as 'user' | 'assistant',
-          content: formattedContent,
-        } as CoreMessage)
-      } else {
-        const textContent =
-          typeof contentParts[0] === 'string'
-          ? contentParts[0] 
-          : contentParts[0]?.type === 'text' 
-            ? contentParts[0].text 
-            : ''
-        if (textContent) {
-          coreMessages.push({
-            role: message.role as 'user' | 'assistant',
-            content: textContent,
-          })
+
+        const hasImages = userParts.some((part) => part.type === 'image')
+        if (hasImages || userParts.length > 1) {
+          coreMessages.push({ role: 'user', content: userParts })
+        } else {
+          const textContent = userParts[0]?.type === 'text' ? userParts[0].text : ''
+          if (textContent) coreMessages.push({ role: 'user', content: textContent })
+        }
+      } else if (message.role === 'assistant') {
+        let assistantText = ''
+
+        message.content.forEach((c) => {
+          if (c.type === 'text') {
+            assistantText += c.text || ''
+          } else if (c.type === 'image_url' || c.type === 'tool_image_url') {
+            const imageUrl = c.image_url?.url || ''
+            if (imageUrl) assistantText += `\n[Image: ${imageUrl}]\n`
+          } else if (c.type === 'file') {
+            assistantText += `\n[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]\n`
+          }
+        })
+
+        if (assistantText) {
+          coreMessages.push({ role: 'assistant', content: assistantText })
         }
       }
     } else {
@@ -589,10 +582,11 @@ function convertConversationToVercelAISDKv3(conversation: Conversation): CoreMes
         ? message.finalPromtEngineeredMessage || (message.content as string)
         : (message.content as string)
 
-      coreMessages.push({
-        role: message.role as 'user' | 'assistant',
-        content: content,
-      })
+      if (message.role === 'user') {
+        coreMessages.push({ role: 'user', content })
+      } else if (message.role === 'assistant') {
+        coreMessages.push({ role: 'assistant', content })
+      }
     }
   })
 
