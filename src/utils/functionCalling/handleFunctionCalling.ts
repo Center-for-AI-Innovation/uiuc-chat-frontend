@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/completions'
+import type {
+  ChatCompletionMessageFunctionToolCall,
+  ChatCompletionMessageToolCall,
+} from 'openai/resources/chat/completions'
 import posthog from 'posthog-js'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
 import type { ToolOutput } from '~/types/chat'
@@ -88,14 +91,24 @@ export async function handleFunctionCall(
       return []
     }
     const openaiFunctionCallResponse = await response.json()
+    if (openaiFunctionCallResponse.message === 'No tools invoked by OpenAI') {
+      console.debug('No tools invoked by OpenAI')
+      return []
+    }
+
     const modelMessage = openaiFunctionCallResponse.choices?.[0]?.message?.content
-    const openaiResponse: ChatCompletionMessageToolCall[] =
+    const openaiResponseAll: ChatCompletionMessageToolCall[] =
       openaiFunctionCallResponse.choices?.[0]?.message?.tool_calls || []
-    
+    const openaiResponse = openaiResponseAll.filter(
+      (toolCall): toolCall is ChatCompletionMessageFunctionToolCall =>
+        toolCall.type === 'function',
+    )
+
     if (openaiResponse.length === 0) {
-      // Model responded without invoking tools - store for buildPrompt
+      // Model responded without invoking tools - store for buildPrompt routing.
       if (modelMessage && selectedConversation.messages.length > 0) {
-        const lastMsg = selectedConversation.messages[selectedConversation.messages.length - 1]
+        const lastMsg =
+          selectedConversation.messages[selectedConversation.messages.length - 1]
         if (lastMsg && lastMsg.role === 'user') {
           ;(lastMsg as any)._toolRoutingResponse = modelMessage
         }

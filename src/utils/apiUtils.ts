@@ -1,5 +1,5 @@
 // utils/apiUtils.ts
-import { CoreMessage } from 'ai'
+import { ModelMessage } from 'ai'
 import { v4 as uuidv4 } from 'uuid'
 import { Conversation, Message } from '~/types/chat'
 import {
@@ -202,8 +202,8 @@ export async function fetchCourseMetadata(course_name: string): Promise<any> {
 
 export function convertConversatonToVercelAISDKv3(
   conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
+): ModelMessage[] {
+  const coreMessages: ModelMessage[] = []
 
   // Add system message as the first message
   const systemMessage = conversation.messages.findLast(
@@ -259,7 +259,7 @@ export function convertConversatonToVercelAISDKv3(
 
 export function convertConversationToCoreMessagesWithoutSystem(
   conversation: Conversation,
-): CoreMessage[] {
+): ModelMessage[] {
   function processMessageContent(message: Message, isLastUserMessage: boolean) {
     let content: any[]
 
@@ -370,4 +370,3 @@ export const createProject = async (
     throw error
   }
 }
-

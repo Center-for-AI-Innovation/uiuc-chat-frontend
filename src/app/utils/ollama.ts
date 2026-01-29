@@ -1,5 +1,5 @@
-import { createOllama } from 'ollama-ai-provider'
-import { type CoreMessage, generateText, streamText } from 'ai'
+import { createOllama } from 'ollama-ai-provider-v2'
+import { type ModelMessage, generateText, streamText } from 'ai'
 import { type Conversation } from '~/types/chat'
 import {
   type NCSAHostedProvider,
@@ -178,18 +178,23 @@ export async function runOllamaChat(
         throw new Error('Conversation messages array is empty')
       }
 
-      const ollamaModel = ollama(conversation.model.id, {
-        numCtx: conversation.model.tokenLimit,
-      })
+      const ollamaModel = ollama(conversation.model.id)
       const commonParams = {
         model: ollamaModel as any, // Force type compatibility
         messages: convertConversatonToVercelAISDKv3(conversation),
         temperature: conversation.temperature,
-        maxTokens: 4096, // output tokens
+        maxOutputTokens: 4096, // output tokens
+        providerOptions: {
+          ollama: {
+            options: {
+              num_ctx: conversation.model.tokenLimit,
+            },
+          },
+        },
       }
 
       if (stream) {
-        const result = await streamText(commonParams)
+        const result = streamText(commonParams)
         return result.toTextStreamResponse()
       } else {
         const result = await generateText(commonParams)
@@ -247,8 +252,8 @@ export async function runOllamaChat(
 
 function convertConversatonToVercelAISDKv3(
   conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
+): ModelMessage[] {
+  const coreMessages: ModelMessage[] = []
 
   // Add system message as the first message
   const systemMessage = conversation.messages.findLast(

@@ -1,4 +1,4 @@
-import { type CoreMessage, generateText, streamText } from 'ai'
+import { type ModelMessage, generateText, streamText } from 'ai'
 import { type Conversation } from '~/types/chat'
 import { type NCSAHostedVLMProvider } from '~/utils/modelProviders/LLMProvider'
 export const dynamic = 'force-dynamic'
@@ -15,29 +15,29 @@ export async function runVLLM(
       throw new Error('Conversation is missing')
     }
 
-    const vlmModel = createOpenAI({
+    const vlmProvider = createOpenAI({
       baseURL: process.env.NCSA_HOSTED_VLM_BASE_URL,
       apiKey: process.env.NCSA_HOSTED_API_KEY || '',
-      compatibility: 'compatible', // strict/compatible - enable 'strict' when using the OpenAI API
     })
     if (conversation.messages.length === 0) {
       throw new Error('Conversation messages array is empty')
     }
 
-    const model = vlmModel(conversation.model.id)
+    // Use .chat() to use Chat Completions API instead of Responses API
+    const model = vlmProvider.chat(conversation.model.id)
 
     const commonParams = {
       model: model,
       messages: convertConversationToVercelAISDKv3(conversation),
       temperature: conversation.temperature,
-      maxTokens: 8192,
+      maxOutputTokens: 8192,
       topP: 0.8,
       repetitionPenalty: 1.05,
     }
 
     try {
       if (stream) {
-        const result = await streamText(commonParams as any)
+        const result = streamText(commonParams as any)
         return result.toTextStreamResponse()
       } else {
         const result = await generateText(commonParams as any)
@@ -82,8 +82,8 @@ export async function runVLLM(
 
 function convertConversationToVercelAISDKv3(
   conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
+): ModelMessage[] {
+  const coreMessages: ModelMessage[] = []
 
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,

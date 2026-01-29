@@ -2,7 +2,7 @@ import type { Conversation } from '~/types/chat'
 import type { BedrockProvider } from '~/utils/modelProviders/LLMProvider'
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { type CoreMessage, generateText, streamText } from 'ai'
+import { type ModelMessage, generateText, streamText } from 'ai'
 import { NextResponse } from 'next/server'
 
 export async function runBedrockChat(
@@ -26,16 +26,11 @@ export async function runBedrockChat(
     }
 
     const bedrock = createAmazonBedrock({
-      bedrockOptions: {
-        region: bedrockProvider.region,
-        credentials: {
-          accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
-          secretAccessKey: await decryptKeyIfNeeded(
-            bedrockProvider.secretAccessKey,
-          ),
-          sessionToken: undefined,
-        },
-      },
+      region: bedrockProvider.region,
+      accessKeyId: await decryptKeyIfNeeded(bedrockProvider.accessKeyId),
+      secretAccessKey: await decryptKeyIfNeeded(
+        bedrockProvider.secretAccessKey,
+      ),
     })
 
     if (conversation.messages.length === 0) {
@@ -45,19 +40,19 @@ export async function runBedrockChat(
       model: bedrock(conversation.model.id),
       messages: convertConversationToBedrockFormat(conversation),
       temperature: conversation.temperature,
-      maxTokens: 4096,
+      maxOutputTokens: 4096,
       type: 'text-delta' as const,
       tools: {},
       toolChoice: undefined,
     }
 
     if (stream) {
-      const result = await streamText({
+      const result = streamText({
         ...commonParams,
         messages: commonParams.messages.map((msg) => ({
           role: msg.role === 'tool' ? 'tool' : msg.role,
           content: msg.content,
-        })) as CoreMessage[],
+        })) as ModelMessage[],
       })
       return result.toTextStreamResponse()
     } else {
@@ -73,7 +68,7 @@ export async function runBedrockChat(
 
 function convertConversationToBedrockFormat(
   conversation: Conversation,
-): CoreMessage[] {
+): ModelMessage[] {
   const messages = []
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,
@@ -107,5 +102,5 @@ function convertConversationToBedrockFormat(
       content: content,
     })
   })
-  return messages as CoreMessage[]
+  return messages as ModelMessage[]
 }
