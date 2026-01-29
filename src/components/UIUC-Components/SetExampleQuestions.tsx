@@ -63,8 +63,9 @@ export default function SetExampleQuestions({
   }
 
   return (
-    <Box className="pl-1 pr-1">
+    <Box>
       <form
+        className="flex flex-col gap-3"
         onSubmit={(event) => {
           event.preventDefault()
           upsertCourseMetadata(inputList.filter((item) => item !== ''))
@@ -72,7 +73,7 @@ export default function SetExampleQuestions({
       >
         {inputList.map((value, i) => {
           return (
-            <div className="flex items-center gap-2" key={i}>
+            <div className="flex flex-col gap-2" key={i}>
               <TextInput
                 // withAsterisk
                 name="question"
@@ -98,15 +99,17 @@ export default function SetExampleQuestions({
                 // onBlur={() => handleInputBlur(i)} I couldn't get this working to remove boxes...
               />
 
-              <Button
-                type="submit"
-                size={'xs'}
-                disabled={value === ''}
-                className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
-                onClick={async () => {}}
-              >
-                Save
-              </Button>
+              <div>
+                <Button
+                  type="submit"
+                  size={'xs'}
+                  disabled={value === ''}
+                  className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
+                  onClick={async () => {}}
+                >
+                  Save
+                </Button>
+              </div>
             </div>
           )
         })}

@@ -918,7 +918,7 @@ CRITICAL: The optimized prompt must:
           <div className={`${isEmbedded ? '' : 'p-4'}`}>
             {/* Prompt Engineering Guide */}
             <Paper
-              className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
+              className="w-full rounded-xl bg-[--dashboard-background-faded] px-6"
               p="md"
               sx={{
                 transition: 'all 0.2s ease',
@@ -931,7 +931,6 @@ CRITICAL: The optimized prompt must:
                 justify="space-between"
                 sx={{
                   cursor: 'pointer',
-                  padding: '4px 8px',
                   borderRadius: '8px',
                 }}
                 onClick={() => setInsightsOpen(!insightsOpen)}
@@ -1073,7 +1072,7 @@ CRITICAL: The optimized prompt must:
                 alignItems: 'center',
                 background: 'var(--dashboard-background-faded)',
               }}
-              className="mt-4 rounded-xl px-4 py-6 sm:px-6 sm:py-6 md:px-8"
+              className="mt-4 rounded-xl px-4 py-6 sm:p-6"
             >
               <div
                 style={{
@@ -1083,7 +1082,7 @@ CRITICAL: The optimized prompt must:
                 }}
               >
                 <Flex justify="space-between" align="center" mb="md">
-                  <Flex align="center" className="gap-4">
+                  <Flex align="center" className="-mt-2 gap-4">
                     <Title
                       className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
                       order={4}

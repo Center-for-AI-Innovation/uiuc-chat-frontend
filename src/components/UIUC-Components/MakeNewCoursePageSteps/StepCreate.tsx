@@ -69,7 +69,7 @@ const StepCreate = ({
             }
           />
 
-          <div className="mt-1 min-h-[1.35rem] text-sm">
+          <div className="mt-1 hidden min-h-[1.35rem] text-sm">
             {projectName && (
               <div className="flex items-start gap-2">
                 {/* NOTE: assuming this is the best / proper way to get the current server url */}
@@ -119,9 +119,8 @@ const StepCreate = ({
 const componentClasses = {
   input: {
     label: 'font-semibold text-base text-[--foreground]',
-    wrapper: '-ml-3',
     input: `
-      mt-2
+      mt-3
       px-3
 
       placeholder:text-[--foreground-faded]
