@@ -447,12 +447,17 @@ export const keycloakUsers = pgTable('user_entity', {
   not_before: integer('not_before').notNull().default(0),
 })
 
-export const scrapeMetadata = pgTable('scraping_metadata', {
+export const scrapeMetadataRun = pgTable('scraping_metadata_run', {
   id: uuid('id').primaryKey(),
   course_name: text('course_name'),
   url: text('url'),
   max_urls: integer('max_urls').default(50),
   scrape_strategy: text('scrape_strategy').default('Equal and Below'),
+})
+
+export const scrapeMetadataDocument = pgTable('scraping_metadata_document', {
+  run_id: uuid('run_id').references(() => scrapeMetadataRun.id),
+  content: text('content'),
 })
 
 // Table relationships
