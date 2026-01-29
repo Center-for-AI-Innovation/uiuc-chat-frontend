@@ -295,6 +295,12 @@ export const buildPrompt = async ({
       userPromptSections.push(toolsOutputResults)
     }
 
+    // Add tool routing response if present (model asked follow-up instead of invoking tools)
+    const toolRoutingResponse = (lastUserMessage as any)?._toolRoutingResponse
+    if (toolRoutingResponse) {
+      userPromptSections.push(`<AssistantFollowUp>${toolRoutingResponse}</AssistantFollowUp>`)
+    }
+
     // Add the user's query to the prompt sections
     userPromptSections.push(userQuery)
 
@@ -666,6 +672,7 @@ export const getDefaultPostPrompt = (): string => {
     systemPromptOnly: false,
     vector_search_rewrite_disabled: false,
     allow_logged_in_users: false,
+    is_frozen: false
   }
 
   // Call getSystemPostPrompt with default values

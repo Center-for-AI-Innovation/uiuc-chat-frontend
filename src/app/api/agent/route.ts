@@ -4,24 +4,35 @@
 import { NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
-import { withCourseAccessFromRequest, getCourseMetadata } from '~/app/api/authorization'
+import {
+  withCourseAccessFromRequest,
+  getCourseMetadata,
+} from '~/app/api/authorization'
 import {
   type AgentRunRequest,
   type AgentStreamEvent,
   serializeAgentStreamEvent,
 } from '~/types/agentStream'
-import {
-  type Conversation,
-  type Message,
-  type Content,
-} from '~/types/chat'
+import { type Conversation, type Message, type Content } from '~/types/chat'
 import { runAgentConversation } from '~/server/agent/runAgentConversation'
-import { AllSupportedModels, type GenericSupportedModel, type AllLLMProviders, ProviderNames } from '~/utils/modelProviders/LLMProvider'
+import {
+  AllSupportedModels,
+  type GenericSupportedModel,
+  type AllLLMProviders,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
-import { getBaseUrl } from '~/utils/apiUtils'
-import { db, conversations as conversationsTable, messages } from '~/db/dbClient'
-import { eq, inArray } from 'drizzle-orm'
-import { convertDBToChatConversation, type DBMessage } from '~/pages/api/conversation'
+import {
+  db,
+  conversations as conversationsTable,
+  messages,
+} from '~/db/dbClient'
+import { eq } from 'drizzle-orm'
+import {
+  convertDBToChatConversation,
+  type DBMessage,
+} from '~/pages/api/conversation'
+import { getModels } from '~/pages/api/models'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -33,8 +44,11 @@ export const maxDuration = 300 // 5 minutes
 /**
  * Validate that the model is not a WebLLM model (which only runs in browser)
  */
-function validateModelForAgentMode(modelId: string): { valid: boolean; error?: string } {
-  const isWebLLMModel = webLLMModels.some(model => model.id === modelId)
+function validateModelForAgentMode(modelId: string): {
+  valid: boolean
+  error?: string
+} {
+  const isWebLLMModel = webLLMModels.some((model) => model.id === modelId)
   if (isWebLLMModel) {
     return {
       valid: false,
@@ -44,29 +58,8 @@ function validateModelForAgentMode(modelId: string): { valid: boolean; error?: s
   return { valid: true }
 }
 
-/**
- * Fetch LLM providers for a project using internal API
- * Note: Using fetch to avoid bundling server-only code
- */
-async function fetchLLMProviders(projectName: string, baseUrl: string): Promise<AllLLMProviders | null> {
-  try {
-    const response = await fetch(`${baseUrl}/api/models`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projectName }),
-    })
-    if (!response.ok) {
-      console.error('Failed to fetch LLM providers:', response.status)
-      return null
-    }
-    return await response.json() as AllLLMProviders
-  } catch (error) {
-    console.error('Error fetching LLM providers:', error)
-    return null
-  }
-}
-
 // getCourseMetadata is imported from authorization.ts - uses Redis directly
+// getModels is imported from pages/api/models.ts - uses Redis directly, no HTTP call needed
 
 /**
  * Fetch or create a conversation
@@ -96,7 +89,10 @@ async function getOrCreateConversation(
           .from(messages)
           .where(eq(messages.conversation_id, conversationId))
 
-        return convertDBToChatConversation(dbConv, dbMessages as unknown as DBMessage[])
+        return convertDBToChatConversation(
+          dbConv,
+          dbMessages as unknown as DBMessage[],
+        )
       }
     } catch (error) {
       console.error('Error fetching conversation:', error)
@@ -104,7 +100,9 @@ async function getOrCreateConversation(
   }
 
   // Create new conversation
-  const model = Array.from(AllSupportedModels).find(m => m.id === modelId) as GenericSupportedModel
+  const model = Array.from(AllSupportedModels).find(
+    (m) => m.id === modelId,
+  ) as GenericSupportedModel
   if (!model) {
     console.error(`Model ${modelId} not found`)
     return null
@@ -164,7 +162,8 @@ async function handler(req: AuthenticatedRequest) {
     } = body
 
     // Get user identifier from request
-    const userIdentifier = (req as any).userEmail || (req as any).user?.email || ''
+    const userIdentifier =
+      (req as any).userEmail || (req as any).user?.email || ''
 
     // Basic validation only - do heavy setup inside stream for faster feedback
     if (!courseName) {
@@ -199,7 +198,7 @@ async function handler(req: AuthenticatedRequest) {
 
     const encoder = new TextEncoder()
     let controllerClosed = false
-    
+
     const stream = new ReadableStream({
       async start(controller) {
         const emit = (event: AgentStreamEvent) => {
@@ -226,17 +225,25 @@ async function handler(req: AuthenticatedRequest) {
 
         try {
           console.log('[Agent Route] Fetching metadata for course:', courseName)
-          const baseUrl = getBaseUrl()
           const [llmProviders, courseMetadata] = await Promise.all([
-            fetchLLMProviders(courseName, baseUrl),
+            getModels(courseName),
             getCourseMetadata(courseName),
           ])
-          
-          console.log('[Agent Route] Course metadata result:', courseMetadata ? 'found' : 'not found')
-          console.log('[Agent Route] LLM providers result:', llmProviders ? 'found' : 'not found')
+
+          console.log(
+            '[Agent Route] Course metadata result:',
+            courseMetadata ? 'found' : 'not found',
+          )
+          console.log(
+            '[Agent Route] LLM providers result:',
+            llmProviders ? 'found' : 'not found',
+          )
 
           if (!courseMetadata) {
-            console.error('[Agent Route] Course metadata not found for:', courseName)
+            console.error(
+              '[Agent Route] Course metadata not found for:',
+              courseName,
+            )
             emit({
               type: 'error',
               message: 'Could not fetch course metadata',
@@ -272,11 +279,13 @@ async function handler(req: AuthenticatedRequest) {
           if (typeof userMessage.content === 'string') {
             messageContent = userMessage.content
           } else if (Array.isArray(userMessage.content)) {
-            messageContent = userMessage.content.map((c): Content => ({
-              type: (c.type || 'text') as Content['type'],
-              text: c.text,
-              image_url: c.image_url,
-            }))
+            messageContent = userMessage.content.map(
+              (c): Content => ({
+                type: (c.type || 'text') as Content['type'],
+                text: c.text,
+                image_url: c.image_url,
+              }),
+            )
           } else {
             messageContent = String(userMessage.content)
           }
@@ -317,7 +326,7 @@ async function handler(req: AuthenticatedRequest) {
             userMessage: newUserMessage,
             documentGroups: documentGroups || [],
             courseMetadata,
-            llmProviders: llmProviders || {} as AllLLMProviders,
+            llmProviders: llmProviders || ({} as AllLLMProviders),
             openaiKey,
             userIdentifier,
             emit,
@@ -342,14 +351,17 @@ async function handler(req: AuthenticatedRequest) {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
       },
     })
   } catch (error) {
     console.error('Error in agent route handler:', error)
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'An unexpected error occurred',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred',
       },
       { status: 500 },
     )
@@ -357,4 +369,3 @@ async function handler(req: AuthenticatedRequest) {
 }
 
 export const POST = withCourseAccessFromRequest('any')(handler as any)
-

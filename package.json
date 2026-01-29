@@ -26,6 +26,7 @@
     "@ai-sdk/anthropic": "^1.1.15",
     "@ai-sdk/google": "^1.0.7",
     "@ai-sdk/openai": "^0.0.34",
+    "@ai-sdk/openai-compatible": "^0.2.12",
     "@ai-sdk/provider": "^1.0.7",
     "@aws-sdk/client-bedrock-runtime": "^3.751.0",
     "@aws-sdk/client-rds-data": "^3.825.0",
@@ -158,7 +159,7 @@
     "tokenlens": "^1.3.1",
     "use-debounce": "^10.0.4",
     "use-stick-to-bottom": "^1.1.1",
-    "uuid": "^9.0.1",
+    "uuid": "^13.0.0",
     "vaul": "^1.1.2",
     "vercel": "^31.0.1",
     "zod": "^3.25.76"

@@ -19,6 +19,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const course_intro_message = req.query.course_intro_message as string
   const banner_image_s3 = req.query.banner_image_s3 as string
   const is_private = JSON.parse((req.query.is_private as string) || 'false')
+  const is_frozen = JSON.parse((req.query.is_frozen as string) || 'false')
   const course_admins = JSON.parse(
     (req.query.course_admins as string) || '["rohan13@illinois.edu"]',
   )
@@ -70,6 +71,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       systemPromptOnly,
       vector_search_rewrite_disabled,
       allow_logged_in_users,
+      is_frozen
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
     const redisClient = await ensureRedisConnected()

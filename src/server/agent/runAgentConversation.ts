@@ -26,7 +26,11 @@ import {
 } from './agentServerUtils'
 import { persistMessageServer } from '~/pages/api/conversation'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
-import { routeModelRequest, processChunkWithStateMachine, State } from '~/utils/streamProcessing'
+import {
+  routeModelRequest,
+  processChunkWithStateMachine,
+  State,
+} from '~/utils/streamProcessing'
 import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
@@ -59,7 +63,7 @@ const MAX_AGENT_STEPS = 20
  * Emits typed events via the `emit` callback as processing progresses.
  */
 export async function runAgentConversation(
-  params: RunAgentParams
+  params: RunAgentParams,
 ): Promise<RunAgentResult> {
   const {
     conversation,
@@ -75,18 +79,23 @@ export async function runAgentConversation(
   } = params
 
   // Clone conversation to avoid mutation issues
-  const workingConversation: Conversation = JSON.parse(JSON.stringify(conversation))
-  
+  const workingConversation: Conversation = JSON.parse(
+    JSON.stringify(conversation),
+  )
+
   // Ensure user message is in the conversation
-  const existingMessageIndex = workingConversation.messages.findIndex(m => m.id === userMessage.id)
+  const existingMessageIndex = workingConversation.messages.findIndex(
+    (m) => m.id === userMessage.id,
+  )
   if (existingMessageIndex === -1) {
     workingConversation.messages.push(userMessage)
   } else {
     workingConversation.messages[existingMessageIndex] = userMessage
   }
 
-  const message = workingConversation.messages[workingConversation.messages.length - 1]!
-  
+  const message =
+    workingConversation.messages[workingConversation.messages.length - 1]!
+
   const initializingEvent: AgentEvent = {
     id: 'agent-initializing',
     stepNumber: 0,
@@ -104,7 +113,8 @@ export async function runAgentConversation(
 
   // Track accumulated contexts and deduplication
   const seen = new Set<string>()
-  const fileUploadContexts: ContextWithMetadata[] = message.contexts?.slice() || []
+  const fileUploadContexts: ContextWithMetadata[] =
+    message.contexts?.slice() || []
   const accumulatedContexts: ContextWithMetadata[] = []
   let totalContextsRetrieved = 0
   const toolsExecutedSummary: Array<{
@@ -118,9 +128,12 @@ export async function runAgentConversation(
   try {
     availableTools = await fetchToolsServer(courseName)
   } catch (error) {
-    console.error('Error fetching tools:', error)
+    console.error(
+      `[Agent] Error fetching tools for course ${courseName}:`,
+      error,
+    )
   }
-  
+
   initializingEvent.status = 'done'
   initializingEvent.updatedAt = new Date().toISOString()
   emit({
@@ -131,36 +144,35 @@ export async function runAgentConversation(
 
   // Add synthetic retrieval tool for agent mode
   // Note: Description explicitly encourages multiple calls for deep research
-  const toolsForAgent: UIUCTool[] = [
-    {
-      id: 'synthetic-retrieval-tool',
-      name: 'search_documents',
-      readableName: 'Search Documents',
-      description:
-        'Primary grounding tool for Agent Mode. Invoke this tool to search course documents. For deep research tasks, call this tool multiple times with different queries to explore different aspects, angles, or facets of the topic. Each call should use a distinct, focused query that targets a specific aspect of the research question. The tool returns ranked course passages with citation indices; rely on them when forming your answer and cite sources with <cite>n</cite> tags. Continue calling with varied queries until you have comprehensive coverage of the topic. Additional specialized tools may appear later, but treat them as complementary steps after retrieval.',
-      inputParameters: {
-        type: 'object',
-        properties: {
-          query: {
-            type: 'string',
-            description:
-              "Short natural-language query that captures the current need based on the intent of the user's message",
-          },
+  const syntheticRetrievalTool: UIUCTool = {
+    id: 'synthetic-retrieval-tool',
+    name: 'search_documents',
+    readableName: 'Search Documents',
+    description:
+      'Primary grounding tool for Agent Mode. Invoke this tool to search course documents. For deep research tasks, call this tool multiple times with different queries to explore different aspects, angles, or facets of the topic. Each call should use a distinct, focused query that targets a specific aspect of the research question. The tool returns ranked course passages with citation indices; rely on them when forming your answer and cite sources with <cite>n</cite> tags. Continue calling with varied queries until you have comprehensive coverage of the topic. Additional specialized tools may appear later, but treat them as complementary steps after retrieval.',
+    inputParameters: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description:
+            "Short natural-language query that captures the current need based on the intent of the user's message",
         },
-        required: ['query'],
       },
-      courseName: courseName,
-      enabled: true,
-    } as UIUCTool,
-    ...availableTools,
-  ]
+      required: ['query'],
+    },
+    courseName: courseName,
+    enabled: true,
+  }
+
+  const toolsForAgent: UIUCTool[] = [syntheticRetrievalTool, ...availableTools]
 
   const appendAgentEvent = (event: AgentEvent) => {
     if (!message.agentEvents) {
       message.agentEvents = []
     }
     message.agentEvents = [...message.agentEvents, event]
-    
+
     // Emit agent events update
     emit({
       type: 'agent_events_update',
@@ -169,10 +181,7 @@ export async function runAgentConversation(
     })
   }
 
-  const updateAgentEvent = (
-    eventId: string,
-    updates: Partial<AgentEvent>
-  ) => {
+  const updateAgentEvent = (eventId: string, updates: Partial<AgentEvent>) => {
     if (!message.agentEvents) return
 
     message.agentEvents = message.agentEvents.map((event) => {
@@ -204,8 +213,16 @@ export async function runAgentConversation(
     for (let step = 0; step < MAX_AGENT_STEPS; step++) {
       // Check for cancellation
       if (signal?.aborted) {
-        emit({ type: 'error', message: 'Agent run was cancelled', recoverable: false })
-        return { success: false, conversation: workingConversation, error: 'Cancelled' }
+        emit({
+          type: 'error',
+          message: 'Agent run was cancelled',
+          recoverable: false,
+        })
+        return {
+          success: false,
+          conversation: workingConversation,
+          error: 'Cancelled',
+        }
       }
 
       const stepNumber = step + 1
@@ -247,11 +264,16 @@ export async function runAgentConversation(
           status: 'error',
           info: selectionError,
         })
-        emit({ type: 'error', message: selectionError, stepNumber, recoverable: true })
+        emit({
+          type: 'error',
+          message: selectionError,
+          stepNumber,
+          recoverable: true,
+        })
       }
 
-      const selectedToolNames = selectedTools.map(t => t.readableName)
-      
+      const selectedToolNames = selectedTools.map((t) => t.readableName)
+
       updateAgentEvent(selectionEventId, {
         status: 'done',
         metadata:
@@ -264,13 +286,16 @@ export async function runAgentConversation(
         type: 'selection',
         stepNumber,
         status: 'done',
-        selectedTools: selectedTools.map(t => ({
+        selectedTools: selectedTools.map((t) => ({
           id: t.id,
           name: t.name,
           readableName: t.readableName,
           arguments: t.aiGeneratedArgumentValues,
         })),
-        info: selectedTools.length === 0 ? 'Agent will now generate a response.' : undefined,
+        info:
+          selectedTools.length === 0
+            ? 'Agent will now generate a response.'
+            : undefined,
       })
 
       // No tools selected - proceed to final response
@@ -278,7 +303,7 @@ export async function runAgentConversation(
 
       // Dedupe based on tool name + args
       const signatures = selectedTools.map(
-        (t) => `${t.name}:${JSON.stringify(t.aiGeneratedArgumentValues || {})}`
+        (t) => `${t.name}:${JSON.stringify(t.aiGeneratedArgumentValues || {})}`,
       )
       const allSeen = signatures.every((s) => seen.has(s))
       signatures.forEach((s) => seen.add(s))
@@ -299,8 +324,12 @@ export async function runAgentConversation(
         : [...selectedTools]
 
       // Step 2: Execute tools
-      const retrievalTools = selectedTools.filter(t => t.id === 'synthetic-retrieval-tool')
-      const n8nTools = selectedTools.filter(t => t.id !== 'synthetic-retrieval-tool')
+      const retrievalTools = selectedTools.filter(
+        (t) => t.id === 'synthetic-retrieval-tool',
+      )
+      const n8nTools = selectedTools.filter(
+        (t) => t.id !== 'synthetic-retrieval-tool',
+      )
 
       // Execute retrieval tools IN PARALLEL (LLM already decided all queries for this step)
       // First, emit 'running' events for all retrievals
@@ -326,10 +355,11 @@ export async function runAgentConversation(
         })
       }
 
-      // Execute all retrievals in parallel
-      const retrievalResults = await Promise.all(
-        retrievalTools.map(async (retrievalTool, idx) => {
-          const searchQuery = retrievalTool.aiGeneratedArgumentValues?.query || ''
+      // Execute all retrievals in parallel, but emit updates as each one resolves
+      const retrievalPromises = retrievalTools.map(
+        async (retrievalTool, idx) => {
+          const searchQuery =
+            retrievalTool.aiGeneratedArgumentValues?.query || ''
           const retrievalEventId = `agent-step-${stepNumber}-retrieval-${idx}`
 
           try {
@@ -339,70 +369,83 @@ export async function runAgentConversation(
               tokenLimit: workingConversation.model.tokenLimit || 4000,
               docGroups: documentGroups,
             })
-            return { retrievalTool, idx, contexts, searchQuery, retrievalEventId, error: null }
+
+            const contextsFound = contexts.length
+            totalContextsRetrieved += contextsFound
+            accumulatedContexts.push(...contexts)
+
+            // Update message.contexts incrementally so the UI can update totals in real-time
+            message.contexts = [...fileUploadContexts, ...accumulatedContexts]
+
+            // Emit context metadata for citation processing on client (incremental total)
+            const contextsMetadata: ContextMetadata[] = accumulatedContexts.map(
+              (ctx) => ({
+                s3_path: ctx.s3_path,
+                readable_filename: ctx.readable_filename,
+                url: ctx.url,
+                base_url: ctx.base_url,
+                pagenumber: ctx.pagenumber,
+              }),
+            )
+
+            emit({
+              type: 'contexts_metadata',
+              messageId: message.id,
+              contextsMetadata,
+              totalContexts: accumulatedContexts.length,
+            })
+
+            // Update retrieval tool with output
+            const toolIdx = message.tools?.findIndex(
+              (t) => t.invocationId === retrievalTool.invocationId,
+            )
+            if (toolIdx !== undefined && toolIdx >= 0 && message.tools) {
+              message.tools[toolIdx]!.output = {
+                text: `Retrieved ${contextsFound} document chunks for query: "${searchQuery}"`,
+                data: {
+                  contextsRetrieved: contextsFound,
+                  contexts: contexts.slice(0, 5).map((ctx) => ({
+                    text: ctx.text?.substring(0, 200) + '...',
+                    filename: ctx.readable_filename,
+                  })),
+                },
+              }
+            }
+
+            updateAgentEvent(retrievalEventId, {
+              status: 'done',
+              metadata: {
+                contextQuery: searchQuery,
+                contextsRetrieved: contextsFound,
+              },
+            })
+
+            emit({
+              type: 'retrieval',
+              stepNumber,
+              status: 'done',
+              query: searchQuery,
+              contextsRetrieved: contextsFound,
+            })
           } catch (error) {
-            return { retrievalTool, idx, contexts: [], searchQuery, retrievalEventId, error }
+            const errorMessage =
+              error instanceof Error ? error.message : 'Unknown error'
+            updateAgentEvent(retrievalEventId, {
+              status: 'error',
+              metadata: { contextQuery: searchQuery, errorMessage },
+            })
+            emit({
+              type: 'retrieval',
+              stepNumber,
+              status: 'error',
+              query: searchQuery,
+              errorMessage,
+            })
           }
-        })
+        },
       )
 
-      // Process results and emit completion events
-      for (const result of retrievalResults) {
-        const { retrievalTool, idx, contexts, searchQuery, retrievalEventId, error } = result
-
-        if (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-          updateAgentEvent(retrievalEventId, {
-            status: 'error',
-            metadata: { contextQuery: searchQuery, errorMessage },
-          })
-          emit({
-            type: 'retrieval',
-            stepNumber,
-            status: 'error',
-            query: searchQuery,
-            errorMessage,
-          })
-          continue
-        }
-
-        const contextsFound = contexts.length
-        totalContextsRetrieved += contextsFound
-        accumulatedContexts.push(...contexts)
-
-        // Update retrieval tool with output
-        const toolIdx = message.tools?.findIndex(
-          t => t.invocationId === retrievalTool.invocationId
-        )
-        if (toolIdx !== undefined && toolIdx >= 0 && message.tools) {
-          message.tools[toolIdx]!.output = {
-            text: `Retrieved ${contextsFound} document chunks for query: "${searchQuery}"`,
-            data: { 
-              contextsRetrieved: contextsFound,
-              contexts: contexts.slice(0, 5).map(ctx => ({
-                text: ctx.text?.substring(0, 200) + '...',
-                filename: ctx.readable_filename,
-              }))
-            },
-          }
-        }
-
-        updateAgentEvent(retrievalEventId, {
-          status: 'done',
-          metadata: {
-            contextQuery: searchQuery,
-            contextsRetrieved: contextsFound,
-          },
-        })
-
-        emit({
-          type: 'retrieval',
-          stepNumber,
-          status: 'done',
-          query: searchQuery,
-          contextsRetrieved: contextsFound,
-        })
-      }
+      await Promise.all(retrievalPromises)
 
       // After all retrievals complete, update message.contexts and emit metadata
       if (retrievalTools.length > 0) {
@@ -410,14 +453,16 @@ export async function runAgentConversation(
         message.contexts = [...fileUploadContexts, ...accumulatedContexts]
 
         // Emit context metadata for citation processing on client
-        const contextsMetadata: ContextMetadata[] = accumulatedContexts.map(ctx => ({
-          s3_path: ctx.s3_path,
-          readable_filename: ctx.readable_filename,
-          url: ctx.url,
-          base_url: ctx.base_url,
-          pagenumber: ctx.pagenumber,
-        }))
-        
+        const contextsMetadata: ContextMetadata[] = accumulatedContexts.map(
+          (ctx) => ({
+            s3_path: ctx.s3_path,
+            readable_filename: ctx.readable_filename,
+            url: ctx.url,
+            base_url: ctx.base_url,
+            pagenumber: ctx.pagenumber,
+          }),
+        )
+
         emit({
           type: 'contexts_metadata',
           messageId: message.id,
@@ -469,7 +514,9 @@ export async function runAgentConversation(
 
           // Find and update the tool in message.tools
           const toolIdx = message.tools?.findIndex(
-            t => t.invocationId === executedTool.invocationId || t.id === executedTool.id
+            (t) =>
+              t.invocationId === executedTool.invocationId ||
+              t.id === executedTool.id,
           )
           if (toolIdx !== undefined && toolIdx >= 0 && message.tools) {
             message.tools[toolIdx] = executedTool
@@ -589,7 +636,8 @@ export async function runAgentConversation(
     }
 
     // Persist the built prompt
-    const lastMessage = workingConversation.messages[workingConversation.messages.length - 1]
+    const lastMessage =
+      workingConversation.messages[workingConversation.messages.length - 1]
     if (lastMessage) {
       try {
         await persistMessageServer({
@@ -612,18 +660,21 @@ export async function runAgentConversation(
     if (llmResponse instanceof Response && llmResponse.body) {
       const reader = llmResponse.body.getReader()
       const decoder = new TextDecoder()
-      let assistantContent = ''  // Processed content with citations replaced
-      
+      let assistantContent = '' // Processed content with citations replaced
+
       // Citation processing state - persists across chunks
       const citationStateMachine = { state: State.Normal, buffer: '' }
       const citationLinkCache = new Map<number, string>()
-      
+
       // Debug: Log context count for citation processing
-      console.log('[Agent] Starting final response streaming. Message contexts:', {
-        hasContexts: !!message.contexts,
-        contextCount: message.contexts?.length ?? 0,
-        firstContextFilename: message.contexts?.[0]?.readable_filename,
-      })
+      console.log(
+        '[Agent] Starting final response streaming. Message contexts:',
+        {
+          hasContexts: !!message.contexts,
+          contextCount: message.contexts?.length ?? 0,
+          firstContextFilename: message.contexts?.[0]?.readable_filename,
+        },
+      )
 
       try {
         while (true) {
@@ -631,23 +682,23 @@ export async function runAgentConversation(
           if (done) break
 
           const rawChunk = decoder.decode(value, { stream: true })
-          
+
           // Process citations in the chunk using the user message (which has contexts)
           // Pass server-side presigned URL generator to bypass API auth
           const processedChunk = await processChunkWithStateMachine(
             rawChunk,
-            message,  // User message with contexts
+            message, // User message with contexts
             citationStateMachine,
             citationLinkCache,
             courseName,
-            generatePresignedUrlServer,  // Server-side presigned URL function
+            generatePresignedUrlServer, // Server-side presigned URL function
           )
-          
+
           assistantContent += processedChunk
 
           emit({
             type: 'final_tokens',
-            delta: processedChunk,  // Send processed chunk with citations replaced
+            delta: processedChunk, // Send processed chunk with citations replaced
             done: false,
           })
         }
@@ -710,13 +761,21 @@ export async function runAgentConversation(
         status: 'error',
         metadata: { errorMessage },
       })
-      return { success: false, conversation: workingConversation, error: errorMessage }
+      return {
+        success: false,
+        conversation: workingConversation,
+        error: errorMessage,
+      }
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error in agent run'
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error in agent run'
     console.error('Error in runAgentConversation:', error)
     emit({ type: 'error', message: errorMessage, recoverable: false })
-    return { success: false, conversation: workingConversation, error: errorMessage }
+    return {
+      success: false,
+      conversation: workingConversation,
+      error: errorMessage,
+    }
   }
 }
-

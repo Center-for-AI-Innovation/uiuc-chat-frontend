@@ -33,6 +33,7 @@ import {
 } from '~/utils/functionCalling/handleFunctionCalling'
 import {
   type AllLLMProviders,
+  type AnySupportedModel,
   type GenericSupportedModel,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
@@ -132,6 +133,15 @@ export default async function chat(
     return
   }
 
+  // Check if course is frozen/archived
+  if (courseMetadata.is_frozen === true) {
+    res.status(403).json({
+      error: 'Project is temporarily frozen by the administrator',
+      message: `Course '${course_name}' has been temporarily frozen by the administrator`,
+    })
+    return
+  }
+
   // Determine and validate the model to use
   let selectedModel: GenericSupportedModel
   let llmProviders: AllLLMProviders
@@ -207,11 +217,12 @@ export default async function chat(
     .find((model) => model.default)
 
   // if temperature in the body is set as undefined; use the default model temperature
-  const chatFinalTemperature = temperature !== undefined
-    ? temperature
-    : (defaultModel?.temperature !== undefined
-      ? defaultModel.temperature
-      : 0.1)
+  const chatFinalTemperature =
+    temperature !== undefined
+      ? temperature
+      : defaultModel?.temperature !== undefined
+        ? defaultModel.temperature
+        : 0.1
 
   // Construct the conversation object
   const conversation: Conversation = {
@@ -235,8 +246,8 @@ export default async function chat(
   // Check if the content is an array and filter out image content
   const imageContent = Array.isArray(lastMessage.content)
     ? (lastMessage.content as Content[]).filter(
-      (content) => content.type === 'image_url',
-    )
+        (content) => content.type === 'image_url',
+      )
     : []
 
   const imageUrls = imageContent.map(
@@ -294,20 +305,36 @@ export default async function chat(
   // Handle tools
   let updatedConversation = conversation
   if (availableTools.length > 0) {
+    // Determine which provider's API key to use based on the selected model
+    let toolApiKey = llmProviders[ProviderNames.OpenAI]?.apiKey as string
+    // Check if model is from OpenAICompatible provider
+    const isOpenAICompatible =
+      llmProviders?.OpenAICompatible?.enabled &&
+      (llmProviders.OpenAICompatible.models || []).some(
+        (m: AnySupportedModel) =>
+          m.enabled && m.id.toLowerCase() === selectedModel.id.toLowerCase(),
+      )
+
+    if (isOpenAICompatible) {
+      toolApiKey = llmProviders[ProviderNames.OpenAICompatible]
+        ?.apiKey as string
+    }
+
     updatedConversation = await handleToolsServer(
       lastMessage,
       availableTools,
       imageUrls,
       imgDesc,
       conversation,
-      llmProviders[ProviderNames.OpenAI]?.apiKey as string,
+      toolApiKey,
       course_name,
       getBaseUrl(),
+      llmProviders,
     )
   }
 
   const chatBody: ChatBody = {
-    conversation,
+    conversation: updatedConversation,
     key: llmProviders[ProviderNames.OpenAI]?.apiKey as string,
     course_name,
     stream,

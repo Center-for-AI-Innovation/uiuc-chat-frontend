@@ -3,17 +3,18 @@ import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/comple
 import posthog from 'posthog-js'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
 import type { ToolOutput } from '~/types/chat'
-import {
-  type Conversation,
-  type Message,
-  type UIUCTool,
-} from '~/types/chat'
+import { type Conversation, type Message, type UIUCTool } from '~/types/chat'
 import {
   type N8NParameter,
   type N8nWorkflow,
   type OpenAICompatibleTool,
 } from '~/types/tools'
 import { getBackendUrl } from '~/utils/apiUtils'
+import {
+  type AllLLMProviders,
+  type AnySupportedModel,
+  ProviderNames,
+} from '~/utils/modelProviders/LLMProvider'
 
 export async function handleFunctionCall(
   message: Message,
@@ -24,27 +25,62 @@ export async function handleFunctionCall(
   openaiKey: string,
   course_name: string,
   base_url?: string,
+  llmProviders?: AllLLMProviders,
 ): Promise<UIUCTool[]> {
   try {
-    // Convert UIUCTool to OpenAICompatibleTool
     const openAITools = getOpenAIToolFromUIUCTool(availableTools)
-    
-    const url = base_url
+
+    const isOpenAICompatible =
+      llmProviders?.OpenAICompatible?.enabled &&
+      (llmProviders.OpenAICompatible.models || []).some(
+        (m: AnySupportedModel) =>
+          m.enabled &&
+          m.id.toLowerCase() === selectedConversation.model.id.toLowerCase(),
+      )
+
+    // Use the unified OpenAI function call route for both OpenAI and OpenAI-compatible
+    const baseEndpoint = base_url
       ? `${base_url}/api/chat/openaiFunctionCall`
       : '/api/chat/openaiFunctionCall'
+    const url = course_name
+      ? `${baseEndpoint}?course_name=${encodeURIComponent(course_name)}`
+      : baseEndpoint
+
+    const body: any = {
+      conversation: selectedConversation,
+      tools: openAITools,
+      imageUrls: imageUrls,
+      imageDescription: imageDescription,
+      course_name: course_name,
+    }
+
+    if (isOpenAICompatible) {
+      body.providerBaseUrl = llmProviders!.OpenAICompatible.baseUrl
+      body.apiKey = llmProviders!.OpenAICompatible.apiKey
+      // Check if this is OpenRouter and lowercase model ID if so
+      let modelIdToSend = selectedConversation.model.id
+      const baseUrl = llmProviders!.OpenAICompatible.baseUrl
+      if (baseUrl) {
+        try {
+          const parsedUrl = new URL(baseUrl)
+          const hostname = parsedUrl.hostname.toLowerCase()
+          const isOpenRouter = hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
+          if (isOpenRouter) {
+            modelIdToSend = selectedConversation.model.id.toLowerCase()
+          }
+        } catch { /* invalid URL, use original modelId */ }
+      }
+      body.modelId = modelIdToSend
+    } else {
+      body.openaiKey = openaiKey
+    }
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        conversation: selectedConversation,
-        tools: openAITools,
-        imageUrls: imageUrls,
-        imageDescription: imageDescription,
-        openaiKey: openaiKey,
-        course_name: course_name,
-      }),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {
@@ -52,20 +88,54 @@ export async function handleFunctionCall(
       return []
     }
     const openaiFunctionCallResponse = await response.json()
-    if (openaiFunctionCallResponse.message === 'No tools invoked by OpenAI') {
-      console.debug('No tools invoked by OpenAI')
-      return []
-    }
-
+    const modelMessage = openaiFunctionCallResponse.choices?.[0]?.message?.content
     const openaiResponse: ChatCompletionMessageToolCall[] =
       openaiFunctionCallResponse.choices?.[0]?.message?.tool_calls || []
+    
+    if (openaiResponse.length === 0) {
+      // Model responded without invoking tools - store for buildPrompt
+      if (modelMessage && selectedConversation.messages.length > 0) {
+        const lastMsg = selectedConversation.messages[selectedConversation.messages.length - 1]
+        if (lastMsg && lastMsg.role === 'user') {
+          ;(lastMsg as any)._toolRoutingResponse = modelMessage
+        }
+      }
+      return []
+    }
     console.log('OpenAI tools to run: ', openaiResponse)
+
+    // Helper function to heal and parse JSON arguments, fixing common malformed JSON issues
+    const healToolArguments = (args: string): any => {
+      try {
+        return JSON.parse(args)
+      } catch (parseError) {
+        // Try to fix common malformed JSON issues (missing opening brace)
+        const trimmed = args.trim()
+        if (!trimmed.startsWith('{') && trimmed.endsWith('}')) {
+          try {
+            const fixed = '{' + trimmed
+            return JSON.parse(fixed)
+          } catch (fixError) {
+            // If healing fails, throw error with context
+            throw new Error(
+              `Failed to parse tool arguments: ${parseError instanceof Error ? parseError.message : String(parseError)}. Original arguments: ${args.substring(0, 200)}`,
+            )
+          }
+        }
+        // If not healable, throw error
+        throw new Error(
+          `Failed to parse tool arguments: ${parseError instanceof Error ? parseError.message : String(parseError)}. Arguments: ${args.substring(0, 200)}`,
+        )
+      }
+    }
 
     // Map tool into UIUCTool, parse arguments, and add invocation ID
     const uiucToolsToRun: UIUCTool[] = openaiResponse.map((openaiTool) => {
       const baseTool = availableTools.find(
         (availableTool) => availableTool.name === openaiTool.function.name,
       )
+
+      const parsedArguments = healToolArguments(openaiTool.function.arguments)
 
       if (!baseTool) {
         // Handle case where the tool specified by OpenAI isn't available
@@ -81,7 +151,7 @@ export async function handleFunctionCall(
           name: openaiTool.function.name,
           readableName: `Error: ${openaiTool.function.name} not found`,
           description: 'Tool definition not found',
-          aiGeneratedArgumentValues: JSON.parse(openaiTool.function.arguments),
+          aiGeneratedArgumentValues: parsedArguments,
           error: 'Tool definition not found in available tools list.',
         } as UIUCTool
       }
@@ -90,7 +160,7 @@ export async function handleFunctionCall(
       return {
         ...baseTool, // Copy properties from the base tool definition
         invocationId: openaiTool.id, // Add the unique invocation ID from OpenAI
-        aiGeneratedArgumentValues: JSON.parse(openaiTool.function.arguments), // Add the specific arguments for this call
+        aiGeneratedArgumentValues: parsedArguments, // Add the specific arguments for this call
       }
     })
 
@@ -101,7 +171,9 @@ export async function handleFunctionCall(
 
     // Update the message object with the array of tool invocations
     // In agent mode (iterative), append to existing tools; otherwise replace
-    message.tools = message.tools ? [...message.tools, ...validUiucToolsToRun] : [...validUiucToolsToRun]
+    message.tools = message.tools
+      ? [...message.tools, ...validUiucToolsToRun]
+      : [...validUiucToolsToRun]
     selectedConversation.messages[selectedConversation.messages.length - 1] =
       message
     console.log(
@@ -205,6 +277,7 @@ export async function handleToolsServer(
   openaiKey: string,
   projectName: string,
   base_url?: string,
+  llmProviders?: AllLLMProviders,
 ): Promise<Conversation> {
   try {
     const uiucToolsToRun = await handleFunctionCall(
@@ -216,6 +289,7 @@ export async function handleToolsServer(
       openaiKey,
       projectName,
       base_url,
+      llmProviders,
     )
 
     if (uiucToolsToRun.length > 0) {
@@ -430,40 +504,44 @@ export function getOpenAIToolFromUIUCTool(
   tools: UIUCTool[],
 ): OpenAICompatibleTool[] {
   return tools.map((tool) => {
+    const properties = tool.inputParameters?.properties
+    const parameters: OpenAICompatibleTool['function']['parameters'] =
+      properties
+        ? {
+            type: 'object' as const,
+            properties: Object.keys(properties).reduce(
+              (acc, key) => {
+                const param = properties[key]
+                acc[key] = {
+                  type:
+                    param?.type === 'number'
+                      ? 'number'
+                      : param?.type === 'Boolean'
+                        ? 'Boolean'
+                        : 'string',
+                  description: param?.description,
+                  enum: param?.enum,
+                }
+                return acc
+              },
+              {} as {
+                [key: string]: {
+                  type: 'string' | 'number' | 'Boolean'
+                  description?: string
+                  enum?: string[]
+                }
+              },
+            ),
+            required: tool.inputParameters?.required ?? [],
+          }
+        : undefined
+
     return {
       type: 'function',
       function: {
         name: tool.name,
         description: tool.description,
-        parameters: tool.inputParameters
-          ? {
-              type: 'object',
-              properties: Object.keys(tool.inputParameters.properties).reduce(
-                (acc, key) => {
-                  const param = tool.inputParameters?.properties[key]
-                  acc[key] = {
-                    type:
-                      param?.type === 'number'
-                        ? 'number'
-                        : param?.type === 'Boolean'
-                          ? 'Boolean'
-                          : 'string',
-                    description: param?.description,
-                    enum: param?.enum,
-                  }
-                  return acc
-                },
-                {} as {
-                  [key: string]: {
-                    type: 'string' | 'number' | 'Boolean'
-                    description?: string
-                    enum?: string[]
-                  }
-                },
-              ),
-              required: tool.inputParameters.required,
-            }
-          : undefined,
+        parameters,
       },
     }
   })
