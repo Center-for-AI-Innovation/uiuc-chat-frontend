@@ -9,7 +9,6 @@ import { persistMessageServer } from '~/pages/api/conversation'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { withCourseAccessFromRequest } from '~/app/api/authorization'
-import { conversationToMessages } from '~/utils/functionCalling/conversationToMessages'
 
 // Change runtime to edge
 export const runtime = 'nodejs'
