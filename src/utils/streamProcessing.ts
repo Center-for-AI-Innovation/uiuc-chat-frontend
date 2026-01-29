@@ -21,7 +21,7 @@ import {
 } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { getBaseUrl } from '~/utils/apiUtils'
-import { createLogConversationPayload } from '~/utils/app/conversation'
+import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
 import {
   type AllLLMProviders,
   AllSupportedModels,
