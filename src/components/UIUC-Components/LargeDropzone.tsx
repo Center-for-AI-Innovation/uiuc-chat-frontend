@@ -338,6 +338,7 @@ export function LargeDropzone({
           flexDirection: 'column',
         }}
       >
+        {/* TODO: fix large dropzone display across all screens */}
         <div
           className={classes.wrapper}
           style={{
@@ -346,7 +347,6 @@ export function LargeDropzone({
             justifyContent: 'center',
             alignItems: 'center',
             flexDirection: 'column',
-            paddingTop: rem(24),
           }}
         >
           <Dropzone

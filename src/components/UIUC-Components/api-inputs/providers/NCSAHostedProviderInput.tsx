@@ -24,7 +24,7 @@ export default function NCSAHostedLLmsProviderInput({
     <motion.div layout>
       <Card
         p="lg"
-        radius="lg"
+        radius="md"
         className="max-w-[330px] bg-[--dashboard-background-faded] text-[--dashboard-foreground] md:w-[330px]"
       >
         <div

@@ -12,6 +12,7 @@ const StepLLM = ({ project_name }: { project_name: string }) => {
         />
 
         <div className="step_content">
+          {/* TODO: fix spacing */}
           <APIKeyInputForm projectName={project_name} isEmbedded={true} />
         </div>
       </div>
