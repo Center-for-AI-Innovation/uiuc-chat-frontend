@@ -119,12 +119,23 @@ export function withCourseAccessFromRequest(
       // Get course metadata
       const courseMetadata = await getCourseMetadata(courseName)
       if (!courseMetadata) {
-        return new NextResponse(
-          JSON.stringify({
-            error: 'Course not found',
-            message: `Course '${courseName}' does not exist`,
-          }),
+        return NextResponse.json(
+          {
+            error: 'Project not found',
+            message: `Project '${courseName}' does not exist`,
+          },
           { status: 404 },
+        )
+      }
+
+      // Check if course is frozen/archived
+      if (courseMetadata.is_frozen === true) {
+        return NextResponse.json(
+          {
+            error: 'Project is temporarily frozen by the administrator',
+            message: `Project '${courseName}' has been temporarily frozen by the administrator`,
+          },
+          { status: 403 },
         )
       }
 

@@ -166,16 +166,21 @@ export async function fetchCourseMetadata(course_name: string): Promise<any> {
     const response = await fetch(endpoint)
 
     if (!response.ok) {
-      throw new Error(
+      const error = new Error(
         `Error fetching course metadata: ${response.statusText || response.status}`,
-      )
+      ) as Error & { status?: number }
+      error.status = response.status
+      throw error
     }
 
     const data = await response.json()
     if (data.success === false) {
-      throw new Error(
+      const error = new Error(
         data.message || 'An error occurred while fetching course metadata',
-      )
+      ) as Error & { status?: number }
+      // Try to infer status from error message or default to 500
+      error.status = data.status || 500
+      throw error
     }
 
     if (

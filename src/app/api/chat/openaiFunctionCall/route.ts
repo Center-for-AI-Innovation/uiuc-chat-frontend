@@ -4,7 +4,7 @@ import type {
   ChatCompletionTool,
   ChatCompletionContentPart,
 } from 'openai/resources/chat/completions'
-import { type Conversation } from '~/types/chat'
+import { type Conversation, type UIUCTool } from '~/types/chat'
 import { persistMessageServer } from '~/pages/api/conversation'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
@@ -289,7 +289,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
 
     const toolCalls = data.choices[0].message.tool_calls
 
-    lastMessage.tools = toolCalls as any
+    lastMessage.tools = toolCalls as unknown as UIUCTool[]
     await persistMessageServer({
       conversation,
       message: lastMessage,

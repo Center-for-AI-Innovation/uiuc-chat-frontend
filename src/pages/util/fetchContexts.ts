@@ -19,7 +19,7 @@ export default async function fetchContextsFromBackend(
     conversation_id: conversation_id,
   }
 
-  const response = await fetch(`${backendUrl}/getTopContexts`, {
+  const response = await fetch(`https://ai-ta-backend-vyriad.up.railway.app/getTopContexts`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

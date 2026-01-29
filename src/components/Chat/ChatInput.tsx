@@ -1318,29 +1318,29 @@ export const ChatInput = ({
             )}
           </div>
 
-          <Text
-            size={isSmallScreen ? '10px' : 'xs'}
-            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
-            onClick={handleTextClick}
-            style={{ cursor: 'pointer', pointerEvents: 'auto' }}
-          >
-            {selectBestModel(llmProviders)?.name}
-            {selectedConversation?.model &&
-              webLLMModels.some(
-                (m) => m.name === selectedConversation?.model?.name,
-              ) &&
-              chat_ui?.isModelLoading() &&
-              '  Please wait while the model is loading...'}
-            <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
-          </Text>
-          {/* Agent Mode pill */}
-          <div className="absolute bottom-[.35rem] right-5 flex items-center gap-2">
-            {/* Render pill only if model supports tools */}
+          {/* Model picker and Agent Mode pill container */}
+          <div className="absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-2">
+            <Text
+              size={isSmallScreen ? '10px' : 'xs'}
+              className={`font-montserratHeading ${montserrat_heading.variable} flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
+              onClick={handleTextClick}
+              style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+            >
+              {selectBestModel(llmProviders)?.name}
+              {selectedConversation?.model &&
+                webLLMModels.some(
+                  (m) => m.name === selectedConversation?.model?.name,
+                ) &&
+                chat_ui?.isModelLoading() &&
+                '  Please wait while the model is loading...'}
+              <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
+            </Text>
+            {/* Agent Mode pill */}
             {selectedConversation?.model &&
             llmProviders &&
             modelSupportsTools(selectedConversation.model, llmProviders) ? (
               <button
-                className={`rounded-full px-3 py-1 text-xs md:text-sm transition-colors ${
+                className={`rounded-full px-3 py-1 text-xs transition-colors md:text-sm ${
                   agentModeEnabled
                     ? 'bg-[--primary] text-[--background]'
                     : 'bg-[--background-faded] text-[--foreground]'
