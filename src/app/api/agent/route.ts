@@ -3,7 +3,7 @@
 
 import { NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
-import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
+import { type AuthenticatedRequest, getUserIdentifier } from '~/utils/appRouterAuth'
 import {
   withCourseAccessFromRequest,
   getCourseMetadata,
@@ -162,8 +162,7 @@ async function handler(req: AuthenticatedRequest) {
     } = body
 
     // Get user identifier from request
-    const userIdentifier =
-      (req as any).userEmail || (req as any).user?.email || ''
+    const userIdentifier = getUserIdentifier(req) || ''
 
     // Basic validation only - do heavy setup inside stream for faster feedback
     if (!courseName) {
