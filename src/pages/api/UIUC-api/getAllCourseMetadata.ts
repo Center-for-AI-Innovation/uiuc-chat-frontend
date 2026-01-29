@@ -21,6 +21,10 @@ export const getCoursesByOwnerOrAdmin = async (
         let courseMetadata: CourseMetadata | null = null
         try {
           courseMetadata = JSON.parse(value) as CourseMetadata
+          // Filter out frozen/archived courses
+          if (courseMetadata.is_frozen === true) {
+            return acc
+          }
           if (
             courseMetadata.course_owner &&
             courseMetadata.course_admins &&
@@ -63,11 +67,18 @@ export const getAllCourseMetadata = async (): Promise<
       return []
     }
 
-    const all_course_metadata = Object.entries(all_course_metadata_raw).map(
-      ([key, value]) => {
-        return { [key]: JSON.parse(value) as CourseMetadata }
-      },
-    )
+    const all_course_metadata = Object.entries(all_course_metadata_raw)
+      .map(([key, value]) => {
+        const courseMetadata = JSON.parse(value) as CourseMetadata
+        // Filter out frozen/archived courses
+        if (courseMetadata.is_frozen === true) {
+          return null
+        }
+        return { [key]: courseMetadata }
+      })
+      .filter(
+        (item): item is { [key: string]: CourseMetadata } => item !== null,
+      )
     console.log('all_course_metadata', all_course_metadata)
 
     return all_course_metadata
