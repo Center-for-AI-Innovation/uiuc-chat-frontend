@@ -4,6 +4,7 @@ import { appWithTranslation } from 'next-i18next'
 import { type AppType } from 'next/app'
 
 import Maintenance from '~/components/UIUC-Components/Maintenance'
+import 'katex/dist/katex.min.css'
 import '~/styles/citation-tooltips.css'
 import '~/styles/globals.css'
 
