@@ -125,13 +125,13 @@ const MakeNewCoursePage = ({
           | undefined
       }
     />,
-    <StepLLM key="llm" project_name={projectName} />,
-    <StepPrompt key="prompt" project_name={projectName} />,
     <StepBranding
       key="branding"
       project_name={projectName}
       user_id={user_id}
     />,
+    <StepLLM key="llm" project_name={projectName} />,
+    <StepPrompt key="prompt" project_name={projectName} />,
     <StepSuccess key="success" project_name={projectName} />,
   ]
 
