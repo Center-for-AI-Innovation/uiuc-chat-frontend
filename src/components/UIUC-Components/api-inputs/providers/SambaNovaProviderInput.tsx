@@ -25,9 +25,9 @@ export default function SambaNovaProviderInput({
   return (
     <motion.div layout>
       <Card
-        p="lg"
-        radius="lg"
-        className="max-w-[330px] bg-[--dashboard-background-faded] text-[--dashboard-foreground] md:w-[330px] "
+        p="md"
+        radius="md"
+        className="max-w-[330px] bg-[--dashboard-background-faded] text-[--dashboard-foreground] md:w-[330px]"
       >
         <div
           style={{

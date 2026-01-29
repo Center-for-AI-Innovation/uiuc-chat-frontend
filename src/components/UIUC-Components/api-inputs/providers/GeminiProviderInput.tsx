@@ -25,8 +25,8 @@ export default function GeminiProviderInput({
   return (
     <motion.div layout>
       <Card
-        p="lg"
-        radius="lg"
+        p="md"
+        radius="md"
         className="max-w-[330px] bg-[--dashboard-background-faded] text-[--dashboard-foreground] md:w-[330px]"
       >
         <div
