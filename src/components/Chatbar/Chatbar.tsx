@@ -14,17 +14,16 @@ import ChatbarContext from './Chatbar.context'
 import { type ChatbarInitialState, initialState } from './Chatbar.state'
 import { v4 as uuidv4 } from 'uuid'
 import { useQueryClient } from '@tanstack/react-query'
-import {
-  useDeleteAllConversations,
-  useDeleteConversation,
-  useFetchConversationHistory,
-  useUpdateConversation,
-} from '~/hooks/conversationQueries'
+import { useDeleteAllConversations } from '@/hooks/queries/useDeleteAllConversations'
+import { useDeleteConversation } from '@/hooks/queries/useDeleteConversation'
+import { useFetchConversationHistory } from '@/hooks/queries/useFetchConversationHistory'
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+
 import { AnimatePresence, motion } from 'framer-motion'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 import { useDebouncedState } from '@mantine/hooks'
 import posthog from 'posthog-js'
-import { saveConversationToServer } from '~/utils/app/conversation'
+import { saveConversationToServer } from '@/hooks/__internal__/conversation'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
 
