@@ -618,6 +618,88 @@ export default function APIKeyInputForm({
             gap: 16,
           }}
         >
+          {/* Default Model Section */}
+          <div className="mt-6 rounded-lg border border-[--dashboard-border] bg-[--dashboard-sidebar-background] p-4">
+            <Title
+              className={`${montserrat_heading.variable} mb-2 font-montserratHeading text-[--foreground]`}
+              order={4}
+            >
+              Default Model
+            </Title>
+            <Text
+              className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph`}
+              size="sm"
+            >
+              Choose the default model for your chatbot. Users can still
+              override this default.
+            </Text>
+            <div className="flex justify-center">
+              {llmProviders && (
+                <NewModelDropdown
+                  value={findDefaultModel(llmProviders) as AnySupportedModel}
+                  onChange={(newDefaultModel) => {
+                    const modelWithProvider = {
+                      ...newDefaultModel,
+                      provider:
+                        (newDefaultModel as any).provider ||
+                        findDefaultModel(llmProviders)?.provider,
+                    }
+                    setDefaultModelAndUpdateProviders(
+                      modelWithProvider as AnySupportedModel & {
+                        provider: ProviderNames
+                      },
+                    )
+                    return form.handleSubmit()
+                  }}
+                  llmProviders={llmProviders}
+                  isSmallScreen={isSmallScreen}
+                />
+              )}
+            </div>
+          </div>
+
+          <Title
+            className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
+            order={4}
+          >
+            Open source LLMs
+          </Title>
+          <Text
+            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+            size="sm"
+          >
+            Your weights, your rules.
+          </Text>
+          <Flex
+            direction={{ base: 'column', '75rem': 'row' }}
+            wrap="wrap"
+            justify="flex-start"
+            align="flex-start"
+            className="gap-4"
+            w={'100%'}
+          >
+            <NCSAHostedLLmsProviderInput
+              provider={llmProviders?.NCSAHosted as NCSAHostedProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <NCSAHostedVLMProviderInput
+              provider={llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <OllamaProviderInput
+              provider={llmProviders?.Ollama as OllamaProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <WebLLMProviderInput
+              provider={llmProviders?.WebLLM as WebLLMProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+          </Flex>
+
           <Title
             className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
             order={4}
@@ -670,87 +752,6 @@ export default function APIKeyInputForm({
               isLoading={isLoadingLLMProviders}
             />
           </Flex>
-          <Title
-            className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
-            order={4}
-          >
-            Open source LLMs
-          </Title>
-          <Text
-            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-            size="sm"
-          >
-            Your weights, your rules.
-          </Text>
-          <Flex
-            direction={{ base: 'column', '75rem': 'row' }}
-            wrap="wrap"
-            justify="flex-start"
-            align="flex-start"
-            className="gap-4"
-            w={'100%'}
-          >
-            <NCSAHostedLLmsProviderInput
-              provider={llmProviders?.NCSAHosted as NCSAHostedProvider}
-              form={form}
-              isLoading={isLoadingLLMProviders}
-            />
-            <NCSAHostedVLMProviderInput
-              provider={llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider}
-              form={form}
-              isLoading={isLoadingLLMProviders}
-            />
-            <OllamaProviderInput
-              provider={llmProviders?.Ollama as OllamaProvider}
-              form={form}
-              isLoading={isLoadingLLMProviders}
-            />
-            <WebLLMProviderInput
-              provider={llmProviders?.WebLLM as WebLLMProvider}
-              form={form}
-              isLoading={isLoadingLLMProviders}
-            />
-          </Flex>
-
-          {/* Default Model Section */}
-          <div className="mt-6 rounded-lg border border-[--dashboard-border] bg-[--dashboard-sidebar-background] p-4">
-            <Title
-              className={`${montserrat_heading.variable} mb-2 font-montserratHeading text-[--foreground]`}
-              order={4}
-            >
-              Default Model
-            </Title>
-            <Text
-              className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph`}
-              size="sm"
-            >
-              Choose the default model for your chatbot. Users can still
-              override this default.
-            </Text>
-            <div className="flex justify-center">
-              {llmProviders && (
-                <NewModelDropdown
-                  value={findDefaultModel(llmProviders) as AnySupportedModel}
-                  onChange={(newDefaultModel) => {
-                    const modelWithProvider = {
-                      ...newDefaultModel,
-                      provider:
-                        (newDefaultModel as any).provider ||
-                        findDefaultModel(llmProviders)?.provider,
-                    }
-                    setDefaultModelAndUpdateProviders(
-                      modelWithProvider as AnySupportedModel & {
-                        provider: ProviderNames
-                      },
-                    )
-                    return form.handleSubmit()
-                  }}
-                  llmProviders={llmProviders}
-                  isSmallScreen={isSmallScreen}
-                />
-              )}
-            </div>
-          </div>
         </div>
       </form>
     </div>
