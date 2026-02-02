@@ -152,9 +152,6 @@ export const OpenAIStream = async (
         OPENAI_ORGANIZATION && {
           'OpenAI-Organization': OPENAI_ORGANIZATION,
         }),
-      ...(apiType === ProviderNames.NCSAHostedVLM && {
-        Authorization: `Bearer ${provider!.apiKey}`,
-      }),
     },
     method: 'POST',
     body: body,
