@@ -2258,7 +2258,6 @@ export const ChatMessage = memo(
                           type="button"
                           className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
                           onClick={() => handleSourcesSidebarToggle(true)}
-                          aria-label={`Sources (${getContextsLength(displayContexts)})`}
                         >
                           <span
                             className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}

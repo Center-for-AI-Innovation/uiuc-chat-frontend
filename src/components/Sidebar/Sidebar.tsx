@@ -167,11 +167,7 @@ const Sidebar = <T,>({
           <div
             role="button"
             tabIndex={permission === 'edit' ? 0 : -1}
-            aria-label={
-              courseName
-                ? `Open ${courseName} dashboard`
-                : 'Open Admin Dashboard'
-            }
+            aria-label="Open Admin Dashboard"
             aria-hidden={permission !== 'edit'}
             className={`flex items-center justify-start gap-3 rounded-lg bg-[--sidebar-background] p-2 text-[--foreground] transition-colors md:gap-4 md:p-3 ${permission === 'edit' ? 'cursor-pointer hover:bg-[--navbar-hover-background]' : 'cursor-default'}`}
             onClick={
