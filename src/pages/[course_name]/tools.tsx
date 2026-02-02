@@ -1,6 +1,5 @@
 import { type NextPage } from 'next'
 import React, { useEffect, useState } from 'react'
-import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
@@ -14,11 +13,9 @@ import { Title } from '@mantine/core'
 import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
+import { montserrat_heading } from 'fonts'
 
-const montserrat = Montserrat({
-  weight: '700',
-  subsets: ['latin'],
-})
+const montserrat = montserrat_heading
 
 const ToolsPage: NextPage = () => {
   const router = useRouter()

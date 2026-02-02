@@ -1,7 +1,6 @@
 // src/pages/[course_name]/prompt.tsx
 'use client'
 import { type NextPage } from 'next'
-import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 import React, { useEffect, useRef, useState } from 'react'
 
@@ -84,10 +83,7 @@ import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
 import { useTranslation } from 'next-i18next'
 
-const montserrat = Montserrat({
-  weight: '700',
-  subsets: ['latin'],
-})
+const montserrat = montserrat_heading
 
 type PartialCourseMetadata = {
   [K in keyof CourseMetadata]?: CourseMetadata[K]
