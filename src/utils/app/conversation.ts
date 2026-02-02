@@ -184,6 +184,7 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
             console.warn(
               'localStorage quota exceeded in saveConversationToLocalStorage, saving minimal conversation data instead',
             )
+            clearSingleOldestConversation()
 
             // Create a minimal version of the conversation with just essential data
             const minimalConversation = {
@@ -234,6 +235,7 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
             console.warn(
               'localStorage quota exceeded in saveConversationToLocalStorage, saving minimal conversation data instead',
             )
+            clearSingleOldestConversation()
 
             // Create a minimal version of the conversation with just essential data
             const minimalConversation = {
