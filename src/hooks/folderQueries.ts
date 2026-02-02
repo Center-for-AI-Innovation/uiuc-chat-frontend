@@ -32,6 +32,7 @@ export function useCreateFolder(
       saveFolderToServer(newFolder, course_name, user_email),
     onMutate: async (newFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
+      const oldFolders = queryClient.getQueryData(['folders', course_name])
 
       queryClient.setQueryData(
         ['folders', course_name],
@@ -40,8 +41,6 @@ export function useCreateFolder(
           return [newFolder, ...safeOld]
         },
       )
-
-      const oldFolders = queryClient.getQueryData(['folders', course_name])
 
       return { newFolder, oldFolders }
     },
@@ -69,6 +68,7 @@ export function useUpdateFolder(
       saveFolderToServer(folder, course_name, user_email),
     onMutate: async (updatedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
+      const oldFolder = queryClient.getQueryData(['folders', course_name])
 
       queryClient.setQueryData(
         ['folders', course_name],
@@ -82,8 +82,6 @@ export function useUpdateFolder(
           })
         },
       )
-
-      const oldFolder = queryClient.getQueryData(['folders', course_name])
 
       return { oldFolder, updatedFolder }
     },
@@ -114,6 +112,7 @@ export function useDeleteFolder(
       deleteFolderFromServer(deletedFolder, course_name, user_email),
     onMutate: async (deletedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
+      const oldFolder = queryClient.getQueryData(['folders', course_name])
 
       queryClient.setQueryData(
         ['folders', course_name],
@@ -124,8 +123,6 @@ export function useDeleteFolder(
           )
         },
       )
-
-      const oldFolder = queryClient.getQueryData(['folders', course_name])
 
       return { oldFolder, deletedFolder }
     },

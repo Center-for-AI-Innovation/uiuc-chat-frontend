@@ -366,8 +366,7 @@ export default function GitHubIngestForm({
         withBorder: true,
         loading: false,
       })
-      // return error
-      // throw error
+      throw error
     }
   }
 

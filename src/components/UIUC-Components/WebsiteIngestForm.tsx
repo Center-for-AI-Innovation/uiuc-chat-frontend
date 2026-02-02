@@ -119,35 +119,41 @@ export default function WebsiteIngestForm({
   })
 
   const handleIngest = async () => {
+    const ingestUrl = url
+    const ingestMaxUrls = maxUrls
+    const ingestStrategy = scrapeStrategy
+    const maxUrlsHasError = inputErrors.maxUrls.error
+    const urlIsValid = isUrlValid
+
     setOpen(false)
 
-    if (inputErrors.maxUrls.error) {
+    if (maxUrlsHasError) {
       alert('Invalid max URLs input (1 to 500)')
       return
     }
 
-    if (isUrlValid) {
+    if (urlIsValid) {
       const newFile: FileUpload = {
-        name: url,
+        name: ingestUrl,
         status: 'uploading',
         type: 'webscrape',
-        url: url,
+        url: ingestUrl,
         isBaseUrl: true,
       }
       setUploadFiles((prevFiles) => [...prevFiles, newFile])
 
       try {
         const response = await scrapeWeb(
-          url,
+          ingestUrl,
           project_name,
-          maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
-          scrapeStrategy,
+          ingestMaxUrls.trim() !== '' ? parseInt(ingestMaxUrls) : 50,
+          ingestStrategy,
         )
       } catch (error: unknown) {
         console.error('Error while scraping web:', error)
         setUploadFiles((prevFiles) =>
           prevFiles.map((file) =>
-            file.name === url ? { ...file, status: 'error' } : file,
+            file.name === ingestUrl ? { ...file, status: 'error' } : file,
           ),
         )
         // Remove the timeout since we're handling errors properly now
@@ -346,8 +352,7 @@ export default function WebsiteIngestForm({
         withBorder: true,
         loading: false,
       })
-      // return error
-      // throw error
+      throw error
     }
   }
 
