@@ -19,12 +19,18 @@ describe('SetExampleQuestions', () => {
       />,
     )
 
-    const inputs = screen.getAllByLabelText(/Example question/i)
+    const inputs = screen.getAllByPlaceholderText(
+      /Add sample queries to illustrate usage/i,
+    )
     expect(inputs).toHaveLength(1)
 
     fireEvent.change(inputs[0]!, { target: { value: 'What is a monad?' } })
     await waitFor(() =>
-      expect(screen.getAllByLabelText(/Example question/i)).toHaveLength(2),
+      expect(
+        screen.getAllByPlaceholderText(
+          /Add sample queries to illustrate usage/i,
+        ),
+      ).toHaveLength(2),
     )
   })
 
@@ -36,12 +42,18 @@ describe('SetExampleQuestions', () => {
       />,
     )
 
-    const inputs = screen.getAllByLabelText(/Example question/i)
+    const inputs = screen.getAllByPlaceholderText(
+      /Add sample queries to illustrate usage/i,
+    )
     expect(inputs).toHaveLength(2)
 
     fireEvent.focus(inputs[1]!)
     await waitFor(() =>
-      expect(screen.getAllByLabelText(/Example question/i)).toHaveLength(3),
+      expect(
+        screen.getAllByPlaceholderText(
+          /Add sample queries to illustrate usage/i,
+        ),
+      ).toHaveLength(3),
     )
   })
 
@@ -58,14 +70,25 @@ describe('SetExampleQuestions', () => {
     )
 
     // Type a second question (the component appends an empty input when typing in the last).
-    const firstInput = screen.getAllByLabelText(/Example question/i)[0]!
+    const firstInput = screen.getAllByPlaceholderText(
+      /Add sample queries to illustrate usage/i,
+    )[0]!
     await user.type(firstInput, 'Q1')
     await waitFor(() =>
-      expect(screen.getAllByLabelText(/Example question/i)).toHaveLength(2),
+      expect(
+        screen.getAllByPlaceholderText(
+          /Add sample queries to illustrate usage/i,
+        ),
+      ).toHaveLength(2),
     )
-    await user.type(screen.getAllByLabelText(/Example question/i)[1]!, 'Q2')
+    await user.type(
+      screen.getAllByPlaceholderText(
+        /Add sample queries to illustrate usage/i,
+      )[1]!,
+      'Q2',
+    )
 
-    fireEvent.click(screen.getByRole('button', { name: /Submit/i }))
+    fireEvent.click(screen.getAllByRole('button', { name: /Save/i })[0]!)
 
     await waitFor(() =>
       expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith('CS101', {
@@ -86,7 +109,7 @@ describe('SetExampleQuestions', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /Submit/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Save/i }))
 
     expect(alertSpy).toHaveBeenCalledWith('Course name is required')
     expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
