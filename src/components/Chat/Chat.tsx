@@ -53,7 +53,6 @@ import { MLCEngine } from '@mlc-ai/web-llm'
 import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { motion } from 'framer-motion'
-import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
@@ -83,10 +82,7 @@ import {
 } from '~/utils/streamProcessing'
 import { createLogConversationPayload } from '@/utils/app/conversation'
 
-const montserrat_med = Montserrat({
-  weight: '500',
-  subsets: ['latin'],
-})
+const montserrat_med = montserrat_paragraph
 
 const DEFAULT_DOCUMENT_GROUP = {
   id: 'DocGroup-all',
