@@ -149,14 +149,14 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         }}
       >
         <button
-          tabIndex={0}
-          aria-label="Copy"
+          type="button"
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
               ? 'opacity-100'
               : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
           }`}
           onClick={copyOnClick}
+          aria-label="Copy message"
         >
           {messagedCopied ? (
             <IconCheck
@@ -184,14 +184,14 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         }}
       >
         <button
-          tabIndex={0}
-          aria-label={isThumbsUp ? 'Remove Good Response' : 'Good Response'}
+          type="button"
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
               ? 'opacity-100'
               : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
           }`}
           onClick={handleThumbsUp}
+          aria-label="Good response"
         >
           <div
             className={
@@ -224,14 +224,14 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         }}
       >
         <button
-          tabIndex={0}
-          aria-label={isThumbsDown ? 'Remove Bad Response' : 'Bad Response'}
+          type="button"
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
               ? 'opacity-100'
               : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
           }`}
           onClick={handleThumbsDown}
+          aria-label="Bad response"
         >
           {isThumbsDown ? (
             <IconThumbDownFilled size={20} />
@@ -256,8 +256,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         }}
       >
         <button
-          tabIndex={0}
-          aria-label="Regenerate Response"
+          type="button"
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
               ? 'opacity-100'
@@ -265,6 +264,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           } ${isRegenerating ? 'animate-spin' : ''}`}
           onClick={handleRegenerate}
           disabled={isRegenerating}
+          aria-label="Regenerate response"
         >
           <IconRepeat size={20} />
         </button>

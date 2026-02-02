@@ -1,21 +1,21 @@
 // Generated schema.ts based on PostgreSQL database
+import { relations } from 'drizzle-orm'
 import {
+  bigint,
+  bigserial,
+  boolean,
+  date,
+  doublePrecision,
+  integer,
+  jsonb,
   pgTable,
   serial,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
-  integer,
-  boolean,
-  jsonb,
-  bigint,
-  date,
-  doublePrecision,
-  bigserial,
-  uniqueIndex,
 } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
 
 // API keys table
 export const apiKeys = pgTable('api_keys', {
@@ -225,7 +225,7 @@ export const courseNames = pgTable('course_names', {
 export const docGroups = pgTable(
   'doc_groups',
   {
-    id: serial('id').primaryKey(),
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
     name: text('name').notNull(),
     course_name: text('course_name').notNull(),
     created_at: timestamp('created_at').defaultNow(),
@@ -433,20 +433,20 @@ export const pubmedDailyUpdate = pgTable('pubmed_daily_update', {
 
 // Keycloak user_entity table schema
 export const keycloakUsers = pgTable('user_entity', {
-  id: text('id').primaryKey(),
-  email: text('email'),
-  email_constraint: text('email_constraint'),
-  email_verified: boolean('email_verified').notNull().default(false),
-  enabled: boolean('enabled').notNull().default(false),
-  federation_link: text('federation_link'),
-  first_name: text('first_name'),
-  last_name: text('last_name'),
-  realm_id: text('realm_id'),
-  username: text('username'),
-  created_timestamp: bigint('created_timestamp', { mode: 'number' }),
-  service_account_client_link: text('service_account_client_link'),
-  not_before: integer('not_before').notNull().default(0),
-})
+    id: text('id').primaryKey(),
+    email: text('email'),
+    email_constraint: text('email_constraint'),
+    email_verified: boolean('email_verified').notNull().default(false),
+    enabled: boolean('enabled').notNull().default(false),
+    federation_link: text('federation_link'),
+    first_name: text('first_name'),
+    last_name: text('last_name'),
+    realm_id: text('realm_id'),
+    username: text('username'),
+    created_timestamp: bigint('created_timestamp', { mode: 'number' }),
+    service_account_client_link: text('service_account_client_link'),
+    not_before: integer('not_before').notNull().default(0),
+  })
 
 // Table relationships
 export const llmGuidedSectionsRelations = relations(

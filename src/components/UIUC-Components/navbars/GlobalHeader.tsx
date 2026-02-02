@@ -98,7 +98,7 @@ export function LandingPageHeader({
   const [headerHeight, setHeaderHeight] = useState(60)
   const posthog = usePostHog()
   const [menuVisible, setMenuVisible] = useState(false)
-  const menuButtonRef = useRef<HTMLDivElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
   const [menuPosition, setMenuPosition] = useState({ right: '20px' })
 
   // Determine which elements should be visible based on screen width
@@ -444,16 +444,15 @@ export function LandingPageHeader({
 
           {/* Hamburger menu for small screens */}
           {showHamburgerMenu && (
-            <div
-              role="button"
-              tabIndex={0}
-              aria-label="Toggle Menu"
+            <button
               className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
               onClick={(e) => toggleMenu(e)}
               ref={menuButtonRef}
+              type="button"
+              aria-label="Open menu"
             >
               <Menu2 size={24} strokeWidth={2} color="var(--illinois-orange)" />
-            </div>
+            </button>
           )}
         </div>
 

@@ -5,7 +5,7 @@ import { routeModelRequest } from '~/utils/streamProcessing'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { withCourseAccessFromRequest } from '~/app/api/authorization'
-import { reconstructConversation } from '@/hooks/__internal__/conversation'
+import { reconstructConversation } from '@/utils/app/conversation'
 import { persistMessageServer } from '~/pages/api/conversation'
 
 export const runtime = 'nodejs'

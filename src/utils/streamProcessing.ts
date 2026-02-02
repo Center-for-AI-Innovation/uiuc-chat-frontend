@@ -1,4 +1,3 @@
-import { type CoreMessage } from 'ai'
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import posthog from 'posthog-js'
 import { v4 as uuidv4 } from 'uuid'
@@ -21,7 +20,7 @@ import {
 } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { getBaseUrl } from '~/utils/apiUtils'
-import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
+import { createLogConversationPayload } from '~/utils/app/conversation'
 import {
   type AllLLMProviders,
   AllSupportedModels,
@@ -81,7 +80,7 @@ export async function processChunkWithStateMachine(
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
 
-  if (!chunk) {
+  if (!chunk && !buffer) {
     return ''
   }
 
@@ -247,12 +246,6 @@ export async function processChunkWithStateMachine(
   // Update the state machine context
   stateMachineContext.state = state
   stateMachineContext.buffer = buffer
-
-  // Only output buffer content if we're in Normal state and not potentially mid-tag
-  if (buffer.length > 0 && state === State.Normal && !buffer.startsWith('<')) {
-    processedChunk += buffer
-    buffer = ''
-  }
 
   return processedChunk
 }
@@ -742,58 +735,6 @@ export const getOpenAIKey = (
   // console.log('OpenAI key found for getOpenAIKey:', key)
   // console.log('llmProviders:', llmProviders)
   return key
-}
-
-// Helper function to convert conversation to Vercel AI SDK v3 format
-function convertMessagesToVercelAISDKv3(
-  conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
-
-  const systemMessage = conversation.messages.findLast(
-    (msg) => msg.latestSystemMessage !== undefined,
-  )
-  if (systemMessage) {
-    coreMessages.push({
-      role: 'system',
-      content: systemMessage.latestSystemMessage || '',
-    })
-  }
-
-  conversation.messages.forEach((message, index) => {
-    if (message.role === 'system') return
-
-    let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
-    } else if (Array.isArray(message.content)) {
-      // Handle both text and file content
-      const textParts: string[] = []
-
-      message.content.forEach((c) => {
-        if (c.type === 'text') {
-          textParts.push(c.text || '')
-        } else if (c.type === 'file') {
-          // Convert file content to text representation for commercial models
-          textParts.push(
-            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
-          )
-        }
-        // Note: image_url and other content types may need special handling
-      })
-
-      content = textParts.join('\n')
-    } else {
-      content = message.content as string
-    }
-
-    coreMessages.push({
-      role: message.role as 'user' | 'assistant',
-      content: content,
-    })
-  })
-
-  return coreMessages
 }
 
 export const routeModelRequest = async (

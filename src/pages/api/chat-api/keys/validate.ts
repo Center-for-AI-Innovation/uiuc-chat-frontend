@@ -60,7 +60,7 @@ export async function validateApiKeyAndRetrieveData(apiKey: string) {
       userData = rows.length > 0 ? rows[0] : null
     } else {
       console.log(
-        'Using UIUC Chat config: use raw SQL to fetch user data from keycloak.user_entity.',
+        'Using UIUC.chat config: use raw SQL to fetch user data from keycloak.user_entity.',
       )
       // raw SQL to avoid schema issues
       const result = await client`

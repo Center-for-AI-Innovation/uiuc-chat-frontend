@@ -44,7 +44,7 @@ import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 import {
   saveConversationToServer,
   createLogConversationPayload,
-} from '@/hooks/__internal__/conversation'
+} from '@/utils/app/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -2231,6 +2231,8 @@ export const ChatMessage = memo(
                               aria-label="Edit Message"
                               className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
                                 ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
+                              type="button"
+                              aria-label="Edit message"
                               onClick={toggleEditing}
                             >
                               <IconEdit
@@ -2255,17 +2257,10 @@ export const ChatMessage = memo(
                     {shouldShowSources && (
                       <div className="relative z-0 mb-1 flex justify-start">
                         <button
-                          tabIndex={0}
-                          aria-label={
-                            'Open citations for ' +
-                            getContextsLength(message.contexts) +
-                            ' Source' +
-                            (getContextsLength(message.contexts) == 1
-                              ? ''
-                              : 's')
-                          }
+                          type="button"
                           className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
                           onClick={() => handleSourcesSidebarToggle(true)}
+                          aria-label={`Open citations for ${getContextsLength(displayContexts)} Source${getContextsLength(displayContexts) === 1 ? '' : 's'}`}
                         >
                           <span
                             className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}

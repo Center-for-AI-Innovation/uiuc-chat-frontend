@@ -75,10 +75,7 @@ const conversationToMessages = (
           role: message.role as 'user' | 'assistant' | 'system',
           content: contentParts,
         } as ChatCompletionMessageParam)
-      } else if (
-        contentParts.length === 1 &&
-        contentParts[0]?.type === 'text'
-      ) {
+      } else if (contentParts.length === 1 && contentParts[0]?.type === 'text') {
         const firstPart = contentParts[0]
         if (firstPart) {
           transformedData.push({
@@ -205,34 +202,36 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
   }
 
   // Determine API URL and model
+  if (isOpenAICompatible && (!providerBaseUrl || !apiKey || !modelId)) {
+    return NextResponse.json(
+      {
+        error: 'Missing required parameters: providerBaseUrl, apiKey, or modelId',
+      },
+      { status: 400 },
+    )
+  }
   let apiUrl = 'https://api.openai.com/v1/chat/completions'
   let isOpenRouter = false
-  let model = 'gpt-4.1'
-
-  if (providerBaseUrl && apiKey && modelId) {
+  if (isOpenAICompatible) {
+    // Remove trailing slash if present, then append /chat/completions
     const baseUrl = providerBaseUrl.replace(/\/$/, '')
     apiUrl = `${baseUrl}/chat/completions`
-
+    // Check if this is OpenRouter using proper hostname parsing
     try {
       const parsedUrl = new URL(providerBaseUrl)
       const hostname = parsedUrl.hostname.toLowerCase()
       isOpenRouter =
         hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
     } catch {
-      // ignore invalid URL
+      /* invalid URL */
     }
-
-    model = isOpenRouter ? modelId.toLowerCase() : modelId
-  } else if (isOpenAICompatible) {
-    // Defensive: should be unreachable given how isOpenAICompatible is computed
-    return NextResponse.json(
-      {
-        error:
-          'Missing required parameters: providerBaseUrl, apiKey, or modelId',
-      },
-      { status: 400 },
-    )
   }
+  // OpenRouter requires lowercase model IDs
+  const model = isOpenAICompatible
+    ? isOpenRouter
+      ? modelId.toLowerCase()
+      : modelId
+    : 'gpt-4.1'
 
   try {
     const headers: Record<string, string> = {
@@ -241,8 +240,18 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     }
     // OpenRouter requires these headers
     if (isOpenRouter) {
-      headers['HTTP-Referer'] = 'https://chat.illinois.edu'
-      headers['X-Title'] = 'Illinois Chat'
+      const forwardedProto = req.headers.get('x-forwarded-proto') ?? 'https'
+      const host = req.headers.get('host')
+      const inferredReferer = host ? `${forwardedProto}://${host}` : undefined
+
+      headers['HTTP-Referer'] =
+        process.env.OPENROUTER_HTTP_REFERER ||
+        inferredReferer ||
+        'https://chat.illinois.edu'
+      headers['X-Title'] =
+        process.env.OPENROUTER_X_TITLE ||
+        process.env.NEXT_PUBLIC_APP_NAME ||
+        'Illinois Chat'
     }
 
     const response = await fetch(apiUrl, {
@@ -264,12 +273,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
       const apiName = isOpenAICompatible
         ? 'OpenAI-compatible API'
         : 'OpenAI API'
-      console.error(
-        `${apiName} error:`,
-        response.status,
-        response.statusText,
-        errorBody,
-      )
+      console.error(`${apiName} error:`, response.status, response.statusText, errorBody)
       return NextResponse.json(
         { error: `${apiName} error: ${response.status}` },
         { status: response.status },
@@ -303,7 +307,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
 
     const toolCalls = data.choices[0].message.tool_calls
 
-    lastMessage.tools = toolCalls as unknown as typeof lastMessage.tools
+    lastMessage.tools = toolCalls as any
     await persistMessageServer({
       conversation,
       message: lastMessage,

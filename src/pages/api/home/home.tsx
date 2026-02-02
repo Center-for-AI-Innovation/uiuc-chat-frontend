@@ -26,15 +26,17 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-
-import { useFetchLastConversation } from '@/hooks/queries/useFetchLastConversation'
-import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
-
-import { useDeleteFolder } from '@/hooks/queries/useDeleteFolder'
-import { useUpdateFolder } from '@/hooks/queries/useUpdateFolder'
-import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
-import { useCreateFolder } from '@/hooks/queries/useCreateFolder'
-
+import {
+  useFetchConversationHistory,
+  useFetchLastConversation,
+  useUpdateConversation,
+} from '~/hooks/conversationQueries'
+import {
+  useCreateFolder,
+  useDeleteFolder,
+  useFetchFolders,
+  useUpdateFolder,
+} from '~/hooks/folderQueries'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
@@ -70,6 +72,8 @@ const Home = ({
   // Add these two new state setters
   const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
   const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
+  const [isDragging, setIsDragging] = useState<boolean>(false)
+  const [dragEnterCounter, setDragEnterCounter] = useState(0)
 
   // Hooks
   const { t } = useTranslation('chat')
@@ -571,7 +575,65 @@ const Home = ({
       <path d="M14 14l1 -1a3 5 0 0 1 3 0l2 2" />
     </svg>
   )
+  // EFFECTS for file drag and drop --------------------------------------------
+  useEffect(() => {
+    const handleDocumentDragOver = (e: DragEvent) => {
+      e.preventDefault()
+    }
 
+    const handleDocumentDragEnter = (e: DragEvent) => {
+      setDragEnterCounter((prev) => prev + 1)
+      setIsDragging(true)
+    }
+
+    const handleDocumentDragLeave = (e: DragEvent) => {
+      e.preventDefault()
+      setDragEnterCounter((prev) => {
+        const next = prev - 1
+        if (next <= 0 || !e.relatedTarget) {
+          setIsDragging(false)
+          return 0
+        }
+        return next
+      })
+    }
+
+    const handleDocumentDrop = (e: DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      setDragEnterCounter(0)
+    }
+
+    const handleDocumentKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsDragging(false)
+        setDragEnterCounter(0)
+      }
+    }
+
+    const handleMouseOut = (e: MouseEvent) => {
+      if (!e.relatedTarget) {
+        setIsDragging(false)
+        setDragEnterCounter(0)
+      }
+    }
+
+    document.addEventListener('dragover', handleDocumentDragOver)
+    document.addEventListener('dragenter', handleDocumentDragEnter)
+    document.addEventListener('dragleave', handleDocumentDragLeave)
+    document.addEventListener('drop', handleDocumentDrop)
+    document.addEventListener('keydown', handleDocumentKeyDown)
+    window.addEventListener('mouseout', handleMouseOut)
+
+    return () => {
+      document.removeEventListener('dragover', handleDocumentDragOver)
+      document.removeEventListener('dragenter', handleDocumentDragEnter)
+      document.removeEventListener('dragleave', handleDocumentDragLeave)
+      document.removeEventListener('drop', handleDocumentDrop)
+      document.removeEventListener('keydown', handleDocumentKeyDown)
+      window.removeEventListener('mouseout', handleMouseOut)
+    }
+  }, [])
   useEffect(() => {
     if (window.innerWidth < 640) {
       dispatch({ field: 'showChatbar', value: false })

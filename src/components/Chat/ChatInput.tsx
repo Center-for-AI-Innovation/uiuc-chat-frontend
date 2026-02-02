@@ -53,7 +53,7 @@ import { type CSSProperties } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
-import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
+import { fetchPresignedUrl, uploadToS3 } from '~/utils/apiUtils'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import {
   selectBestModel,
@@ -1240,6 +1240,8 @@ export const ChatInput = ({
                 className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center justify-center rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
                 onClick={handleSend}
                 style={{ pointerEvents: 'auto' }}
+                type="button"
+                aria-label="Send message"
               >
                 {messageIsStreaming ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
