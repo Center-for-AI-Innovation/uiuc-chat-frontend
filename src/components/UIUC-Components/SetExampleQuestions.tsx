@@ -76,6 +76,7 @@ export default function SetExampleQuestions({
               <TextInput
                 // withAsterisk
                 name="question"
+                aria-label="Example question"
                 placeholder="Add sample queries to illustrate usage of your AI."
                 className="w-full"
                 styles={{
@@ -97,30 +98,19 @@ export default function SetExampleQuestions({
                 onFocus={() => handleInputFocus(i)}
                 // onBlur={() => handleInputBlur(i)} I couldn't get this working to remove boxes...
               />
-
-              <Button
-                type="submit"
-                size={'xs'}
-                disabled={value === ''}
-                className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
-                onClick={async () => {}}
-              >
-                Save
-              </Button>
             </div>
           )
         })}
-        {/*
         <Group position="right" mt="md">
           <Button
             tabIndex={0}
             className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
             type="submit"
+            size="xs"
           >
-            Add
+            Submit
           </Button>
         </Group>
-*/}
       </form>
     </Box>
   )
