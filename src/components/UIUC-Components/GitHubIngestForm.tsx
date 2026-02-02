@@ -19,14 +19,11 @@ import {
 // import { Checkbox } from '@radix-ui/react-checkbox'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
-import { Montserrat } from 'next/font/google'
+import { montserrat_paragraph } from 'fonts'
 import { type FileUpload } from './UploadNotification'
 import Link from 'next/link'
 import { type QueryClient } from '@tanstack/react-query'
-const montserrat_med = Montserrat({
-  weight: '500',
-  subsets: ['latin'],
-})
+const montserrat_med = montserrat_paragraph
 export default function GitHubIngestForm({
   project_name,
   setUploadFiles,

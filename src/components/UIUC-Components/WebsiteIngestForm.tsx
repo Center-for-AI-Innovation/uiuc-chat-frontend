@@ -31,17 +31,13 @@ import {
 // import { ModelToggles } from '../ModelToggles'
 import { motion } from 'framer-motion'
 // import { Checkbox } from '@radix-ui/react-checkbox'
-import { montserrat_heading } from 'fonts'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { notifications } from '@mantine/notifications'
 import axios from 'axios'
-import { Montserrat } from 'next/font/google'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
 
-const montserrat_med = Montserrat({
-  weight: '500',
-  subsets: ['latin'],
-})
+const montserrat_med = montserrat_paragraph
 export default function WebsiteIngestForm({
   project_name,
   setUploadFiles,

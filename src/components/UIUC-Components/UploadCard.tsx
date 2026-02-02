@@ -20,7 +20,6 @@ import SetExampleQuestions from './SetExampleQuestions'
 // import { Checkbox } from '@radix-ui/react-checkbox'
 import { IconShare } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Montserrat } from 'next/font/google'
 import { memo, useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import CanvasIngestForm from './CanvasIngestForm'
@@ -32,10 +31,7 @@ import ShareSettingsModal from './ShareSettingsModal'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 import WebsiteIngestForm from './WebsiteIngestForm'
 
-const montserrat_light = Montserrat({
-  weight: '400',
-  subsets: ['latin'],
-})
+const montserrat_light = montserrat_paragraph
 
 const useStyles = createStyles((theme) => ({
   // For Accordion
