@@ -769,7 +769,7 @@ const Home = ({
             <Navbar isPlain={false} />
 
             <div className="flex h-full w-full overflow-y-auto sm:pt-0">
-              {isDragging &&
+              {/* {isDragging &&
                 VisionCapableModels.has(
                   selectedConversation?.model.id as any,
                 ) && (
@@ -779,7 +779,7 @@ const Home = ({
                       Drop your image here!
                     </span>
                   </div>
-                )}
+                )} */}
 
               <Chatbar
                 current_email={current_email}
