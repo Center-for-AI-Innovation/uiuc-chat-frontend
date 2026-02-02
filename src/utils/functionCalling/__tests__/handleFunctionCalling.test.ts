@@ -224,6 +224,47 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     expect(parsed.modelId).toBe('mixed-model')
   })
 
+  it('handleFunctionCall tolerates invalid OpenAICompatible baseUrl and keeps modelId casing', async () => {
+    const conversation: any = {
+      id: 'c1',
+      model: { id: 'MiXeD-Model', name: 'm', tokenLimit: 10, enabled: true },
+      messages: [{ id: 'u1', role: 'user', content: 'hi' }],
+    }
+    const message: any = { id: 'u1', role: 'user', content: 'hi' }
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: 'No tools needed', tool_calls: [] } }],
+        }),
+        { status: 200 },
+      ),
+    )
+
+    await handleFunctionCall(
+      message,
+      [],
+      [],
+      '',
+      conversation,
+      'ignored-openai-key',
+      'CS101',
+      undefined,
+      {
+        OpenAICompatible: {
+          enabled: true,
+          baseUrl: 'not-a-url',
+          apiKey: 'compat-key',
+          models: [{ id: 'mixed-model', enabled: true }],
+        },
+      } as any,
+    )
+
+    const [, options] = fetchSpy.mock.calls[0] as any
+    const parsed = JSON.parse(options.body)
+    expect(parsed.modelId).toBe('MiXeD-Model')
+  })
+
   it('handleFunctionCall returns [] when tool is not found in availableTools', async () => {
     const availableTools: any[] = []
     const conversation: any = {
