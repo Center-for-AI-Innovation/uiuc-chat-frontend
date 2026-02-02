@@ -262,6 +262,7 @@ export default function ShareSettingsModal({
               </div>
               <button
                 onClick={handleCopy}
+                aria-label="Copy share link"
                 className="flex min-w-[42px] items-center justify-center rounded-lg bg-[--dashboard-button] p-2.5 text-[--dashboard-button-foreground] transition-all duration-300 hover:bg-[--dashboard-button-hover] active:scale-95"
               >
                 {isCopied ? <IconCheck size={16} /> : <IconCopy size={16} />}

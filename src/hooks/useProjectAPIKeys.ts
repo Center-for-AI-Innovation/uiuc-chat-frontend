@@ -42,32 +42,38 @@ export function useGetProjectLLMProviders({
 }
 
 export function useSetProjectLLMProviders(queryClient: QueryClient) {
+  const pendingRef = useRef<
+    {
+      resolve: (value: unknown) => void
+      reject: (reason?: unknown) => void
+    }[]
+  >([])
+
   const debouncedApiCall = useMemo(
     () =>
       debounce(
-        (
-          variables: {
-            projectName: string
-            llmProviders: AllLLMProviders
-          },
-          resolve: (value: any) => void,
-          reject: (reason?: any) => void,
-        ) => {
-          fetch('/api/UIUC-api/upsertLLMProviders', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(variables),
-          })
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error('Failed to set LLM settings.')
-              }
-              return response.json()
+        async (variables: { projectName: string; llmProviders: AllLLMProviders }) => {
+          // Capture and clear pending promises at call time so an in-flight request
+          // can't resolve/reject promises added by later mutations.
+          const pending = pendingRef.current
+          pendingRef.current = []
+
+          try {
+            const response = await fetch('/api/UIUC-api/upsertLLMProviders', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(variables),
             })
-            .then(resolve)
-            .catch(reject)
+            if (!response.ok) {
+              throw new Error('Failed to set LLM settings.')
+            }
+            const data = await response.json()
+            pending.forEach(({ resolve }) => resolve(data))
+          } catch (err) {
+            pending.forEach(({ reject }) => reject(err))
+          }
         },
         1000,
         { maxWait: 10000 },
@@ -81,7 +87,8 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
       llmProviders: AllLLMProviders
     }) => {
       return new Promise((resolve, reject) => {
-        debouncedApiCall(variables, resolve, reject)
+        pendingRef.current.push({ resolve, reject })
+        debouncedApiCall(variables)
       })
     },
     onMutate: async (variables) => {
