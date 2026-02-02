@@ -1,9 +1,6 @@
 import { useRouter } from 'next/router'
 import { createStyles, rem, Title, useMantineTheme, Text } from '@mantine/core'
 import React, { useState } from 'react'
-import { Montserrat } from 'next/font/google'
-
-const montserrat = Montserrat({ weight: '700', subsets: ['latin'] })
 
 const useStyles = createStyles((theme) => ({
   wrapper: {

@@ -560,7 +560,6 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                   readOnly
                   rightSection={
                     <Button
-                      aria-label="Copy API Key"
                       onClick={() => handleCopyApiKey(apiKey)}
                       aria-label="Copy API key"
                       variant="subtle"
