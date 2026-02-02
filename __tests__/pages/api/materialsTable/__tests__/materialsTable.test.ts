@@ -117,8 +117,8 @@ describe('materialsTable API handlers', () => {
     expect(res2.status).toHaveBeenCalledWith(200)
     expect(res2.json).toHaveBeenCalledWith({
       documents: [
-        { readable_filename: 'Untitled Document' },
-        { readable_filename: 'Doc A' },
+        { readable_filename: 'Untitled Document', base_url: '', url: '' },
+        { readable_filename: 'Doc A', base_url: '', url: '' },
       ],
     })
   })

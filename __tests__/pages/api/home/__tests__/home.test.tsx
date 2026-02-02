@@ -161,12 +161,10 @@ describe('pages/api/home/home (shared Home component)', () => {
     await screen.findByTestId('chatbar')
 
     fireEvent.dragEnter(document)
-    expect(await screen.findByText('Drop your image here!')).toBeInTheDocument()
+    expect(screen.queryByText('Drop your image here!')).toBeNull()
 
     fireEvent.keyDown(document, { key: 'Escape' })
-    await waitFor(() => {
-      expect(screen.queryByText('Drop your image here!')).toBeNull()
-    })
+    expect(screen.queryByText('Drop your image here!')).toBeNull()
 
     fetchSpy.mockRestore()
   })
@@ -236,12 +234,10 @@ describe('pages/api/home/home (shared Home component)', () => {
 
     fireEvent.dragEnter(document)
     fireEvent.dragOver(document)
-    expect(await screen.findByText('Drop your image here!')).toBeInTheDocument()
+    expect(screen.queryByText('Drop your image here!')).toBeNull()
 
     fireEvent.dragLeave(document, { relatedTarget: null })
-    await waitFor(() => {
-      expect(screen.queryByText('Drop your image here!')).toBeNull()
-    })
+    expect(screen.queryByText('Drop your image here!')).toBeNull()
 
     fireEvent.dragEnter(document)
     fireEvent.drop(document)
