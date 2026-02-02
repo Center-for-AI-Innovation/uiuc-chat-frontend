@@ -12,6 +12,7 @@ import {
   saveConversationToLocalStorage,
   saveConversationToServer,
   saveConversations,
+  logConversationToServer,
 } from '../conversation'
 
 function makeConversation(overrides: Partial<Conversation> = {}): Conversation {
@@ -507,6 +508,39 @@ describe('conversation utils', () => {
   it('fetchLastConversation returns null when response is non-ok', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('no', { status: 500 }))
     await expect(fetchLastConversation('CS101')).resolves.toBeNull()
+  })
+
+  it('logConversationToServer returns parsed JSON on success', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+
+    await expect(logConversationToServer(makeConversation(), 'CS101')).resolves.toEqual({
+      ok: true,
+    })
+  })
+
+  it('logConversationToServer throws with a useful message when response is non-ok', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'bad' }), {
+        status: 500,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+
+    await expect(logConversationToServer(makeConversation(), 'CS101')).rejects.toThrow(
+      'Error logging conversation: bad',
+    )
+  })
+
+  it('logConversationToServer rethrows when fetch rejects', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
+
+    await expect(logConversationToServer(makeConversation(), 'CS101')).rejects.toThrow('boom')
   })
 
   it('saveConversations writes to localStorage', () => {

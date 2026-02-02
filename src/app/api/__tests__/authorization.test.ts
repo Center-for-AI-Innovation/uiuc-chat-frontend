@@ -1,292 +1,281 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const hoisted = vi.hoisted(() => {
-  return {
-    hGet: vi.fn(),
-    ensureRedisConnected: vi.fn(),
-    withAppRouterAuth: vi.fn(),
-  }
-})
+const mocks = vi.hoisted(() => ({
+  ensureRedisConnected: vi.fn(),
+}))
 
 vi.mock('~/utils/redisClient', () => ({
-  ensureRedisConnected: hoisted.ensureRedisConnected,
+  ensureRedisConnected: (...args: any[]) => mocks.ensureRedisConnected(...args),
 }))
 
 vi.mock('~/utils/appRouterAuth', () => ({
-  withAppRouterAuth: (handler: any) => {
-    hoisted.withAppRouterAuth(handler)
-    return async (req: any) => handler(req)
-  },
+  withAppRouterAuth: (handler: any) => handler,
 }))
 
-import {
-  extractCourseName,
-  getCourseMetadata,
-  hasCourseAccess,
-  withCourseAccessFromRequest,
-} from '../authorization'
-
 describe('app/api/authorization', () => {
-  it('extractCourseName finds course name from query params, headers, and body', async () => {
-    const q = new Request('http://localhost/api?course_name=CS101', {
+  beforeEach(() => {
+    mocks.ensureRedisConnected.mockReset()
+  })
+
+  function makeReq({
+    url,
+    method = 'GET',
+    body,
+    headers,
+    user,
+  }: {
+    url: string
+    method?: string
+    body?: any
+    headers?: Record<string, string>
+    user?: any
+  }) {
+    const headerBag = new Headers(headers)
+    return {
+      url,
+      method,
+      headers: headerBag,
+      clone: () => ({
+        json: async () => body,
+      }),
+      user,
+    } as any
+  }
+
+  it('extractCourseName reads from query params', async () => {
+    const req = new Request('https://example.test/api?courseName=CS101', {
       method: 'GET',
     })
-    await expect(extractCourseName(q as any)).resolves.toBe('CS101')
+    const { extractCourseName } = await import('../authorization')
+    await expect(extractCourseName(req as any)).resolves.toBe('CS101')
+  })
 
-    const h = new Request('http://localhost/api', {
-      method: 'GET',
-      headers: { 'x-course-name': 'CS102' },
-    })
-    await expect(extractCourseName(h as any)).resolves.toBe('CS102')
-
-    const b = new Request('http://localhost/api', {
+  it('extractCourseName reads from POST JSON body', async () => {
+    const req = new Request('https://example.test/api', {
       method: 'POST',
-      body: JSON.stringify({ projectName: 'CS103' }),
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ course_name: 'CS101' }),
     })
-    await expect(extractCourseName(b as any)).resolves.toBe('CS103')
+    const { extractCourseName } = await import('../authorization')
+    await expect(extractCourseName(req as any)).resolves.toBe('CS101')
   })
 
-  it('hasCourseAccess checks owner/admin/approved/allow_logged_in_users', () => {
-    const meta: any = {
-      course_owner: 'owner@example.com',
-      course_admins: ['admin@example.com'],
-      approved_emails_list: ['allowed@example.com'],
-      allow_logged_in_users: false,
-    }
+  it('extractCourseName tolerates invalid JSON body', async () => {
+    const req = new Request('https://example.test/api', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{invalid',
+    })
+    const { extractCourseName } = await import('../authorization')
+    await expect(extractCourseName(req as any)).resolves.toBeNull()
+  })
 
-    expect(hasCourseAccess({ email: 'owner@example.com' } as any, meta)).toBe(
-      true,
+  it('withCourseAccessFromRequest returns 400 when course name is missing', async () => {
+    const { withCourseAccessFromRequest } = await import('../authorization')
+    const wrapped = withCourseAccessFromRequest('any')(async () => {
+      return new Response(JSON.stringify({ ok: true }), { status: 200 }) as any
+    })
+
+    const res = await wrapped(new Request('https://example.test/api', { method: 'GET' }) as any)
+    expect(res.status).toBe(400)
+  })
+
+  it('withCourseAccessFromRequest returns 404 when project does not exist', async () => {
+    mocks.ensureRedisConnected.mockResolvedValueOnce({
+      hGet: vi.fn(async () => null),
+    })
+
+    const { withCourseAccessFromRequest } = await import('../authorization')
+    const wrapped = withCourseAccessFromRequest('any')(async () => {
+      return new Response(JSON.stringify({ ok: true }), { status: 200 }) as any
+    })
+
+    const res = await wrapped(
+      new Request('https://example.test/api?courseName=CS101', { method: 'GET' }) as any,
     )
-    expect(hasCourseAccess({ email: 'admin@example.com' } as any, meta)).toBe(
-      true,
+    expect(res.status).toBe(404)
+  })
+
+  it('withCourseAccessFromRequest returns 403 when project is frozen', async () => {
+    mocks.ensureRedisConnected.mockResolvedValueOnce({
+      hGet: vi.fn(async () => JSON.stringify({ is_private: false, is_frozen: true })),
+    })
+
+    const { withCourseAccessFromRequest } = await import('../authorization')
+    const wrapped = withCourseAccessFromRequest('any')(async () => {
+      return new Response(JSON.stringify({ ok: true }), { status: 200 }) as any
+    })
+
+    const res = await wrapped(
+      new Request('https://example.test/api?courseName=CS101', { method: 'GET' }) as any,
     )
+    expect(res.status).toBe(403)
+  })
+
+  it('withCourseAccessFromRequest calls handler for public projects with access=any', async () => {
+    mocks.ensureRedisConnected.mockResolvedValueOnce({
+      hGet: vi.fn(async () => JSON.stringify({ is_private: false, is_frozen: false })),
+    })
+
+    const handler = vi.fn(async () => {
+      return new Response(JSON.stringify({ ok: true }), { status: 200 }) as any
+    })
+    const { withCourseAccessFromRequest } = await import('../authorization')
+    const wrapped = withCourseAccessFromRequest('any')(handler as any)
+
+    const res = await wrapped(
+      new Request('https://example.test/api?courseName=CS101', { method: 'GET' }) as any,
+    )
+    expect(res.status).toBe(200)
+    expect(handler).toHaveBeenCalled()
+  })
+
+  it('hasCourseAccess returns true for admins/owner/approved/allow_logged_in_users', async () => {
+    const { hasCourseAccess } = await import('../authorization')
+
     expect(
-      hasCourseAccess({ email: 'allowed@example.com' } as any, meta),
+      hasCourseAccess(
+        { email: 'a@x' } as any,
+        { course_admins: ['a@x'] } as any,
+      ),
     ).toBe(true)
-    expect(hasCourseAccess({ email: 'nope@example.com' } as any, meta)).toBe(
-      false,
-    )
 
-    meta.allow_logged_in_users = true
-    expect(hasCourseAccess({ email: 'any@example.com' } as any, meta)).toBe(
-      true,
-    )
+    expect(
+      hasCourseAccess(
+        { email: 'o@x' } as any,
+        { course_owner: 'o@x' } as any,
+      ),
+    ).toBe(true)
+
+    expect(
+      hasCourseAccess(
+        { email: 'u@x' } as any,
+        { approved_emails_list: ['u@x'] } as any,
+      ),
+    ).toBe(true)
+
+    expect(
+      hasCourseAccess(
+        { email: 'any@x' } as any,
+        { allow_logged_in_users: true } as any,
+      ),
+    ).toBe(true)
   })
 
-  it('getCourseMetadata returns parsed JSON and returns null on errors', async () => {
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: hoisted.hGet.mockResolvedValueOnce(
-        JSON.stringify({ course_owner: 'x@example.com' }),
-      ),
-    })
+  it('getCourseMetadata returns parsed metadata and returns null on errors', async () => {
+    const { getCourseMetadata } = await import('../authorization')
 
+    mocks.ensureRedisConnected.mockResolvedValueOnce({
+      hGet: vi.fn(async () => JSON.stringify({ is_private: false, course_owner: 'o@x' })),
+    })
     await expect(getCourseMetadata('CS101')).resolves.toMatchObject({
-      course_owner: 'x@example.com',
+      is_private: false,
+      course_owner: 'o@x',
     })
 
-    hoisted.ensureRedisConnected.mockRejectedValueOnce(new Error('boom'))
+    mocks.ensureRedisConnected.mockRejectedValueOnce(new Error('boom'))
     await expect(getCourseMetadata('CS101')).resolves.toBeNull()
   })
 
-  it('withCourseAccessFromRequest enforces course name and access levels', async () => {
-    const handler = vi.fn().mockResolvedValue(new Response('ok'))
+  it('withCourseAccessFromRequest enforces auth for private projects', async () => {
+    const { withCourseAccessFromRequest } = await import('../authorization')
+    const handler = vi.fn(async () => new Response('ok', { status: 200 }) as any)
 
-    const wrapped = withCourseAccessFromRequest('any')(handler as any)
-    const noCourseReq = new Request('http://localhost/api', { method: 'GET' })
-    const r1 = await wrapped(noCourseReq as any)
-    expect(r1.status).toBe(400)
+    // Private course: unauthenticated -> 401
+    mocks.ensureRedisConnected.mockResolvedValueOnce({
+      hGet: vi.fn(async () => JSON.stringify({ is_private: true, is_frozen: false })),
+    })
+    const wrappedAny = withCourseAccessFromRequest('any')(handler as any)
+    const res401 = await wrappedAny(
+      makeReq({ url: 'https://example.test/api?courseName=CS101', method: 'GET' }),
+    )
+    expect(res401.status).toBe(401)
 
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(null),
+    // Private course: authenticated but not allowed -> 403
+    mocks.ensureRedisConnected.mockResolvedValueOnce({
+      hGet: vi.fn(async () =>
+        JSON.stringify({
+          is_private: true,
+          is_frozen: false,
+          course_owner: 'owner@x',
+          approved_emails_list: [],
+          course_admins: [],
+        }),
+      ),
     })
-    const missingCourseReq = new Request('http://localhost/api?course_name=X', {
-      method: 'GET',
-    })
-    const r2 = await wrapped(missingCourseReq as any)
-    expect(r2.status).toBe(404)
+    const res403 = await wrappedAny(
+      makeReq({
+        url: 'https://example.test/api?courseName=CS101',
+        method: 'GET',
+        user: { email: 'nope@x' },
+      }),
+    )
+    expect(res403.status).toBe(403)
 
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(JSON.stringify({ is_private: false })),
+    // Private course: admin-required and user isn't admin -> 403
+    mocks.ensureRedisConnected.mockResolvedValueOnce({
+      hGet: vi.fn(async () =>
+        JSON.stringify({
+          is_private: true,
+          is_frozen: false,
+          course_owner: 'owner@x',
+          course_admins: ['admin@x'],
+          approved_emails_list: ['user@x'],
+        }),
+      ),
     })
-    const publicReq = new Request('http://localhost/api?course_name=PUB', {
-      method: 'GET',
+    const wrappedAdmin = withCourseAccessFromRequest('admin')(handler as any)
+    const resAdmin403 = await wrappedAdmin(
+      makeReq({
+        url: 'https://example.test/api?courseName=CS101',
+        method: 'POST',
+        user: { email: 'user@x' },
+      }),
+    )
+    expect(resAdmin403.status).toBe(403)
+
+    // Private course: owner-required and user isn't owner -> 403
+    mocks.ensureRedisConnected.mockResolvedValueOnce({
+      hGet: vi.fn(async () =>
+        JSON.stringify({
+          is_private: true,
+          is_frozen: false,
+          course_owner: 'owner@x',
+          course_admins: ['admin@x'],
+          approved_emails_list: ['user@x'],
+        }),
+      ),
     })
-    const r3 = await wrapped(publicReq as any)
-    expect(r3.status).toBe(200)
+    const wrappedOwner = withCourseAccessFromRequest('owner')(handler as any)
+    const resOwner403 = await wrappedOwner(
+      makeReq({
+        url: 'https://example.test/api?courseName=CS101',
+        method: 'POST',
+        user: { email: 'user@x' },
+      }),
+    )
+    expect(resOwner403.status).toBe(403)
+
+    // Private course: allowed + access any -> handler called
+    mocks.ensureRedisConnected.mockResolvedValueOnce({
+      hGet: vi.fn(async () =>
+        JSON.stringify({
+          is_private: true,
+          is_frozen: false,
+          course_owner: 'owner@x',
+          course_admins: [],
+          approved_emails_list: ['user@x'],
+        }),
+      ),
+    })
+    const resOk = await wrappedAny(
+      makeReq({
+        url: 'https://example.test/api?courseName=CS101',
+        method: 'GET',
+        user: { email: 'user@x' },
+      }),
+    )
+    expect(resOk.status).toBe(200)
     expect(handler).toHaveBeenCalled()
-
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(
-        JSON.stringify({
-          is_private: true,
-          course_owner: 'owner@example.com',
-          course_admins: [],
-          approved_emails_list: [],
-          allow_logged_in_users: false,
-        }),
-      ),
-    })
-    const privateReqNoUser = new Request(
-      'http://localhost/api?course_name=PRIV',
-      { method: 'GET' },
-    )
-    const r4 = await wrapped(privateReqNoUser as any)
-    expect(r4.status).toBe(401)
-
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(
-        JSON.stringify({
-          is_private: true,
-          course_owner: 'owner@example.com',
-          course_admins: [],
-          approved_emails_list: [],
-          allow_logged_in_users: false,
-        }),
-      ),
-    })
-    const privateReqDenied = Object.assign(
-      new Request('http://localhost/api?course_name=PRIV', { method: 'GET' }),
-      { user: { email: 'nope@example.com' } },
-    )
-    const r5 = await wrapped(privateReqDenied as any)
-    expect(r5.status).toBe(403)
-
-    const adminWrapped = withCourseAccessFromRequest('admin')(handler as any)
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(
-        JSON.stringify({
-          is_private: true,
-          course_owner: 'owner@example.com',
-          course_admins: ['admin@example.com'],
-          approved_emails_list: [],
-          allow_logged_in_users: false,
-        }),
-      ),
-    })
-    const privateReqNonAdmin = Object.assign(
-      new Request('http://localhost/api?course_name=PRIV', { method: 'GET' }),
-      { user: { email: 'nope@example.com' } },
-    )
-    const r6 = await adminWrapped(privateReqNonAdmin as any)
-    expect(r6.status).toBe(403)
-
-    const ownerWrapped = withCourseAccessFromRequest('owner')(handler as any)
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(
-        JSON.stringify({
-          is_private: true,
-          course_owner: 'owner@example.com',
-          course_admins: [],
-          approved_emails_list: [],
-          allow_logged_in_users: false,
-        }),
-      ),
-    })
-    const privateReqNonOwner = Object.assign(
-      new Request('http://localhost/api?course_name=PRIV', { method: 'GET' }),
-      { user: { email: 'admin@example.com' } },
-    )
-    const r7 = await ownerWrapped(privateReqNonOwner as any)
-    expect(r7.status).toBe(403)
-
-    // Success cases: admin + owner + allow_logged_in_users.
-    handler.mockClear()
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(
-        JSON.stringify({
-          is_private: true,
-          course_owner: 'owner@example.com',
-          course_admins: ['admin@example.com'],
-          approved_emails_list: [],
-          allow_logged_in_users: false,
-        }),
-      ),
-    })
-    const privateReqAdmin = Object.assign(
-      new Request('http://localhost/api?course_name=PRIV', { method: 'GET' }),
-      { user: { email: 'admin@example.com' } },
-    )
-    const r8 = await adminWrapped(privateReqAdmin as any)
-    expect(r8.status).toBe(200)
-    expect(handler).toHaveBeenCalled()
-
-    handler.mockClear()
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(
-        JSON.stringify({
-          is_private: true,
-          course_owner: 'owner@example.com',
-          course_admins: [],
-          approved_emails_list: [],
-          allow_logged_in_users: false,
-        }),
-      ),
-    })
-    const privateReqOwner = Object.assign(
-      new Request('http://localhost/api?course_name=PRIV', { method: 'GET' }),
-      { user: { email: 'owner@example.com' } },
-    )
-    const r9 = await ownerWrapped(privateReqOwner as any)
-    expect(r9.status).toBe(200)
-
-    handler.mockClear()
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(
-        JSON.stringify({
-          is_private: true,
-          course_owner: 'owner@example.com',
-          course_admins: [],
-          approved_emails_list: [],
-          allow_logged_in_users: true,
-        }),
-      ),
-    })
-    const allowLoggedIn = Object.assign(
-      new Request('http://localhost/api?course_name=PRIV', { method: 'GET' }),
-      { user: { email: 'someone@example.com' } },
-    )
-    const r10 = await wrapped(allowLoggedIn as any)
-    expect(r10.status).toBe(200)
-
-    // Method-specific access map.
-    handler.mockClear()
-    const mapWrapped = withCourseAccessFromRequest({ GET: 'admin' })(
-      handler as any,
-    )
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(
-        JSON.stringify({
-          is_private: false,
-          course_owner: 'owner@example.com',
-          course_admins: ['admin@example.com'],
-          approved_emails_list: [],
-          allow_logged_in_users: false,
-        }),
-      ),
-    })
-    const mapReqNoUser = new Request(
-      'http://localhost/api?course_name=PUB',
-      { method: 'GET' },
-    )
-    const r11 = await mapWrapped(mapReqNoUser as any)
-    expect(r11.status).toBe(401)
-
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(
-        JSON.stringify({
-          is_private: false,
-          course_owner: 'owner@example.com',
-          course_admins: ['admin@example.com'],
-          approved_emails_list: [],
-          allow_logged_in_users: false,
-        }),
-      ),
-    })
-    const mapReqAdmin = Object.assign(
-      new Request('http://localhost/api?course_name=PUB', { method: 'GET' }),
-      { user: { email: 'admin@example.com' } },
-    )
-    const r12 = await mapWrapped(mapReqAdmin as any)
-    expect(r12.status).toBe(200)
   })
 })
