@@ -109,6 +109,10 @@
 
   /* Font Variables */
   --font-montserrat-heading: 'Montserrat', sans-serif;
+  --font-montserratHeading: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --font-montserratParagraph: 'Montserrat', system-ui, -apple-system, sans-serif;
+  --font-doto: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
   --ring: var(--illinois-blue);
 
   --padding: 1rem;
