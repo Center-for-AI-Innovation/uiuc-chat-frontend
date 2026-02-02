@@ -2227,8 +2227,6 @@ export const ChatMessage = memo(
                             }}
                           >
                             <button
-                              tabIndex={0}
-                              aria-label="Edit Message"
                               className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
                                 ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
                               type="button"
@@ -2260,7 +2258,7 @@ export const ChatMessage = memo(
                           type="button"
                           className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
                           onClick={() => handleSourcesSidebarToggle(true)}
-                          aria-label={`Open citations for ${getContextsLength(displayContexts)} Source${getContextsLength(displayContexts) === 1 ? '' : 's'}`}
+                          aria-label={`Sources (${getContextsLength(displayContexts)})`}
                         >
                           <span
                             className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
