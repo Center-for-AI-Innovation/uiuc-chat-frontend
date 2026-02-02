@@ -13,12 +13,6 @@ const bundleAnalyzerConfig = {
 /** @type {import("next").NextConfig} */
 const config = {
   i18n: nextI18NextConfig.i18n,
-  eslint: {
-    // The repo currently emits a large number of lint warnings (especially in tests).
-    // Next's built-in lint step can fail the build on warnings depending on environment.
-    // Lint is run separately in CI via explicit scripts/workflows.
-    ignoreDuringBuilds: true,
-  },
   serverRuntimeConfig: {
     bodyParser: {
       sizeLimit: '100mb',
