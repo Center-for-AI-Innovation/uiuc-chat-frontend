@@ -52,7 +52,10 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
   const debouncedApiCall = useMemo(
     () =>
       debounce(
-        async (variables: { projectName: string; llmProviders: AllLLMProviders }) => {
+        async (variables: {
+          projectName: string
+          llmProviders: AllLLMProviders
+        }) => {
           // Capture and clear pending promises at call time so an in-flight request
           // can't resolve/reject promises added by later mutations.
           const pending = pendingRef.current
@@ -128,4 +131,3 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
     },
   })
 }
-

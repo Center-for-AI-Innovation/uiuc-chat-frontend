@@ -8,7 +8,9 @@ const hoisted = vi.hoisted(() => {
   const select = vi.fn(() => ({ from: selectFrom }))
 
   const insertOnConflictDoUpdate = vi.fn().mockResolvedValue(undefined)
-  const insertValues = vi.fn(() => ({ onConflictDoUpdate: insertOnConflictDoUpdate }))
+  const insertValues = vi.fn(() => ({
+    onConflictDoUpdate: insertOnConflictDoUpdate,
+  }))
   const insert = vi.fn(() => ({ values: insertValues }))
 
   return {
@@ -103,7 +105,11 @@ describe('UIUC-api/logConversation', () => {
                 latestSystemMessage: 'sys',
                 finalPromtEngineeredMessage: 'final',
               },
-              { id: 'm2', role: 'assistant', content: [{ type: 'text', text: 'ok' }] },
+              {
+                id: 'm2',
+                role: 'assistant',
+                content: [{ type: 'text', text: 'ok' }],
+              },
             ],
           },
         },

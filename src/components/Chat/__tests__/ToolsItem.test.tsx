@@ -48,4 +48,3 @@ describe('ToolsItem', () => {
     expect(screen.getByText('No tools found')).toBeInTheDocument()
   })
 })
-

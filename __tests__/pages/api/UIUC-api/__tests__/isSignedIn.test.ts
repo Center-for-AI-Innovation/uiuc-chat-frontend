@@ -25,4 +25,3 @@ describe('UIUC-api/isSignedIn', () => {
     expect(res.status).toHaveBeenCalledWith(200)
   })
 })
-

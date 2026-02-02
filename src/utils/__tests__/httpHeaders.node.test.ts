@@ -10,4 +10,3 @@ describe('createHeaders (node)', () => {
     })
   })
 })
-

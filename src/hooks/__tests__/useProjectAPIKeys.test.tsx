@@ -6,11 +6,16 @@ import {
   useGetProjectLLMProviders,
   useSetProjectLLMProviders,
 } from '../useProjectAPIKeys'
-import { ProviderNames, type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import {
+  ProviderNames,
+  type AllLLMProviders,
+} from '~/utils/modelProviders/LLMProvider'
 
 function createWrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
   }
 }
 
@@ -79,13 +84,19 @@ describe('useProjectAPIKeys hooks', () => {
     )
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
-    const { result } = renderHook(() => useSetProjectLLMProviders(queryClient), {
-      wrapper: Wrapper,
-    })
+    const { result } = renderHook(
+      () => useSetProjectLLMProviders(queryClient),
+      {
+        wrapper: Wrapper,
+      },
+    )
 
     const variables = { projectName: 'proj', llmProviders: makeProviders() }
 
@@ -109,21 +120,29 @@ describe('useProjectAPIKeys hooks', () => {
 
   it('useSetProjectLLMProviders rejects pending promises and invalidates on error', async () => {
     vi.useFakeTimers()
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
-      Promise.resolve(new Response('nope', { status: 500 })),
-    )
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(() =>
+        Promise.resolve(new Response('nope', { status: 500 })),
+      )
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     queryClient.setQueryData(['projectLLMProviders', 'proj'], makeProviders())
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
     const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData')
 
     const Wrapper = createWrapper(queryClient)
-    const { result } = renderHook(() => useSetProjectLLMProviders(queryClient), {
-      wrapper: Wrapper,
-    })
+    const { result } = renderHook(
+      () => useSetProjectLLMProviders(queryClient),
+      {
+        wrapper: Wrapper,
+      },
+    )
 
     const variables = { projectName: 'proj', llmProviders: makeProviders() }
     const p1 = result.current.mutateAsync(variables)
@@ -165,12 +184,18 @@ describe('useProjectAPIKeys hooks', () => {
       .mockImplementationOnce(() => secondResponse)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
-    const { result } = renderHook(() => useSetProjectLLMProviders(queryClient), {
-      wrapper: Wrapper,
-    })
+    const { result } = renderHook(
+      () => useSetProjectLLMProviders(queryClient),
+      {
+        wrapper: Wrapper,
+      },
+    )
 
     const variables1 = { projectName: 'proj', llmProviders: makeProviders() }
     const variables2 = { projectName: 'proj', llmProviders: makeProviders() }

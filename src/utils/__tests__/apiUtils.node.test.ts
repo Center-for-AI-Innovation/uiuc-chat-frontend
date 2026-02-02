@@ -24,4 +24,3 @@ describe('getBaseUrl (node)', () => {
     expect(getBaseUrl()).toBe('http://localhost:4321')
   })
 })
-

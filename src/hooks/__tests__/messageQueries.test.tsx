@@ -13,18 +13,26 @@ const { deleteMessagesFromServer } = await import('~/utils/app/message')
 
 describe('useDeleteMessages', () => {
   it('maps deletedMessages to messageIds', async () => {
-    ;(deleteMessagesFromServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined)
+    ;(
+      deleteMessagesFromServer as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue(undefined)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )
 
-    const { result } = renderHook(() => useDeleteMessages('user@example.com', 'CS101'), {
-      wrapper: Wrapper,
-    })
+    const { result } = renderHook(
+      () => useDeleteMessages('user@example.com', 'CS101'),
+      {
+        wrapper: Wrapper,
+      },
+    )
 
     const deletedMessages: Message[] = [
       { id: 'm1', role: 'user', content: 'a' },

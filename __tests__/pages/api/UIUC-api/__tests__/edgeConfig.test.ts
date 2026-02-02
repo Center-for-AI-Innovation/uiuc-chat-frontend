@@ -18,7 +18,10 @@ vi.mock('axios', async () => {
   }
 })
 
-import { addConfigV2, addEdgeConfigItem } from '~/pages/api/UIUC-api/addCourseEdgeConfig'
+import {
+  addConfigV2,
+  addEdgeConfigItem,
+} from '~/pages/api/UIUC-api/addCourseEdgeConfig'
 
 describe('UIUC-api edge config helpers', () => {
   const originalEnv = { ...process.env }
@@ -47,7 +50,6 @@ describe('UIUC-api edge config helpers', () => {
       'https://edge.example/items',
       expect.objectContaining({ method: 'PATCH' }),
     )
-
     ;(fetchMock as any).mockRejectedValueOnce(new Error('boom'))
     await expect(addEdgeConfigItem('CS101')).resolves.toBeUndefined()
   })
@@ -62,4 +64,3 @@ describe('UIUC-api edge config helpers', () => {
     await expect(addConfigV2('CS101')).resolves.toEqual([])
   })
 })
-

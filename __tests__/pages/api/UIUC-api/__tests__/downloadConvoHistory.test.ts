@@ -58,4 +58,3 @@ describe('UIUC-api/downloadConvoHistory', () => {
     expect(res2.send).toHaveBeenCalled()
   })
 })
-

@@ -37,7 +37,10 @@ import handler from '~/pages/api/UIUC-api/upsertCourseMetadata'
 describe('UIUC-api/upsertCourseMetadata', () => {
   it('returns 400 when courseName is missing', async () => {
     const res = createMockRes()
-    await handler(createMockReq({ method: 'POST', body: {} }) as any, res as any)
+    await handler(
+      createMockReq({ method: 'POST', body: {} }) as any,
+      res as any,
+    )
     expect(res.status).toHaveBeenCalledWith(400)
   })
 
@@ -65,4 +68,3 @@ describe('UIUC-api/upsertCourseMetadata', () => {
     expect(hoisted.hSet).toHaveBeenCalled()
   })
 })
-

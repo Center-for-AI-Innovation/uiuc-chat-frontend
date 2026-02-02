@@ -49,7 +49,10 @@ describe('UIUC-api S3 routes', () => {
     )
     expect(res1.status).toHaveBeenCalledWith(400)
 
-    hoisted.createPresignedPost.mockResolvedValueOnce({ url: 'u', fields: { key: 'k' } })
+    hoisted.createPresignedPost.mockResolvedValueOnce({
+      url: 'u',
+      fields: { key: 'k' },
+    })
     const res2 = createMockRes()
     await uploadToS3Handler(
       createMockReq({
@@ -70,7 +73,10 @@ describe('UIUC-api S3 routes', () => {
 
   it('getPresignedUrl returns 405 for non-GET and 200 for normal courses', async () => {
     const res1 = createMockRes()
-    await getPresignedUrlHandler(createMockReq({ method: 'POST' }) as any, res1 as any)
+    await getPresignedUrlHandler(
+      createMockReq({ method: 'POST' }) as any,
+      res1 as any,
+    )
     expect(res1.status).toHaveBeenCalledWith(405)
 
     hoisted.getSignedUrl.mockResolvedValueOnce('https://signed.example')
@@ -83,7 +89,9 @@ describe('UIUC-api S3 routes', () => {
       res2 as any,
     )
     expect(res2.status).toHaveBeenCalledWith(200)
-    expect(res2.json).toHaveBeenCalledWith({ presignedUrl: 'https://signed.example' })
+    expect(res2.json).toHaveBeenCalledWith({
+      presignedUrl: 'https://signed.example',
+    })
   })
 
   it('getPresignedUrl returns 500 for vyriad/pubmed when MinIO client is missing', async () => {
@@ -98,4 +106,3 @@ describe('UIUC-api S3 routes', () => {
     expect(res.status).toHaveBeenCalledWith(500)
   })
 })
-

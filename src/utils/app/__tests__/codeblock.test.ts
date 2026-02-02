@@ -9,4 +9,3 @@ describe('programmingLanguages', () => {
     expect(programmingLanguages.sql).toBe('.sql')
   })
 })
-

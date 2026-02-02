@@ -9,17 +9,17 @@ export type RequestWithBodyModel = RequestModel & {
 }
 
 export const useFetch = () => {
-  const handleFetch = async (
-    url: string,
-    request: any,
-  ) => {
+  const handleFetch = async (url: string, request: any) => {
     const { params, signal, ...requestWithoutParams } = request ?? {}
     const requestUrl = params ? `${url}${params}` : url
 
     const requestBody = requestWithoutParams?.body
       ? requestWithoutParams.body instanceof FormData
         ? { ...requestWithoutParams, body: requestWithoutParams.body }
-        : { ...requestWithoutParams, body: JSON.stringify(requestWithoutParams.body) }
+        : {
+            ...requestWithoutParams,
+            body: JSON.stringify(requestWithoutParams.body),
+          }
       : requestWithoutParams
 
     const headers = {

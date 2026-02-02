@@ -79,4 +79,3 @@ describe('s3Client', () => {
     )
   })
 })
-

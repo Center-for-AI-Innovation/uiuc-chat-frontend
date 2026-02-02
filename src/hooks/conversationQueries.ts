@@ -100,7 +100,11 @@ export function useUpdateConversation(
   course_name: string,
 ) {
   // console.log('useUpdateConversation with user_email: ', user_email)
-  const conversationHistoryKey = ['conversationHistory', course_name, ''] as const
+  const conversationHistoryKey = [
+    'conversationHistory',
+    course_name,
+    '',
+  ] as const
 
   return useMutation({
     mutationKey: ['updateConversation', user_email, course_name],
@@ -118,10 +122,9 @@ export function useUpdateConversation(
       // 2. Use the queryClient to update the conversationHistory query result
       // 3. Add the old conversation to the context
       // 4. Return the updated conversation and old conversation to the success handler
-      const previousConversationHistory =
-        queryClient.getQueryData<InfiniteData<ConversationPage>>(
-          conversationHistoryKey,
-        )
+      const previousConversationHistory = queryClient.getQueryData<
+        InfiniteData<ConversationPage>
+      >(conversationHistoryKey)
       const previousFolders = updatedConversation.folderId
         ? queryClient.getQueryData<FolderWithConversation[]>([
             'folders',
@@ -175,7 +178,11 @@ export function useUpdateConversation(
         console.log('user_email is undefined in update mutation')
       }
       // Step 4: Return the updated conversation
-      return { previousConversationHistory, previousFolders, updatedConversation }
+      return {
+        previousConversationHistory,
+        previousFolders,
+        updatedConversation,
+      }
     },
     onError: (error, variables, context) => {
       // An error happened!
@@ -187,7 +194,10 @@ export function useUpdateConversation(
         )
       }
       if (context?.previousFolders) {
-        queryClient.setQueryData(['folders', course_name], context.previousFolders)
+        queryClient.setQueryData(
+          ['folders', course_name],
+          context.previousFolders,
+        )
       }
       console.error(
         'Error saving updated conversation to server:',
@@ -238,10 +248,9 @@ export function useDeleteConversation(
         deleteConversation.userEmail || user_email,
       ),
     onMutate: async (deletedConversation: Conversation) => {
-      const previousConversationHistory =
-        queryClient.getQueryData<InfiniteData<ConversationPage>>(
-          conversationHistoryKey,
-        )
+      const previousConversationHistory = queryClient.getQueryData<
+        InfiniteData<ConversationPage>
+      >(conversationHistoryKey)
 
       // Step 1: Cancel the query to prevent it from refetching
       await queryClient.cancelQueries({
@@ -291,27 +300,30 @@ export function useDeleteAllConversations(
   user_email: string,
   course_name: string,
 ) {
-  const conversationHistoryKey = ['conversationHistory', course_name, ''] as const
+  const conversationHistoryKey = [
+    'conversationHistory',
+    course_name,
+    '',
+  ] as const
 
   return useMutation({
     mutationKey: ['deleteAllConversations', user_email, course_name],
     mutationFn: async () =>
       deleteAllConversationsFromServer(course_name, user_email),
     onMutate: async () => {
-      const previousConversationHistory =
-        queryClient.getQueryData<InfiniteData<ConversationPage>>(
-          conversationHistoryKey,
-        )
+      const previousConversationHistory = queryClient.getQueryData<
+        InfiniteData<ConversationPage>
+      >(conversationHistoryKey)
 
       // Step 1: Cancel the query to prevent it from refetching
       await queryClient.cancelQueries({
         queryKey: conversationHistoryKey,
       })
       // Step 2: Perform the optimistic update
-      queryClient.setQueryData(
-        conversationHistoryKey,
-        () => ({ pages: [{ conversations: [], nextCursor: null }], pageParams: [0] }),
-      )
+      queryClient.setQueryData(conversationHistoryKey, () => ({
+        pages: [{ conversations: [], nextCursor: null }],
+        pageParams: [0],
+      }))
 
       // Step 3: Return context for rollback
       return { previousConversationHistory }

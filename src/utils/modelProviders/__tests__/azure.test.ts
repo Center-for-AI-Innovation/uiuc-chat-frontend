@@ -42,7 +42,12 @@ describe('getAzureModels', () => {
       AzureEndpoint: 'https://azure.example.com/',
       models: [
         // Preserve overrides from existing config
-        { id: AzureModelID.GPT_4o, enabled: false, default: true, temperature: 0.3 },
+        {
+          id: AzureModelID.GPT_4o,
+          enabled: false,
+          default: true,
+          temperature: 0.3,
+        },
       ],
     } as any
 
@@ -66,14 +71,18 @@ describe('getAzureModels', () => {
     expect(ids).toContain(AzureModelID.GPT_5)
     expect(ids).toContain(AzureModelID.GPT_4o)
 
-    const gpt5 = (out.models || []).find((m: any) => m.id === AzureModelID.GPT_5)
+    const gpt5 = (out.models || []).find(
+      (m: any) => m.id === AzureModelID.GPT_5,
+    )
     const gpt5Thinking = (out.models || []).find(
       (m: any) => m.id === AzureModelID.GPT_5_thinking,
     )
     expect(gpt5.azureDeploymentID).toBe('dep-gpt5')
     expect(gpt5Thinking.azureDeploymentID).toBe('dep-gpt5')
 
-    const gpt4o = (out.models || []).find((m: any) => m.id === AzureModelID.GPT_4o)
+    const gpt4o = (out.models || []).find(
+      (m: any) => m.id === AzureModelID.GPT_4o,
+    )
     expect(gpt4o.enabled).toBe(false)
     expect(gpt4o.default).toBe(true)
     expect(gpt4o.temperature).toBe(0.3)
@@ -94,4 +103,3 @@ describe('getAzureModels', () => {
     expect(out.error).toBe('boom')
   })
 })
-

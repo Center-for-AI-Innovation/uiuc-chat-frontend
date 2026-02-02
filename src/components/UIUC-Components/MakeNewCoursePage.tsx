@@ -84,8 +84,7 @@ const MakeNewCoursePage = ({
 
   // Check if we're waiting for debounce (user typed but debounce hasn't completed)
   // This handles cases where user types, backspaces, or changes the input while debounce is in progress
-  const isWaitingForDebounce =
-    projectName !== debouncedProjectName
+  const isWaitingForDebounce = projectName !== debouncedProjectName
 
   const handleSubmit = async (
     project_name: string,
@@ -130,7 +129,8 @@ const MakeNewCoursePage = ({
         notifications.show({
           title: 'Failed to create project',
           message:
-            err.message || 'An error occurred while creating the project. Please try again.',
+            err.message ||
+            'An error occurred while creating the project. Please try again.',
           color: 'red',
           autoClose: 5000,
         })
@@ -176,16 +176,17 @@ const MakeNewCoursePage = ({
                   We’re getting ready to transition to{' '}
                   <a
                     href="https://chat.illinois.edu"
-                    className="underline text-[--illinois-orange]"
+                    className="text-[--illinois-orange] underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     chat.illinois.edu
                   </a>
-                  . You can create new chatbots there. If you have any questions, please email us at{' '}
+                  . You can create new chatbots there. If you have any
+                  questions, please email us at{' '}
                   <a
                     href="mailto:genaisupport@mx.uillinois.edu"
-                    className="underline text-[--illinois-orange]"
+                    className="text-[--illinois-orange] underline"
                   >
                     genaisupport@mx.uillinois.edu
                   </a>
@@ -211,9 +212,7 @@ const MakeNewCoursePage = ({
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main
-        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
-      >
+      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
         <div className="flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
           <Card
             shadow="xs"
@@ -272,20 +271,21 @@ const MakeNewCoursePage = ({
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
-                          color:
-                            isCheckingAvailability
+                          color: isCheckingAvailability
+                            ? 'var(--foreground)'
+                            : isCourseAvailable && projectName != ''
                               ? 'var(--foreground)'
-                              : isCourseAvailable && projectName != ''
-                                ? 'var(--foreground)'
-                                : projectName !== '' && isCourseAvailable === false
-                                  ? 'red'
-                                  : 'var(--foreground)',
+                              : projectName !== '' &&
+                                  isCourseAvailable === false
+                                ? 'red'
+                                : 'var(--foreground)',
                           '&:focus-within': {
                             borderColor: isCheckingAvailability
                               ? 'var(--foreground)'
                               : isCourseAvailable && projectName !== ''
                                 ? 'green'
-                                : projectName !== '' && isCourseAvailable === false
+                                : projectName !== '' &&
+                                    isCourseAvailable === false
                                   ? 'red'
                                   : 'var(--foreground)',
                           },

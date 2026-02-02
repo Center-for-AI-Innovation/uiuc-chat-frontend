@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { cleanConversationHistory, cleanSelectedConversation } from '../clean'
-import { OpenAIModelID, OpenAIModels } from '~/utils/modelProviders/types/openai'
+import {
+  OpenAIModelID,
+  OpenAIModels,
+} from '~/utils/modelProviders/types/openai'
 import { DEFAULT_SYSTEM_PROMPT, DEFAULT_TEMPERATURE } from '../const'
 import { makeConversation } from '~/test-utils/mocks/chat'
 

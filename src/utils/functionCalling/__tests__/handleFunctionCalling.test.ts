@@ -64,7 +64,11 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
               formDescription: 'd',
               formFields: {
                 values: [
-                  { fieldLabel: 'First Name', fieldType: 'string', requiredField: true },
+                  {
+                    fieldLabel: 'First Name',
+                    fieldType: 'string',
+                    requiredField: true,
+                  },
                 ],
               },
             },
@@ -112,7 +116,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          choices: [{ message: { content: 'No tools needed', tool_calls: [] } }],
+          choices: [
+            { message: { content: 'No tools needed', tool_calls: [] } },
+          ],
         }),
         { status: 200 },
       ),
@@ -153,7 +159,7 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
                 tool_calls: [
                   {
                     id: 'call1',
-                    function: { name: 'my_tool', arguments: '\"x\":1}' },
+                    function: { name: 'my_tool', arguments: '"x":1}' },
                   },
                 ],
               },
@@ -192,7 +198,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          choices: [{ message: { content: 'No tools needed', tool_calls: [] } }],
+          choices: [
+            { message: { content: 'No tools needed', tool_calls: [] } },
+          ],
         }),
         { status: 200 },
       ),
@@ -235,7 +243,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          choices: [{ message: { content: 'No tools needed', tool_calls: [] } }],
+          choices: [
+            { message: { content: 'No tools needed', tool_calls: [] } },
+          ],
         }),
         { status: 200 },
       ),
@@ -283,7 +293,7 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
                 tool_calls: [
                   {
                     id: 'call1',
-                    function: { name: 'missing_tool', arguments: '{\"x\":1}' },
+                    function: { name: 'missing_tool', arguments: '{"x":1}' },
                   },
                 ],
               },
@@ -334,7 +344,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          choices: [{ message: { content: 'No tools needed', tool_calls: [] } }],
+          choices: [
+            { message: { content: 'No tools needed', tool_calls: [] } },
+          ],
         }),
         { status: 200 },
       ),
@@ -389,7 +401,15 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     )
 
     await expect(
-      handleFunctionCall(message, availableTools, [], '', conversation, 'k', 'CS101'),
+      handleFunctionCall(
+        message,
+        availableTools,
+        [],
+        '',
+        conversation,
+        'k',
+        'CS101',
+      ),
     ).resolves.toEqual([])
   })
 
@@ -414,7 +434,7 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
                 tool_calls: [
                   {
                     id: 'call1',
-                    function: { name: 'my_tool', arguments: '\"x\":}' },
+                    function: { name: 'my_tool', arguments: '"x":}' },
                   },
                 ],
               },
@@ -426,14 +446,24 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     )
 
     await expect(
-      handleFunctionCall(message, availableTools, [], '', conversation, 'k', 'CS101'),
+      handleFunctionCall(
+        message,
+        availableTools,
+        [],
+        '',
+        conversation,
+        'k',
+        'CS101',
+      ),
     ).resolves.toEqual([])
   })
 
   it('handleToolCall runs client-side n8n flow via /api/UIUC-api/runN8nFlow', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy
-      .mockResolvedValueOnce(new Response(JSON.stringify('n8n-key'), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify('n8n-key'), { status: 200 }),
+      )
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({
@@ -474,7 +504,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
   })
 
   it('handleToolCall logs when there is no last message', async () => {
-    await expect(handleToolCall([], { id: 'c1', messages: [] } as any, 'proj')).resolves.toBeUndefined()
+    await expect(
+      handleToolCall([], { id: 'c1', messages: [] } as any, 'proj'),
+    ).resolves.toBeUndefined()
   })
 
   it('handleToolCall rethrows unexpected errors', async () => {
@@ -492,7 +524,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
       messages: [{ id: 'm1', role: 'user', content: 'hi', tools: {} }],
     }
 
-    await expect(handleToolCall([tool], conversation, 'proj')).rejects.toBeInstanceOf(TypeError)
+    await expect(
+      handleToolCall([tool], conversation, 'proj'),
+    ).rejects.toBeInstanceOf(TypeError)
   })
 
   it('handleToolCall sets a timeout error when runN8nFlow fetch aborts', async () => {
@@ -501,7 +535,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
 
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy
-      .mockResolvedValueOnce(new Response(JSON.stringify('n8n-key'), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify('n8n-key'), { status: 200 }),
+      )
       .mockRejectedValueOnce(abortErr)
 
     const tool: any = {
@@ -518,13 +554,17 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     }
 
     await handleToolCall([tool], conversation, 'proj')
-    expect(conversation.messages[0].tools[0].error).toMatch(/Request timed out/i)
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Request timed out/i,
+    )
   })
 
   it('handleToolCall preserves unexpected fetch errors from runN8nFlow', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy
-      .mockResolvedValueOnce(new Response(JSON.stringify('n8n-key'), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify('n8n-key'), { status: 200 }),
+      )
       .mockRejectedValueOnce(new Error('boom'))
 
     const tool: any = {
@@ -547,7 +587,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
   it('handleToolCall sets an error when runN8nFlow responds non-ok', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy
-      .mockResolvedValueOnce(new Response(JSON.stringify('n8n-key'), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify('n8n-key'), { status: 200 }),
+      )
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ error: 'bad input' }), {
           status: 500,
@@ -586,7 +628,10 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
               nodes: [
                 {
                   type: 'n8n-nodes-base.formTrigger',
-                  parameters: { formDescription: 'd', formFields: { values: [] } },
+                  parameters: {
+                    formDescription: 'd',
+                    formFields: { values: [] },
+                  },
                 },
               ],
             },
@@ -608,7 +653,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
   })
 
   it('useFetchAllWorkflows throws when neither course_name nor api_key provided', () => {
-    expect(() => useFetchAllWorkflows()).toThrow(/one of course_name OR api_key/i)
+    expect(() => useFetchAllWorkflows()).toThrow(
+      /one of course_name OR api_key/i,
+    )
   })
 
   it('handleToolsServer runs function selection then tool execution', async () => {
@@ -624,7 +671,7 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
                   tool_calls: [
                     {
                       id: 'call1',
-                      function: { name: 'my_tool', arguments: '{\"x\":1}' },
+                      function: { name: 'my_tool', arguments: '{"x":1}' },
                     },
                   ],
                 },
@@ -635,7 +682,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
         ),
       )
       // getN8nKeyFromProject
-      .mockResolvedValueOnce(new Response(JSON.stringify('n8n-key'), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify('n8n-key'), { status: 200 }),
+      )
       // runN8nFlow
       .mockResolvedValueOnce(
         new Response(
@@ -689,7 +738,7 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
                 tool_calls: [
                   {
                     id: 'call1',
-                    function: { name: 'my_tool', arguments: '{\"x\":1}' },
+                    function: { name: 'my_tool', arguments: '{"x":1}' },
                   },
                 ],
               },

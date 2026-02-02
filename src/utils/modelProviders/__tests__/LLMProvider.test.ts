@@ -5,10 +5,15 @@ import {
   type AllLLMProviders,
 } from '../LLMProvider'
 import { OpenAIModelID, OpenAIModels } from '../types/openai'
-import { NCSAHostedVLMModelID, NCSAHostedVLMModels } from '../types/NCSAHostedVLM'
+import {
+  NCSAHostedVLMModelID,
+  NCSAHostedVLMModels,
+} from '../types/NCSAHostedVLM'
 
 function makeAllProviders(
-  overrides: Partial<Record<ProviderNames, { enabled: boolean; models: any[] }>>,
+  overrides: Partial<
+    Record<ProviderNames, { enabled: boolean; models: any[] }>
+  >,
 ): AllLLMProviders {
   const base: Record<string, any> = {}
   for (const provider of Object.values(ProviderNames)) {
@@ -41,7 +46,10 @@ describe('selectBestModel', () => {
   })
 
   it('maps Qwen2.5-VL-32B to Qwen2.5-VL-72B', () => {
-    localStorage.setItem('defaultModel', NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT)
+    localStorage.setItem(
+      'defaultModel',
+      NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
+    )
 
     const providers = makeAllProviders({
       [ProviderNames.NCSAHostedVLM]: { enabled: true, models: [] },
@@ -57,7 +65,11 @@ describe('selectBestModel', () => {
       [ProviderNames.OpenAI]: {
         enabled: true,
         models: [
-          { ...OpenAIModels[OpenAIModelID.GPT_4o_mini], enabled: true, default: true },
+          {
+            ...OpenAIModels[OpenAIModelID.GPT_4o_mini],
+            enabled: true,
+            default: true,
+          },
           { ...OpenAIModels[OpenAIModelID.GPT_4o], enabled: true },
         ],
       },
@@ -70,7 +82,13 @@ describe('selectBestModel', () => {
     const providers = makeAllProviders({
       [ProviderNames.OpenAI]: {
         enabled: true,
-        models: [{ ...OpenAIModels[OpenAIModelID.GPT_4o_mini], enabled: true, default: false }],
+        models: [
+          {
+            ...OpenAIModels[OpenAIModelID.GPT_4o_mini],
+            enabled: true,
+            default: false,
+          },
+        ],
       },
     })
 

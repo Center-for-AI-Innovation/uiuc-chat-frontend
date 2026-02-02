@@ -64,7 +64,9 @@ export const generateSecureBase36String = (length: number): string => {
   while (result.length < length) {
     const remaining = length - result.length
     // Each byte contributes 1–2 base36 chars; use a conservative size to guarantee enough.
-    const randomBytes = new Uint8Array(Math.max(remaining, Math.ceil(remaining * 0.75)))
+    const randomBytes = new Uint8Array(
+      Math.max(remaining, Math.ceil(remaining * 0.75)),
+    )
     crypto.getRandomValues(randomBytes)
 
     for (let i = 0; i < randomBytes.length; i++) {

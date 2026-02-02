@@ -92,4 +92,3 @@ describe('UIUC-api/createProject', () => {
     fetchSpy.mockRestore()
   })
 })
-

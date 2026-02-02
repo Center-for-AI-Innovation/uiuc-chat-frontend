@@ -47,10 +47,16 @@ describe('UploadNotification', () => {
     ]
 
     renderWithProviders(
-      <UploadNotification files={files} onClose={onClose} projectName="CS101" />,
+      <UploadNotification
+        files={files}
+        onClose={onClose}
+        projectName="CS101"
+      />,
     )
 
-    expect(await screen.findByText(/Processing 4 documents/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Processing 4 documents/i),
+    ).toBeInTheDocument()
     expect(screen.getByText('a.pdf')).toBeInTheDocument()
     expect(screen.getByText('b.docx')).toBeInTheDocument()
     expect(screen.getByText('c.ts')).toBeInTheDocument()
@@ -98,11 +104,17 @@ describe('UploadNotification', () => {
     ]
 
     renderWithProviders(
-      <UploadNotification files={files} onClose={onClose} projectName="CS101" />,
+      <UploadNotification
+        files={files}
+        onClose={onClose}
+        projectName="CS101"
+      />,
     )
 
     // Failed doc should be shown as error
-    expect(await screen.findByText(/Processing 2 documents/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Processing 2 documents/i),
+    ).toBeInTheDocument()
     expect(screen.getByText('bad.pdf')).toBeInTheDocument()
     expect(screen.getAllByText(/Upload failed/i).length).toBeGreaterThan(0)
 

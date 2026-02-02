@@ -1,4 +1,7 @@
-import { OpenAIModelID, OpenAIModels } from '~/utils/modelProviders/types/openai'
+import {
+  OpenAIModelID,
+  OpenAIModels,
+} from '~/utils/modelProviders/types/openai'
 import type { ContextWithMetadata, Conversation, Message } from '~/types/chat'
 
 export function makeMessage(overrides: Partial<Message> = {}): Message {
@@ -41,4 +44,3 @@ export function makeContextWithMetadata(
     ...overrides,
   }
 }
-

@@ -40,9 +40,7 @@ describe('CustomBanner', () => {
       <BannerComponent bannerUrl="https://example.com/banner.png" />,
     )
 
-    expect(
-      screen.getByAltText('Banner image of course'),
-    ).toBeInTheDocument()
+    expect(screen.getByAltText('Banner image of course')).toBeInTheDocument()
 
     await waitFor(() =>
       expect(container.firstChild).toHaveStyle({ minHeight: '50px' }),
@@ -51,4 +49,3 @@ describe('CustomBanner', () => {
     globalThis.Image = OriginalImage
   })
 })
-

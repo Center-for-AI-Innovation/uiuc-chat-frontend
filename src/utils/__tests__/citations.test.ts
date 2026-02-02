@@ -311,7 +311,9 @@ describe('replaceCitationLinks', () => {
       'TEST101',
     )
 
-    expect(out).toContain('1. ([Doc 1](https://example.com/1.pdf "Citation 1"))')
+    expect(out).toContain(
+      '1. ([Doc 1](https://example.com/1.pdf "Citation 1"))',
+    )
     expect(out).not.toContain('#page=')
     expect(out).not.toContain('p.')
   })

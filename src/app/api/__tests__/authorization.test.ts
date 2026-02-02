@@ -76,7 +76,9 @@ describe('app/api/authorization', () => {
       return new Response(JSON.stringify({ ok: true }), { status: 200 }) as any
     })
 
-    const res = await wrapped(new Request('https://example.test/api', { method: 'GET' }) as any)
+    const res = await wrapped(
+      new Request('https://example.test/api', { method: 'GET' }) as any,
+    )
     expect(res.status).toBe(400)
   })
 
@@ -91,14 +93,18 @@ describe('app/api/authorization', () => {
     })
 
     const res = await wrapped(
-      new Request('https://example.test/api?courseName=CS101', { method: 'GET' }) as any,
+      new Request('https://example.test/api?courseName=CS101', {
+        method: 'GET',
+      }) as any,
     )
     expect(res.status).toBe(404)
   })
 
   it('withCourseAccessFromRequest returns 403 when project is frozen', async () => {
     mocks.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn(async () => JSON.stringify({ is_private: false, is_frozen: true })),
+      hGet: vi.fn(async () =>
+        JSON.stringify({ is_private: false, is_frozen: true }),
+      ),
     })
 
     const { withCourseAccessFromRequest } = await import('../authorization')
@@ -107,14 +113,18 @@ describe('app/api/authorization', () => {
     })
 
     const res = await wrapped(
-      new Request('https://example.test/api?courseName=CS101', { method: 'GET' }) as any,
+      new Request('https://example.test/api?courseName=CS101', {
+        method: 'GET',
+      }) as any,
     )
     expect(res.status).toBe(403)
   })
 
   it('withCourseAccessFromRequest calls handler for public projects with access=any', async () => {
     mocks.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn(async () => JSON.stringify({ is_private: false, is_frozen: false })),
+      hGet: vi.fn(async () =>
+        JSON.stringify({ is_private: false, is_frozen: false }),
+      ),
     })
 
     const handler = vi.fn(async () => {
@@ -124,7 +134,9 @@ describe('app/api/authorization', () => {
     const wrapped = withCourseAccessFromRequest('any')(handler as any)
 
     const res = await wrapped(
-      new Request('https://example.test/api?courseName=CS101', { method: 'GET' }) as any,
+      new Request('https://example.test/api?courseName=CS101', {
+        method: 'GET',
+      }) as any,
     )
     expect(res.status).toBe(200)
     expect(handler).toHaveBeenCalled()
@@ -141,10 +153,7 @@ describe('app/api/authorization', () => {
     ).toBe(true)
 
     expect(
-      hasCourseAccess(
-        { email: 'o@x' } as any,
-        { course_owner: 'o@x' } as any,
-      ),
+      hasCourseAccess({ email: 'o@x' } as any, { course_owner: 'o@x' } as any),
     ).toBe(true)
 
     expect(
@@ -166,7 +175,9 @@ describe('app/api/authorization', () => {
     const { getCourseMetadata } = await import('../authorization')
 
     mocks.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn(async () => JSON.stringify({ is_private: false, course_owner: 'o@x' })),
+      hGet: vi.fn(async () =>
+        JSON.stringify({ is_private: false, course_owner: 'o@x' }),
+      ),
     })
     await expect(getCourseMetadata('CS101')).resolves.toMatchObject({
       is_private: false,
@@ -179,15 +190,22 @@ describe('app/api/authorization', () => {
 
   it('withCourseAccessFromRequest enforces auth for private projects', async () => {
     const { withCourseAccessFromRequest } = await import('../authorization')
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }) as any)
+    const handler = vi.fn(
+      async () => new Response('ok', { status: 200 }) as any,
+    )
 
     // Private course: unauthenticated -> 401
     mocks.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn(async () => JSON.stringify({ is_private: true, is_frozen: false })),
+      hGet: vi.fn(async () =>
+        JSON.stringify({ is_private: true, is_frozen: false }),
+      ),
     })
     const wrappedAny = withCourseAccessFromRequest('any')(handler as any)
     const res401 = await wrappedAny(
-      makeReq({ url: 'https://example.test/api?courseName=CS101', method: 'GET' }),
+      makeReq({
+        url: 'https://example.test/api?courseName=CS101',
+        method: 'GET',
+      }),
     )
     expect(res401.status).toBe(401)
 

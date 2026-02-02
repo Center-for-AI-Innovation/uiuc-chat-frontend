@@ -42,7 +42,10 @@ describe('SettingsLayout', () => {
   })
 
   it('wires collapse + open toggles into NavigationSidebar', async () => {
-    globalThis.__TEST_ROUTER__ = { asPath: '/CS101/dashboard?x=1', isReady: true }
+    globalThis.__TEST_ROUTER__ = {
+      asPath: '/CS101/dashboard?x=1',
+      isReady: true,
+    }
 
     const setSidebarCollapsed = vi.fn()
 
@@ -58,17 +61,23 @@ describe('SettingsLayout', () => {
       </SettingsLayout>,
     )
 
-    expect(screen.getByTestId('active-link')).toHaveTextContent('/CS101/dashboard')
+    expect(screen.getByTestId('active-link')).toHaveTextContent(
+      '/CS101/dashboard',
+    )
 
     // Sidebar auto-opens on desktop.
-    await waitFor(() => expect(screen.getByTestId('is-open')).toHaveTextContent('true'))
+    await waitFor(() =>
+      expect(screen.getByTestId('is-open')).toHaveTextContent('true'),
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'collapse' }))
     expect(setSidebarCollapsed).toHaveBeenCalledWith(true)
     expect(setSpy).toHaveBeenCalledWith('sidebar-collapsed', 'true')
 
     fireEvent.click(screen.getByRole('button', { name: 'toggle' }))
-    await waitFor(() => expect(screen.getByTestId('is-open')).toHaveTextContent('false'))
+    await waitFor(() =>
+      expect(screen.getByTestId('is-open')).toHaveTextContent('false'),
+    )
   })
 
   it('still updates state when localStorage.setItem throws', () => {
@@ -94,4 +103,3 @@ describe('SettingsLayout', () => {
     expect(warnSpy).toHaveBeenCalled()
   })
 })
-
