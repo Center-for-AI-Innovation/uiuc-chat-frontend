@@ -122,7 +122,7 @@ describe('ChatInput', () => {
     )
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Send message to Illinois Chat'),
       '123456',
     )
     expect(alertSpy).toHaveBeenCalled()
@@ -164,10 +164,12 @@ describe('ChatInput', () => {
     await user.upload(fileInput, new File(['hello'], 'notes.txt', { type: 'text/plain' }))
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Send message to Illinois Chat'),
       'Question',
     )
-    await user.click(screen.getByRole('button', { name: /Send message/i }))
+    await user.click(
+      screen.getByRole('button', { name: /Send message to Illinois Chat/i }),
+    )
 
     expect(onSend).not.toHaveBeenCalled()
     expect(showWarningToast).toHaveBeenCalled()
@@ -192,7 +194,9 @@ describe('ChatInput', () => {
       { homeContext: { dispatch: vi.fn() } },
     )
 
-    await user.click(screen.getByRole('button', { name: /Send message/i }))
+    await user.click(
+      screen.getByRole('button', { name: /Send message to Illinois Chat/i }),
+    )
     expect(alertSpy).toHaveBeenCalled()
   })
 
@@ -253,7 +257,7 @@ describe('ChatInput', () => {
       },
     )
 
-    const input = screen.getByPlaceholderText('Message Illinois.chat')
+    const input = screen.getByPlaceholderText('Send message to Illinois Chat')
     await user.type(input, '/t')
     expect(screen.getByText(/TestPrompt/i)).toBeInTheDocument()
 
@@ -306,7 +310,7 @@ describe('ChatInput', () => {
       },
     )
 
-    const input = screen.getByPlaceholderText('Message Illinois.chat')
+    const input = screen.getByPlaceholderText('Send message to Illinois Chat')
     await user.type(input, '/v')
     await user.keyboard('{Enter}')
 
@@ -353,10 +357,12 @@ describe('ChatInput', () => {
     expect(await screen.findByText(/Ready for chat/i)).toBeInTheDocument()
 
       await user.type(
-        screen.getByPlaceholderText('Message Illinois.chat'),
+        screen.getByPlaceholderText('Send message to Illinois Chat'),
         'Hello with files',
       )
-      await user.click(screen.getByRole('button', { name: /Send message/i }))
+      await user.click(
+        screen.getByRole('button', { name: /Send message to Illinois Chat/i }),
+      )
 
       expect(onSend).toHaveBeenCalledTimes(1)
       const message = onSend.mock.calls[0]?.[0]
@@ -420,10 +426,12 @@ describe('ChatInput', () => {
     expect(screen.getByText(/Ready for chat/i)).toBeInTheDocument()
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Send message to Illinois Chat'),
       'Question about my file',
     )
-    await user.click(screen.getByRole('button', { name: /Send message/i }))
+    await user.click(
+      screen.getByRole('button', { name: /Send message to Illinois Chat/i }),
+    )
 
     expect(onSend).toHaveBeenCalledTimes(1)
     const message = onSend.mock.calls[0]?.[0]
@@ -634,7 +642,7 @@ describe('ChatInput', () => {
       { homeState: { messageIsStreaming: false, prompts } as any, homeContext: { dispatch: vi.fn() } },
     )
 
-    const input = screen.getByPlaceholderText('Message Illinois.chat')
+    const input = screen.getByPlaceholderText('Send message to Illinois Chat')
     await user.type(input, '/t')
     expect(screen.getByText(/TestPrompt/i)).toBeInTheDocument()
 
@@ -689,10 +697,12 @@ describe('ChatInput', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 2100))
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Send message to Illinois Chat'),
       'Question about my file',
     )
-    await user.click(screen.getByRole('button', { name: /Send message/i }))
+    await user.click(
+      screen.getByRole('button', { name: /Send message to Illinois Chat/i }),
+    )
 
     expect(onSend).toHaveBeenCalledTimes(1)
     const message = onSend.mock.calls[0]?.[0]
@@ -728,7 +738,7 @@ describe('ChatInput', () => {
         { homeState: { messageIsStreaming: false, prompts: [] } as any, homeContext: { dispatch: vi.fn() } },
       )
 
-      const textarea = screen.getByPlaceholderText('Message Illinois.chat')
+      const textarea = screen.getByPlaceholderText('Send message to Illinois Chat')
       await user.type(textarea, 'Hello{Enter}')
       expect(onSend).not.toHaveBeenCalled()
     } finally {
@@ -758,7 +768,7 @@ describe('ChatInput', () => {
       { homeState: { messageIsStreaming: false, prompts } as any, homeContext: { dispatch: vi.fn() } },
     )
 
-    const textarea = screen.getByPlaceholderText('Message Illinois.chat')
+    const textarea = screen.getByPlaceholderText('Send message to Illinois Chat')
     await user.type(textarea, '/')
     expect(screen.getByText(/One/i)).toBeInTheDocument()
 
@@ -787,7 +797,7 @@ describe('ChatInput', () => {
       { homeState: { messageIsStreaming: false, prompts: [] } as any, homeContext: { dispatch: vi.fn() } },
     )
 
-    const textarea = screen.getByPlaceholderText('Message Illinois.chat')
+    const textarea = screen.getByPlaceholderText('Send message to Illinois Chat')
     fireEvent.keyDown(textarea, { key: '/', metaKey: true })
 
     const combo = await screen.findByRole('combobox')

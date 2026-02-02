@@ -44,7 +44,6 @@ import {
   showWarningToast,
   showInfoToast,
 } from '~/utils/toastUtils'
-import { Montserrat } from 'next/font/google'
 
 import React from 'react'
 
@@ -52,7 +51,7 @@ import { type CSSProperties } from 'react'
 
 import { useMediaQuery } from '@mantine/hooks'
 import { IconChevronRight } from '@tabler/icons-react'
-import { montserrat_heading } from 'fonts'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { fetchPresignedUrl, uploadToS3 } from '~/utils/apiUtils'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import {
@@ -65,10 +64,7 @@ import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
 import { type ChatBody, ContextWithMetadata } from '~/types/chat'
 
-const montserrat_med = Montserrat({
-  weight: '500',
-  subsets: ['latin'],
-})
+const montserrat_med = montserrat_paragraph
 
 // Helper function to create a unique key for file comparison
 const createFileKey = (file: File): string => {
@@ -1222,7 +1218,7 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={'Message Illinois Chat'}
+                placeholder={'Send message to Illinois Chat'}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
@@ -1235,13 +1231,11 @@ export const ChatInput = ({
 
               {/* Send button */}
               <button
-                tabIndex={0}
-                aria-label="Send"
                 className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center justify-center rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
                 onClick={handleSend}
                 style={{ pointerEvents: 'auto' }}
                 type="button"
-                aria-label="Send message"
+                aria-label="Send message to Illinois Chat"
               >
                 {messageIsStreaming ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
@@ -1281,11 +1275,11 @@ export const ChatInput = ({
               <div className="absolute bottom-2 right-10 lg:-right-10 lg:bottom-0">
                 <button
                   tabIndex={0}
-                  aria-label="Scroll Down"
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
                   onClick={onScrollDownClick}
                   style={{ pointerEvents: 'auto' }}
                 >
+                  <span className="sr-only">Scroll Down</span>
                   <IconArrowDown size={18} />
                 </button>
               </div>
