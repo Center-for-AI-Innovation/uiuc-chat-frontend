@@ -1,30 +1,29 @@
-// Intentionally avoids `next/font/google` so builds can run without outbound
-// network access (e.g. self-hosted build environments).
-//
-// We define the font CSS variables in `src/styles/globals.css` and reference them
-// from Tailwind via `tailwind.config.ts`.
+import { Courier_Prime, Montserrat } from 'next/font/google'
 
-export type FontHandle = {
-  className: string
-  variable: string
-  style: {
-    fontFamily: string
-  }
-}
+// Docs: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts#with-tailwind-css
 
-function fontHandle(cssVarName: string): FontHandle {
-  return {
-    className: '',
-    variable: '',
-    style: { fontFamily: `var(${cssVarName})` },
-  }
-}
+export const montserrat_heading = Montserrat({
+  weight: '700',
+  subsets: ['latin'],
+  variable: '--font-montserratHeading',
+  display: 'swap',
+})
 
-export const montserrat_heading = fontHandle('--font-montserratHeading')
+export const montserrat_paragraph = Montserrat({
+  weight: '500',
+  subsets: ['latin'],
+  variable: '--font-montserratParagraph',
+  display: 'swap',
+})
 
-export const montserrat_paragraph = fontHandle('--font-montserratParagraph')
-
-export const doto_font = fontHandle('--font-doto')
+// Using Dosis as an alternative to Doto since Doto doesn't seem to be
+// directly available in next/font/google
+export const doto_font = Courier_Prime({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-doto',
+  display: 'swap',
+})
 
 // export const rubik_puddles = Rubik_Puddles({
 //   weight: '400',
