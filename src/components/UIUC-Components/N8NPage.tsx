@@ -32,6 +32,7 @@ import { LoadingPlaceholderForAdminPages } from './MainPageBackground'
 import { N8nWorkflowsTable } from './N8nWorkflowsTable'
 
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
@@ -47,7 +48,10 @@ export const GetCurrentPageName = () => {
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
-const montserrat_med = montserrat_paragraph
+const montserrat_med = Montserrat({
+  weight: '500',
+  subsets: ['latin'],
+})
 
 const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   const router = useRouter()
@@ -55,9 +59,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   const auth = useAuth()
 
   const useIllinoisChatConfig = useMemo(() => {
-    return (
-      process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG?.toLowerCase() === 'true'
-    )
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
 
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(

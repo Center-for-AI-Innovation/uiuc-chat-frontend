@@ -13,7 +13,7 @@ import {
 } from '@tabler/icons-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { DataTable } from 'mantine-datatable'
-import { montserrat_paragraph } from 'fonts'
+import { Montserrat } from 'next/font/google'
 import { type UIUCTool } from '~/types/chat'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { LoadingSpinner } from './LoadingSpinner'
@@ -31,7 +31,10 @@ interface N8nWorkflowsTableProps {
   // ) => Promise<WorkflowRecord[]>
 }
 
-const montserrat_med = montserrat_paragraph
+const montserrat_med = Montserrat({
+  weight: '500',
+  subsets: ['latin'],
+})
 
 const dataTableTitleStyles = {
   color: 'var(--table-header)',
