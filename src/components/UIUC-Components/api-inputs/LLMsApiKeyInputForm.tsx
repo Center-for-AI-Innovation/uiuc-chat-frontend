@@ -23,8 +23,10 @@ import { getModelLogo } from '~/components/Chat/ModelSelect'
 import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
-import { useUpdateProjectLLMProviders } from '@/hooks/queries/useUpdateProjectLLMProviders'
-import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
+import {
+  useGetProjectLLMProviders,
+  useSetProjectLLMProviders,
+} from '~/hooks/useProjectAPIKeys'
 import {
   LLM_PROVIDER_ORDER,
   type AllLLMProviders,
@@ -424,7 +426,7 @@ export default function APIKeyInputForm({
   isEmbedded?: boolean
 } = {}) {
   const routerProjectName = GetCurrentPageName()
-  const projectName = projectNameProp || routerProjectName
+  const projectName = projectNameProp || routerProjectName || ''
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
@@ -440,7 +442,7 @@ export default function APIKeyInputForm({
     isError: isErrorLLMProviders,
     error: errorLLMProviders,
     // enabled: !!projectName // Only run the query when projectName is available
-  } = useFetchLLMProviders({ projectName })
+  } = useGetProjectLLMProviders({ projectName })
 
   useEffect(() => {
     if (llmProviders) {
@@ -460,7 +462,7 @@ export default function APIKeyInputForm({
     }
   }, [isErrorLLMProviders])
 
-  const mutation = useUpdateProjectLLMProviders(queryClient)
+  const mutation = useSetProjectLLMProviders(queryClient)
 
   const setDefaultModelAndUpdateProviders = (
     newDefaultModel: AnySupportedModel & { provider: ProviderNames },

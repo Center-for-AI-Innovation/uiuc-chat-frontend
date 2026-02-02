@@ -14,10 +14,12 @@ import ChatbarContext from './Chatbar.context'
 import { type ChatbarInitialState, initialState } from './Chatbar.state'
 import { v4 as uuidv4 } from 'uuid'
 import { useQueryClient } from '@tanstack/react-query'
-import { useDeleteAllConversations } from '@/hooks/queries/useDeleteAllConversations'
-import { useDeleteConversation } from '@/hooks/queries/useDeleteConversation'
-import { useFetchConversationHistory } from '@/hooks/queries/useFetchConversationHistory'
-import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+import {
+  useDeleteAllConversations,
+  useDeleteConversation,
+  useFetchConversationHistory,
+  useUpdateConversation,
+} from '~/hooks/conversationQueries'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
