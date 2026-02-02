@@ -28,6 +28,12 @@ export default defineConfig({
         '**/.next/**',
         '**/.cursor/**',
         '**/scripts/**',
+        // Legacy/duplicated hooks that are being phased out in favor of
+        // src/hooks/{conversation,docGroups,folder}Queries.ts
+        'src/hooks/queries/**',
+        'src/hooks/__internal__/**',
+        // This is UI state/context, not a Next.js API route handler.
+        'src/pages/api/home/home.tsx',
       ],
     },
   },
