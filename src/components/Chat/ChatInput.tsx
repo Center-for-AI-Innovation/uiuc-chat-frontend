@@ -63,6 +63,7 @@ import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
+import { useFetchContexts } from '@/hooks/queries/useFetchContexts'
 import { type ChatBody, ContextWithMetadata } from '~/types/chat'
 
 const montserrat_med = Montserrat({
@@ -174,51 +175,6 @@ async function createNewConversation(
   return newConversation
 }
 
-async function fetchFileUploadContexts(
-  conversationId: string,
-  courseName: string,
-  user_id: string,
-  fileName: string,
-): Promise<ContextWithMetadata[]> {
-  try {
-    // Keep the original simple flow - single approach
-    const requestBody = {
-      course_name: courseName,
-      user_id: user_id,
-      search_query: fileName, // Use filename as search query
-      token_limit: 4000,
-      doc_groups: ['All Documents'],
-      conversation_id: conversationId,
-    }
-
-    const response = await fetch('/api/getContexts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-
-      if (Array.isArray(data)) {
-        // Filter by filename to ensure we get contexts for this specific file
-        const filteredContexts = data.filter(
-          (context: any) => context.readable_filename === fileName,
-        )
-
-        return filteredContexts
-      } else {
-        return []
-      }
-    } else {
-      return []
-    }
-  } catch (error) {
-    console.error('Error fetching file contexts:', error)
-    return []
-  }
-}
-
 export const ChatInput = ({
   onSend,
   onScrollDownClick,
@@ -265,6 +221,7 @@ export const ChatInput = ({
   const fileUploadRef = useRef<HTMLInputElement | null>(null)
   const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
   const { mutateAsync: routeChatAsync } = useRouteChat()
+  const { mutateAsync: fetchContextsAsync } = useFetchContexts()
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -771,11 +728,19 @@ export const ChatInput = ({
           // Add a small delay to allow backend processing to complete
           await new Promise((resolve) => setTimeout(resolve, 2000))
 
-          const contexts = await fetchFileUploadContexts(
-            conversation.id,
-            courseName,
+          const allContexts = await fetchContextsAsync({
+            course_name: courseName,
             user_id,
-            file.name,
+            search_query: file.name, // Use filename as search query
+            token_limit: 4000,
+            doc_groups: ['All Documents'],
+            conversation_id: conversation.id,
+          })
+
+          // Filter by filename to ensure we get contexts for this specific file
+          const contexts = allContexts.filter(
+            (context: ContextWithMetadata) =>
+              context.readable_filename === file.name,
           )
 
           setFileUploads((prev) =>
