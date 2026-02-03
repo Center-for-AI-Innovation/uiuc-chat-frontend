@@ -53,7 +53,8 @@ import { type CSSProperties } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
-import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
+import { fetchPresignedUrl } from 'src/utils/apiUtils'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import {
   selectBestModel,
@@ -190,6 +191,7 @@ export const ChatInput = ({
   onRegenerate,
 }: Props) => {
   const { t } = useTranslation('chat')
+  const uploadToS3Mutation = useUploadToS3()
 
   const {
     state: {
@@ -643,7 +645,13 @@ export const ChatInput = ({
 
       // Upload all files to S3 and update status
       try {
-        const s3Key = await uploadToS3(file, user_id, courseName, 'chat')
+        const s3Key = await uploadToS3Mutation.mutateAsync({
+          file,
+          uniqueFileName: `${crypto.randomUUID()}.${file.name.split('.').pop()}`,
+          courseName,
+          user_id,
+          uploadType: 'chat',
+        })
 
         setFileUploads((prev) =>
           prev.map((f) =>

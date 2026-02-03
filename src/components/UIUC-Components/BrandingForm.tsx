@@ -12,7 +12,8 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { callSetCourseMetadata, uploadToS3 } from '~/utils/apiUtils'
+import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 
 const BrandingForm = ({
   project_name,
@@ -22,6 +23,7 @@ const BrandingForm = ({
   user_id: string
 }) => {
   const queryClient = useQueryClient()
+  const uploadToS3Mutation = useUploadToS3()
   const [introMessage, setIntroMessage] = useState('')
   const [isIntroMessageUpdated, setIsIntroMessageUpdated] = useState(false)
   const [metadata, setMetadata] = useState<CourseMetadata | null>(null)
@@ -58,11 +60,12 @@ const BrandingForm = ({
     if (logo) {
       console.log('Uploading to s3')
 
-      const banner_s3_image = await uploadToS3(
-        logo ?? null,
+      const banner_s3_image = await uploadToS3Mutation.mutateAsync({
+        file: logo,
+        uniqueFileName: `${crypto.randomUUID()}.${logo.name.split('.').pop()}`,
+        courseName: project_name,
         user_id,
-        project_name,
-      )
+      })
 
       if (banner_s3_image && metadata) {
         metadata.banner_image_s3 = banner_s3_image

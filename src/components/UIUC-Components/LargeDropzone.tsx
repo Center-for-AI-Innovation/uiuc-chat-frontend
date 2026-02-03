@@ -28,6 +28,7 @@ import { useMediaQuery } from '@mantine/hooks'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
 import { type FileUpload } from './UploadNotification'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 import { type AuthContextProps } from 'react-oidc-context'
 
 const useStyles = createStyles((theme) => ({
@@ -102,54 +103,7 @@ export function LargeDropzone({
     await new Promise((resolve) => setTimeout(resolve, 200))
     await router.reload()
   }
-  const uploadToS3 = async (file: File | null, uniqueFileName: string) => {
-    if (!file) return
-
-    const requestObject = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        uniqueFileName: uniqueFileName,
-        fileType: file.type,
-        courseName: courseName,
-        // No user_id needed since document uploads use courses/${courseName}/ path
-      }),
-    }
-
-    try {
-      interface PresignedPostResponse {
-        post: {
-          url: string
-          fields: { [key: string]: string }
-        }
-      }
-
-      // Then, update the lines where you fetch the response and parse the JSON
-      const response = await fetch('/api/UIUC-api/uploadToS3', requestObject)
-      const data = (await response.json()) as PresignedPostResponse
-
-      const { url, fields } = data.post as {
-        url: string
-        fields: { [key: string]: string }
-      }
-      const formData = new FormData()
-
-      Object.entries(fields).forEach(([key, value]) => {
-        formData.append(key, value)
-      })
-
-      formData.append('file', file)
-
-      await fetch(url, {
-        method: 'POST',
-        body: formData,
-      })
-    } catch (error) {
-      console.error('Error uploading file:', error)
-    }
-  }
+  const uploadToS3Mutation = useUploadToS3()
 
   const ingestFiles = async (files: File[] | null, is_new_course: boolean) => {
     if (!files) return
@@ -201,7 +155,11 @@ export function LargeDropzone({
         const uniqueReadableFileName = `${nameWithoutExtension}${extension}`
 
         try {
-          await uploadToS3(file, uniqueFileName)
+          await uploadToS3Mutation.mutateAsync({
+            file,
+            uniqueFileName,
+            courseName,
+          })
           setSuccessfulUploads((prev) => prev + 1)
 
           const response = await fetch(`/api/UIUC-api/ingest`, {

@@ -1,6 +1,5 @@
 // utils/apiUtils.ts
 import { CoreMessage } from 'ai'
-import { v4 as uuidv4 } from 'uuid'
 import { Conversation, Message } from '~/types/chat'
 import {
   type CourseMetadata,
@@ -72,56 +71,6 @@ export const callSetCourseMetadata = async (
       error,
     })
     return false
-  }
-}
-
-/**
- * Uploads a file to S3 using a pre-signed URL.
- * @param {File | null} file - The file to upload.
- * @param {string} user_id - The user ID associated with the file.
- * @param {string} course_name - The name of the course associated with the file.
- * @param {string} uploadType - The type of upload ('chat' or 'document-group').
- * @returns {Promise<string | undefined>} - A promise that resolves to the key of the uploaded file or undefined.
- */
-export const uploadToS3 = async (
-  file: File | null,
-  user_id: string,
-  course_name: string,
-  uploadType: 'chat' | 'document-group' = 'document-group',
-): Promise<string | undefined> => {
-  if (!file) return
-
-  const uniqueFileName = `${uuidv4()}.${file.name.split('.').pop()}`
-  const requestObject = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fileName: file.name,
-      fileType: file.type,
-      user_id: user_id,
-      courseName: course_name,
-      uniqueFileName,
-      uploadType,
-    }),
-  }
-
-  try {
-    const endpoint = '/api/UIUC-api/uploadToS3'
-    const response = await fetch(endpoint, requestObject)
-    const data: PresignedPostResponse = await response.json()
-    const { url, fields } = data.post
-
-    const formData = new FormData()
-    Object.entries(fields).forEach(([key, value]) =>
-      formData.append(key, value),
-    )
-    formData.append('file', file)
-
-    await fetch(url, { method: 'POST', body: formData })
-    console.debug('File uploaded to S3 successfully', { file_name: file.name })
-    return fields.key
-  } catch (error) {
-    console.error('Error uploading file to S3', { error })
   }
 }
 
@@ -260,18 +209,9 @@ export function convertConversationToCoreMessagesWithoutSystem(
     })
 }
 
-// Helper Types
-interface PresignedPostResponse {
-  post: {
-    url: string
-    fields: { [key: string]: string }
-  }
-}
-
 // Export all functions as part of the API Utils module
 export default {
   callSetCourseMetadata,
-  uploadToS3,
   fetchPresignedUrl,
 }
 /**
