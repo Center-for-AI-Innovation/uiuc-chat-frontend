@@ -20,9 +20,11 @@ import {
   IconCopy,
   IconExternalLink,
 } from '@tabler/icons-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useEffect, useState } from 'react'
 import { type AuthContextProps } from 'react-oidc-context'
+import { useFetchChatApiKey } from '~/hooks/queries/useFetchChatApiKey'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
@@ -43,9 +45,23 @@ const ApiKeyManagement = ({
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
-  const [apiKey, setApiKey] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+  const {
+    data: apiKey = null,
+    isLoading: loading,
+    isError,
+  } = useFetchChatApiKey(course_name, auth.isAuthenticated)
+
+  useEffect(() => {
+    if (isError) {
+      showNotification({
+        title: 'Error',
+        message: 'Failed to fetch API key.',
+        color: 'red',
+      })
+    }
+  }, [isError])
   const baseUrl = process.env.VERCEL_URL || window.location.origin
-  const [loading, setLoading] = useState(true)
   const [insightsOpen, setInsightsOpen] = useState(false)
 
   const { data: metadata } = useFetchCourseMetadata({
@@ -175,32 +191,6 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 });`,
   }
 
-  useEffect(() => {
-    const fetchApiKey = async () => {
-      if (!auth.isAuthenticated) {
-        setLoading(false)
-        return
-      }
-      const response = await fetch(
-        `/api/chat-api/keys/fetch?course_name=${course_name}`,
-      )
-
-      if (response.ok) {
-        const data = await response.json()
-        setApiKey(data.apiKey)
-      } else {
-        showNotification({
-          title: 'Error',
-          message: 'Failed to fetch API key.',
-          color: 'red',
-        })
-      }
-      setLoading(false)
-    }
-
-    fetchApiKey()
-  }, [auth.isAuthenticated])
-
   const handleGenerate = async () => {
     const response = await fetch(
       `/api/chat-api/keys/generate?course_name=${course_name}`,
@@ -214,7 +204,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
     if (response.ok) {
       const data = await response.json()
-      setApiKey(data.apiKey)
+      queryClient.setQueryData(['chatApiKey', course_name], data.apiKey)
       showNotification({
         title: 'Success',
         message: 'API key generated successfully.',
@@ -238,7 +228,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
     if (response.ok) {
       const data = await response.json()
-      setApiKey(data.newApiKey)
+      queryClient.setQueryData(['chatApiKey', course_name], data.newApiKey)
       showNotification({
         title: 'Success',
         message: 'API key rotated successfully.',
@@ -261,7 +251,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     )
 
     if (response.ok) {
-      setApiKey(null)
+      queryClient.setQueryData(['chatApiKey', course_name], null)
       showNotification({
         title: 'Success',
         message: 'API key deleted successfully.',
