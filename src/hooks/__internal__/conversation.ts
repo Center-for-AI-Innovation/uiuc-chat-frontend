@@ -275,6 +275,28 @@ export const saveConversationToLocalStorage = (conversation: Conversation) => {
   return successful
 }
 
+const clearSingleOldestConversation = () => {
+  console.debug('CLEARING OLDEST CONVERSATIONS to free space in local storage.')
+
+  const existingConversations = JSON.parse(
+    localStorage.getItem('conversationHistory') || '[]',
+  )
+
+  // let existingConversations = JSON.parse(localStorage.getItem('conversationHistory') || '[]');
+  while (existingConversations.length > 0) {
+    existingConversations.shift() // Remove the oldest conversation
+    try {
+      localStorage.setItem(
+        'conversationHistory',
+        JSON.stringify(existingConversations),
+      )
+      break // Exit loop if setItem succeeds
+    } catch (error) {
+      continue // Try removing another conversation
+    }
+  }
+}
+
 export interface SaveConversationOptions {
   forceFullPayload?: boolean
 }
