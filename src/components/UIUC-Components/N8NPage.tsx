@@ -38,6 +38,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
+import { useUpsertN8nAPIKey } from '~/hooks/queries/useUpsertN8nAPIKey'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 
 // Utility function for responsive card widths based on sidebar state
@@ -87,6 +88,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     isError: isErrorTools,
     refetch: refetchWorkflows,
   } = useFetchAllWorkflows(GetCurrentPageName())
+
+  const upsertN8nAPIKey = useUpsertN8nAPIKey()
 
   const notificationStyles = (isError = false) => {
     return {
@@ -159,68 +162,68 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     }
 
     console.log('Saving n8n API Key:', n8nApiKeyTextbox)
-    const response = await fetch(`/api/UIUC-api/tools/upsertN8nAPIKey`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    upsertN8nAPIKey.mutate(
+      {
         course_name: currentPageName,
         n8n_api_key: n8nApiKeyTextbox,
-      }),
-    })
-    setN8nApiKey(n8nApiKeyTextbox)
-    refetchWorkflows()
+      },
+      {
+        onSuccess: () => {
+          setN8nApiKey(n8nApiKeyTextbox)
+          refetchWorkflows()
 
-    if (isErrorTools) {
-      errorFetchingWorkflowsToast()
-      return
-    }
+          if (isErrorTools) {
+            errorFetchingWorkflowsToast()
+            return
+          }
 
-    if (!flows_table) {
-      notifications.show({
-        id: 'error-notification',
-        title: 'Error',
-        message: 'Failed to fetch workflows. Please try again later.',
-        autoClose: 10000,
-        color: 'red',
-        radius: 'lg',
-        icon: <IconAlertCircle />,
-        className: 'my-notification-class',
-        styles: notificationStyles(true),
-        loading: false,
-      })
-      return
-    }
+          if (!flows_table) {
+            notifications.show({
+              id: 'error-notification',
+              title: 'Error',
+              message: 'Failed to fetch workflows. Please try again later.',
+              autoClose: 10000,
+              color: 'red',
+              radius: 'lg',
+              icon: <IconAlertCircle />,
+              className: 'my-notification-class',
+              styles: notificationStyles(true),
+              loading: false,
+            })
+            return
+          }
 
-    if (response.ok) {
-      notifications.show({
-        id: 'n8n-api-key-saved',
-        title: 'Success',
-        message: 'n8n API Key saved successfully!',
-        autoClose: 10000,
-        color: 'green',
-        radius: 'lg',
-        icon: <IconCheck />,
-        className: 'my-notification-class',
-        styles: notificationStyles(false),
-        loading: false,
-      })
-    } else {
-      notifications.show({
-        id: 'error-notification',
-        title: 'Error',
-        message: 'Failed to save n8n API Key. Please try again later.',
-        autoClose: 10000,
-        color: 'red',
-        radius: 'lg',
-        icon: <IconAlertCircle />,
-        className: 'my-notification-class',
-        styles: notificationStyles(true),
-        loading: false,
-      })
-    }
-    setIsLoading(false)
+          notifications.show({
+            id: 'n8n-api-key-saved',
+            title: 'Success',
+            message: 'n8n API Key saved successfully!',
+            autoClose: 10000,
+            color: 'green',
+            radius: 'lg',
+            icon: <IconCheck />,
+            className: 'my-notification-class',
+            styles: notificationStyles(false),
+            loading: false,
+          })
+          setIsLoading(false)
+        },
+        onError: () => {
+          notifications.show({
+            id: 'error-notification',
+            title: 'Error',
+            message: 'Failed to save n8n API Key. Please try again later.',
+            autoClose: 10000,
+            color: 'red',
+            radius: 'lg',
+            icon: <IconAlertCircle />,
+            className: 'my-notification-class',
+            styles: notificationStyles(true),
+            loading: false,
+          })
+          setIsLoading(false)
+        },
+      },
+    )
   }
 
   useEffect(() => {
