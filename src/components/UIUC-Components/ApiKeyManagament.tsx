@@ -24,6 +24,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useEffect, useState } from 'react'
 import { type AuthContextProps } from 'react-oidc-context'
+import { useDeleteChatApiKey } from '~/hooks/queries/useDeleteChatApiKey'
 import { useFetchChatApiKey } from '~/hooks/queries/useFetchChatApiKey'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
@@ -51,6 +52,7 @@ const ApiKeyManagement = ({
     isLoading: loading,
     isError,
   } = useFetchChatApiKey(course_name, auth.isAuthenticated)
+  const deleteChatApiKey = useDeleteChatApiKey(course_name)
 
   useEffect(() => {
     if (isError) {
@@ -242,27 +244,22 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     }
   }
 
-  const handleDelete = async () => {
-    const response = await fetch(
-      `/api/chat-api/keys/delete?course_name=${course_name}`,
-      {
-        method: 'DELETE',
+  const handleDelete = () => {
+    deleteChatApiKey.mutate(undefined, {
+      onSuccess: () => {
+        showNotification({
+          title: 'Success',
+          message: 'API key deleted successfully.',
+        })
       },
-    )
-
-    if (response.ok) {
-      queryClient.setQueryData(['chatApiKey', course_name], null)
-      showNotification({
-        title: 'Success',
-        message: 'API key deleted successfully.',
-      })
-    } else {
-      showNotification({
-        title: 'Error',
-        message: 'Failed to delete API key.',
-        color: 'red',
-      })
-    }
+      onError: () => {
+        showNotification({
+          title: 'Error',
+          message: 'Failed to delete API key.',
+          color: 'red',
+        })
+      },
+    })
   }
 
   const styles = {
