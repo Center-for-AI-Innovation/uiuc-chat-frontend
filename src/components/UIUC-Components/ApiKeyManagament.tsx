@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react'
 import { type AuthContextProps } from 'react-oidc-context'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useGenerateApiKey } from '~/hooks/queries/useGenerateApiKey'
+import { useRotateApiKey } from '~/hooks/queries/useRotateApiKey'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -54,6 +55,7 @@ const ApiKeyManagement = ({
     enabled: Boolean(course_name),
   })
   const generateApiKey = useGenerateApiKey()
+  const rotateApiKey = useRotateApiKey()
   type Language = 'curl' | 'python' | 'node'
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('curl')
@@ -223,21 +225,16 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   }
 
   const handleRotate = async () => {
-    const response = await fetch(
-      `/api/chat-api/keys/rotate?course_name=${course_name}`,
-      {
-        method: 'PUT',
-      },
-    )
-
-    if (response.ok) {
-      const data = await response.json()
+    try {
+      const data = await rotateApiKey.mutateAsync({
+        courseName: course_name,
+      })
       setApiKey(data.newApiKey)
       showNotification({
         title: 'Success',
         message: 'API key rotated successfully.',
       })
-    } else {
+    } catch {
       showNotification({
         title: 'Error',
         message: 'Failed to rotate API key.',
