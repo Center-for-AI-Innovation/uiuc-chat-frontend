@@ -1,41 +1,15 @@
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { Title, Text, Flex, Divider, ActionIcon } from '@mantine/core'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useFetchNomicMap } from '~/hooks/queries/useFetchNomicMap'
 
 function NomicDocumentMap({ course_name }: { course_name: string }) {
   const [accordionOpened, setAccordionOpened] = useState(false)
 
-  const [nomicMapData, setNomicMapData] = useState<NomicMapData | null>(null)
-  const [nomicIsLoading, setNomicIsLoading] = useState(true)
-
-  // fetch nomicMapData
-  useEffect(() => {
-    const fetchNomicMapData = async () => {
-      try {
-        const response = await fetch(
-          `/api/getNomicMapForQueries?course_name=${course_name}&map_type=conversation`,
-        )
-
-        const responseText = await response.text()
-        const data = JSON.parse(responseText)
-
-        const parsedData: NomicMapData = {
-          map_id: data.map_id,
-          map_link: data.map_link,
-        }
-        console.log('Parsed nomic map data:', parsedData)
-        setNomicMapData(parsedData)
-        setNomicIsLoading(false)
-      } catch (error) {
-        console.error('NomicDocumentsMap - Error fetching nomic map:', error)
-        setNomicIsLoading(false)
-      }
-    }
-
-    fetchNomicMapData()
-  }, [course_name])
+  const { data: nomicMapData, isLoading: nomicIsLoading } =
+    useFetchNomicMap(course_name)
 
   return (
     <>
