@@ -41,11 +41,9 @@ import {
   type CourseDocument,
   type DocumentGroup,
 } from '~/types/courseMaterials'
-import {
-  useAppendToDocGroup,
-  useGetDocumentGroups,
-  useRemoveFromDocGroup,
-} from '~/hooks/docGroupsQueries'
+import { useAppendToDocGroup } from '@/hooks/queries/useAppendToDocGroup'
+import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
+import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
 import handleExport from '~/pages/util/handleExport'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { LoadingSpinner } from './LoadingSpinner'
@@ -115,7 +113,7 @@ export function ProjectFilesTable({
   }
 
   const appendToDocGroup = useAppendToDocGroup(course_name, queryClient, page)
-  const removeFromDocGroup = useRemoveFromDocGroup(
+  const removeFromDocGroup = useDeleteFromDocGroup(
     course_name,
     queryClient,
     page,
@@ -213,7 +211,7 @@ export function ProjectFilesTable({
     isLoading: isLoadingDocumentGroups,
     isError: isErrorDocumentGroups,
     refetch: refetchDocumentGroups,
-  } = useGetDocumentGroups(course_name)
+  } = useFetchDocumentGroups(course_name)
 
   useEffect(() => {
     if (tabValue === 'failed') {

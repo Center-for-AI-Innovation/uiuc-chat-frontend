@@ -32,15 +32,15 @@ vi.mock('~/components/UIUC-Components/runAuthCheck', () => ({
   get_user_permission: () => 'edit',
 }))
 
-vi.mock('~/hooks/conversationQueries', () => ({
+vi.mock('@/hooks/queries/useUpdateConversation', () => ({
   useUpdateConversation: () => ({ mutateAsync: vi.fn(async () => ({})) }),
 }))
 
-vi.mock('~/hooks/messageQueries', () => ({
+vi.mock('@/hooks/queries/useDeleteMessages', () => ({
   useDeleteMessages: () => ({ mutate: vi.fn(async () => ({})) }),
 }))
 
-vi.mock('~/hooks/docGroupsQueries', () => ({
+vi.mock('@/hooks/queries/useFetchEnabledDocGroups', () => ({
   useFetchEnabledDocGroups: () => ({
     data: [{ name: 'Group 1' }],
     isSuccess: true,

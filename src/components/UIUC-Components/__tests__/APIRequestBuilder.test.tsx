@@ -4,8 +4,8 @@ import { screen } from '@testing-library/react'
 
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
 
-vi.mock('~/hooks/useProjectAPIKeys', () => ({
-  useGetProjectLLMProviders: () => ({
+vi.mock('@/hooks/queries/useFetchLLMProviders', () => ({
+  useFetchLLMProviders: () => ({
     data: {
       OpenAI: {
         provider: 'OpenAI',

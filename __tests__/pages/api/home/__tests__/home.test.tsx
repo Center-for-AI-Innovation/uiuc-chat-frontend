@@ -9,17 +9,23 @@ vi.mock('@/services/errorService', () => ({
   }),
 }))
 
-vi.mock('~/hooks/conversationQueries', () => ({
+vi.mock('@/hooks/queries/useFetchConversationHistory', () => ({
   useFetchConversationHistory: () => ({
     data: [],
     isFetched: true,
     isLoading: false,
   }),
+}))
+
+vi.mock('@/hooks/queries/useFetchLastConversation', () => ({
   useFetchLastConversation: () => ({
     data: { temperature: 0.3 },
     isFetched: true,
     isLoading: false,
   }),
+}))
+
+vi.mock('@/hooks/queries/useUpdateConversation', () => ({
   useUpdateConversation: () => ({ mutate: vi.fn() }),
 }))
 
@@ -29,10 +35,19 @@ const hoistedState = vi.hoisted(() => ({
   ],
 }))
 
-vi.mock('~/hooks/folderQueries', () => ({
+vi.mock('@/hooks/queries/useCreateFolder', () => ({
   useCreateFolder: () => ({ mutate: vi.fn() }),
+}))
+
+vi.mock('@/hooks/queries/useUpdateFolder', () => ({
   useUpdateFolder: () => ({ mutate: vi.fn() }),
+}))
+
+vi.mock('@/hooks/queries/useDeleteFolder', () => ({
   useDeleteFolder: () => ({ mutate: vi.fn() }),
+}))
+
+vi.mock('@/hooks/queries/useFetchFolders', () => ({
   useFetchFolders: () => ({
     data: hoistedState.folders,
     isFetched: true,

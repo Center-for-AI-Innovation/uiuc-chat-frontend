@@ -15,9 +15,15 @@ const mocks = vi.hoisted(() => ({
   mutate: vi.fn(),
 }))
 
-vi.mock('~/hooks/useProjectAPIKeys', () => ({
-  useGetProjectLLMProviders: () => mocks.query,
-  useSetProjectLLMProviders: () => ({ mutate: mocks.mutate, isPending: false }),
+vi.mock('@/hooks/queries/useFetchLLMProviders', () => ({
+  useFetchLLMProviders: () => mocks.query,
+}))
+
+vi.mock('@/hooks/queries/useUpdateProjectLLMProviders', () => ({
+  useUpdateProjectLLMProviders: () => ({
+    mutate: mocks.mutate,
+    isPending: false,
+  }),
 }))
 
 vi.mock('@mantine/notifications', () => ({
