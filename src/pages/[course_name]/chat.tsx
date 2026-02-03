@@ -13,7 +13,6 @@ import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
-import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()
@@ -243,7 +242,8 @@ const ChatPage: NextPage = () => {
       {!isCourseMetadataLoading &&
         !auth.isLoading &&
         router.isReady &&
-        currentEmail !== undefined &&
+        // Only render once we have a valid identifier (email or posthog id)
+        !!currentEmail &&
         courseMetadata && (
           <Home
             current_email={currentEmail || ''}
