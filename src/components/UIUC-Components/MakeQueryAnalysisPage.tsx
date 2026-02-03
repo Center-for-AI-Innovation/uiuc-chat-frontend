@@ -40,6 +40,7 @@ import SettingsLayout, {
 import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
 import downloadConversationHistory from '../../pages/util/downloadConversationHistory'
 import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
+import { useFetchConversationStats } from '~/hooks/queries/useFetchConversationStats'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -96,13 +97,6 @@ interface ModelUsage {
   percentage: number
 }
 
-interface ConversationStats {
-  per_day: { [date: string]: number }
-  per_hour: { [hour: string]: number }
-  per_weekday: { [day: string]: number }
-  heatmap: { [day: string]: { [hour: string]: number } }
-}
-
 interface CourseStats {
   total_conversations: number
   total_users: number
@@ -154,11 +148,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const [conversationStats, setConversationStats] =
-    useState<ConversationStats | null>(null)
-  const [statsLoading, setStatsLoading] = useState(true)
-  const [statsError, setStatsError] = useState<string | null>(null)
-
   const [courseStatsLoading, setCourseStatsLoading] = useState(true)
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
   const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
@@ -177,24 +166,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     null,
     null,
   ])
-  const [totalCount, setTotalCount] = useState<number>(0)
-
-  // Separate state for filtered conversation stats
-  const [filteredConversationStats, setFilteredConversationStats] =
-    useState<ConversationStats | null>(null)
-  const [filteredStatsLoading, setFilteredStatsLoading] = useState(true)
-  const [filteredStatsError, setFilteredStatsError] = useState<string | null>(
-    null,
-  )
-
   // Set current email when auth is ready
   useEffect(() => {
     if (!auth.isLoading && auth.user?.profile.email) {
       setCurrentEmail(auth.user.profile.email)
     }
   }, [auth.isLoading, auth.user?.profile.email])
-
-  const [hasConversationData, setHasConversationData] = useState<boolean>(true)
 
   const getDateRange = () => {
     const today = new Date()
@@ -234,62 +211,32 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     }
   }
 
-  useEffect(() => {
-    const fetchFilteredConversationStats = async () => {
-      try {
-        const { from_date, to_date } = getDateRange()
+  const { from_date, to_date } = getDateRange()
+  const isCustomWithoutFullRange =
+    dateRangeType === 'custom' && (!dateRange[0] || !dateRange[1])
 
-        if (dateRangeType === 'custom' && (!dateRange[0] || !dateRange[1])) {
-          setHasConversationData(false)
-          return
-        }
+  const {
+    data: filteredConversationStats,
+    isFetching: filteredStatsLoading,
+    error: filteredStatsErrorObj,
+  } = useFetchConversationStats({
+    courseName: course_name,
+    fromDate: from_date,
+    toDate: to_date,
+    enabled: !isCustomWithoutFullRange,
+  })
 
-        // TODO: Change this to a fetch request
-        const response = await fetch('/api/UIUC-api/getConversationStats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name, from_date, to_date }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          setFilteredConversationStats(data)
-          setTotalCount(data.total_count || 0)
-          setHasConversationData(Object.keys(data.per_day).length > 0)
-        }
-      } catch (error) {
-        console.error('Error fetching filtered conversation stats:', error)
-        setFilteredStatsError('Failed to fetch conversation statistics')
-        setHasConversationData(false)
-      } finally {
-        setFilteredStatsLoading(false)
-      }
-    }
-
-    fetchFilteredConversationStats()
-  }, [course_name, dateRangeType, dateRange])
-
-  useEffect(() => {
-    const fetchAllTimeConversationStats = async () => {
-      try {
-        const response = await fetch('/api/UIUC-api/getConversationStats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          setConversationStats(data)
-        }
-      } catch (error) {
-        console.error('Error fetching all-time conversation stats:', error)
-        setStatsError('Failed to fetch conversation statistics')
-      } finally {
-        setStatsLoading(false)
-      }
-    }
-
-    fetchAllTimeConversationStats()
-  }, [course_name])
+  const filteredStatsError = filteredStatsErrorObj
+    ? 'Failed to fetch conversation statistics'
+    : null
+  const totalCount = filteredConversationStats?.total_count ?? 0
+  const hasConversationData = isCustomWithoutFullRange
+    ? false
+    : filteredStatsErrorObj
+      ? false
+      : filteredConversationStats
+        ? Object.keys(filteredConversationStats.per_day).length > 0
+        : true
 
   useEffect(() => {
     const fetchCourseStats = async () => {
