@@ -44,7 +44,7 @@ import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 import {
   saveConversationToServer,
   createLogConversationPayload,
-} from '@/utils/app/conversation'
+} from '@/hooks/__internal__/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'

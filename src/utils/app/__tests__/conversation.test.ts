@@ -13,7 +13,7 @@ import {
   saveConversationToServer,
   saveConversations,
   logConversationToServer,
-} from '../conversation'
+} from '@/hooks/__internal__/conversation'
 
 function makeConversation(overrides: Partial<Conversation> = {}): Conversation {
   return {

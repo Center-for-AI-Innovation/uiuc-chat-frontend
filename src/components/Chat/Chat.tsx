@@ -80,7 +80,7 @@ import {
   handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
-import { createLogConversationPayload } from '@/utils/app/conversation'
+import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
 
 const montserrat_med = montserrat_paragraph
 
