@@ -95,7 +95,7 @@
     "@vercel/edge-config": "^0.2.0",
     "@vercel/kv": "^0.2.1",
     "@vercel/speed-insights": "^1.1.0",
-    "ai": "^4.1.46",
+    "ai": "^6.0.42",
     "axios": "^1.6.0",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
