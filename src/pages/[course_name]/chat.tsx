@@ -12,6 +12,7 @@ import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchProjectDocumentCount } from '~/hooks/queries/useFetchProjectDocumentCount'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
@@ -31,7 +32,8 @@ const ChatPage: NextPage = () => {
   const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
   const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
-  const [documentCount, setDocumentCount] = useState<number | null>(null)
+  const { data: documentCount = null } =
+    useFetchProjectDocumentCount(courseName)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
   const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
   const { course_name } = router.query
@@ -96,24 +98,6 @@ const ChatPage: NextPage = () => {
       })
     }
   }, [courseMetadata])
-
-  // UseEffect to fetch document count in the background
-  useEffect(() => {
-    if (!courseName) return
-    const fetchDocumentCount = async () => {
-      try {
-        const documentsResponse = await fetch(
-          `/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${courseName}`,
-        )
-        const documentsData = await documentsResponse.json()
-        setDocumentCount(documentsData.total_count || 0)
-      } catch (error) {
-        console.error('Error fetching document count:', error)
-        setDocumentCount(0)
-      }
-    }
-    fetchDocumentCount()
-  }, [courseName])
 
   // UseEffect to check user permissions and set user email
   useEffect(() => {
