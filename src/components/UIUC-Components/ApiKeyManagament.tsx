@@ -24,6 +24,7 @@ import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useEffect, useState } from 'react'
 import { type AuthContextProps } from 'react-oidc-context'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useGenerateApiKey } from '~/hooks/queries/useGenerateApiKey'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -52,6 +53,7 @@ const ApiKeyManagement = ({
     courseName: course_name,
     enabled: Boolean(course_name),
   })
+  const generateApiKey = useGenerateApiKey()
   type Language = 'curl' | 'python' | 'node'
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('curl')
@@ -202,24 +204,16 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   }, [auth.isAuthenticated])
 
   const handleGenerate = async () => {
-    const response = await fetch(
-      `/api/chat-api/keys/generate?course_name=${course_name}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    )
-
-    if (response.ok) {
-      const data = await response.json()
+    try {
+      const data = await generateApiKey.mutateAsync({
+        courseName: course_name,
+      })
       setApiKey(data.apiKey)
       showNotification({
         title: 'Success',
         message: 'API key generated successfully.',
       })
-    } else {
+    } catch {
       showNotification({
         title: 'Error',
         message: 'Failed to generate API key.',
