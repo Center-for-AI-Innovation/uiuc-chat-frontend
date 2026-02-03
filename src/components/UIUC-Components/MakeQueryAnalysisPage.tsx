@@ -41,6 +41,7 @@ import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
 import downloadConversationHistory from '../../pages/util/downloadConversationHistory'
 import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
 import { useFetchConversationStats } from '~/hooks/queries/useFetchConversationStats'
+import { useFetchWeeklyTrends } from '~/hooks/queries/useFetchWeeklyTrends'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -106,13 +107,6 @@ interface CourseStats {
   avg_messages_per_conversation: number
 }
 
-interface WeeklyTrend {
-  current_week_value: number
-  metric_name: string
-  percentage_change: number
-  previous_week_value: number
-}
-
 const formatPercentageChange = (value: number | null | undefined) => {
   if (value == null) return '0'
   return value.toFixed(1)
@@ -152,10 +146,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
   const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
 
-  // Update the state to use an array of WeeklyTrend
-  const [weeklyTrends, setWeeklyTrends] = useState<WeeklyTrend[]>([])
-  const [trendsLoading, setTrendsLoading] = useState(true)
-  const [trendsError, setTrendsError] = useState<string | null>(null)
+  const { data: weeklyTrends = [] } = useFetchWeeklyTrends({
+    courseName: course_name,
+  })
 
   const [modelUsageData, setModelUsageData] = useState<ModelUsage[]>([])
   const [modelUsageLoading, setModelUsageLoading] = useState(true)
@@ -270,32 +263,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     }
 
     fetchCourseStats()
-  }, [course_name])
-
-  useEffect(() => {
-    const fetchWeeklyTrends = async () => {
-      setTrendsLoading(true)
-      setTrendsError(null)
-      try {
-        const response = await fetch('/api/UIUC-api/getWeeklyTrends', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name, project_name: course_name }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          setWeeklyTrends(data)
-        } else {
-          throw new Error('Failed to fetch weekly trends')
-        }
-      } catch (error) {
-        setTrendsError('Failed to load trends')
-      } finally {
-        setTrendsLoading(false)
-      }
-    }
-
-    fetchWeeklyTrends()
   }, [course_name])
 
   useEffect(() => {
