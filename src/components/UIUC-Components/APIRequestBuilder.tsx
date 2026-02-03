@@ -24,7 +24,7 @@ interface APIRequestBuilderProps {
   course_name: string
   apiKey: string | null
   courseMetadata?: {
-    system_prompt?: string
+    system_prompt?: string | null
   }
 }
 

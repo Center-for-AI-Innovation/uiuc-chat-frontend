@@ -13,6 +13,7 @@ import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
+import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
 const ChatPage: NextPage = () => {
   const auth = useAuth()

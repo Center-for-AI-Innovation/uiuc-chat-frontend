@@ -6,7 +6,6 @@ import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createProject } from '~/utils/apiUtils'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
 import UploadNotification, { type FileUpload } from './UploadNotification'
@@ -18,6 +17,7 @@ import StepPrompt from './MakeNewCoursePageSteps/StepPrompt'
 import StepBranding from './MakeNewCoursePageSteps/StepBranding'
 import StepSuccess from './MakeNewCoursePageSteps/StepSuccess'
 import { useAuth } from 'react-oidc-context'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 const MakeNewCoursePage = ({
   project_name,
@@ -42,6 +42,11 @@ const MakeNewCoursePage = ({
   const [hasCreatedProject, setHasCreatedProject] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
   const [currentStep, setStep] = useState(0)
+
+  const { refetch: refetchCourseMetadata } = useFetchCourseMetadata({
+    courseName: projectName,
+    enabled: false,
+  })
 
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
@@ -167,10 +172,7 @@ const MakeNewCoursePage = ({
 
       if (is_new_course) {
         try {
-          const metadata = (await fetchCourseMetadata(
-            project_name,
-          )) as CourseMetadata
-          queryClient.setQueryData(['courseMetadata', project_name], metadata)
+          await refetchCourseMetadata({ throwOnError: true })
         } catch (metadataError) {
           console.error(
             'Error fetching course metadata after creation:',

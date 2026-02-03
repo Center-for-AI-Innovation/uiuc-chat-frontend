@@ -26,6 +26,7 @@ import { type AuthContextProps } from 'react-oidc-context'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
+import { type CourseMetadata } from '~/types/courseMetadata'
 
 const ApiKeyManagement = ({
   course_name,
