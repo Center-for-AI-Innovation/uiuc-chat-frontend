@@ -17,5 +17,15 @@ describe('useCreateReducer', () => {
       result.current.dispatch({ type: 'reset' })
     })
     expect(result.current.state).toEqual({ count: 0, name: 'x' })
+
+    expect(() => {
+      act(() => {
+        result.current.dispatch({
+          type: 'change',
+          field: 'count',
+          value: 2,
+        } as any)
+      })
+    }).toThrow()
   })
 })
