@@ -1,1 +1,28 @@
-A list of hooks for Tenstack Query
+TanStack Query hooks used across the app for fetching and mutating server state (cached, deduped, retried, and invalidated consistently).
+
+- `useAppendToDocGroup` — adds a document to a document group and updates the cached document + group counts.
+- `useCreateDocumentGroup` — creates a new document group and updates cached document groups/documents.
+- `useCreateFolder` — creates a folder (optimistic cache update for `folders`).
+- `useDeleteAllConversations` — deletes all conversations for a course/user and clears cached conversation history.
+- `useDeleteConversation` — deletes one conversation and removes it from cached conversation history.
+- `useDeleteFolder` — deletes a folder and removes it from cached folders.
+- `useDeleteFromDocGroup` — removes a document from a document group and updates cached document + group counts.
+- `useDeleteMessages` — deletes a set of messages from a conversation (used for edit/regenerate flows).
+- `useFetchAllCourseNames` — fetches all course names for search/autocomplete.
+- `useFetchConversationHistory` — fetches paginated conversation history (infinite query).
+- `useFetchCourseExists` — checks whether a course exists.
+- `useFetchCourseMetadata` — fetches course metadata/settings.
+- `useFetchDocumentGroups` — fetches document groups for a course.
+- `useFetchEnabledDocGroups` — fetches enabled document groups for retrieval.
+- `useFetchFolders` — fetches folders for a course/user.
+- `useFetchLLMProviders` — fetches configured LLM providers/models for a project.
+- `useFetchLastConversation` — fetches the latest conversation (used for defaults like temperature).
+- `useFetchMaintenanceDetails` — fetches maintenance mode details (title/body + flag).
+- `useFetchMaintenanceMode` — fetches the maintenance mode flag (fast check).
+- `useLogConversation` — logs a conversation to the server for analytics/stats.
+- `useQueryRewrite` — runs server-side query rewrite for retrieval.
+- `useRouteChat` — routes a chat request through the server-side router endpoint.
+- `useUpdateConversation` — saves/updates a conversation with optimistic cache updates.
+- `useUpdateDocGroup` — toggles document group enabled/disabled state with optimistic updates.
+- `useUpdateFolder` — renames/updates folder state with optimistic updates.
+- `useUpdateProjectLLMProviders` — persists LLM provider settings (debounced) and invalidates cached provider config.
