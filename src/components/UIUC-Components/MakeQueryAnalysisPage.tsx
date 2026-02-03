@@ -40,6 +40,7 @@ import SettingsLayout, {
 import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
 import downloadConversationHistory from '../../pages/util/downloadConversationHistory'
 import { useFetchConversationStats } from '~/hooks/queries/useFetchConversationStats'
+import { useFetchModelUsageCounts } from '~/hooks/queries/useFetchModelUsageCounts'
 import { useFetchProjectStats } from '~/hooks/queries/useFetchProjectStats'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
@@ -168,9 +169,14 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const [trendsLoading, setTrendsLoading] = useState(true)
   const [trendsError, setTrendsError] = useState<string | null>(null)
 
-  const [modelUsageData, setModelUsageData] = useState<ModelUsage[]>([])
-  const [modelUsageLoading, setModelUsageLoading] = useState(true)
-  const [modelUsageError, setModelUsageError] = useState<string | null>(null)
+  const {
+    data: modelUsageData = [],
+    isFetching: modelUsageLoading,
+    error: modelUsageErrorObj,
+  } = useFetchModelUsageCounts({ courseName: course_name })
+  const modelUsageError = modelUsageErrorObj
+    ? 'Failed to load model usage data'
+    : null
 
   const [dateRangeType, setDateRangeType] = useState<string>('last_month')
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
@@ -273,32 +279,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     }
 
     fetchWeeklyTrends()
-  }, [course_name])
-
-  useEffect(() => {
-    const fetchModelUsage = async () => {
-      setModelUsageLoading(true)
-      setModelUsageError(null)
-      try {
-        const response = await fetch('/api/UIUC-api/getModelUsageCounts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name, project_name: course_name }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          setModelUsageData(data)
-        } else {
-          throw new Error('Failed to fetch model usage data')
-        }
-      } catch (error) {
-        setModelUsageError('Failed to load model usage data')
-      } finally {
-        setModelUsageLoading(false)
-      }
-    }
-
-    fetchModelUsage()
   }, [course_name])
 
   const [view, setView] = useState('hour')
