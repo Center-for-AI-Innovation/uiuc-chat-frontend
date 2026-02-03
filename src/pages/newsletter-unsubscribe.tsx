@@ -6,10 +6,12 @@ import { IconSunset2, IconX } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
+import { useNewsletterUnsubscribe } from '~/hooks/queries/useNewsletterUnsubscribe'
 
 export default function Unsubscribe() {
   const [email, setEmail] = useState('')
   const router = useRouter()
+  const newsletterUnsubscribe = useNewsletterUnsubscribe()
 
   useEffect(() => {
     if (router.isReady) {
@@ -36,30 +38,7 @@ export default function Unsubscribe() {
     }
 
     try {
-      const response = await fetch('/api/UIUC-api/newsletterUnsubscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      if (!response.ok) {
-        notifications.show({
-          id: 'network-error-notification',
-          title: 'Our database is having a bad day. 😢',
-          message:
-            "Seems like we couldn't unsubscribe you. Please try again later. Email help@uiuc.chat for assistance.",
-          autoClose: 20000,
-          color: 'red',
-          radius: 'lg',
-          icon: <IconX />,
-          className: 'my-notification-class',
-          style: { backgroundColor: '#15162c' },
-          loading: false,
-        })
-        throw new Error('Network response was not ok')
-      }
+      await newsletterUnsubscribe.mutateAsync({ email })
 
       notifications.show({
         id: 'success-notification',
