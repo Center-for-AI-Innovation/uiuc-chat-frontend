@@ -29,6 +29,7 @@ import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
 import { type FileUpload } from './UploadNotification'
 import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
+import { useIngest } from '~/hooks/queries/useIngest'
 import { type AuthContextProps } from 'react-oidc-context'
 
 const useStyles = createStyles((theme) => ({
@@ -104,6 +105,7 @@ export function LargeDropzone({
     await router.reload()
   }
   const uploadToS3Mutation = useUploadToS3()
+  const ingestMutation = useIngest()
 
   const ingestFiles = async (files: File[] | null, is_new_course: boolean) => {
     if (!files) return
@@ -162,18 +164,11 @@ export function LargeDropzone({
           })
           setSuccessfulUploads((prev) => prev + 1)
 
-          const response = await fetch(`/api/UIUC-api/ingest`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              uniqueFileName: uniqueFileName,
-              courseName: courseName,
-              readableFilename: uniqueReadableFileName,
-            }),
+          const res = await ingestMutation.mutateAsync({
+            uniqueFileName,
+            courseName,
+            readableFilename: uniqueReadableFileName,
           })
-          const res = await response.json()
           console.debug('Ingest submitted...', res)
           return { ok: true, s3_path: file.name }
         } catch (error) {
