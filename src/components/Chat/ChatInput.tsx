@@ -64,6 +64,7 @@ import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
 import { useFetchContexts } from '@/hooks/queries/useFetchContexts'
+import { useChatFileUpload } from '@/hooks/queries/useChatFileUpload'
 import { type ChatBody, ContextWithMetadata } from '~/types/chat'
 
 const montserrat_med = Montserrat({
@@ -222,6 +223,7 @@ export const ChatInput = ({
   const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
   const { mutateAsync: routeChatAsync } = useRouteChat()
   const { mutateAsync: fetchContextsAsync } = useFetchContexts()
+  const { mutateAsync: chatFileUploadAsync } = useChatFileUpload()
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -705,25 +707,15 @@ export const ChatInput = ({
           }
         } else {
           // For non-image files, use the regular file processing
-          const response = await fetch('/api/UIUC-api/chat-file-upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              conversationId: conversation.id,
-              courseName: courseName,
-              user_id: user_id,
-              s3Key: s3Key,
-              fileName: file.name,
-              fileType: file.type,
-              model: conversation.model?.id,
-            }),
+          await chatFileUploadAsync({
+            conversationId: conversation.id,
+            courseName: courseName,
+            user_id: user_id,
+            s3Key: s3Key || '',
+            fileName: file.name,
+            fileType: file.type,
+            model: conversation.model?.id,
           })
-
-          if (!response.ok) {
-            throw new Error('File too large, please upload a smaller file')
-          }
-
-          await response.json()
 
           // Add a small delay to allow backend processing to complete
           await new Promise((resolve) => setTimeout(resolve, 2000))
