@@ -10,6 +10,7 @@ import Navbar from './navbars/Navbar'
 
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import ProjectTable from '~/components/UIUC-Components/ProjectTable'
+import { useFetchAllCourseNames } from '~/hooks/queries/useFetchAllCourseNames'
 
 const Dashboard = ({
   project_name,
@@ -31,9 +32,17 @@ const Dashboard = ({
     boolean | undefined
   >(undefined)
   const [isLoading, setIsLoading] = useState(false)
-  const [allExistingCourseNames, setAllExistingCourseNames] = useState<
-    string[]
-  >([])
+
+  const checkIfNewCoursePage = () => {
+    // `/new` --> `new`
+    // `/new?course_name=mycourse` --> `new`
+    return router.asPath.split('/')[1]?.split('?')[0] as string
+  }
+
+  const { data: allExistingCourseNames = [] } = useFetchAllCourseNames({
+    enabled: checkIfNewCoursePage() === 'new',
+  })
+
   const checkCourseAvailability = () => {
     const courseExists =
       projectName != '' &&
@@ -41,31 +50,6 @@ const Dashboard = ({
       allExistingCourseNames.includes(projectName)
     setIsCourseAvailable(!courseExists)
   }
-  const checkIfNewCoursePage = () => {
-    // `/new` --> `new`
-    // `/new?course_name=mycourse` --> `new`
-    return router.asPath.split('/')[1]?.split('?')[0] as string
-  }
-
-  useEffect(() => {
-    // only run when creating new courses.. otherwise VERY wasteful on DB.
-    if (checkIfNewCoursePage() == 'new') {
-      async function fetchGetAllCourseNames() {
-        const response = await fetch(`/api/UIUC-api/getAllCourseNames`)
-
-        if (response.ok) {
-          const data = await response.json()
-          setAllExistingCourseNames(data.all_course_names)
-        } else {
-          console.error(`Error fetching course metadata: ${response.status}`)
-        }
-      }
-
-      fetchGetAllCourseNames().catch((error) => {
-        console.error(error)
-      })
-    }
-  }, [])
 
   useEffect(() => {
     checkCourseAvailability()
