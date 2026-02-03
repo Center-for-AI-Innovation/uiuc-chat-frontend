@@ -14,6 +14,7 @@ import { Title } from '@mantine/core'
 import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -25,7 +26,7 @@ const ToolsPage: NextPage = () => {
   const auth = useAuth()
 
   const [courseData, setCourseData] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingCourseData, setIsLoadingCourseData] = useState(false)
   const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
   const getCurrentPageName = () => {
@@ -38,50 +39,46 @@ const ToolsPage: NextPage = () => {
   }
   const courseName = getCurrentPageName() as string
 
+  const {
+    data: courseExists,
+    isLoading: isCheckingExists,
+    isError: isExistsError,
+  } = useFetchCourseExists({
+    courseName,
+    enabled: router.isReady && !auth.isLoading && Boolean(courseName),
+  })
+
   useEffect(() => {
-    if (!router.isReady || auth.isLoading) return
+    if (isCheckingExists) return
+
+    if (isExistsError || !courseExists) {
+      setErrorType(404)
+      return
+    }
 
     const fetchCourseData = async () => {
-      setIsLoading(true)
+      setIsLoadingCourseData(true)
       try {
-        const exsitResponse = await fetch(
-          `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
+        const dataResponse = await fetch(
+          `/api/UIUC-api/getAllCourseData?course_name=${courseName}`,
         )
-        if (!exsitResponse.ok) {
-          const s = exsitResponse.status
+        if (!dataResponse.ok) {
+          const s = dataResponse.status
           if (s === 401 || s === 403 || s === 404)
             setErrorType(s as 401 | 403 | 404)
           return
         }
-
-        const data = await exsitResponse.json()
-        if (!data) {
-          setErrorType(404)
-          return
-        } else {
-          const dataResponse = await fetch(
-            `/api/UIUC-api/getAllCourseData?course_name=${courseName}`,
-          )
-          if (!dataResponse.ok) {
-            const s = dataResponse.status
-            if (s === 401 || s === 403 || s === 404)
-              setErrorType(s as 401 | 403 | 404)
-            return
-          }
-          const data = await dataResponse.json()
-          const courseData = data.distinct_files
-          setCourseData(courseData)
-        }
+        const data = await dataResponse.json()
+        setCourseData(data.distinct_files)
       } catch (error) {
         console.error(error)
-
         const errorWithStatus = error as Error & { status?: number }
         const status = errorWithStatus.status
         if (status === 401 || status === 403 || status === 404) {
           setErrorType(status as 401 | 403 | 404)
         }
       } finally {
-        setIsLoading(false)
+        setIsLoadingCourseData(false)
       }
 
       posthog.capture('tool_page_visited', {
@@ -89,9 +86,14 @@ const ToolsPage: NextPage = () => {
       })
     }
     fetchCourseData()
-  }, [router.isReady, auth.isLoading, courseName])
+  }, [courseExists, isCheckingExists, isExistsError, courseName])
 
-  if (auth.isLoading || isLoading || courseName === undefined) {
+  if (
+    auth.isLoading ||
+    isCheckingExists ||
+    isLoadingCourseData ||
+    courseName === undefined
+  ) {
     return <LoadingPlaceholderForAdminPages />
   }
 
