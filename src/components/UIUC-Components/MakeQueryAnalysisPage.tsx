@@ -39,8 +39,8 @@ import SettingsLayout, {
 } from '~/components/Layout/SettingsLayout'
 import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
 import downloadConversationHistory from '../../pages/util/downloadConversationHistory'
-import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
 import { useFetchConversationStats } from '~/hooks/queries/useFetchConversationStats'
+import { useFetchProjectStats } from '~/hooks/queries/useFetchProjectStats'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -148,9 +148,20 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const [courseStatsLoading, setCourseStatsLoading] = useState(true)
-  const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
-  const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
+  const { data: projectStatsData } = useFetchProjectStats({
+    courseName: course_name,
+  })
+  const courseStats: CourseStats | null = projectStatsData
+    ? {
+        total_conversations: projectStatsData.total_conversations,
+        total_messages: projectStatsData.total_messages,
+        total_users: projectStatsData.unique_users,
+        avg_conversations_per_user: projectStatsData.avg_conversations_per_user,
+        avg_messages_per_user: projectStatsData.avg_messages_per_user,
+        avg_messages_per_conversation:
+          projectStatsData.avg_messages_per_conversation,
+      }
+    : null
 
   // Update the state to use an array of WeeklyTrend
   const [weeklyTrends, setWeeklyTrends] = useState<WeeklyTrend[]>([])
@@ -237,40 +248,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       : filteredConversationStats
         ? Object.keys(filteredConversationStats.per_day).length > 0
         : true
-
-  useEffect(() => {
-    const fetchCourseStats = async () => {
-      setCourseStatsLoading(true)
-      setCourseStatsError(null)
-      try {
-        const response = await fetch('/api/UIUC-api/getProjectStats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name, project_name: course_name }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          const mappedData = {
-            total_conversations: data.total_conversations,
-            total_messages: data.total_messages,
-            total_users: data.unique_users,
-            avg_conversations_per_user: data.avg_conversations_per_user,
-            avg_messages_per_user: data.avg_messages_per_user,
-            avg_messages_per_conversation: data.avg_messages_per_conversation,
-          }
-          setCourseStats(mappedData)
-        } else {
-          throw new Error('Failed to fetch course stats')
-        }
-      } catch (error) {
-        setCourseStatsError('Failed to load stats')
-      } finally {
-        setCourseStatsLoading(false)
-      }
-    }
-
-    fetchCourseStats()
-  }, [course_name])
 
   useEffect(() => {
     const fetchWeeklyTrends = async () => {
