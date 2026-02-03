@@ -10,7 +10,7 @@ interface UseFetchLLMProvidersOptions extends FetchLLMProvidersVariables {
   enabled?: boolean
 }
 
-async function fetchLLMProviders({
+export async function fetchLLMProviders({
   projectName,
 }: FetchLLMProvidersVariables): Promise<AllLLMProviders> {
   const response = await fetch('/api/models', {
@@ -28,7 +28,7 @@ async function fetchLLMProviders({
   }
 
   const data = (await response.json()) as AllLLMProviders | undefined
-  if (!data) {
+  if (!data || Object.keys(data).length === 0) {
     throw new Error('No LLM providers returned from API')
   }
 

@@ -58,7 +58,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
 import { useFetchEnabledDocGroups } from '@/hooks/queries/useFetchEnabledDocGroups'
-import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
+import { fetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { useDeleteMessages } from '@/hooks/queries/useDeleteMessages'
 import { useLogConversation } from '@/hooks/queries/useLogConversation'
 import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
@@ -110,9 +110,6 @@ export const Chat = memo(
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
-    const { refetch: refetchLLMProviders } = useFetchLLMProviders({
-      projectName: courseName,
-    })
     const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
     const { mutateAsync: routeChatAsync } = useRouteChat()
     // const
@@ -330,13 +327,7 @@ export const Chat = memo(
         // This happens when the user hits send before the LLM providers have loaded
         if (!llmProviders || Object.keys(llmProviders).length === 0) {
           try {
-            const refetchResult = await refetchLLMProviders({
-              throwOnError: true,
-            })
-            if (!refetchResult.data) {
-              throw new Error('No LLM providers returned from API')
-            }
-            llmProviders = refetchResult.data
+            llmProviders = await fetchLLMProviders({ projectName: courseName })
           } catch (error) {
             console.error('Error fetching LLM providers:', error)
             errorToast({
@@ -1023,9 +1014,11 @@ export const Chat = memo(
           return
         }
 
-        let data
-        if (response instanceof Response) {
-          data = response.body
+        // Only create a stream reader when we actually plan to consume the body as a stream.
+        // Plugin responses are handled via `response.json()` below, which is incompatible with
+        // `getReader()` (it locks the body and makes it unusable for JSON parsing).
+        if (!plugin && response instanceof Response) {
+          const data = response.body
           if (!data) {
             homeDispatch({ field: 'loading', value: false })
             homeDispatch({ field: 'messageIsStreaming', value: false })
@@ -1326,7 +1319,6 @@ export const Chat = memo(
         selectedConversation,
         stopConversationRef,
         chat_ui,
-        refetchLLMProviders,
         routeChatAsync,
         runQueryRewriteAsync,
       ],
