@@ -3,13 +3,13 @@ import { Title, Text, Flex, Divider, ActionIcon } from '@mantine/core'
 import React, { useState } from 'react'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useFetchNomicMap } from '~/hooks/queries/useFetchNomicMap'
+import { useFetchNomicMapForQueries } from '~/hooks/queries/useFetchNomicMapForQueries'
 
 function NomicDocumentMap({ course_name }: { course_name: string }) {
   const [accordionOpened, setAccordionOpened] = useState(false)
 
   const { data: nomicMapData, isLoading: nomicIsLoading } =
-    useFetchNomicMap(course_name)
+    useFetchNomicMapForQueries(course_name)
 
   return (
     <>

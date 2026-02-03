@@ -1,0 +1,38 @@
+import { useQuery } from '@tanstack/react-query'
+
+interface ModelUsage {
+  model_name: string
+  count: number
+  percentage: number
+}
+
+async function fetchModelUsageCounts(
+  courseName: string,
+): Promise<ModelUsage[]> {
+  const response = await fetch('/api/UIUC-api/getModelUsageCounts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ course_name: courseName, project_name: courseName }),
+  })
+
+  if (!response.ok) {
+    console.error('Error fetching model usage counts:', response.status)
+    throw new Error(`Error fetching model usage counts: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+export function useFetchModelUsageCounts({
+  courseName,
+  enabled = true,
+}: {
+  courseName: string
+  enabled?: boolean
+}) {
+  return useQuery({
+    queryKey: ['modelUsageCounts', courseName],
+    queryFn: () => fetchModelUsageCounts(courseName),
+    enabled: enabled && Boolean(courseName),
+  })
+}

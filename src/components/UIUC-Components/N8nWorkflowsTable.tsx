@@ -11,10 +11,10 @@ import {
   // IconSquareArrowUp,
   IconAlertCircle,
 } from '@tabler/icons-react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { DataTable } from 'mantine-datatable'
 import { Montserrat } from 'next/font/google'
 import { type UIUCTool } from '~/types/chat'
+import { useActivateWorkflow } from '~/hooks/queries/useActivateWorkflow'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { LoadingSpinner } from './LoadingSpinner'
 
@@ -81,7 +81,6 @@ export const N8nWorkflowsTable = ({
   sidebarCollapsed = false,
 }: N8nWorkflowsTableProps) => {
   const [page, setPage] = useState(1)
-  const queryClient = useQueryClient()
 
   // Get responsive width classes based on sidebar state
   const widthClasses = sidebarCollapsed
@@ -96,66 +95,7 @@ export const N8nWorkflowsTable = ({
     refetch: refetchWorkflows,
   } = useFetchAllWorkflows(course_name, n8nApiKey, 20, 'true', true)
 
-  const mutate_active_flows = useMutation({
-    mutationFn: async ({ id, checked }: { id: string; checked: boolean }) => {
-      const response = await fetch(
-        `/api/UIUC-api/tools/activateWorkflow?api_key=${n8nApiKey}&id=${id}&activate=${checked}`,
-      )
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error)
-      }
-
-      return data
-    },
-
-    onMutate: (variables) => {
-      // A mutation is about to happen!
-
-      // Optionally return a context containing data to use when for example rolling back
-      return { id: 1 }
-    },
-    onError: (error, variables, context) => {
-      // An error happened!
-      console.log(`Error happened ${error}`)
-      notifications.show({
-        id: 'error-notification',
-        withCloseButton: true,
-        closeButtonProps: { color: 'red' },
-        onClose: () => console.log('error unmounted'),
-        onOpen: () => console.log('error mounted'),
-        autoClose: 12000,
-        title: (
-          <Text size={'lg'} className={`${montserrat_med.className}`}>
-            Error with activation
-          </Text>
-        ),
-        message: (
-          <Text className={`${montserrat_med.className} text-[neutral-200]`}>
-            {(error as Error).message}
-          </Text>
-        ),
-        color: 'red',
-        radius: 'lg',
-        icon: <IconAlertCircle />,
-        className: 'my-notification-class',
-        styles: notificationStyles(true),
-        withBorder: true,
-        loading: false,
-      })
-    },
-    onSuccess: (data, variables, context) => {
-      // Boom baby!
-      console.log(`success`, data)
-    },
-    onSettled: (data, error, variables, context) => {
-      // Error or success... doesn't matter!
-      queryClient.invalidateQueries({
-        queryKey: ['tools', n8nApiKey],
-      })
-    },
-  })
+  const mutate_active_flows = useActivateWorkflow(n8nApiKey)
 
   useEffect(() => {
     // Refetch if API key changes
@@ -275,10 +215,44 @@ export const N8nWorkflowsTable = ({
                   // @ts-ignore -- for some reason N8N returns "active" and we use "enabled" but I can't get them to agree
                   checked={!!record.active}
                   onChange={(event) => {
-                    mutate_active_flows.mutate({
-                      id: record.id,
-                      checked: event.target.checked,
-                    })
+                    mutate_active_flows.mutate(
+                      {
+                        id: record.id,
+                        checked: event.target.checked,
+                      },
+                      {
+                        onError: (error) => {
+                          notifications.show({
+                            id: 'error-notification',
+                            withCloseButton: true,
+                            closeButtonProps: { color: 'red' },
+                            autoClose: 12000,
+                            title: (
+                              <Text
+                                size={'lg'}
+                                className={`${montserrat_med.className}`}
+                              >
+                                Error with activation
+                              </Text>
+                            ),
+                            message: (
+                              <Text
+                                className={`${montserrat_med.className} text-[neutral-200]`}
+                              >
+                                {(error as Error).message}
+                              </Text>
+                            ),
+                            color: 'red',
+                            radius: 'lg',
+                            icon: <IconAlertCircle />,
+                            className: 'my-notification-class',
+                            styles: notificationStyles(true),
+                            withBorder: true,
+                            loading: false,
+                          })
+                        },
+                      },
+                    )
                   }}
                   size="sm"
                   className="cursor-pointer"

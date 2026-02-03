@@ -21,6 +21,7 @@ import {
 } from '@tabler/icons-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
+import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
 import { Dropzone } from '@mantine/dropzone'
 import { useRouter } from 'next/router'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -105,6 +106,7 @@ export function LargeDropzone({
     await new Promise((resolve) => setTimeout(resolve, 200))
     await router.reload()
   }
+  const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(courseName)
   const uploadToS3Mutation = useUploadToS3()
   const ingestMutation = useIngest()
 
@@ -215,10 +217,8 @@ export function LargeDropzone({
     const checkIngestStatus = async () => {
       const { data } = await refetchDocsInProgress()
 
-      const docsResponse = await fetch(
-        `/api/materialsTable/successDocs?course_name=${courseName}`,
-      )
-      const docsData = await docsResponse.json()
+      const { data: successDocs } = await refetchSuccessDocs()
+      const docsData = { documents: successDocs }
       // Adjust polling interval based on activity
       if (data.documents.length > 0) {
         pollInterval = MIN_INTERVAL

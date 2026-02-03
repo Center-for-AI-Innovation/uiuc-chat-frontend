@@ -48,6 +48,7 @@ import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
 import {
   DEFAULT_SYSTEM_PROMPT,
   DOCUMENT_FOCUS_PROMPT,
@@ -242,7 +243,6 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
 
   // State
-  const [isLoading, setIsLoading] = useState(true)
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -252,7 +252,11 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const [opened, { close, open }] = useDisclosure(false)
   const [resetModalOpened, { close: closeResetModal, open: openResetModal }] =
     useDisclosure(false)
-  const [llmProviders, setLLMProviders] = useState<AllLLMProviders | null>(null)
+  const { data: llmProviders = null, isLoading: isLoadingLLMProviders } =
+    useFetchLLMProviders({
+      projectName: project_name,
+      enabled: !!project_name,
+    })
   const [
     linkGeneratorOpened,
     { open: openLinkGenerator, close: closeLinkGenerator },
@@ -352,31 +356,6 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
       }
     }
   }, [fetchedMetadata])
-
-  // Fetch LLM providers on mount
-  useEffect(() => {
-    const fetchProviders = async () => {
-      if (!project_name) return
-
-      try {
-        const response = await fetch('/api/models', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectName: project_name }),
-        })
-        if (response.ok) {
-          const providers = await response.json()
-          setLLMProviders(providers)
-        }
-      } catch (error) {
-        console.error('Error fetching LLM providers:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchProviders()
-  }, [project_name])
 
   // Set default model when providers load
   useEffect(() => {
@@ -872,7 +851,7 @@ CRITICAL: The optimized prompt must:
     }
   }
 
-  if (isLoading || isLoadingMetadata) {
+  if (isLoadingLLMProviders || isLoadingMetadata) {
     return (
       <div className="flex items-center justify-center p-8">
         <Text className="text-[--foreground-faded]">Loading...</Text>
