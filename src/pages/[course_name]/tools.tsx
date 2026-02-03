@@ -1,5 +1,5 @@
 import { type NextPage } from 'next'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 
@@ -15,6 +15,7 @@ import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
 import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
+import { useFetchAllCourseData } from '~/hooks/queries/useFetchAllCourseData'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -24,10 +25,6 @@ const montserrat = Montserrat({
 const ToolsPage: NextPage = () => {
   const router = useRouter()
   const auth = useAuth()
-
-  const [courseData, setCourseData] = useState(null)
-  const [isLoadingCourseData, setIsLoadingCourseData] = useState(false)
-  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
   const getCurrentPageName = () => {
     const raw = router.query.course_name
@@ -48,45 +45,29 @@ const ToolsPage: NextPage = () => {
     enabled: router.isReady && !auth.isLoading && Boolean(courseName),
   })
 
+  const {
+    data: courseDataResponse,
+    isLoading: isLoadingCourseData,
+    isError: isCourseDataError,
+  } = useFetchAllCourseData({
+    courseName,
+    enabled: courseExists === true && !isCheckingExists && !isExistsError,
+  })
+
   useEffect(() => {
-    if (isCheckingExists) return
-
-    if (isExistsError || !courseExists) {
-      setErrorType(404)
-      return
-    }
-
-    const fetchCourseData = async () => {
-      setIsLoadingCourseData(true)
-      try {
-        const dataResponse = await fetch(
-          `/api/UIUC-api/getAllCourseData?course_name=${courseName}`,
-        )
-        if (!dataResponse.ok) {
-          const s = dataResponse.status
-          if (s === 401 || s === 403 || s === 404)
-            setErrorType(s as 401 | 403 | 404)
-          return
-        }
-        const data = await dataResponse.json()
-        setCourseData(data.distinct_files)
-      } catch (error) {
-        console.error(error)
-        const errorWithStatus = error as Error & { status?: number }
-        const status = errorWithStatus.status
-        if (status === 401 || status === 403 || status === 404) {
-          setErrorType(status as 401 | 403 | 404)
-        }
-      } finally {
-        setIsLoadingCourseData(false)
-      }
-
+    if (courseDataResponse) {
       posthog.capture('tool_page_visited', {
         course_name: courseName,
       })
     }
-    fetchCourseData()
-  }, [courseExists, isCheckingExists, isExistsError, courseName])
+  }, [courseDataResponse, courseName])
+
+  const errorType: 401 | 403 | 404 | null =
+    isExistsError || (courseExists !== undefined && !courseExists)
+      ? 404
+      : isCourseDataError
+        ? 404
+        : null
 
   if (
     auth.isLoading ||
