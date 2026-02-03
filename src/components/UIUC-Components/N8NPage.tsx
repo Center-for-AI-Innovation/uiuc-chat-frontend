@@ -37,6 +37,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useTestN8nAPI } from '~/hooks/queries/useTestN8nAPI'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 
@@ -88,6 +89,8 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     refetch: refetchWorkflows,
   } = useFetchAllWorkflows(GetCurrentPageName())
 
+  const testN8nAPI = useTestN8nAPI()
+
   const notificationStyles = (isError = false) => {
     return {
       root: {
@@ -123,18 +126,12 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
 
     // TEST KEY TO SEE IF VALID (unless it's empty, that's fine.)
     if (n8nApiKeyTextbox) {
-      const keyTestResponse = await fetch(`/api/UIUC-api/tools/testN8nAPI`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      try {
+        const keyTestResult = await testN8nAPI.mutateAsync({
           n8nApiKey: n8nApiKeyTextbox,
-        }),
-      })
-      console.log('keyTestResponse: ', await keyTestResponse.json())
-
-      if (!keyTestResponse.ok) {
+        })
+        console.log('keyTestResponse: ', keyTestResult)
+      } catch {
         notifications.show({
           id: 'error-notification-bad-key',
           title: 'Key appears invalid',
