@@ -37,6 +37,7 @@ import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
+import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -51,6 +52,7 @@ export default function WebsiteIngestForm({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
+  const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(project_name)
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -175,10 +177,8 @@ export default function WebsiteIngestForm({
         `/api/materialsTable/docsInProgress?course_name=${project_name}`,
       )
       const data = await response.json()
-      const docsResponse = await fetch(
-        `/api/materialsTable/successDocs?course_name=${project_name}`,
-      )
-      const docsData = await docsResponse.json()
+      const { data: successDocs } = await refetchSuccessDocs()
+      const docsData = { documents: successDocs }
       // Helper function to organize docs by base URL
       const organizeDocsByBaseUrl = (
         docs: Array<{ base_url: string; url: string }>,
