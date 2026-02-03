@@ -37,6 +37,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchN8nApiKey } from '~/hooks/queries/useFetchN8nApiKey'
 import { useTestN8nAPI } from '~/hooks/queries/useTestN8nAPI'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
@@ -90,6 +91,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   } = useFetchAllWorkflows(GetCurrentPageName())
 
   const testN8nAPI = useTestN8nAPI()
+  const { data: fetchedN8nApiKey } = useFetchN8nApiKey(currentPageName)
 
   const notificationStyles = (isError = false) => {
     return {
@@ -221,32 +223,11 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   }
 
   useEffect(() => {
-    const getApiKey = async () => {
-      try {
-        const response = await fetch('/api/UIUC-api/getN8Napikey', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ course_name: currentPageName }),
-        })
-
-        const data = await response.json()
-        const apiKey = data.api_key?.[0]?.n8n_api_key
-
-        if (apiKey) {
-          setN8nApiKeyTextbox(apiKey)
-          setN8nApiKey(apiKey)
-        } else {
-          console.warn('API key not found in response:', data)
-        }
-      } catch (error) {
-        console.error('Error getting course data:', error)
-      }
+    if (fetchedN8nApiKey) {
+      setN8nApiKeyTextbox(fetchedN8nApiKey)
+      setN8nApiKey(fetchedN8nApiKey)
     }
-
-    getApiKey()
-  }, [currentPageName])
+  }, [fetchedN8nApiKey])
 
   // Set current email when auth is ready
   useEffect(() => {
