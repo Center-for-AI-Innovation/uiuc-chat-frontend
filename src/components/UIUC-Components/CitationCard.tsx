@@ -38,6 +38,12 @@ const getEffectivePageNumber = (props: CitationCardProps): string => {
   return ''
 }
 
+// Helper function to check if file is a video
+const isVideoFile = (path: string | undefined): boolean => {
+  if (!path) return false
+  return /\.(mp4|mov|avi|webm|mkv)$/i.test(path)
+}
+
 export const CitationCard = ({
   readable_filename,
   course_name,
@@ -138,6 +144,12 @@ export const CitationCard = ({
   }, [s3_path, url, course_name, faviconError, retryCount])
 
   const handleClick = async () => {
+    console.log('CitationCard handleClick:', {
+      s3_path,
+      course_name,
+      url,
+      isVideo: isVideoFile(s3_path),
+    })
     // If it's a URL source, open in new tab
     if (url) {
       // If it's a PDF URL, handle page number
@@ -182,7 +194,16 @@ export const CitationCard = ({
         }
       }
 
-      const presignedUrl = await fetchPresignedUrl(s3_path, course_name, undefined, downloadFilename)
+      // For PDFs and videos, don't pass fileName so ResponseContentDisposition is 'inline'
+      // For other files, pass fileName to trigger download with 'attachment'
+      const isPdfOrVideo =
+        s3_path.toLowerCase().endsWith('.pdf') || isVideoFile(s3_path)
+      const presignedUrl = await fetchPresignedUrl(
+        s3_path,
+        course_name,
+        undefined,
+        isPdfOrVideo ? undefined : downloadFilename,
+      )
 
       // For PDFs, open in new tab for inline viewing with page number if available
       if (s3_path.toLowerCase().endsWith('.pdf')) {
@@ -193,6 +214,12 @@ export const CitationCard = ({
           ? `#page=${effectivePageNumber}`
           : ''
         const finalUrl = `${baseUrl}${pageParam}`
+        window.open(finalUrl, '_blank')
+      } else if (isVideoFile(s3_path)) {
+        // For videos, open in new tab with timestamp if available
+        const baseUrl = (presignedUrl as string).split('#')[0]
+        const timeParam = effectivePageNumber ? `#t=${effectivePageNumber}` : ''
+        const finalUrl = `${baseUrl}${timeParam}`
         window.open(finalUrl, '_blank')
       } else {
         // For other file types, trigger download

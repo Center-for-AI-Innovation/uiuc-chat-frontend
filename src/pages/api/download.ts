@@ -19,10 +19,18 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
     if (filePath.endsWith('.pdf')) {
       ResponseContentType = 'application/pdf'
-    }
-
-    if (filePath.endsWith('.png')) {
-      ResponseContentType = 'application/png'
+    } else if (filePath.endsWith('.png')) {
+      ResponseContentType = 'image/png'
+    } else if (filePath.endsWith('.mp4')) {
+      ResponseContentType = 'video/mp4'
+    } else if (filePath.endsWith('.mov')) {
+      ResponseContentType = 'video/quicktime'
+    } else if (filePath.endsWith('.avi')) {
+      ResponseContentType = 'video/x-msvideo'
+    } else if (filePath.endsWith('.webm')) {
+      ResponseContentType = 'video/webm'
+    } else if (filePath.endsWith('.mkv')) {
+      ResponseContentType = 'video/x-matroska'
     }
 
     let presignedUrl
