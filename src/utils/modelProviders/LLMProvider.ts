@@ -140,6 +140,8 @@ export const VisionCapableModels: Set<
 
   // Gemini
   GeminiModelID.Gemini_2_5_Pro_Exp_03_25,
+  GeminiModelID.Gemini_2_5_Flash,
+  GeminiModelID.Gemini_2_5_Flash_Preview_09_2025,
   GeminiModelID.Gemini_2_0_Pro_Exp_02_05,
   GeminiModelID.Gemini_2_0_Flash,
   GeminiModelID.Gemini_2_0_Flash_Lite,

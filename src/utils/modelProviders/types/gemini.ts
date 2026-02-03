@@ -9,6 +9,8 @@ export interface GeminiModel {
 
 export enum GeminiModelID {
   Gemini_2_5_Pro_Exp_03_25 = 'gemini-2.5-pro-exp-03-25',
+  Gemini_2_5_Flash_Preview_09_2025 = 'gemini-2.5-flash-preview-09-2025',
+  Gemini_2_5_Flash = 'gemini-2.5-flash',
   Gemini_2_0_Flash_Lite = 'gemini-2.0-flash-lite',
   Gemini_2_0_Flash = 'gemini-2.0-flash',
   Gemini_2_0_Flash_Thinking_Exp_01_21 = 'gemini-2.0-flash-thinking-exp-01-21',
@@ -20,6 +22,8 @@ export enum GeminiModelID {
 // Sort models by preference
 export const preferredGeminiModelIds = [
   GeminiModelID.Gemini_2_5_Pro_Exp_03_25,
+  GeminiModelID.Gemini_2_5_Flash,
+  GeminiModelID.Gemini_2_5_Flash_Preview_09_2025,
   GeminiModelID.Gemini_2_0_Flash_Lite,
   GeminiModelID.Gemini_2_0_Flash_Thinking_Exp_01_21,
   GeminiModelID.Gemini_2_0_Flash,
@@ -32,6 +36,18 @@ export const GeminiModels: Record<GeminiModelID, GeminiModel> = {
   [GeminiModelID.Gemini_2_5_Pro_Exp_03_25]: {
     id: GeminiModelID.Gemini_2_5_Pro_Exp_03_25,
     name: 'Gemini 2.5 Pro (One of the best LLMs today)',
+    tokenLimit: 1_000_000,
+    enabled: true,
+  },
+  [GeminiModelID.Gemini_2_5_Flash_Preview_09_2025]: {
+    id: GeminiModelID.Gemini_2_5_Flash_Preview_09_2025,
+    name: 'Gemini 2.5 Flash (Preview 09-2025)',
+    tokenLimit: 1_000_000,
+    enabled: true,
+  },
+  [GeminiModelID.Gemini_2_5_Flash]: {
+    id: GeminiModelID.Gemini_2_5_Flash,
+    name: 'Gemini 2.5 Flash',
     tokenLimit: 1_000_000,
     enabled: true,
   },
