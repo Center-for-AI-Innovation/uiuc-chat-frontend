@@ -23,6 +23,7 @@ import { Montserrat } from 'next/font/google'
 import { type FileUpload } from './UploadNotification'
 import Link from 'next/link'
 import { type QueryClient } from '@tanstack/react-query'
+import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -188,12 +189,12 @@ export default function GitHubIngestForm({
     }
   }, [url])
 
+  const { refetch: refetchDocsInProgress } =
+    useFetchDocsInProgress(project_name)
+
   useEffect(() => {
     const checkIngestStatus = async () => {
-      const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${project_name}`,
-      )
-      const data = await response.json()
+      const { data } = await refetchDocsInProgress()
       const docsResponse = await fetch(
         `/api/materialsTable/successDocs?course_name=${project_name}`,
       )

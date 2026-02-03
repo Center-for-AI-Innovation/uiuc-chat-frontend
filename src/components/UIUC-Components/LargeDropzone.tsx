@@ -20,6 +20,7 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
 import { Dropzone } from '@mantine/dropzone'
 import { useRouter } from 'next/router'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -203,6 +204,8 @@ export function LargeDropzone({
       await refreshOrRedirect(redirect_to_gpt_4)
     }
   }
+  const { refetch: refetchDocsInProgress } = useFetchDocsInProgress(courseName)
+
   useEffect(() => {
     let pollInterval = 9000 // Start with a slower interval
     const MIN_INTERVAL = 1000 // Fast polling when active
@@ -210,10 +213,7 @@ export function LargeDropzone({
     let consecutiveEmptyPolls = 0
 
     const checkIngestStatus = async () => {
-      const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${courseName}`,
-      )
-      const data = await response.json()
+      const { data } = await refetchDocsInProgress()
 
       const docsResponse = await fetch(
         `/api/materialsTable/successDocs?course_name=${courseName}`,
