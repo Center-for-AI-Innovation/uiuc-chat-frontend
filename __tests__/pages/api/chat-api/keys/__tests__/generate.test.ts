@@ -61,7 +61,9 @@ describe('chat-api/keys/generate', () => {
   })
 
   it('returns 409 when user already has an active API key', async () => {
-    hoisted.selectWhere.mockResolvedValueOnce([{ key: 'uc_x', is_active: true }])
+    hoisted.selectWhere.mockResolvedValueOnce([
+      { key: 'uc_x', is_active: true },
+    ])
     const res = createMockRes()
     await handler(
       createMockReq({
@@ -104,4 +106,3 @@ describe('chat-api/keys/generate', () => {
     expect(hoisted.updateWhere).toHaveBeenCalled()
   })
 })
-

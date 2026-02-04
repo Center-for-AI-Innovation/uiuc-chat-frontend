@@ -25,9 +25,14 @@ const hoisted = vi.hoisted(() => ({
   })),
   get_user_permission: vi.fn(() => 'edit'),
   fetchTools: vi.fn(async () => []),
-  handleToolsServer: vi.fn(async (_last, _tools, _urls, _imgDesc, convo) => convo),
+  handleToolsServer: vi.fn(
+    async (_last, _tools, _urls, _imgDesc, convo) => convo,
+  ),
   constructSearchQuery: vi.fn(() => 'q'),
-  handleImageContent: vi.fn(async () => ({ searchQuery: 'q2', imgDesc: 'img' })),
+  handleImageContent: vi.fn(async () => ({
+    searchQuery: 'q2',
+    imgDesc: 'img',
+  })),
   handleContextSearch: vi.fn(async () => [{ id: 1 }]),
   attachContextsToLastMessage: vi.fn(),
   buildPrompt: vi.fn(async ({ conversation }: any) => conversation),
@@ -82,7 +87,10 @@ describe('chat-api/chat', () => {
   it('returns 405 for non-POST methods', async () => {
     const res = createMockRes()
     await chat(
-      createMockReq({ method: 'GET', socket: { remoteAddress: '127.0.0.1' } as any }) as any,
+      createMockReq({
+        method: 'GET',
+        socket: { remoteAddress: '127.0.0.1' } as any,
+      }) as any,
       res as any,
     )
     expect(res.status).toHaveBeenCalledWith(405)
@@ -151,7 +159,9 @@ describe('chat-api/chat', () => {
   })
 
   it('returns 400 when model validation fails', async () => {
-    hoisted.determineAndValidateModelServer.mockRejectedValueOnce(new Error('no model'))
+    hoisted.determineAndValidateModelServer.mockRejectedValueOnce(
+      new Error('no model'),
+    )
     const res = createMockRes()
     await chat(
       createMockReq({
@@ -361,4 +371,3 @@ describe('chat-api/chat', () => {
     expect(hoisted.handleNonStreamingResponse).toHaveBeenCalled()
   })
 })
-

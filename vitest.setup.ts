@@ -74,7 +74,9 @@ if (typeof window !== 'undefined') {
       configurable: true,
     })
   } else if (!(navigator as any).clipboard?.writeText) {
-    ;(navigator as any).clipboard = { writeText: vi.fn(() => Promise.resolve()) }
+    ;(navigator as any).clipboard = {
+      writeText: vi.fn(() => Promise.resolve()),
+    }
   } else {
     ;(navigator as any).clipboard.writeText = vi.fn(() => Promise.resolve())
   }
@@ -112,19 +114,22 @@ if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
       return []
     }
   }
-  ;(globalThis as unknown as { IntersectionObserver: any }).IntersectionObserver =
-    IntersectionObserver as any
+  ;(
+    globalThis as unknown as { IntersectionObserver: any }
+  ).IntersectionObserver = IntersectionObserver as any
 }
 
 // JSDOM doesn't implement URL.createObjectURL/revokeObjectURL by default.
 if (typeof URL !== 'undefined') {
   if (!('createObjectURL' in URL)) {
-    ;(URL as unknown as { createObjectURL: (obj: any) => string }).createObjectURL =
-      vi.fn(() => 'blob:mock')
+    ;(
+      URL as unknown as { createObjectURL: (obj: any) => string }
+    ).createObjectURL = vi.fn(() => 'blob:mock')
   }
   if (!('revokeObjectURL' in URL)) {
-    ;(URL as unknown as { revokeObjectURL: (url: string) => void }).revokeObjectURL =
-      vi.fn()
+    ;(
+      URL as unknown as { revokeObjectURL: (url: string) => void }
+    ).revokeObjectURL = vi.fn()
   }
 }
 
@@ -192,7 +197,8 @@ vi.mock('next/navigation', () => ({
     prefetch: (globalThis.__TEST_ROUTER__?.prefetch as any) ?? vi.fn(),
   }),
   usePathname: () => globalThis.__TEST_PATHNAME__ ?? '/',
-  useSearchParams: () => globalThis.__TEST_SEARCH_PARAMS__ ?? new URLSearchParams(),
+  useSearchParams: () =>
+    globalThis.__TEST_SEARCH_PARAMS__ ?? new URLSearchParams(),
 }))
 
 vi.mock('next/image', () => ({

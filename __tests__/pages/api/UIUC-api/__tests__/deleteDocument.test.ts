@@ -26,7 +26,10 @@ describe('UIUC-api/deleteDocument', () => {
 
     const res3 = createMockRes()
     await handler(
-      createMockReq({ method: 'DELETE', query: { course_name: 'CS101' } }) as any,
+      createMockReq({
+        method: 'DELETE',
+        query: { course_name: 'CS101' },
+      }) as any,
       res3 as any,
     )
     expect(res3.status).toHaveBeenCalledWith(400)
@@ -66,4 +69,3 @@ describe('UIUC-api/deleteDocument', () => {
     fetchSpy.mockRestore()
   })
 })
-

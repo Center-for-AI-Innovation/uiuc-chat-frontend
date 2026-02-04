@@ -33,7 +33,9 @@ vi.mock('~/utils/redisClient', () => ({
 
 describe('authorization helpers', () => {
   it('extractCourseName finds course name from query/body/headers', () => {
-    expect(extractCourseName(createMockReq({ query: { courseName: 'A' } }))).toBe('A')
+    expect(
+      extractCourseName(createMockReq({ query: { courseName: 'A' } })),
+    ).toBe('A')
     expect(
       extractCourseName(createMockReq({ query: { project_name: 'B' } })),
     ).toBe('B')
@@ -87,21 +89,38 @@ describe('authorization helpers', () => {
     expect(isCourseOwner({} as any, meta)).toBe(false)
     expect(isCourseAdmin({} as any, meta)).toBe(false)
     expect(isApprovedUser({} as any, meta)).toBe(false)
-    expect(hasCourseAccess({ email: 'other@example.com' } as any, { ...meta, allow_logged_in_users: true })).toBe(
+    expect(
+      hasCourseAccess({ email: 'other@example.com' } as any, {
+        ...meta,
+        allow_logged_in_users: true,
+      }),
+    ).toBe(true)
+
+    expect(isCourseOwner({ email: 'owner@example.com' } as any, meta)).toBe(
       true,
     )
-
-    expect(isCourseOwner({ email: 'owner@example.com' } as any, meta)).toBe(true)
     expect(isCourseOwner({ email: 'x@example.com' } as any, meta)).toBe(false)
-    expect(isCourseAdmin({ email: 'admin@example.com' } as any, meta)).toBe(true)
-    expect(isApprovedUser({ email: 'approved@example.com' } as any, meta)).toBe(true)
-    expect(hasCourseAccess({ email: 'approved@example.com' } as any, meta)).toBe(true)
-    expect(isCourseRegularUser({ email: 'approved@example.com' } as any, meta)).toBe(true)
-    expect(isCourseRegularUser({ email: 'admin@example.com' } as any, meta)).toBe(false)
+    expect(isCourseAdmin({ email: 'admin@example.com' } as any, meta)).toBe(
+      true,
+    )
+    expect(isApprovedUser({ email: 'approved@example.com' } as any, meta)).toBe(
+      true,
+    )
+    expect(
+      hasCourseAccess({ email: 'approved@example.com' } as any, meta),
+    ).toBe(true)
+    expect(
+      isCourseRegularUser({ email: 'approved@example.com' } as any, meta),
+    ).toBe(true)
+    expect(
+      isCourseRegularUser({ email: 'admin@example.com' } as any, meta),
+    ).toBe(false)
   })
 
   it('withCourseAccess enforces authentication, course existence, and membership', async () => {
-    const handler = vi.fn(async (_req: any, res: any) => res.status(200).json({ ok: true }))
+    const handler = vi.fn(async (_req: any, res: any) =>
+      res.status(200).json({ ok: true }),
+    )
     const wrapped = withCourseAccess('CS101')(handler)
 
     const res1 = createMockRes()
@@ -114,7 +133,10 @@ describe('authorization helpers', () => {
     hoisted.hGetMock.mockResolvedValueOnce(null)
     const res2 = createMockRes()
     await wrapped(
-      createMockReq({ method: 'GET', user: { email: 'approved@example.com' } }) as any,
+      createMockReq({
+        method: 'GET',
+        user: { email: 'approved@example.com' },
+      }) as any,
       res2 as any,
     )
     expect(res2.status).toHaveBeenCalledWith(404)
@@ -130,7 +152,10 @@ describe('authorization helpers', () => {
     )
     const res3 = createMockRes()
     await wrapped(
-      createMockReq({ method: 'GET', user: { email: 'someone@example.com' } }) as any,
+      createMockReq({
+        method: 'GET',
+        user: { email: 'someone@example.com' },
+      }) as any,
       res3 as any,
     )
     expect(res3.status).toHaveBeenCalledWith(403)
@@ -146,7 +171,10 @@ describe('authorization helpers', () => {
     )
     const res4 = createMockRes()
     await wrapped(
-      createMockReq({ method: 'GET', user: { email: 'someone@example.com' } }) as any,
+      createMockReq({
+        method: 'GET',
+        user: { email: 'someone@example.com' },
+      }) as any,
       res4 as any,
     )
     expect(res4.status).toHaveBeenCalledWith(200)
@@ -154,7 +182,9 @@ describe('authorization helpers', () => {
   })
 
   it('withCourseAdminAccess allows only admins/owners', async () => {
-    const handler = vi.fn(async (_req: any, res: any) => res.status(200).json({ ok: true }))
+    const handler = vi.fn(async (_req: any, res: any) =>
+      res.status(200).json({ ok: true }),
+    )
     const wrapped = withCourseAdminAccess('CS101')(handler)
 
     hoisted.hGetMock.mockResolvedValueOnce(
@@ -168,7 +198,10 @@ describe('authorization helpers', () => {
     )
     const res1 = createMockRes()
     await wrapped(
-      createMockReq({ method: 'POST', user: { email: 'approved@example.com' } }) as any,
+      createMockReq({
+        method: 'POST',
+        user: { email: 'approved@example.com' },
+      }) as any,
       res1 as any,
     )
     expect(res1.status).toHaveBeenCalledWith(403)
@@ -184,7 +217,10 @@ describe('authorization helpers', () => {
     )
     const res2 = createMockRes()
     await wrapped(
-      createMockReq({ method: 'POST', user: { email: 'admin@example.com' } }) as any,
+      createMockReq({
+        method: 'POST',
+        user: { email: 'admin@example.com' },
+      }) as any,
       res2 as any,
     )
     expect(res2.status).toHaveBeenCalledWith(200)
@@ -200,14 +236,19 @@ describe('authorization helpers', () => {
     )
     const res3 = createMockRes()
     await wrapped(
-      createMockReq({ method: 'POST', user: { email: 'owner@example.com' } }) as any,
+      createMockReq({
+        method: 'POST',
+        user: { email: 'owner@example.com' },
+      }) as any,
       res3 as any,
     )
     expect(res3.status).toHaveBeenCalledWith(200)
   })
 
   it('withCourseOwnerAccess allows only owners', async () => {
-    const handler = vi.fn(async (_req: any, res: any) => res.status(200).json({ ok: true }))
+    const handler = vi.fn(async (_req: any, res: any) =>
+      res.status(200).json({ ok: true }),
+    )
     const wrapped = withCourseOwnerAccess('CS101')(handler)
 
     hoisted.hGetMock.mockResolvedValueOnce(
@@ -221,7 +262,10 @@ describe('authorization helpers', () => {
     )
     const res1 = createMockRes()
     await wrapped(
-      createMockReq({ method: 'DELETE', user: { email: 'admin@example.com' } }) as any,
+      createMockReq({
+        method: 'DELETE',
+        user: { email: 'admin@example.com' },
+      }) as any,
       res1 as any,
     )
     expect(res1.status).toHaveBeenCalledWith(403)
@@ -237,7 +281,10 @@ describe('authorization helpers', () => {
     )
     const res2 = createMockRes()
     await wrapped(
-      createMockReq({ method: 'DELETE', user: { email: 'owner@example.com' } }) as any,
+      createMockReq({
+        method: 'DELETE',
+        user: { email: 'owner@example.com' },
+      }) as any,
       res2 as any,
     )
     expect(res2.status).toHaveBeenCalledWith(200)
@@ -251,7 +298,10 @@ describe('authorization helpers', () => {
 
     const res1 = createMockRes()
     await wrapped(
-      createMockReq({ method: 'POST', user: { email: 'owner@example.com' } }) as any,
+      createMockReq({
+        method: 'POST',
+        user: { email: 'owner@example.com' },
+      }) as any,
       res1 as any,
     )
     expect(res1.status).toHaveBeenCalledWith(400)
@@ -329,7 +379,9 @@ describe('authorization helpers', () => {
       }),
     )
 
-    const handler = vi.fn(async (req: any, res: any) => res.status(200).json({ ok: true, course: req.courseName }))
+    const handler = vi.fn(async (req: any, res: any) =>
+      res.status(200).json({ ok: true, course: req.courseName }),
+    )
     const wrapped = withCourseAccessFromRequest('any')(handler)
 
     const req = createMockReq({ method: 'GET', query: { courseName: 'CS101' } })
@@ -347,7 +399,11 @@ describe('authorization helpers', () => {
     const handler = vi.fn()
     const wrapped = withCourseAccessFromRequest('any')(handler)
 
-    const req = createMockReq({ method: 'GET', query: { courseName: 'CS101' }, user: null })
+    const req = createMockReq({
+      method: 'GET',
+      query: { courseName: 'CS101' },
+      user: null,
+    })
     const res = createMockRes()
 
     await wrapped(req as any, res as any)
@@ -365,8 +421,13 @@ describe('authorization helpers', () => {
       }),
     )
 
-    const handler = vi.fn(async (_req: any, res: any) => res.status(200).json({ ok: true }))
-    const wrapped = withCourseAccessFromRequest({ DELETE: 'owner', POST: 'admin' })(handler)
+    const handler = vi.fn(async (_req: any, res: any) =>
+      res.status(200).json({ ok: true }),
+    )
+    const wrapped = withCourseAccessFromRequest({
+      DELETE: 'owner',
+      POST: 'admin',
+    })(handler)
 
     const res1 = createMockRes()
     await wrapped(

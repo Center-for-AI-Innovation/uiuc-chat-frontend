@@ -44,14 +44,26 @@ describe('documentGroups API', () => {
 
   it('handles addDocumentsToDocGroup success', async () => {
     hoisted.addDocumentsToDocGroup.mockResolvedValueOnce(true)
-    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({ status: 'completed' })
+    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({
+      status: 'completed',
+    })
 
-    const doc: any = { readable_filename: 'f', url: '', s3_path: 's3', doc_groups: ['a'] }
+    const doc: any = {
+      readable_filename: 'f',
+      url: '',
+      s3_path: 's3',
+      doc_groups: ['a'],
+    }
     const res = createMockRes()
     await handler(
       createMockReq({
         method: 'POST',
-        body: { action: 'addDocumentsToDocGroup', courseName: 'CS101', doc, userId: 'u' },
+        body: {
+          action: 'addDocumentsToDocGroup',
+          courseName: 'CS101',
+          doc,
+          userId: 'u',
+        },
         headers: {},
         socket: { remoteAddress: '127.0.0.1' } as any,
       }) as any,
@@ -64,14 +76,26 @@ describe('documentGroups API', () => {
 
   it('rolls back SQL when Qdrant update fails in addDocumentsToDocGroup', async () => {
     hoisted.addDocumentsToDocGroup.mockResolvedValueOnce(true)
-    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({ status: 'failed' })
+    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({
+      status: 'failed',
+    })
 
-    const doc: any = { readable_filename: 'f', url: '', s3_path: 's3', doc_groups: ['a'] }
+    const doc: any = {
+      readable_filename: 'f',
+      url: '',
+      s3_path: 's3',
+      doc_groups: ['a'],
+    }
     const res = createMockRes()
     await handler(
       createMockReq({
         method: 'POST',
-        body: { action: 'addDocumentsToDocGroup', courseName: 'CS101', doc, docGroup: 'a' },
+        body: {
+          action: 'addDocumentsToDocGroup',
+          courseName: 'CS101',
+          doc,
+          docGroup: 'a',
+        },
         headers: {},
         socket: { remoteAddress: '127.0.0.1' } as any,
       }) as any,
@@ -84,7 +108,12 @@ describe('documentGroups API', () => {
 
   it('returns 500 when SQL update fails in addDocumentsToDocGroup', async () => {
     hoisted.addDocumentsToDocGroup.mockResolvedValueOnce(false)
-    const doc: any = { readable_filename: 'f', url: '', s3_path: 's3', doc_groups: ['a'] }
+    const doc: any = {
+      readable_filename: 'f',
+      url: '',
+      s3_path: 's3',
+      doc_groups: ['a'],
+    }
     const res = createMockRes()
     await handler(
       createMockReq({
@@ -100,14 +129,25 @@ describe('documentGroups API', () => {
 
   it('handles appendDocGroup and initializes doc_groups when missing', async () => {
     hoisted.addDocumentsToDocGroup.mockResolvedValueOnce(true)
-    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({ status: 'completed' })
+    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({
+      status: 'completed',
+    })
 
-    const doc: any = { readable_filename: 'f', url: 'http://x', doc_groups: undefined }
+    const doc: any = {
+      readable_filename: 'f',
+      url: 'http://x',
+      doc_groups: undefined,
+    }
     const res = createMockRes()
     await handler(
       createMockReq({
         method: 'POST',
-        body: { action: 'appendDocGroup', courseName: 'CS101', doc, docGroup: 'g1' },
+        body: {
+          action: 'appendDocGroup',
+          courseName: 'CS101',
+          doc,
+          docGroup: 'g1',
+        },
         headers: {},
         socket: { remoteAddress: '127.0.0.1' } as any,
       }) as any,
@@ -120,14 +160,21 @@ describe('documentGroups API', () => {
 
   it('rolls back SQL when Qdrant update fails in appendDocGroup', async () => {
     hoisted.addDocumentsToDocGroup.mockResolvedValueOnce(true)
-    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({ status: 'failed' })
+    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({
+      status: 'failed',
+    })
 
     const doc: any = { readable_filename: 'f', url: 'http://x', doc_groups: [] }
     const res = createMockRes()
     await handler(
       createMockReq({
         method: 'POST',
-        body: { action: 'appendDocGroup', courseName: 'CS101', doc, docGroup: 'g1' },
+        body: {
+          action: 'appendDocGroup',
+          courseName: 'CS101',
+          doc,
+          docGroup: 'g1',
+        },
         headers: {},
         socket: { remoteAddress: '127.0.0.1' } as any,
       }) as any,
@@ -145,7 +192,12 @@ describe('documentGroups API', () => {
     await handler(
       createMockReq({
         method: 'POST',
-        body: { action: 'appendDocGroup', courseName: 'CS101', doc, docGroup: 'g1' },
+        body: {
+          action: 'appendDocGroup',
+          courseName: 'CS101',
+          doc,
+          docGroup: 'g1',
+        },
         headers: {},
         socket: { remoteAddress: '127.0.0.1' } as any,
       }) as any,
@@ -156,12 +208,21 @@ describe('documentGroups API', () => {
   })
 
   it('handles removeDocGroup', async () => {
-    const doc: any = { readable_filename: 'f', url: 'http://x', doc_groups: ['g1', 'g2'] }
+    const doc: any = {
+      readable_filename: 'f',
+      url: 'http://x',
+      doc_groups: ['g1', 'g2'],
+    }
     const res = createMockRes()
     await handler(
       createMockReq({
         method: 'POST',
-        body: { action: 'removeDocGroup', courseName: 'CS101', doc, docGroup: 'g1' },
+        body: {
+          action: 'removeDocGroup',
+          courseName: 'CS101',
+          doc,
+          docGroup: 'g1',
+        },
         headers: {},
         socket: { remoteAddress: '127.0.0.1' } as any,
       }) as any,
@@ -173,12 +234,21 @@ describe('documentGroups API', () => {
   })
 
   it('handles removeDocGroup when doc_groups is missing', async () => {
-    const doc: any = { readable_filename: 'f', url: 'http://x', doc_groups: undefined }
+    const doc: any = {
+      readable_filename: 'f',
+      url: 'http://x',
+      doc_groups: undefined,
+    }
     const res = createMockRes()
     await handler(
       createMockReq({
         method: 'POST',
-        body: { action: 'removeDocGroup', courseName: 'CS101', doc, docGroup: 'g1' },
+        body: {
+          action: 'removeDocGroup',
+          courseName: 'CS101',
+          doc,
+          docGroup: 'g1',
+        },
         headers: {},
         socket: { remoteAddress: '127.0.0.1' } as any,
       }) as any,
@@ -222,12 +292,21 @@ describe('documentGroups API', () => {
     await handler(
       createMockReq({
         method: 'POST',
-        body: { action: 'updateDocGroupStatus', courseName: 'CS101', docGroup: 'g', enabled: true },
+        body: {
+          action: 'updateDocGroupStatus',
+          courseName: 'CS101',
+          docGroup: 'g',
+          enabled: true,
+        },
       }) as any,
       res as any,
     )
 
-    expect(hoisted.updateDocGroupStatus).toHaveBeenCalledWith('CS101', 'g', true)
+    expect(hoisted.updateDocGroupStatus).toHaveBeenCalledWith(
+      'CS101',
+      'g',
+      true,
+    )
     expect(res.status).toHaveBeenCalledWith(200)
   })
 

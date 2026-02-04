@@ -11,7 +11,9 @@ describe('useFetch', () => {
     )
 
     const { get } = useFetch()
-    await expect(get<{ ok: boolean }>('/api/test')).resolves.toEqual({ ok: true })
+    await expect(get<{ ok: boolean }>('/api/test')).resolves.toEqual({
+      ok: true,
+    })
   })
 
   it('appends params to the URL and stringifies JSON body for POST', async () => {
@@ -108,7 +110,10 @@ describe('useFetch', () => {
     )
 
     const { get } = useFetch()
-    await expect(get('/api/fail')).rejects.toEqual({ title: 'Bad', status: 400 })
+    await expect(get('/api/fail')).rejects.toEqual({
+      title: 'Bad',
+      status: 400,
+    })
   })
 
   it('throws the original Response for non-problem errors', async () => {
@@ -133,7 +138,9 @@ describe('useFetch', () => {
       }),
     )
     const { put } = useFetch()
-    await expect(put('/api/x', { body: { a: 1 } })).resolves.toEqual({ ok: true })
+    await expect(put('/api/x', { body: { a: 1 } })).resolves.toEqual({
+      ok: true,
+    })
 
     fetchSpy.mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {
@@ -142,7 +149,9 @@ describe('useFetch', () => {
       }),
     )
     const { patch } = useFetch()
-    await expect(patch('/api/x', { body: { a: 1 } })).resolves.toEqual({ ok: true })
+    await expect(patch('/api/x', { body: { a: 1 } })).resolves.toEqual({
+      ok: true,
+    })
 
     fetchSpy.mockResolvedValueOnce(
       new Response(JSON.stringify({ ok: true }), {

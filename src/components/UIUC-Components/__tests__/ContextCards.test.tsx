@@ -6,7 +6,9 @@ vi.mock('~/utils/apiUtils', async (importOriginal) => {
   const actual: any = await importOriginal()
   return {
     ...actual,
-    fetchPresignedUrl: vi.fn(async (path: string) => `http://localhost/presigned/${path}`),
+    fetchPresignedUrl: vi.fn(
+      async (path: string) => `http://localhost/presigned/${path}`,
+    ),
   }
 })
 
@@ -61,4 +63,3 @@ describe('ContextCards', () => {
     ).toBeInTheDocument()
   })
 })
-

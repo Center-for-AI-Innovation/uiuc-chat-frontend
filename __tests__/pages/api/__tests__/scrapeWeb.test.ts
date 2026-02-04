@@ -26,7 +26,13 @@ describe('scrapeWeb API', () => {
 
   it('returns 400 when url or courseName is missing', async () => {
     const res = createMockRes()
-    await handler(createMockReq({ method: 'POST', body: { url: null, courseName: null } }) as any, res as any)
+    await handler(
+      createMockReq({
+        method: 'POST',
+        body: { url: null, courseName: null },
+      }) as any,
+      res as any,
+    )
     expect(res.status).toHaveBeenCalledWith(400)
   })
 
@@ -38,7 +44,12 @@ describe('scrapeWeb API', () => {
     await handler(
       createMockReq({
         method: 'POST',
-        body: { url: 'example.com', courseName: 'CS101', maxUrls: 2, scrapeStrategy: 'default' },
+        body: {
+          url: 'example.com',
+          courseName: 'CS101',
+          maxUrls: 2,
+          scrapeStrategy: 'default',
+        },
       }) as any,
       res as any,
     )
@@ -55,12 +66,20 @@ describe('scrapeWeb API', () => {
     await handler(
       createMockReq({
         method: 'POST',
-        body: { url: 'example.com/path', courseName: 'CS101', maxUrls: 2, scrapeStrategy: 'default' },
+        body: {
+          url: 'example.com/path',
+          courseName: 'CS101',
+          maxUrls: 2,
+          scrapeStrategy: 'default',
+        },
       }) as any,
       res as any,
     )
 
-    expect(hoisted.axiosPost).toHaveBeenCalledWith('http://crawlee', expect.any(Object))
+    expect(hoisted.axiosPost).toHaveBeenCalledWith(
+      'http://crawlee',
+      expect.any(Object),
+    )
     expect(res.status).toHaveBeenCalledWith(200)
   })
 
@@ -71,11 +90,15 @@ describe('scrapeWeb API', () => {
     await handler(
       createMockReq({
         method: 'POST',
-        body: { url: 'example.com', courseName: 'CS101', maxUrls: 2, scrapeStrategy: 'default' },
+        body: {
+          url: 'example.com',
+          courseName: 'CS101',
+          maxUrls: 2,
+          scrapeStrategy: 'default',
+        },
       }) as any,
       res as any,
     )
     expect(res.status).toHaveBeenCalledWith(500)
   })
 })
-

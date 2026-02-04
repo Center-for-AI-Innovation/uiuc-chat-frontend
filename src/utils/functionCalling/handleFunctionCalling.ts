@@ -3,11 +3,7 @@ import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/comple
 import posthog from 'posthog-js'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
 import type { ToolOutput } from '~/types/chat'
-import {
-  type Conversation,
-  type Message,
-  type UIUCTool,
-} from '~/types/chat'
+import { type Conversation, type Message, type UIUCTool } from '~/types/chat'
 import {
   type N8NParameter,
   type N8nWorkflow,

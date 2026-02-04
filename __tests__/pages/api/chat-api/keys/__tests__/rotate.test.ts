@@ -43,10 +43,7 @@ describe('chat-api/keys/rotate', () => {
 
   it('returns 400 when email missing', async () => {
     const res = createMockRes()
-    await handler(
-      createMockReq({ method: 'PUT', user: {} }) as any,
-      res as any,
-    )
+    await handler(createMockReq({ method: 'PUT', user: {} }) as any, res as any)
     expect(res.status).toHaveBeenCalledWith(400)
   })
 
@@ -78,4 +75,3 @@ describe('chat-api/keys/rotate', () => {
     expect(res.status).toHaveBeenCalledWith(200)
   })
 })
-

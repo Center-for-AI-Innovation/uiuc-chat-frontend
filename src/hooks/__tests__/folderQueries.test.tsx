@@ -16,20 +16,23 @@ vi.mock('~/utils/app/folders', () => ({
   deleteFolderFromServer: vi.fn(),
 }))
 
-const { fetchFolders, saveFolderToServer, deleteFolderFromServer } = await import(
-  '~/utils/app/folders'
-)
+const { fetchFolders, saveFolderToServer, deleteFolderFromServer } =
+  await import('~/utils/app/folders')
 
 function createWrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
   }
 }
 
 const courseName = 'TEST101'
 const userEmail = 'user@example.com'
 
-function makeFolder(overrides: Partial<FolderWithConversation> = {}): FolderWithConversation {
+function makeFolder(
+  overrides: Partial<FolderWithConversation> = {},
+): FolderWithConversation {
   return {
     id: 'folder-1',
     name: 'Folder',
@@ -66,16 +69,21 @@ describe('folderQueries hooks', () => {
 
   it('useFetchFolders calls fetchFolders when enabled', async () => {
     const folders = [makeFolder({ id: 'a' })]
-    ;(fetchFolders as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(folders)
+    ;(fetchFolders as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      folders,
+    )
 
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
     const Wrapper = createWrapper(queryClient)
 
-    const { result } = renderHook(() => useFetchFolders(userEmail, courseName), {
-      wrapper: Wrapper,
-    })
+    const { result } = renderHook(
+      () => useFetchFolders(userEmail, courseName),
+      {
+        wrapper: Wrapper,
+      },
+    )
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toEqual(folders)
@@ -84,7 +92,10 @@ describe('folderQueries hooks', () => {
 
   it('useCreateFolder optimistically adds folder and rolls back on error', async () => {
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -93,9 +104,9 @@ describe('folderQueries hooks', () => {
 
     const newFolder = makeFolder({ id: 'new' })
     const deferred = createDeferred()
-    ;(saveFolderToServer as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-      deferred.promise as any,
-    )
+    ;(
+      saveFolderToServer as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValueOnce(deferred.promise as any)
 
     const { result } = renderHook(
       () => useCreateFolder(userEmail, queryClient, courseName),
@@ -117,7 +128,10 @@ describe('folderQueries hooks', () => {
 
   it('useUpdateFolder optimistically updates folder and rolls back on error', async () => {
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -126,9 +140,9 @@ describe('folderQueries hooks', () => {
 
     const updated = { ...folder, name: 'New' }
     const deferred = createDeferred()
-    ;(saveFolderToServer as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-      deferred.promise as any,
-    )
+    ;(
+      saveFolderToServer as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValueOnce(deferred.promise as any)
 
     const { result } = renderHook(
       () => useUpdateFolder(userEmail, queryClient, courseName),
@@ -137,7 +151,9 @@ describe('folderQueries hooks', () => {
 
     const promise = result.current.mutateAsync(updated)
     await waitFor(() =>
-      expect(queryClient.getQueryData(['folders', courseName])).toEqual([updated]),
+      expect(queryClient.getQueryData(['folders', courseName])).toEqual([
+        updated,
+      ]),
     )
 
     deferred.reject(new Error('fail'))
@@ -147,7 +163,10 @@ describe('folderQueries hooks', () => {
 
   it('useDeleteFolder optimistically removes folder and rolls back on error', async () => {
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -156,9 +175,9 @@ describe('folderQueries hooks', () => {
     queryClient.setQueryData(['folders', courseName], [folder, other])
 
     const deferred = createDeferred()
-    ;(deleteFolderFromServer as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-      deferred.promise as any,
-    )
+    ;(
+      deleteFolderFromServer as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValueOnce(deferred.promise as any)
 
     const { result } = renderHook(
       () => useDeleteFolder(userEmail, queryClient, courseName),
@@ -167,11 +186,16 @@ describe('folderQueries hooks', () => {
 
     const promise = result.current.mutateAsync(folder)
     await waitFor(() =>
-      expect(queryClient.getQueryData(['folders', courseName])).toEqual([other]),
+      expect(queryClient.getQueryData(['folders', courseName])).toEqual([
+        other,
+      ]),
     )
 
     deferred.reject(new Error('fail'))
     await expect(promise).rejects.toThrow('fail')
-    expect(queryClient.getQueryData(['folders', courseName])).toEqual([folder, other])
+    expect(queryClient.getQueryData(['folders', courseName])).toEqual([
+      folder,
+      other,
+    ])
   })
 })

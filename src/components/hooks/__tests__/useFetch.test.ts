@@ -12,10 +12,15 @@ describe('useFetch', () => {
     )
 
     const api = useFetch()
-    const result = await api.get<{ ok: boolean }>('/api/test', { params: '?a=1' })
+    const result = await api.get<{ ok: boolean }>('/api/test', {
+      params: '?a=1',
+    })
 
     expect(result.ok).toBe(true)
-    expect(globalThis.fetch).toHaveBeenCalledWith('/api/test?a=1', expect.anything())
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/test?a=1',
+      expect.anything(),
+    )
   })
 
   it('POST stringifies body and sets JSON content-type', async () => {
@@ -61,7 +66,8 @@ describe('useFetch', () => {
       headers: new Headers({
         'content-disposition': 'attachment; filename=x.txt',
       }),
-      blob: async () => new Blob(['file'], { type: 'application/octet-stream' }),
+      blob: async () =>
+        new Blob(['file'], { type: 'application/octet-stream' }),
     } as any)
 
     const api = useFetch()

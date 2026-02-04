@@ -50,4 +50,3 @@ describe('UIUC-api/ingest', () => {
     fetchSpy.mockRestore()
   })
 })
-

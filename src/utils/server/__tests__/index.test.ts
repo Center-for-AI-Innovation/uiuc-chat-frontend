@@ -68,16 +68,16 @@ describe('OpenAIStream', () => {
         enabled: true,
         apiKey: 'azure-key',
         AzureEndpoint: 'https://azure.example.com',
-        models: [
-          { id: 'gpt-4o', enabled: true, azureDeploymentID: 'dep-123' },
-        ],
+        models: [{ id: 'gpt-4o', enabled: true, azureDeploymentID: 'dep-123' }],
       },
       [ProviderNames.NCSAHostedVLM]: { enabled: false, models: [] },
     } as any
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      )
 
     await OpenAIStream(
       { id: 'gpt-4o', name: 'm', tokenLimit: 1, enabled: true } as any,
@@ -89,7 +89,9 @@ describe('OpenAIStream', () => {
     )
 
     const [url, init] = fetchSpy.mock.calls[0] as any
-    expect(String(url)).toContain('https://azure.example.com/openai/deployments/dep-123/chat/completions')
+    expect(String(url)).toContain(
+      'https://azure.example.com/openai/deployments/dep-123/chat/completions',
+    )
     expect(init.headers).toMatchObject({ 'api-key': 'azure-key' })
   })
 
@@ -109,7 +111,9 @@ describe('OpenAIStream', () => {
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      )
 
     await OpenAIStream(
       { id: 'vlm-1', name: 'm', tokenLimit: 1, enabled: true } as any,
@@ -130,7 +134,9 @@ describe('OpenAIStream', () => {
     const providers = makeProviders(OpenAIModelID.o3)
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      )
 
     await OpenAIStream(
       { id: OpenAIModelID.o3, name: 'm', tokenLimit: 1, enabled: true } as any,
@@ -151,10 +157,17 @@ describe('OpenAIStream', () => {
     const providers = makeProviders(OpenAIModelID.GPT_5_thinking)
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      )
 
     await OpenAIStream(
-      { id: OpenAIModelID.GPT_5_thinking, name: 'm', tokenLimit: 1, enabled: true } as any,
+      {
+        id: OpenAIModelID.GPT_5_thinking,
+        name: 'm',
+        tokenLimit: 1,
+        enabled: true,
+      } as any,
       'sys',
       0.99,
       providers,
@@ -229,7 +242,9 @@ describe('OpenAIStream', () => {
 
       const fetchSpy = vi
         .spyOn(globalThis, 'fetch')
-        .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ ok: true }), { status: 200 }),
+        )
 
       await mod.OpenAIStream(
         { id: 'gpt-4o', name: 'm', tokenLimit: 1, enabled: true } as any,

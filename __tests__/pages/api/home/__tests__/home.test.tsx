@@ -10,8 +10,16 @@ vi.mock('@/services/errorService', () => ({
 }))
 
 vi.mock('~/hooks/conversationQueries', () => ({
-  useFetchConversationHistory: () => ({ data: [], isFetched: true, isLoading: false }),
-  useFetchLastConversation: () => ({ data: { temperature: 0.3 }, isFetched: true, isLoading: false }),
+  useFetchConversationHistory: () => ({
+    data: [],
+    isFetched: true,
+    isLoading: false,
+  }),
+  useFetchLastConversation: () => ({
+    data: { temperature: 0.3 },
+    isFetched: true,
+    isLoading: false,
+  }),
   useUpdateConversation: () => ({ mutate: vi.fn() }),
 }))
 
@@ -77,7 +85,10 @@ vi.mock('@/components/Chat/Chat', async () => {
 
         const msg = { id: 'm1', role: 'user', content: 'hi' }
         ctx.handleUpdateConversation(convo, { key: 'messages', value: [msg] })
-        ctx.handleFeedbackUpdate({ ...convo, messages: [msg] }, { key: 'name', value: 'Renamed' })
+        ctx.handleFeedbackUpdate(
+          { ...convo, messages: [msg] },
+          { key: 'name', value: 'Renamed' },
+        )
         ctx.handleSelectConversation({ ...convo, messages: [msg] })
         ctx.setIsRouting(true)
         ctx.setIsRetrievalLoading(true)
@@ -103,24 +114,34 @@ describe('pages/api/home/home (shared Home component)', () => {
   it('renders past initial setup and responds to drag events', async () => {
     localStorage.clear()
 
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
-      const url = typeof input === 'string' ? input : input?.url ?? String(input)
-      if (String(url).includes('/api/models')) {
-        return new Response(
-          JSON.stringify({
-            OpenAI: {
-              enabled: true,
-              models: [{ id: 'gpt-4o', name: 'GPT-4o', enabled: true, default: true }],
-            },
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        )
-      }
-      return new Response(JSON.stringify({}), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async (input: any) => {
+        const url =
+          typeof input === 'string' ? input : (input?.url ?? String(input))
+        if (String(url).includes('/api/models')) {
+          return new Response(
+            JSON.stringify({
+              OpenAI: {
+                enabled: true,
+                models: [
+                  {
+                    id: 'gpt-4o',
+                    name: 'GPT-4o',
+                    enabled: true,
+                    default: true,
+                  },
+                ],
+              },
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          )
+        }
+        return new Response(JSON.stringify({}), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
       })
-    })
 
     renderWithProviders(
       <Home
@@ -168,24 +189,34 @@ describe('pages/api/home/home (shared Home component)', () => {
         return originalSetItem.call(this, key, value)
       })
 
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
-      const url = typeof input === 'string' ? input : input?.url ?? String(input)
-      if (String(url).includes('/api/models')) {
-        return new Response(
-          JSON.stringify({
-            OpenAI: {
-              enabled: true,
-              models: [{ id: 'gpt-4o', name: 'GPT-4o', enabled: true, default: true }],
-            },
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        )
-      }
-      return new Response(JSON.stringify({}), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async (input: any) => {
+        const url =
+          typeof input === 'string' ? input : (input?.url ?? String(input))
+        if (String(url).includes('/api/models')) {
+          return new Response(
+            JSON.stringify({
+              OpenAI: {
+                enabled: true,
+                models: [
+                  {
+                    id: 'gpt-4o',
+                    name: 'GPT-4o',
+                    enabled: true,
+                    default: true,
+                  },
+                ],
+              },
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          )
+        }
+        return new Response(JSON.stringify({}), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
       })
-    })
 
     renderWithProviders(
       <Home

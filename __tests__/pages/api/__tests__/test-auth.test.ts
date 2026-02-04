@@ -34,4 +34,3 @@ describe('test-auth API', () => {
     expect(body.user.email).toBe('u@example.com')
   })
 })
-

@@ -34,7 +34,9 @@ describe('UIUC-api runN8nFlow', () => {
       })) as any,
     )
 
-    await expect(runN8nFlowBackend('k', 'n', { a: 1 })).resolves.toEqual({ ok: true })
+    await expect(runN8nFlowBackend('k', 'n', { a: 1 })).resolves.toEqual({
+      ok: true,
+    })
   })
 
   it('runN8nFlowBackend throws an error message from JSON payload when not ok', async () => {
@@ -79,7 +81,9 @@ describe('UIUC-api runN8nFlow', () => {
       }) as any,
     )
 
-    await expect(runN8nFlowBackend('k', 'n', { a: 1 })).rejects.toThrow('timed out')
+    await expect(runN8nFlowBackend('k', 'n', { a: 1 })).rejects.toThrow(
+      'timed out',
+    )
   })
 
   it('handler returns 405/400/200/408/500 for various cases', async () => {
@@ -88,7 +92,10 @@ describe('UIUC-api runN8nFlow', () => {
     expect(res0.status).toHaveBeenCalledWith(405)
 
     const res1 = createMockRes()
-    await handler(createMockReq({ method: 'POST', body: {} }) as any, res1 as any)
+    await handler(
+      createMockReq({ method: 'POST', body: {} }) as any,
+      res1 as any,
+    )
     expect(res1.status).toHaveBeenCalledWith(400)
 
     vi.stubGlobal(
@@ -103,7 +110,10 @@ describe('UIUC-api runN8nFlow', () => {
     )
     const res2 = createMockRes()
     await handler(
-      createMockReq({ method: 'POST', body: { api_key: 'k', name: 'n', data: { a: 1 } } }) as any,
+      createMockReq({
+        method: 'POST',
+        body: { api_key: 'k', name: 'n', data: { a: 1 } },
+      }) as any,
       res2 as any,
     )
     expect(res2.status).toHaveBeenCalledWith(200)
@@ -119,7 +129,10 @@ describe('UIUC-api runN8nFlow', () => {
     )
     const res3 = createMockRes()
     await handler(
-      createMockReq({ method: 'POST', body: { api_key: 'k', name: 'n', data: { a: 1 } } }) as any,
+      createMockReq({
+        method: 'POST',
+        body: { api_key: 'k', name: 'n', data: { a: 1 } },
+      }) as any,
       res3 as any,
     )
     expect(res3.status).toHaveBeenCalledWith(408)
@@ -137,10 +150,12 @@ describe('UIUC-api runN8nFlow', () => {
     )
     const res4 = createMockRes()
     await handler(
-      createMockReq({ method: 'POST', body: { api_key: 'k', name: 'n', data: { a: 1 } } }) as any,
+      createMockReq({
+        method: 'POST',
+        body: { api_key: 'k', name: 'n', data: { a: 1 } },
+      }) as any,
       res4 as any,
     )
     expect(res4.status).toHaveBeenCalledWith(500)
   })
 })
-

@@ -67,7 +67,9 @@ describe('authMiddleware', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     const verifyTokenAsync = vi
       .fn()
-      .mockRejectedValue(new (jwt as any).TokenExpiredError('expired', new Date()))
+      .mockRejectedValue(
+        new (jwt as any).TokenExpiredError('expired', new Date()),
+      )
     vi.doMock('../keycloakClient', () => ({ verifyTokenAsync }))
     vi.doMock('~/utils/authHelpers', () => ({
       getKeycloakBaseFromHost: vi.fn(() => 'https://kc/'),
@@ -137,7 +139,9 @@ describe('authMiddleware', () => {
   })
 
   it('withRole returns 403 when role missing', async () => {
-    const verifyTokenAsync = vi.fn().mockResolvedValue({ realm_access: { roles: [] } })
+    const verifyTokenAsync = vi
+      .fn()
+      .mockResolvedValue({ realm_access: { roles: [] } })
     vi.doMock('../keycloakClient', () => ({ verifyTokenAsync }))
     vi.doMock('~/utils/authHelpers', () => ({
       getKeycloakBaseFromHost: vi.fn(() => 'https://kc/'),
@@ -200,7 +204,9 @@ describe('authMiddleware', () => {
   })
 
   it('withAnyRole calls handler when user has one role', async () => {
-    const verifyTokenAsync = vi.fn().mockResolvedValue({ realm_access: { roles: ['x'] } })
+    const verifyTokenAsync = vi
+      .fn()
+      .mockResolvedValue({ realm_access: { roles: ['x'] } })
     vi.doMock('../keycloakClient', () => ({ verifyTokenAsync }))
     vi.doMock('~/utils/authHelpers', () => ({
       getKeycloakBaseFromHost: vi.fn(() => 'https://kc/'),
@@ -240,7 +246,9 @@ describe('authMiddleware', () => {
   })
 
   it('withAnyRole returns 403 when none of the required roles are present', async () => {
-    const verifyTokenAsync = vi.fn().mockResolvedValue({ realm_access: { roles: [] } })
+    const verifyTokenAsync = vi
+      .fn()
+      .mockResolvedValue({ realm_access: { roles: [] } })
     vi.doMock('../keycloakClient', () => ({ verifyTokenAsync }))
     vi.doMock('~/utils/authHelpers', () => ({
       getKeycloakBaseFromHost: vi.fn(() => 'https://kc/'),

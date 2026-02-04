@@ -49,4 +49,3 @@ describe('determineAndValidateModelServer', () => {
     expect(out.modelsWithProviders.OpenAI).toBeTruthy()
   })
 })
-
