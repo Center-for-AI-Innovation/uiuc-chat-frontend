@@ -1,4 +1,4 @@
-import { TextInput, Button, Group, Box } from '@mantine/core'
+import { TextInput, Button, Box } from '@mantine/core'
 import { useState, useEffect } from 'react'
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
@@ -75,6 +75,7 @@ export default function SetExampleQuestions({
             <div className="flex items-center gap-2" key={i}>
               <TextInput
                 // withAsterisk
+                aria-label={`Example question ${i + 1}`}
                 name="question"
                 placeholder="Add sample queries to illustrate usage of your AI."
                 className="w-full"

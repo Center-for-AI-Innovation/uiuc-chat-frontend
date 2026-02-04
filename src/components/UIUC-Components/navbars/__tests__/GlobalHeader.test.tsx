@@ -39,7 +39,7 @@ describe('GlobalHeader', () => {
     window.dispatchEvent(new Event('resize'))
 
     renderWithProviders(<LandingPageHeader />)
-    await user.click(screen.getByRole('button', { name: /Open menu/i }))
+    await user.click(screen.getByRole('button', { name: /Toggle Menu/i }))
     expect(await screen.findByText('Docs')).toBeInTheDocument()
     ;(window as any).innerWidth = prevWidth
     window.dispatchEvent(new Event('resize'))
