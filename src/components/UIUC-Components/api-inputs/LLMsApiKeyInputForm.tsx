@@ -94,7 +94,10 @@ export const APIKeyInput = ({
         id="API-key-input"
         label={placeholder}
         styles={{
-          label: { color: 'var(--dashboard-foreground-faded)' },
+          label: {
+            color: 'var(--dashboard-foreground-faded)',
+            marginBottom: '4px',
+          },
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -139,12 +142,12 @@ export const APIKeyInput = ({
         </div>
       </Input.Wrapper>
       <FieldInfo field={field} />
-      <div className="pt-1" />
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          marginTop: '8px',
         }}
       >
         {error && (
