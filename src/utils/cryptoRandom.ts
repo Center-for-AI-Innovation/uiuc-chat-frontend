@@ -27,7 +27,8 @@ export const generateSecureRandomString = (
   crypto.getRandomValues(randomBytes)
 
   for (let i = 0; i < safeLength; i++) {
-    const charIndex = randomBytes[i] % chars.length
+    const randomByte = randomBytes[i] ?? 0
+    const charIndex = randomByte % chars.length
     result += chars.charAt(charIndex) || 'A'
   }
 
@@ -67,11 +68,9 @@ export const generateSecureBase36String = (length: number): string => {
 
   let result = ''
   for (let i = 0; i < randomBytes.length; i++) {
-    const randomByte = randomBytes[i]
-    if (randomByte !== undefined) {
-      const charIndex = randomByte % chars.length
-      result += chars[charIndex] || '0'
-    }
+    const randomByte = randomBytes[i] ?? 0
+    const charIndex = randomByte % chars.length
+    result += chars[charIndex] || '0'
   }
 
   return result
