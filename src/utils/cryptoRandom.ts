@@ -15,27 +15,20 @@ export const generateSecureRandomString = (
   charset?: string,
   lowercase = false,
 ): string => {
+  const safeLength = Math.floor(length)
+  if (safeLength <= 0) return ''
+
   const defaultCharset = 'ABCDEFGHJKLMNPQRSTUVWXY3456789' // excluding similar looking characters like Z, 2, I, 1, O, 0
-  const chars = charset || defaultCharset
+  const chars = charset && charset.length > 0 ? charset : defaultCharset
   let result = ''
 
   // Use cryptographically secure random values
-  const randomBytes = new Uint8Array(length)
+  const randomBytes = new Uint8Array(safeLength)
   crypto.getRandomValues(randomBytes)
 
-  for (let i = 0; i < length; i++) {
-    const randomByte = randomBytes[i]
-    if (randomByte !== undefined) {
-      const charIndex = randomByte % chars.length
-      const char = chars[charIndex]
-      if (char) {
-        result += char
-      } else {
-        result += 'A' // fallback character
-      }
-    } else {
-      result += 'A' // fallback character
-    }
+  for (let i = 0; i < safeLength; i++) {
+    const charIndex = randomBytes[i] % chars.length
+    result += chars.charAt(charIndex) || 'A'
   }
 
   return lowercase ? result.toLowerCase() : result
@@ -65,16 +58,21 @@ export const generateSecureKey = (): string => {
  * @returns Secure random string in base36
  */
 export const generateSecureBase36String = (length: number): string => {
-  const randomBytes = new Uint8Array(Math.ceil(length * 0.75)) // base36 needs ~0.75 bytes per char
+  const safeLength = Math.floor(length)
+  if (safeLength <= 0) return ''
+
+  const chars = '0123456789abcdefghijklmnopqrstuvwxyz'
+  const randomBytes = new Uint8Array(safeLength)
   crypto.getRandomValues(randomBytes)
 
   let result = ''
   for (let i = 0; i < randomBytes.length; i++) {
     const randomByte = randomBytes[i]
     if (randomByte !== undefined) {
-      result += randomByte.toString(36)
+      const charIndex = randomByte % chars.length
+      result += chars[charIndex] || '0'
     }
   }
 
-  return result.substring(0, length)
+  return result
 }
