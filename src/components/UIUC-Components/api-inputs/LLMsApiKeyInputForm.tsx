@@ -861,7 +861,7 @@ export default function APIKeyInputForm({
                               prices and follow their rules.
                             </Text>
                             <Flex
-                              direction={{ base: 'column', '75rem': 'row' }}
+                              direction="row"
                               wrap="wrap"
                               justify="flex-start"
                               align="flex-start"
@@ -930,7 +930,7 @@ export default function APIKeyInputForm({
                               Your weights, your rules.
                             </Text>
                             <Flex
-                              direction={{ base: 'column', '75rem': 'row' }}
+                              direction="row"
                               wrap="wrap"
                               justify="flex-start"
                               align="flex-start"

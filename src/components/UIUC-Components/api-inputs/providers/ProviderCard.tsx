@@ -32,63 +32,60 @@ export default function ProviderCard({
   children,
 }: ProviderCardProps) {
   if (isLoading) {
-    return <Skeleton className="h-[200px] w-[330px] rounded-lg" />
+    return (
+      <Skeleton className="h-[200px] min-w-[min(330px,100%)] flex-[1_1_calc(50%-0.5rem)] rounded-lg" />
+    )
   }
 
   return (
-    <motion.div layout>
-      <Card className="max-w-[330px] border-0 bg-[--dashboard-background-faded] p-5 text-[--dashboard-foreground] shadow-none md:w-[330px]">
-        <div className="mb-3 flex items-center justify-between">
-          <ProviderTitle name={providerName} externalUrl={externalUrl} />
-          <form.Field
-            className="mb-1"
-            name={`providers.${providerKey}.enabled`}
-          >
-            {(field: any) => (
-              <ProviderSwitch
-                checked={field.state.value}
-                onCheckedChange={(checked: boolean) => {
-                  field.handleChange(checked)
-                  form.handleSubmit()
-                }}
-                providerName={providerName}
-              />
-            )}
-          </form.Field>
-        </div>
-
-        {description && (
-          <p className="mb-2 text-sm text-[--dashboard-foreground-faded]">
-            {description}
-          </p>
-        )}
-
-        <ProviderError
-          error={provider?.error}
-          enabled={
-            form.state.values?.providers?.[providerKey]?.enabled ||
-            provider.enabled
-          }
-        />
-
-        <form.Field name={`providers.${providerKey}.enabled`}>
+    <div className="w-full min-w-[min(330px,100%)] flex-[1_1_calc(50%-0.5rem)] rounded-md border-0 bg-[--dashboard-background-faded] p-5 text-[--dashboard-foreground] shadow-none">
+      <div className="mb-3 flex items-center justify-between">
+        <ProviderTitle name={providerName} externalUrl={externalUrl} />
+        <form.Field className="mb-1" name={`providers.${providerKey}.enabled`}>
           {(field: any) => (
-            <AnimatePresence>
-              {field.state.value && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {children}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <ProviderSwitch
+              checked={field.state.value}
+              onCheckedChange={(checked: boolean) => {
+                field.handleChange(checked)
+                form.handleSubmit()
+              }}
+              providerName={providerName}
+            />
           )}
         </form.Field>
-      </Card>
-    </motion.div>
+      </div>
+
+      {description && (
+        <p className="mb-2 text-sm text-[--dashboard-foreground-faded]">
+          {description}
+        </p>
+      )}
+
+      <ProviderError
+        error={provider?.error}
+        enabled={
+          form.state.values?.providers?.[providerKey]?.enabled ||
+          provider.enabled
+        }
+      />
+
+      <form.Field name={`providers.${providerKey}.enabled`}>
+        {(field: any) => (
+          <AnimatePresence>
+            {field.state.value && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {children}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+      </form.Field>
+    </div>
   )
 }
 
