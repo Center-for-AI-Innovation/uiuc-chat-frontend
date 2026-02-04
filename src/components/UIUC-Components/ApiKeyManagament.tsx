@@ -199,10 +199,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
   const handleGenerate = async () => {
     try {
-      const data = await generateApiKey.mutateAsync({
+      await generateApiKey.mutateAsync({
         courseName: course_name,
       })
-      setApiKey(data.apiKey)
       showNotification({
         title: 'Success',
         message: 'API key generated successfully.',
@@ -218,10 +217,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
   const handleRotate = async () => {
     try {
-      const data = await rotateApiKey.mutateAsync({
+      await rotateApiKey.mutateAsync({
         courseName: course_name,
       })
-      setApiKey(data.newApiKey)
       showNotification({
         title: 'Success',
         message: 'API key rotated successfully.',

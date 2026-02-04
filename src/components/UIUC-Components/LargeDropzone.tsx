@@ -220,7 +220,7 @@ export function LargeDropzone({
       const { data: successDocs } = await refetchSuccessDocs()
       const docsData = { documents: successDocs }
       // Adjust polling interval based on activity
-      if (data.documents.length > 0) {
+      if (data && data.documents.length > 0) {
         pollInterval = MIN_INTERVAL
         consecutiveEmptyPolls = 0
       } else {
