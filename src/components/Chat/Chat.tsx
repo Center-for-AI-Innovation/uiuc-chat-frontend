@@ -281,22 +281,14 @@ export const Chat = memo(
     ) => {
       // Log conversation to database
       try {
-        const response = await fetch(`/api/UIUC-api/logConversation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(
-            createLogConversationPayload(
-              getCurrentPageName(),
-              conversation,
-              message,
-              earliestEditedMessageId,
-            ),
+        await logConversationMutation.mutateAsync(
+          createLogConversationPayload(
+            getCurrentPageName(),
+            conversation,
+            message,
+            earliestEditedMessageId,
           ),
-        })
-        // const data = await response.json()
-        // return data.success
+        )
       } catch (error) {
         console.error('Error setting course data:', error)
       }
@@ -1931,19 +1923,13 @@ export const Chat = memo(
               updatedConversation.messages.length - 1
             ] ?? null
           if (latestAssistantMessage) {
-            await fetch('/api/UIUC-api/logConversation', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(
-                createLogConversationPayload(
-                  getCurrentPageName(),
-                  updatedConversation,
-                  latestAssistantMessage,
-                ),
+            await logConversationMutation.mutateAsync(
+              createLogConversationPayload(
+                getCurrentPageName(),
+                updatedConversation,
+                latestAssistantMessage,
               ),
-            })
+            )
           }
         } catch (error) {
           homeDispatch({

@@ -487,17 +487,18 @@ export function reconstructConversation(
   return cloned
 }
 
-export async function logConversationToServer(
-  conversation: Conversation,
-  course_name: string,
-) {
+export type LogConversationPayload =
+  | { course_name: string; delta: SaveConversationDelta }
+  | { course_name: string; conversation: Conversation }
+
+export async function logConversationToServer(payload: LogConversationPayload) {
   try {
     const response = await fetch('/api/UIUC-api/logConversation', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ course_name, conversation }),
+      body: JSON.stringify(payload),
     })
 
     if (!response.ok) {

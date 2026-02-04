@@ -45,6 +45,7 @@ import {
   saveConversationToServer,
   createLogConversationPayload,
 } from '@/hooks/__internal__/conversation'
+import { useLogConversation } from '@/hooks/queries/useLogConversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -453,6 +454,7 @@ export const ChatMessage = memo(
     courseName,
   }: Props) => {
     const { t } = useTranslation('chat')
+    const logConversationMutation = useLogConversation(courseName)
     const { activeSidebarMessageId, setActiveSidebarMessageId } =
       useReactContext(SourcesSidebarContext)
 
@@ -745,21 +747,17 @@ export const ChatMessage = memo(
         })
 
         if (latestMessage) {
-          fetch('/api/UIUC-api/logConversation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(
+          logConversationMutation
+            .mutateAsync(
               createLogConversationPayload(
                 courseName,
                 updatedConversation,
                 latestMessage,
               ),
-            ),
-          }).catch((error) => {
-            console.error('Error logging conversation delta:', error)
-          })
+            )
+            .catch((error) => {
+              console.error('Error logging conversation delta:', error)
+            })
         }
       }
       setIsEditing(false)
