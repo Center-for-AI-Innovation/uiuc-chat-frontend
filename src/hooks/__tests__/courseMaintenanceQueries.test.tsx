@@ -199,4 +199,22 @@ describe('course + maintenance query hooks', () => {
     await Promise.resolve()
     expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
+
+  it('useFetchAllCourseNames surfaces errors when response is non-ok', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, retryDelay: 0 } },
+    })
+    const Wrapper = createWrapper(queryClient)
+
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('no', { status: 500 }))
+      .mockResolvedValueOnce(new Response('no', { status: 500 }))
+
+    const { result } = renderHook(() => useFetchAllCourseNames(), {
+      wrapper: Wrapper,
+    })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.error).toBeInstanceOf(Error)
+  })
 })
