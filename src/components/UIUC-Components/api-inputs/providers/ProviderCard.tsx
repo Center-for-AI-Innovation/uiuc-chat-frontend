@@ -1,13 +1,13 @@
 import React, { type ReactNode } from 'react'
 import { Alert, AlertDescription } from '@/components/shadcn/ui/alert'
 import { Skeleton } from '@/components/shadcn/ui/skeleton'
+import { Switch } from '@/components/shadcn/ui/switch'
 import { IconExternalLink } from '@tabler/icons-react'
 import {
   type LLMProvider,
   type ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
 import { motion, AnimatePresence } from 'framer-motion'
-import CustomSwitch from '~/components/Switches/CustomSwitch'
 
 interface ProviderCardProps {
   providerName: string
@@ -119,15 +119,14 @@ function ProviderSwitch({
   providerName: string
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <CustomSwitch
-        label={''}
-        tooltip={`Enable ${providerName} provider`}
-        checked={checked}
-        onChange={onCheckedChange}
-        aria-label={`Enable ${providerName} provider`}
-      />
-    </div>
+    <Switch
+      variant="labeled"
+      showLabels
+      showThumbIcon
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      aria-label={`Enable ${providerName} provider`}
+    />
   )
 }
 
