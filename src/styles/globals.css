@@ -224,7 +224,7 @@
   --dashboard-background-faded: color-mix(
     in srgb,
     var(--dashboard-background),
-    black 5%
+    black 3%
   );
   --dashboard-background-dark: #ddd; /* color-mix(in srgb, var(--illinois-background-dark), white 5%); */
   --dashboard-background-darker: color-mix(
