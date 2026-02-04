@@ -619,7 +619,7 @@ export default function APIKeyInputForm({
           }}
         >
           {/* Default Model Section */}
-          <div className="mt-6 rounded-lg border border-[--dashboard-border] bg-[--dashboard-sidebar-background] p-4">
+          <div className="rounded-lg border border-[--dashboard-border] bg-[--dashboard-sidebar-background] p-4">
             <Title
               className={`${montserrat_heading.variable} mb-2 font-montserratHeading text-[--foreground]`}
               order={4}
