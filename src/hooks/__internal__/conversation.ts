@@ -7,8 +7,7 @@ import {
   type ConversationMeta,
   type ContextWithMetadata,
 } from '@/types/chat'
-import posthog from 'posthog-js'
-import { cleanConversationHistory } from './clean'
+import { cleanConversationHistory } from '@/utils/app/clean'
 import { createHeaders } from '~/utils/httpHeaders'
 
 // Helper function to create headers with PostHog ID and user email
@@ -394,9 +393,12 @@ export function createLogConversationPayload(
       const lastIndex = conversation.messages.length - 1
       const userMessage = conversation.messages[lastIndex - 1]
       const assistantMessage = conversation.messages[lastIndex]
-      
+
       // Only include both if we have a user->assistant pair
-      if (userMessage?.role === 'user' && assistantMessage?.role === 'assistant') {
+      if (
+        userMessage?.role === 'user' &&
+        assistantMessage?.role === 'assistant'
+      ) {
         messagesToInclude = [userMessage, assistantMessage]
       } else {
         // Fallback: just include the provided message
@@ -447,7 +449,6 @@ export function createLogConversationPayload(
 //   }
 // }
 
-
 export function reconstructConversation(
   conversation: Conversation | undefined | null,
   fallback?: Conversation,
@@ -486,4 +487,30 @@ export function reconstructConversation(
   })
 
   return cloned
+}
+
+export async function logConversationToServer(
+  conversation: Conversation,
+  course_name: string,
+) {
+  try {
+    const response = await fetch('/api/UIUC-api/logConversation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ course_name, conversation }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null)
+      const errorMessage = errorData?.error || response.statusText
+      throw new Error(`Error logging conversation: ${errorMessage}`)
+    }
+
+    return response.json().catch(() => null)
+  } catch (error) {
+    console.error('Error logging conversation to server:', error)
+    throw error
+  }
 }

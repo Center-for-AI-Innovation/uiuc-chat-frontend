@@ -1,9 +1,9 @@
-import { type QueryClient, useMutation, useQuery } from '@tanstack/react-query'
+import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { debounce } from 'lodash'
-import { useMemo, useRef } from 'react'
-import { showConfirmationToast } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
+import { useMemo } from 'react'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
+<<<<<<< HEAD:src/hooks/useProjectAPIKeys.ts
 export function useGetProjectLLMProviders({
   projectName,
 }: {
@@ -49,6 +49,9 @@ export function useSetProjectLLMProviders(queryClient: QueryClient) {
     }[]
   >([])
 
+=======
+export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
+>>>>>>> 3b85146fb3e0771f56cd6d0a4034601fe98ab7b0:src/hooks/queries/useUpdateProjectLLMProviders.ts
   const debouncedApiCall = useMemo(
     () =>
       debounce(
