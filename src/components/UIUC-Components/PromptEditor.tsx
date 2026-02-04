@@ -70,6 +70,7 @@ import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useQueryClient } from '@tanstack/react-query'
 import { useFetchDefaultPostPrompt } from '@/hooks/queries/useFetchDefaultPostPrompt'
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
 
 interface PromptEditorProps {
   project_name: string
@@ -260,6 +261,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     })
   const { data: defaultPostPrompt, refetch: refetchDefaultPostPrompt } =
     useFetchDefaultPostPrompt()
+  const { mutateAsync: routeChatAsync } = useRouteChat()
   const [
     linkGeneratorOpened,
     { open: openLinkGenerator, close: closeLinkGenerator },
@@ -791,24 +793,7 @@ CRITICAL: The optimized prompt must:
         key: '',
       }
 
-      const response = await fetch('/api/allNewRoutingChat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(chatBody),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        showPromptToast(
-          theme,
-          'Error',
-          errorData.error || 'Failed to optimize prompt',
-          true,
-        )
-        return
-      }
+      const response = await routeChatAsync(chatBody)
 
       const reader = response.body?.getReader()
       if (!reader) {
