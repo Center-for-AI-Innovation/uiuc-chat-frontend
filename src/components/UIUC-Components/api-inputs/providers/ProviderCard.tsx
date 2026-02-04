@@ -33,12 +33,12 @@ export default function ProviderCard({
 }: ProviderCardProps) {
   if (isLoading) {
     return (
-      <Skeleton className="h-[200px] min-w-[min(330px,100%)] flex-[1_1_calc(50%-0.5rem)] rounded-lg" />
+      <Skeleton className="h-[200px] min-w-[min(330px,100%)] flex-[1_1_calc(50%_-_0.5rem)] rounded-lg" />
     )
   }
 
   return (
-    <div className="w-full min-w-[min(330px,100%)] flex-[1_1_calc(50%-0.5rem)] rounded-md border-0 bg-[--dashboard-background-faded] p-5 text-[--dashboard-foreground] shadow-none">
+    <div className="w-full min-w-[min(330px,100%)] flex-[1_1_calc(50%_-_0.5rem)] rounded-md border-0 bg-[--dashboard-background-faded] p-5 text-[--dashboard-foreground] shadow-none">
       <div className="mb-3 flex items-center justify-between">
         <ProviderTitle name={providerName} externalUrl={externalUrl} />
         <form.Field className="mb-1" name={`providers.${providerKey}.enabled`}>
