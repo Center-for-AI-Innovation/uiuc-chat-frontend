@@ -14,6 +14,7 @@ import {
   IconChevronDown,
   IconSelector,
 } from '@tabler/icons-react'
+import { useFetchAllCourseMetadata } from '~/hooks/queries/useFetchAllCourseMetadata'
 
 const StyledRow = styled.tr`
   &:hover {
@@ -81,13 +82,14 @@ const ListProjectTable: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const [rows, setRows] = useState<JSX.Element[]>([])
-  const [isFullyLoaded, setIsFullyLoaded] = useState<boolean>(false)
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [sortColumn, setSortColumn] = useState<SortableColumn>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
-  const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>(
-    [],
-  )
+
+  const { data: rawData = [], isFetched } = useFetchAllCourseMetadata({
+    currUserEmail: auth.user?.profile.email || '',
+    enabled: !auth.isLoading && auth.isAuthenticated === true,
+  })
 
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {
@@ -201,41 +203,7 @@ const ListProjectTable: React.FC = () => {
     sortData()
   }, [sortColumn, sortDirection, rawData])
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      console.log('Fetching projects')
-
-      if (auth.isLoading) {
-        return
-      }
-
-      if (auth.isAuthenticated && auth.user?.profile.email) {
-        console.log('Signed')
-
-        const currUserEmail = auth.user.profile.email
-        console.log(currUserEmail)
-        if (!currUserEmail) {
-          throw new Error('No email found for the user')
-        }
-
-        const response = await fetch(
-          `/api/UIUC-api/getAllCourseMetadata?currUserEmail=${currUserEmail}`,
-        )
-        const data = await response.json()
-        if (data) {
-          setRawData(data)
-          setIsFullyLoaded(true)
-        } else {
-          console.log('No project found with the given name')
-          setIsFullyLoaded(true)
-        }
-      } else {
-        console.log('User not signed in')
-        setIsFullyLoaded(true)
-      }
-    }
-    fetchCourses()
-  }, [auth.isLoading, auth.isAuthenticated])
+  const isFullyLoaded = !auth.isAuthenticated || isFetched
 
   if (auth.isLoading || !isFullyLoaded) {
     // Loading screen is actually NOT worth it :/ just return null

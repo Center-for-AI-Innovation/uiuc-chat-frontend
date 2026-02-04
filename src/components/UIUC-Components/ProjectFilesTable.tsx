@@ -42,6 +42,7 @@ import {
   type DocumentGroup,
 } from 'src/types/courseMaterials'
 import { useAppendToDocGroup } from '@/hooks/queries/useAppendToDocGroup'
+import { useFetchFailedDocuments } from '~/hooks/queries/useFetchFailedDocuments'
 import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
 import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
 
@@ -181,31 +182,22 @@ export function ProjectFilesTable({
     isLoading: isLoadingFailedDocuments,
     isError: isErrorFailedDocuments,
     error: failedDocumentsError,
-  } = useQuery({
+  } = useFetchFailedDocuments({
+    courseName: course_name,
+    from: (page - 1) * PAGE_SIZE,
+    to: (page - 1) * PAGE_SIZE + PAGE_SIZE - 1,
+    filterKey,
+    filterValue,
+    sortColumn: sortStatus.columnAccessor,
+    sortDirection: sortStatus.direction,
     refetchInterval: 20_000,
-    queryKey: [
-      'failedDocuments',
-      course_name,
-      page,
-      filterKey,
-      filterValue,
-      sortStatus.columnAccessor,
-      sortStatus.direction,
-    ],
-    queryFn: async () => {
-      const from = (page - 1) * PAGE_SIZE
-      const to = from + PAGE_SIZE - 1
-      const response = await fetch(
-        `/api/materialsTable/fetchFailedDocuments?from=${from}&to=${to}&course_name=${course_name}&filter_key=${filterKey}&filter_value=${filterValue}&sort_column=${sortStatus.columnAccessor}&sort_direction=${sortStatus.direction}`,
-      )
-      if (!response.ok) {
-        throw new Error('Failed to fetch failed documents')
-      }
-      const failedDocumentsResponse = await response.json()
-      setFailedCount(failedDocumentsResponse.recent_fail_count)
-      return failedDocumentsResponse
-    },
   })
+
+  useEffect(() => {
+    if (failedDocuments?.recent_fail_count !== undefined) {
+      setFailedCount(failedDocuments.recent_fail_count)
+    }
+  }, [failedDocuments?.recent_fail_count])
 
   const {
     data: documentGroups,

@@ -18,6 +18,7 @@ import { useDeleteAllConversations } from '@/hooks/queries/useDeleteAllConversat
 import { useDeleteConversation } from '@/hooks/queries/useDeleteConversation'
 import { useFetchConversationHistory } from '@/hooks/queries/useFetchConversationHistory'
 import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+import { useDownloadConvoHistory } from '@/hooks/queries/useDownloadConvoHistory'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
@@ -26,10 +27,6 @@ import posthog from 'posthog-js'
 import { saveConversationToServer } from '@/hooks/__internal__/conversation'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
-
-interface DownloadResult {
-  message: string
-}
 
 export const Chatbar = ({
   current_email,
@@ -107,6 +104,8 @@ export const Chatbar = ({
     courseName as string,
   )
 
+  const { mutateAsync: downloadConvoHistoryAsync } = useDownloadConvoHistory()
+
   const [convoMigrationLoading, setConvoMigrationLoading] =
     useState<boolean>(false)
 
@@ -148,113 +147,6 @@ export const Chatbar = ({
       )
     } catch (error) {
       console.error('Error updating conversations:', error)
-    }
-  }
-
-  const downloadConversationHistoryUser = async (
-    userEmail: string,
-    projectName: string,
-  ): Promise<DownloadResult> => {
-    // Input validation on client side
-    if (!userEmail || !projectName) {
-      return { message: 'Missing email or project name.' }
-    }
-
-    console.log(
-      `Starting download for user: ${userEmail}, project: ${projectName}`,
-    )
-
-    try {
-      const response = await fetch(
-        `/api/UIUC-api/downloadConvoHistoryUser?projectName=${encodeURIComponent(projectName)}`,
-        {
-          method: 'GET',
-          headers: {
-            Accept: 'application/zip, application/json, */*',
-          },
-        },
-      )
-
-      console.log('Received response:', response.status, response.statusText)
-
-      if (!response.ok) {
-        // Try to get error message from response
-        let errorMessage = `Server error (${response.status})`
-        try {
-          const errorData = await response.json()
-          errorMessage = errorData.error || errorMessage
-        } catch {
-          // If response isn't JSON, use status text
-          errorMessage = response.statusText || errorMessage
-        }
-
-        console.error('Server error:', errorMessage)
-        return { message: `Error: ${errorMessage}` }
-      }
-
-      const contentType = response.headers.get('content-type') || ''
-
-      if (contentType.includes('application/json')) {
-        console.log('Response is JSON')
-        const jsonData = await response.json()
-        console.log('Parsed JSON data:', jsonData)
-
-        if (jsonData.response === 'Download from S3') {
-          console.log(
-            'Large conversation history, sending email with download link',
-          )
-          return {
-            message:
-              "We are gathering your large conversation history, you'll receive an email with a download link shortly.",
-          }
-        } else if (jsonData.error) {
-          return { message: `Error: ${jsonData.error}` }
-        } else {
-          console.log('Conversation history ready for download')
-          return {
-            message: 'Your conversation history is ready for download.',
-          }
-        }
-      } else if (contentType.includes('application/zip')) {
-        console.log('Response is a ZIP file')
-        const blob = await response.blob()
-
-        // Validate blob size (basic sanity check)
-        if (blob.size === 0) {
-          return { message: 'Error: Received empty file.' }
-        }
-
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-
-        // Sanitize filename for security
-        const sanitizedProjectName = projectName
-          .replace(/[^a-zA-Z0-9\-_]/g, '_')
-          .substring(0, 10)
-        link.setAttribute('download', `${sanitizedProjectName}-convos.zip`)
-
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
-
-        console.log('Download started, check your downloads')
-        return { message: 'Downloading now, check your downloads.' }
-      } else {
-        console.warn('Unexpected content type:', contentType)
-        return { message: 'Unexpected response format from server.' }
-      }
-    } catch (error) {
-      console.error('Error exporting documents:', error)
-
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        return {
-          message: 'Network error. Please check your connection and try again.',
-        }
-      }
-
-      return { message: 'Error exporting documents. Please try again.' }
     }
   }
 
@@ -350,7 +242,7 @@ export const Chatbar = ({
     if (courseName && current_email) {
       setIsExporting(true)
       try {
-        await downloadConversationHistoryUser(current_email, courseName)
+        await downloadConvoHistoryAsync({ projectName: courseName })
       } finally {
         setIsExporting(false)
       }

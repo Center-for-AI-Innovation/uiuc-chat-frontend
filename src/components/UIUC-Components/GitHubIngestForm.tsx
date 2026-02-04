@@ -23,6 +23,8 @@ import { Montserrat } from 'next/font/google'
 import { type FileUpload } from './UploadNotification'
 import Link from 'next/link'
 import { type QueryClient } from '@tanstack/react-query'
+import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
+import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -115,6 +117,7 @@ export default function GitHubIngestForm({
       },
     },
   }))
+  const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(project_name)
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -188,16 +191,14 @@ export default function GitHubIngestForm({
     }
   }, [url])
 
+  const { refetch: refetchDocsInProgress } =
+    useFetchDocsInProgress(project_name)
+
   useEffect(() => {
     const checkIngestStatus = async () => {
-      const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${project_name}`,
-      )
-      const data = await response.json()
-      const docsResponse = await fetch(
-        `/api/materialsTable/successDocs?course_name=${project_name}`,
-      )
-      const docsData = await docsResponse.json()
+      const { data } = await refetchDocsInProgress()
+      const { data: successDocs } = await refetchSuccessDocs()
+      const docsData = { documents: successDocs }
 
       // Helper function to organize docs by base URL
       const organizeDocsByBaseUrl = (

@@ -14,7 +14,8 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { callSetCourseMetadata, uploadToS3 } from '~/utils/apiUtils'
+import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import SetExampleQuestions from './SetExampleQuestions'
 // import { Checkbox } from '@radix-ui/react-checkbox'
@@ -102,6 +103,7 @@ export const UploadCard = memo(function UploadCard({
     initialMetadata?.project_description || '',
   )
   const queryClient = useQueryClient()
+  const uploadToS3Mutation = useUploadToS3()
   const [introMessage, setIntroMessage] = useState(
     initialMetadata?.course_intro_message || '',
   )
@@ -430,12 +432,18 @@ export const UploadCard = memo(function UploadCard({
                     // Assuming the file is converted to a URL somewhere else
                     if (e.target.files?.length) {
                       console.log('Uploading to s3')
-                      const banner_s3_image = await uploadToS3(
-                        e.target.files?.[0] ?? null,
-                        '', // No user_id needed for course logos
-                        projectName,
-                        'document-group', // Course logos belong with course materials
-                      )
+                      const file = e.target.files[0]
+                      if (!file) {
+                        console.error('No file selected')
+                        return
+                      }
+                      const banner_s3_image =
+                        await uploadToS3Mutation.mutateAsync({
+                          file,
+                          uniqueFileName: `${crypto.randomUUID()}.${file.name.split('.').pop()}`,
+                          courseName: projectName,
+                          uploadType: 'document-group',
+                        })
                       if (banner_s3_image && metadata) {
                         metadata.banner_image_s3 = banner_s3_image
                         await callSetCourseMetadata(projectName, metadata)

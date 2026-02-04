@@ -1,6 +1,5 @@
 // utils/apiUtils.ts
 import { CoreMessage } from 'ai'
-import { v4 as uuidv4 } from 'uuid'
 import { Conversation, Message } from '~/types/chat'
 import {
   type CourseMetadata,
@@ -76,56 +75,6 @@ export const callSetCourseMetadata = async (
 }
 
 /**
- * Uploads a file to S3 using a pre-signed URL.
- * @param {File | null} file - The file to upload.
- * @param {string} user_id - The user ID associated with the file.
- * @param {string} course_name - The name of the course associated with the file.
- * @param {string} uploadType - The type of upload ('chat' or 'document-group').
- * @returns {Promise<string | undefined>} - A promise that resolves to the key of the uploaded file or undefined.
- */
-export const uploadToS3 = async (
-  file: File | null,
-  user_id: string,
-  course_name: string,
-  uploadType: 'chat' | 'document-group' = 'document-group',
-): Promise<string | undefined> => {
-  if (!file) return
-
-  const uniqueFileName = `${uuidv4()}.${file.name.split('.').pop()}`
-  const requestObject = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fileName: file.name,
-      fileType: file.type,
-      user_id: user_id,
-      courseName: course_name,
-      uniqueFileName,
-      uploadType,
-    }),
-  }
-
-  try {
-    const endpoint = '/api/UIUC-api/uploadToS3'
-    const response = await fetch(endpoint, requestObject)
-    const data: PresignedPostResponse = await response.json()
-    const { url, fields } = data.post
-
-    const formData = new FormData()
-    Object.entries(fields).forEach(([key, value]) =>
-      formData.append(key, value),
-    )
-    formData.append('file', file)
-
-    await fetch(url, { method: 'POST', body: formData })
-    console.debug('File uploaded to S3 successfully', { file_name: file.name })
-    return fields.key
-  } catch (error) {
-    console.error('Error uploading file to S3', { error })
-  }
-}
-
-/**
  * Fetches a pre-signed URL for downloading a file.
  * @param {string} filePath - The path of the file to download.
  * @param {string} [page] - The page from which the request originates.
@@ -152,51 +101,6 @@ export async function fetchPresignedUrl(
   } catch (error) {
     console.error('Error fetching presigned URL', { error })
     return null
-  }
-}
-
-/**
- * Fetches metadata for a specific course.
- * @param {string} course_name - The name of the course.
- * @returns {Promise<any>} - A promise that resolves to the course metadata.
- */
-export async function fetchCourseMetadata(course_name: string): Promise<any> {
-  try {
-    const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${course_name}`
-    const response = await fetch(endpoint)
-
-    if (!response.ok) {
-      const error = new Error(
-        `Error fetching course metadata: ${response.statusText || response.status}`,
-      ) as Error & { status?: number }
-      error.status = response.status
-      throw error
-    }
-
-    const data = await response.json()
-    if (data.success === false) {
-      const error = new Error(
-        data.message || 'An error occurred while fetching course metadata',
-      ) as Error & { status?: number }
-      // Try to infer status from error message or default to 500
-      error.status = data.status || 500
-      throw error
-    }
-
-    if (
-      data.course_metadata &&
-      typeof data.course_metadata.is_private === 'string'
-    ) {
-      data.course_metadata.is_private =
-        data.course_metadata.is_private.toLowerCase() === 'true'
-    }
-
-    // Note: allow_logged_in_users is stored as a boolean in Redis
-
-    return data.course_metadata
-  } catch (error) {
-    console.error('Error fetching course metadata', { course_name, error })
-    throw error
   }
 }
 
@@ -305,20 +209,10 @@ export function convertConversationToCoreMessagesWithoutSystem(
     })
 }
 
-// Helper Types
-interface PresignedPostResponse {
-  post: {
-    url: string
-    fields: { [key: string]: string }
-  }
-}
-
 // Export all functions as part of the API Utils module
 export default {
   callSetCourseMetadata,
-  uploadToS3,
   fetchPresignedUrl,
-  fetchCourseMetadata,
 }
 /**
  * Create a new project

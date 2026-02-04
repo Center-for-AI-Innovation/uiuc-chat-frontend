@@ -1,30 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Title, Text } from '@mantine/core'
 import Link from 'next/link'
+import { useFetchMaintenanceDetails } from '~/hooks/queries/useFetchMaintenanceDetails'
 
 const Maintenance = ({}: {
   // Prevent search engine indexing of Maintenance page (because it'll ruin our entire search results): https://github.com/vercel/next.js/discussions/12850#discussioncomment-3335807
   // in _document.tsx
 }) => {
-  const [maintenanceBodyText, setMaintenanceBodyText] = useState('')
-  const [maintenanceTitleText, setMaintenanceTitleText] = useState('')
-
-  useEffect(() => {
-    const checkMaintenanceMode = async () => {
-      try {
-        const response = await fetch('/api/UIUC-api/getMaintenanceModeDetails')
-        const data = await response.json()
-        // setIsMaintenanceMode(data.isMaintenanceMode)
-        setMaintenanceBodyText(data.maintenanceBodyText)
-        setMaintenanceTitleText(data.maintenanceTitleText)
-      } catch (error) {
-        console.error('Failed to check maintenance mode:', error)
-        // setIsMaintenanceMode(false)
-      }
-    }
-
-    checkMaintenanceMode()
-  }, [])
+  const { data } = useFetchMaintenanceDetails()
+  const maintenanceTitleText = data?.maintenanceTitleText ?? ''
+  const maintenanceBodyText = data?.maintenanceBodyText ?? ''
 
   return (
     <>

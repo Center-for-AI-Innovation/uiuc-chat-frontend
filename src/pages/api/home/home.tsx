@@ -1,5 +1,5 @@
 // src/pages/home/home.tsx
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useTranslation } from 'next-i18next'
 import Head from 'next/head'
@@ -34,6 +34,7 @@ import { useDeleteFolder } from '@/hooks/queries/useDeleteFolder'
 import { useUpdateFolder } from '@/hooks/queries/useUpdateFolder'
 import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
 import { useCreateFolder } from '@/hooks/queries/useCreateFolder'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
@@ -108,27 +109,11 @@ const Home = ({
   } = useFetchLastConversation(course_name, current_email)
 
   const stopConversationRef = useRef<boolean>(false)
-  const getModels = useCallback(
-    async (params: { projectName: string }, signal?: AbortSignal) => {
-      const response = await fetch(`/api/models`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal,
-        body: JSON.stringify({
-          projectName: params.projectName,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch models')
-      }
-
-      return response.json()
-    },
-    [],
-  )
+  const { data: fetchedLLMProviders, error: llmProvidersError } =
+    useFetchLLMProviders({
+      projectName: course_name,
+      enabled: !!course_metadata,
+    })
 
   const serverSidePluginKeysSet = true
 
@@ -212,25 +197,24 @@ const Home = ({
       }
     }
 
-    const setOpenaiModel = async () => {
-      // Get models available to users
-      try {
-        if (!course_metadata) return
-
-        //TODO(BG): can be replaced with react query call
-        const models = await getModels({
-          projectName: course_name,
-        })
-        dispatch({ field: 'llmProviders', value: models })
-      } catch (error) {
-        console.error('Error fetching models user has access to: ', error)
-        dispatch({ field: 'modelError', value: getModelsError(error) })
-      }
-    }
-
-    setOpenaiModel()
     setIsLoading(false)
   }, [course_metadata, apiKey])
+
+  useEffect(() => {
+    if (fetchedLLMProviders) {
+      dispatch({ field: 'llmProviders', value: fetchedLLMProviders })
+    }
+    if (llmProvidersError) {
+      console.error(
+        'Error fetching models user has access to: ',
+        llmProvidersError,
+      )
+      dispatch({
+        field: 'modelError',
+        value: getModelsError(llmProvidersError),
+      })
+    }
+  }, [fetchedLLMProviders, llmProvidersError])
 
   useEffect(() => {
     if (isFoldersFetched && !isLoadingFolders) {

@@ -13,52 +13,49 @@ import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()
-  const [projectName, setProjectName] = useState<string | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
-  const [isFetchingCourseMetadata, setIsFetchingCourseMetadata] = useState(true)
   const auth = useAuth()
   const isLoaded = !auth.isLoading
   const isSignedIn = auth.isAuthenticated
   const user_email = auth.user?.profile.email
-  const [metadata, setProjectMetadata] = useState<CourseMetadata | null>()
-  const getCurrentPageName = () => {
-    return router.query.course_name as string
-  }
 
+  const projectName =
+    typeof router.query.course_name === 'string'
+      ? router.query.course_name
+      : undefined
+
+  const { data: metadata, isLoading: isFetchingCourseMetadata } =
+    useFetchCourseMetadata({
+      courseName: projectName || '',
+      enabled: router.isReady && Boolean(projectName),
+    })
+
+  // Redirect to /new if course doesn't exist
   useEffect(() => {
-    if (!router.isReady) return
-    const fetchCourseData = async () => {
-      const local_course_name = getCurrentPageName()
-
-      // Check exists
-      const metadata: CourseMetadata =
-        await fetchCourseMetadata(local_course_name)
-      if (metadata === null) {
-        await router.push('/new?course_name=' + local_course_name)
-        return
-      }
-      setProjectName(local_course_name)
-      setIsFetchingCourseMetadata(false)
-      setProjectMetadata(metadata)
+    if (
+      router.isReady &&
+      !isFetchingCourseMetadata &&
+      projectName &&
+      metadata === undefined
+    ) {
+      router.push('/new?course_name=' + projectName)
     }
-    fetchCourseData()
-  }, [router.isReady])
+  }, [router.isReady, isFetchingCourseMetadata, projectName, metadata, router])
 
   if (
     metadata &&
     user_email !== (metadata.course_owner as string) &&
-    metadata.course_admins.indexOf(getCurrentPageName()) === -1
+    metadata.course_admins.indexOf(projectName || '') === -1
   ) {
     void router.push(`/new?course_name=${projectName}`)
 
-    return <CannotEditCourse course_name={getCurrentPageName() as string} />
+    return <CannotEditCourse course_name={projectName || ''} />
   }
   if (!isLoaded || isFetchingCourseMetadata || projectName == null) {
     return <LoadingPlaceholderForAdminPages />
