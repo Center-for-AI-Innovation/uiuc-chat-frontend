@@ -3,13 +3,11 @@ import { describe, expect, it, vi } from 'vitest'
 import type { InfiniteData } from '@tanstack/react-query'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import {
-  useDeleteAllConversations,
-  useDeleteConversation,
-  useFetchConversationHistory,
-  useFetchLastConversation,
-  useUpdateConversation,
-} from '../conversationQueries'
+import { useDeleteAllConversations } from '../queries/useDeleteAllConversations'
+import { useDeleteConversation } from '../queries/useDeleteConversation'
+import { useFetchConversationHistory } from '../queries/useFetchConversationHistory'
+import { useFetchLastConversation } from '../queries/useFetchLastConversation'
+import { useUpdateConversation } from '../queries/useUpdateConversation'
 import type { Conversation, ConversationPage } from '~/types/chat'
 import type { FolderWithConversation } from '~/types/folder'
 import {

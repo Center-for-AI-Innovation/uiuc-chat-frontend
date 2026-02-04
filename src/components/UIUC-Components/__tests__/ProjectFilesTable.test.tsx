@@ -106,8 +106,8 @@ vi.mock('@mantine/core', async (importOriginal) => {
   }
 })
 
-vi.mock('~/hooks/docGroupsQueries', () => ({
-  useGetDocumentGroups: () => ({
+vi.mock('@/hooks/queries/useFetchDocumentGroups', () => ({
+  useFetchDocumentGroups: () => ({
     data: [
       { id: 1, name: 'Group A', doc_count: 1, enabled: true },
       { id: 2, name: 'Group B', doc_count: 0, enabled: true },
@@ -117,11 +117,17 @@ vi.mock('~/hooks/docGroupsQueries', () => ({
     error: null,
     refetch: vi.fn(),
   }),
+}))
+
+vi.mock('@/hooks/queries/useAppendToDocGroup', () => ({
   useAppendToDocGroup: () => ({
     mutate: vi.fn(async () => undefined),
     isPending: false,
   }),
-  useRemoveFromDocGroup: () => ({
+}))
+
+vi.mock('@/hooks/queries/useDeleteFromDocGroup', () => ({
+  useDeleteFromDocGroup: () => ({
     mutate: vi.fn(async () => undefined),
     isPending: false,
   }),

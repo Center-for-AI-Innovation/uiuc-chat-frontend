@@ -2,14 +2,12 @@ import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import {
-  useAppendToDocGroup,
-  useCreateDocumentGroup,
-  useFetchEnabledDocGroups,
-  useGetDocumentGroups,
-  useRemoveFromDocGroup,
-  useUpdateDocGroup,
-} from '../docGroupsQueries'
+import { useAppendToDocGroup } from '../queries/useAppendToDocGroup'
+import { useCreateDocumentGroup } from '../queries/useCreateDocumentGroup'
+import { useDeleteFromDocGroup } from '../queries/useDeleteFromDocGroup'
+import { useFetchDocumentGroups } from '../queries/useFetchDocumentGroups'
+import { useFetchEnabledDocGroups } from '../queries/useFetchEnabledDocGroups'
+import { useUpdateDocGroup } from '../queries/useUpdateDocGroup'
 import type { CourseDocument, DocumentGroup } from '~/types/courseMaterials'
 
 vi.mock('react-oidc-context', () => ({
@@ -52,7 +50,7 @@ function createDeferred<T = unknown>() {
 }
 
 describe('docGroupsQueries hooks', () => {
-  it('useGetDocumentGroups fetches and returns document groups', async () => {
+  it('useFetchDocumentGroups fetches and returns document groups', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(
         JSON.stringify({
@@ -74,7 +72,7 @@ describe('docGroupsQueries hooks', () => {
     })
     const Wrapper = createWrapper(queryClient)
 
-    const { result } = renderHook(() => useGetDocumentGroups(courseName), {
+    const { result } = renderHook(() => useFetchDocumentGroups(courseName), {
       wrapper: Wrapper,
     })
 
@@ -324,7 +322,7 @@ describe('docGroupsQueries hooks', () => {
     )
   })
 
-  it('useRemoveFromDocGroup rolls back on error', async () => {
+  it('useDeleteFromDocGroup rolls back on error', async () => {
     const deferred = createDeferred<Response>()
     vi.spyOn(globalThis, 'fetch').mockReturnValueOnce(deferred.promise as any)
 
@@ -349,7 +347,7 @@ describe('docGroupsQueries hooks', () => {
     queryClient.setQueryData(['documents', courseName, page], docsState)
 
     const { result } = renderHook(
-      () => useRemoveFromDocGroup(courseName, queryClient, page),
+      () => useDeleteFromDocGroup(courseName, queryClient, page),
       { wrapper: Wrapper },
     )
 
