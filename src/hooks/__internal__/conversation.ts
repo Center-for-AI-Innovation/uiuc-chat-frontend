@@ -36,17 +36,28 @@ export async function fetchConversationHistory(
       throw new Error('Error fetching conversation history')
     }
 
-    const { conversations, nextCursor } = await response.json()
+    const { conversations, nextCursor } = (await response.json()) as {
+      conversations: unknown
+      nextCursor: unknown
+    }
 
-    // // Clean the conversations and ensure they're properly structured
-    const cleanedConversations = conversations.map((conversation: any) => {
-      // Ensure messages are properly ordered by creation time
-      if (conversation.messages) {
-        conversation.messages.sort((a: any, b: any) => {
-          return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          )
-        })
+    const getCreatedAtMs = (m: unknown) => {
+      if (!m || typeof m !== 'object') return 0
+      const createdAt = (m as Record<string, unknown>).created_at
+      if (typeof createdAt !== 'string') return 0
+      const ms = new Date(createdAt).getTime()
+      return Number.isFinite(ms) ? ms : 0
+    }
+
+    // Clean the conversations and ensure they're properly structured
+    const cleanedConversations = (
+      Array.isArray(conversations) ? conversations : []
+    ).map((conversation) => {
+      if (conversation && typeof conversation === 'object') {
+        const maybeMessages = (conversation as Record<string, unknown>).messages
+        if (Array.isArray(maybeMessages)) {
+          maybeMessages.sort((a, b) => getCreatedAtMs(a) - getCreatedAtMs(b))
+        }
       }
       return conversation
     })
@@ -122,8 +133,10 @@ export const deleteConversationFromServer = async (
     if (!response.ok) {
       throw new Error('Error deleting conversation')
     }
+    return await response.json().catch(() => ({}))
   } catch (error) {
     console.error('Error deleting conversation:', error)
+    throw error
   }
 }
 
@@ -141,8 +154,10 @@ export const deleteAllConversationsFromServer = async (
     if (!response.ok) {
       throw new Error('Error deleting conversation')
     }
+    return await response.json().catch(() => ({}))
   } catch (error) {
     console.error('Error deleting conversation:', error)
+    throw error
   }
 }
 

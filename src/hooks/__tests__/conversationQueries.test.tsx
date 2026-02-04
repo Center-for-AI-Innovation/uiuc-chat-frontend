@@ -10,17 +10,17 @@ import {
   useFetchLastConversation,
   useUpdateConversation,
 } from '../conversationQueries'
-import { fetchConversationHistory } from '~/utils/app/conversation'
 import type { Conversation, ConversationPage } from '~/types/chat'
 import type { FolderWithConversation } from '~/types/folder'
 import {
   deleteAllConversationsFromServer,
   deleteConversationFromServer,
+  fetchConversationHistory,
   fetchLastConversation,
   saveConversationToServer,
-} from '~/utils/app/conversation'
+} from '@/hooks/__internal__/conversation'
 
-vi.mock('~/utils/app/conversation', () => ({
+vi.mock('@/hooks/__internal__/conversation', () => ({
   fetchConversationHistory: vi.fn(),
   fetchLastConversation: vi.fn(),
   saveConversationToServer: vi.fn(),
