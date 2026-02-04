@@ -26,6 +26,8 @@ vi.mock('~/db/dbClient', () => ({
   documentsInProgress: {
     course_name: { name: 'course_name' },
     readable_filename: { name: 'readable_filename' },
+    base_url: { name: 'base_url' },
+    url: { name: 'url' },
   },
   documentsFailed: {
     id: { name: 'id' },
@@ -117,8 +119,8 @@ describe('materialsTable API handlers', () => {
     expect(res2.status).toHaveBeenCalledWith(200)
     expect(res2.json).toHaveBeenCalledWith({
       documents: [
-        { readable_filename: 'Untitled Document' },
-        { readable_filename: 'Doc A' },
+        { readable_filename: 'Untitled Document', base_url: '', url: '' },
+        { readable_filename: 'Doc A', base_url: '', url: '' },
       ],
     })
   })

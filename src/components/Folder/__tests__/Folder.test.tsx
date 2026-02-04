@@ -37,9 +37,12 @@ describe('Folder', () => {
     expect(await screen.findByText('child')).toBeInTheDocument()
 
     // Rename: click the first action button (pencil) -> input -> Enter triggers update.
+    const folderToggle = screen.getByRole('button', {
+      name: /Open Folder|Close Folder/i,
+    })
     const actionButtons = Array.from(
       container.querySelectorAll('button'),
-    ).filter((b) => b !== screen.getByRole('button', { name: /folder 1/i }))
+    ).filter((b) => b !== folderToggle)
     expect(actionButtons.length).toBeGreaterThanOrEqual(2)
     await user.click(actionButtons[0]!)
     const input = await screen.findByRole('textbox')
@@ -50,11 +53,11 @@ describe('Folder', () => {
     // Delete: click trash action then confirm check.
     const buttonsAfterRename = Array.from(
       container.querySelectorAll('button'),
-    ).filter((b) => b !== screen.getByRole('button', { name: /folder 1/i }))
+    ).filter((b) => b !== folderToggle)
     await user.click(buttonsAfterRename.at(-1)!)
     const confirmButtons = Array.from(
       container.querySelectorAll('button'),
-    ).filter((b) => b !== screen.getByRole('button', { name: /folder 1/i }))
+    ).filter((b) => b !== folderToggle)
     // click until delete is called (check then cancel).
     for (const b of confirmButtons) {
       await user.click(b)

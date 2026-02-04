@@ -120,7 +120,7 @@ describe('ChatInput', () => {
     )
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Message Illinois Chat'),
       '123456',
     )
     expect(alertSpy).toHaveBeenCalled()
@@ -167,7 +167,7 @@ describe('ChatInput', () => {
     )
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Message Illinois Chat'),
       'Question',
     )
     await user.click(screen.getByRole('button', { name: /Send message/i }))
@@ -254,7 +254,7 @@ describe('ChatInput', () => {
       },
     )
 
-    const input = screen.getByPlaceholderText('Message Illinois.chat')
+    const input = screen.getByPlaceholderText('Message Illinois Chat')
     await user.type(input, '/t')
     expect(screen.getByText(/TestPrompt/i)).toBeInTheDocument()
 
@@ -310,7 +310,7 @@ describe('ChatInput', () => {
       },
     )
 
-    const input = screen.getByPlaceholderText('Message Illinois.chat')
+    const input = screen.getByPlaceholderText('Message Illinois Chat')
     await user.type(input, '/v')
     await user.keyboard('{Enter}')
 
@@ -359,7 +359,7 @@ describe('ChatInput', () => {
     expect(await screen.findByText(/Ready for chat/i)).toBeInTheDocument()
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Message Illinois Chat'),
       'Hello with files',
     )
     await user.click(screen.getByRole('button', { name: /Send message/i }))
@@ -426,7 +426,7 @@ describe('ChatInput', () => {
     expect(screen.getByText(/Ready for chat/i)).toBeInTheDocument()
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Message Illinois Chat'),
       'Question about my file',
     )
     await user.click(screen.getByRole('button', { name: /Send message/i }))
@@ -651,7 +651,7 @@ describe('ChatInput', () => {
       },
     )
 
-    const input = screen.getByPlaceholderText('Message Illinois.chat')
+    const input = screen.getByPlaceholderText('Message Illinois Chat')
     await user.type(input, '/t')
     expect(screen.getByText(/TestPrompt/i)).toBeInTheDocument()
 
@@ -706,7 +706,7 @@ describe('ChatInput', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 2100))
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Message Illinois Chat'),
       'Question about my file',
     )
     await user.click(screen.getByRole('button', { name: /Send message/i }))
@@ -748,7 +748,7 @@ describe('ChatInput', () => {
         },
       )
 
-      const textarea = screen.getByPlaceholderText('Message Illinois.chat')
+      const textarea = screen.getByPlaceholderText('Message Illinois Chat')
       await user.type(textarea, 'Hello{Enter}')
       expect(onSend).not.toHaveBeenCalled()
     } finally {
@@ -781,7 +781,7 @@ describe('ChatInput', () => {
       },
     )
 
-    const textarea = screen.getByPlaceholderText('Message Illinois.chat')
+    const textarea = screen.getByPlaceholderText('Message Illinois Chat')
     await user.type(textarea, '/')
     expect(screen.getByText(/One/i)).toBeInTheDocument()
 
@@ -815,7 +815,7 @@ describe('ChatInput', () => {
       },
     )
 
-    const textarea = screen.getByPlaceholderText('Message Illinois.chat')
+    const textarea = screen.getByPlaceholderText('Message Illinois Chat')
     fireEvent.keyDown(textarea, { key: '/', metaKey: true })
 
     const combo = await screen.findByRole('combobox')
@@ -884,14 +884,9 @@ describe('ChatInput', () => {
       },
     )
 
-    const buttons = screen.getAllByRole('button')
-    const scrollButton = buttons.find(
-      (btn) =>
-        !btn.getAttribute('aria-label') &&
-        btn.className.includes('h-7') &&
-        btn.className.includes('w-7'),
-    ) as HTMLElement
-    expect(scrollButton).toBeTruthy()
+    const scrollButton = await screen.findByRole('button', {
+      name: /Scroll Down/i,
+    })
     await user.click(scrollButton)
     expect(onScrollDownClick).toHaveBeenCalled()
   })

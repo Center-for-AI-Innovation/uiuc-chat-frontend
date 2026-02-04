@@ -36,7 +36,7 @@ vi.mock('~/utils/apiUtils', async (importOriginal) => {
   }
 })
 
-vi.mock('~/utils/app/conversation', async (importOriginal) => {
+vi.mock('@/hooks/__internal__/conversation', async (importOriginal) => {
   const actual: any = await importOriginal()
   return {
     ...actual,

@@ -5,25 +5,29 @@ import { fireEvent, screen, within } from '@testing-library/react'
 
 import { DocGroupsTable } from '../DocGroupsTable'
 
-vi.mock('~/hooks/docGroupsQueries', () => ({
-  useGetDocumentGroups: vi.fn(),
+const hooks = vi.hoisted(() => ({
+  useFetchDocumentGroups: vi.fn(),
   useUpdateDocGroup: vi.fn(),
+}))
+
+vi.mock('@/hooks/queries/useFetchDocumentGroups', () => ({
+  useFetchDocumentGroups: hooks.useFetchDocumentGroups,
+}))
+
+vi.mock('@/hooks/queries/useUpdateDocGroup', () => ({
+  useUpdateDocGroup: hooks.useUpdateDocGroup,
 }))
 
 describe('DocGroupsTable', () => {
   it('filters document groups by search and toggles enabled via mutation', async () => {
-    const { useGetDocumentGroups, useUpdateDocGroup } = await import(
-      '~/hooks/docGroupsQueries'
-    )
-
     const groups = [
       { name: 'Week 1', doc_count: 2, enabled: true },
       { name: 'Final Review', doc_count: 5, enabled: false },
     ]
 
     const mutate = vi.fn()
-    vi.mocked(useUpdateDocGroup).mockReturnValue({ mutate } as any)
-    vi.mocked(useGetDocumentGroups).mockReturnValue({
+    vi.mocked(hooks.useUpdateDocGroup).mockReturnValue({ mutate } as any)
+    vi.mocked(hooks.useFetchDocumentGroups).mockReturnValue({
       data: groups,
       isLoading: false,
       isError: false,
@@ -51,12 +55,10 @@ describe('DocGroupsTable', () => {
   })
 
   it('shows an empty state when no results match the search', async () => {
-    const { useGetDocumentGroups, useUpdateDocGroup } = await import(
-      '~/hooks/docGroupsQueries'
-    )
-
-    vi.mocked(useUpdateDocGroup).mockReturnValue({ mutate: vi.fn() } as any)
-    vi.mocked(useGetDocumentGroups).mockReturnValue({
+    vi.mocked(hooks.useUpdateDocGroup).mockReturnValue({
+      mutate: vi.fn(),
+    } as any)
+    vi.mocked(hooks.useFetchDocumentGroups).mockReturnValue({
       data: [{ name: 'Week 1', doc_count: 1, enabled: true }],
       isLoading: false,
       isError: false,
