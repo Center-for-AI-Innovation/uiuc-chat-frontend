@@ -2,7 +2,9 @@ name: Deploy Frontend to AWS ECS Fargate
 
 on:
   push:
-    branches: [illinois-chat]
+    branches:
+      - illinois-chat
+      - main
     paths:
       - 'src/**'
       - 'pages/**'
