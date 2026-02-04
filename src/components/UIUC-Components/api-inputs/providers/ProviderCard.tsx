@@ -37,10 +37,13 @@ export default function ProviderCard({
 
   return (
     <motion.div layout>
-      <Card className="max-w-[330px] border-0 bg-[--dashboard-background-faded] p-4 text-[--dashboard-foreground] shadow-none md:w-[330px]">
-        <div className="flex items-center justify-between">
+      <Card className="max-w-[330px] border-0 bg-[--dashboard-background-faded] p-5 text-[--dashboard-foreground] shadow-none md:w-[330px]">
+        <div className="mb-3 flex items-center justify-between">
           <ProviderTitle name={providerName} externalUrl={externalUrl} />
-          <form.Field name={`providers.${providerKey}.enabled`}>
+          <form.Field
+            className="mb-1"
+            name={`providers.${providerKey}.enabled`}
+          >
             {(field: any) => (
               <ProviderSwitch
                 checked={field.state.value}
@@ -55,7 +58,7 @@ export default function ProviderCard({
         </div>
 
         {description && (
-          <p className="mb-3 text-sm text-[--dashboard-foreground-faded]">
+          <p className="mb-2 text-sm text-[--dashboard-foreground-faded]">
             {description}
           </p>
         )}
@@ -98,15 +101,10 @@ function ProviderTitle({
 }) {
   if (externalUrl) {
     return (
-      <a
-        className="mb-3"
-        href={externalUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a href={externalUrl} target="_blank" rel="noopener noreferrer">
         <div className="flex items-center">
-          <span className="mb-1 pr-2 text-lg font-medium">{name}</span>
-          <IconExternalLink size={16} className="mb-3" />
+          <span className="pr-2 text-lg font-medium">{name}</span>
+          <IconExternalLink size={16} />
         </div>
       </a>
     )
