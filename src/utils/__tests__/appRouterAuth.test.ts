@@ -55,7 +55,9 @@ describe('withAppRouterAuth', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     const verifyTokenAsync = vi
       .fn()
-      .mockRejectedValue(new (jwt as any).TokenExpiredError('expired', new Date()))
+      .mockRejectedValue(
+        new (jwt as any).TokenExpiredError('expired', new Date()),
+      )
     vi.doMock('../keycloakClient', () => ({ verifyTokenAsync }))
     vi.doMock('~/utils/authHelpers', () => ({
       getKeycloakBaseFromHost: vi.fn(() => 'https://kc/'),
@@ -64,7 +66,8 @@ describe('withAppRouterAuth', () => {
     vi.resetModules()
     const { withAppRouterAuth } = await import('../appRouterAuth')
 
-    const wrapped = withAppRouterAuth((() => NextResponse.json({ ok: true })) as any)
+    const wrapped = withAppRouterAuth((() =>
+      NextResponse.json({ ok: true })) as any)
     const req: any = {
       headers: new Headers({ cookie: 'access_token=t' }),
     }
@@ -86,7 +89,8 @@ describe('withAppRouterAuth', () => {
     vi.resetModules()
     const { withAppRouterAuth } = await import('../appRouterAuth')
 
-    const wrapped = withAppRouterAuth((() => NextResponse.json({ ok: true })) as any)
+    const wrapped = withAppRouterAuth((() =>
+      NextResponse.json({ ok: true })) as any)
     const req: any = {
       headers: new Headers({ cookie: 'access_token=t' }),
     }
@@ -106,12 +110,15 @@ describe('withAppRouterAuth', () => {
     vi.resetModules()
     const { withAppRouterAuth } = await import('../appRouterAuth')
 
-    const wrapped = withAppRouterAuth((() => NextResponse.json({ ok: true })) as any)
+    const wrapped = withAppRouterAuth((() =>
+      NextResponse.json({ ok: true })) as any)
     const req: any = {
       headers: new Headers({ cookie: 'access_token=t' }),
     }
     const res = await wrapped(req)
     expect(res.status).toBe(401)
-    await expect(res.json()).resolves.toMatchObject({ error: 'Authentication failed' })
+    await expect(res.json()).resolves.toMatchObject({
+      error: 'Authentication failed',
+    })
   })
 })

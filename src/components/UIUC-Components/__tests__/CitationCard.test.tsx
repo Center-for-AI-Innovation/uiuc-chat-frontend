@@ -29,7 +29,10 @@ describe('CitationCard', () => {
     )
 
     await user.click(screen.getByText('Lecture.pdf'))
-    expect(openSpy).toHaveBeenCalledWith('https://example.com/lecture.pdf#page=12', '_blank')
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://example.com/lecture.pdf#page=12',
+      '_blank',
+    )
   })
 
   it('downloads a non-PDF S3 document with a derived extension', async () => {
@@ -39,7 +42,9 @@ describe('CitationCard', () => {
       .mockImplementation(() => {})
 
     const apiUtils = await import('~/utils/apiUtils')
-    ;(apiUtils as any).fetchPresignedUrl.mockResolvedValueOnce('http://localhost/file')
+    ;(apiUtils as any).fetchPresignedUrl.mockResolvedValueOnce(
+      'http://localhost/file',
+    )
 
     const { CitationCard } = await import('../CitationCard')
 
@@ -61,7 +66,11 @@ describe('CitationCard', () => {
     const { CitationCard } = await import('../CitationCard')
 
     renderWithProviders(
-      <CitationCard readable_filename="Website" url="https://example.com/page" index={1} />,
+      <CitationCard
+        readable_filename="Website"
+        url="https://example.com/page"
+        index={1}
+      />,
     )
 
     // Thumbnail image should be present (favicon).
@@ -72,4 +81,3 @@ describe('CitationCard', () => {
     expect(screen.getByText('Website')).toBeInTheDocument()
   })
 })
-

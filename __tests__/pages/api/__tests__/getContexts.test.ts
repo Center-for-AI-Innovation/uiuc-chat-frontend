@@ -39,7 +39,12 @@ describe('getContexts API', () => {
     await handler(
       createMockReq({
         method: 'POST',
-        body: { course_name: 'CS101', search_query: 'q', token_limit: 10, doc_groups: [] },
+        body: {
+          course_name: 'CS101',
+          search_query: 'q',
+          token_limit: 10,
+          doc_groups: [],
+        },
       }) as any,
       res as any,
     )
@@ -60,4 +65,3 @@ describe('getContexts API', () => {
     expect(res.status).toHaveBeenCalledWith(500)
   })
 })
-

@@ -52,7 +52,9 @@ vi.mock('@mantine/core', async (importOriginal) => {
   }
 })
 
-vi.mock('../GlobalFooter', () => ({ default: () => <div data-testid="footer" /> }))
+vi.mock('../GlobalFooter', () => ({
+  default: () => <div data-testid="footer" />,
+}))
 
 import LLMsApiKeyInputForm from '../api-inputs/LLMsApiKeyInputForm'
 
@@ -69,11 +71,18 @@ describe('LLMsApiKeyInputForm', () => {
         provider: 'OpenAI',
         enabled: true,
         apiKey: 'sk-test',
-        models: [{ id: 'gpt-4o-mini', name: 'GPT-4o mini', enabled: true, default: true }],
+        models: [
+          {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            enabled: true,
+            default: true,
+          },
+        ],
       },
     }
     mocks.query.isError = false
-    renderWithProviders(<LLMsApiKeyInputForm course_name="CS101" /> as any)
+    renderWithProviders((<LLMsApiKeyInputForm course_name="CS101" />) as any)
 
     expect(
       await screen.findByText(/Configure LLM Providers for your Chatbot/i),
@@ -97,7 +106,12 @@ describe('LLMsApiKeyInputForm', () => {
         enabled: true,
         apiKey: 'sk-test',
         models: [
-          { id: 'gpt-4o-mini', name: 'GPT-4o mini', enabled: true, default: true },
+          {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            enabled: true,
+            default: true,
+          },
           { id: 'gpt-4o', name: 'GPT-4o', enabled: true, default: false },
         ],
       },
@@ -111,7 +125,7 @@ describe('LLMsApiKeyInputForm', () => {
     mocks.query.isError = false
     mocks.mutate.mockClear()
 
-    renderWithProviders(<LLMsApiKeyInputForm course_name="CS101" /> as any)
+    renderWithProviders((<LLMsApiKeyInputForm course_name="CS101" />) as any)
 
     await user.selectOptions(screen.getByLabelText('Select a model'), 'gpt-4o')
     expect(mocks.mutate).toHaveBeenCalled()
@@ -130,7 +144,7 @@ describe('LLMsApiKeyInputForm', () => {
     mocks.query.data = null
     mocks.query.isError = true
 
-    renderWithProviders(<LLMsApiKeyInputForm course_name="CS101" /> as any)
+    renderWithProviders((<LLMsApiKeyInputForm course_name="CS101" />) as any)
     expect((notifications as any).show).toHaveBeenCalled()
   })
 })

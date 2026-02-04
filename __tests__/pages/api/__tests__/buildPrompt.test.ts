@@ -20,7 +20,10 @@ import handler from '~/pages/api/buildPrompt'
 describe('buildPrompt API', () => {
   it('returns 400 when conversation is missing', async () => {
     const res = createMockRes()
-    await handler(createMockReq({ method: 'POST', body: { course_name: 'CS101' } }) as any, res as any)
+    await handler(
+      createMockReq({ method: 'POST', body: { course_name: 'CS101' } }) as any,
+      res as any,
+    )
     expect(res.status).toHaveBeenCalledWith(400)
   })
 
@@ -38,4 +41,3 @@ describe('buildPrompt API', () => {
     expect(res.json).toHaveBeenCalledWith({ id: 'c1' })
   })
 })
-

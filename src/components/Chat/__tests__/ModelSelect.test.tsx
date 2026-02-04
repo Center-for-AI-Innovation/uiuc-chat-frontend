@@ -58,7 +58,12 @@ describe('ModelSelect', () => {
         provider: ProviderNames.OpenAI,
         enabled: true,
         models: [
-          { id: 'gpt-4o-mini', name: 'GPT-4o mini', tokenLimit: 128000, enabled: true },
+          {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            tokenLimit: 128000,
+            enabled: true,
+          },
           { id: 'gpt-4o', name: 'GPT-4o', tokenLimit: 128000, enabled: true },
         ],
       },
@@ -72,7 +77,13 @@ describe('ModelSelect', () => {
           id: 'c1',
           name: 'Test',
           messages: [],
-          model: { id: 'gpt-4o-mini', name: 'GPT-4o mini', tokenLimit: 128000, enabled: true, provider: ProviderNames.OpenAI },
+          model: {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            tokenLimit: 128000,
+            enabled: true,
+            provider: ProviderNames.OpenAI,
+          },
           prompt: 'p',
           temperature: 0.3,
           folderId: null,
@@ -84,12 +95,18 @@ describe('ModelSelect', () => {
     })
 
     expect(screen.getByText('Model')).toBeInTheDocument()
-    const toggle = screen.getByRole('button', { name: /More details about the AI models/i })
+    const toggle = screen.getByRole('button', {
+      name: /More details about the AI models/i,
+    })
     await user.click(toggle)
     // The accordion contains multiple blocks; checking for a stable substring is sufficient.
-    expect(screen.getByText(/More details about the AI models/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/More details about the AI models/i),
+    ).toBeInTheDocument()
     await user.click(toggle)
-    expect(screen.getByText(/More details about the AI models/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/More details about the AI models/i),
+    ).toBeInTheDocument()
   })
 
   it('renders ModelItem states for WebLLM downloads', async () => {

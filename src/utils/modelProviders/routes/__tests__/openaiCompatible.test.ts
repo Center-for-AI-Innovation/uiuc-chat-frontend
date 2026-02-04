@@ -28,24 +28,30 @@ describe('getOpenAICompatibleModels', () => {
   })
 
   it('returns empty models when disabled or missing fields', async () => {
-    const provider: any = { enabled: false, apiKey: '', baseUrl: '', models: [{ id: 'x' }] }
+    const provider: any = {
+      enabled: false,
+      apiKey: '',
+      baseUrl: '',
+      models: [{ id: 'x' }],
+    }
     const result = await getOpenAICompatibleModels(provider)
     expect(result.models).toEqual([])
   })
 
   it('filters to only endpoint-available models (case-insensitive) and preserves states', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ data: [{ id: 'OPENAI/GPT-4O' }] }),
-        { status: 200 },
-      ),
+      new Response(JSON.stringify({ data: [{ id: 'OPENAI/GPT-4O' }] }), {
+        status: 200,
+      }),
     )
 
     const provider: any = {
       enabled: true,
       apiKey: 'k',
       baseUrl: 'https://openrouter.ai/api/v1',
-      models: [{ id: OpenAICompatibleModelID.GPT_4o, enabled: false, default: true }],
+      models: [
+        { id: OpenAICompatibleModelID.GPT_4o, enabled: false, default: true },
+      ],
     }
 
     const result = await getOpenAICompatibleModels(provider)

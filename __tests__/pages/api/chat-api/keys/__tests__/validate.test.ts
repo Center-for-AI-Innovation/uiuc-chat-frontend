@@ -39,7 +39,9 @@ vi.mock('drizzle-orm', () => ({
   sql: (strings: any, ...values: any[]) => ({ strings, values }),
 }))
 
-import handler, { validateApiKeyAndRetrieveData } from '~/pages/api/chat-api/keys/validate'
+import handler, {
+  validateApiKeyAndRetrieveData,
+} from '~/pages/api/chat-api/keys/validate'
 
 describe('chat-api/keys/validate', () => {
   it('validateApiKeyAndRetrieveData returns invalid when key not found', async () => {
@@ -98,4 +100,3 @@ describe('chat-api/keys/validate', () => {
     expect(body.authContext?.isAuthenticated).toBe(true)
   })
 })
-

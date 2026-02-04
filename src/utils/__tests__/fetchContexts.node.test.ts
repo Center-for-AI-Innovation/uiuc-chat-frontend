@@ -46,4 +46,3 @@ describe('fetchContextsFromBackend / server-side fetchContexts (node)', () => {
     await expect(fetchContexts('CS101', 'q')).resolves.toEqual([])
   })
 })
-

@@ -22,7 +22,9 @@ describe('Key', () => {
     await user.type(input, '  new-key  {Enter}')
 
     expect(onApiKeyChange).toHaveBeenCalledWith('new-key')
-    expect(screen.getByRole('button', { name: /OpenAI API Key/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /OpenAI API Key/i }),
+    ).toBeInTheDocument()
   })
 
   it('cancels edits and restores the original key', async () => {
@@ -48,6 +50,8 @@ describe('Key', () => {
 
     // Re-open and ensure the input value reset to original.
     await user.click(screen.getByRole('button', { name: /OpenAI API Key/i }))
-    expect((screen.getByPlaceholderText(/API Key/i) as HTMLInputElement).value).toBe('orig')
+    expect(
+      (screen.getByPlaceholderText(/API Key/i) as HTMLInputElement).value,
+    ).toBe('orig')
   })
 })

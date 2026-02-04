@@ -10,7 +10,13 @@ vi.mock('@mantine/notifications', () => ({
 }))
 
 vi.mock('mantine-datatable', () => ({
-  DataTable: ({ records = [], columns = [], onPageChange, page, totalRecords }: any) => (
+  DataTable: ({
+    records = [],
+    columns = [],
+    onPageChange,
+    page,
+    totalRecords,
+  }: any) => (
     <div>
       <div data-testid="datatable-meta">
         page:{page} total:{totalRecords} records:{records.length}
@@ -87,7 +93,9 @@ describe('N8nWorkflowsTable', () => {
       />,
     )
 
-    expect(await screen.findByText(/These tools can be automatically invoked/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/These tools can be automatically invoked/i),
+    ).toBeInTheDocument()
     expect(screen.getByTestId('datatable')).toBeInTheDocument()
 
     // Toggle switch triggers mutate with id + checked

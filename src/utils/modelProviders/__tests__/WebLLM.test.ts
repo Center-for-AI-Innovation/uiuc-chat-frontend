@@ -23,7 +23,10 @@ function makeEngine(overrides: Partial<any> = {}) {
               usage: {
                 prompt_tokens: 1,
                 completion_tokens: 2,
-                extra: { prefill_tokens_per_s: 1.23, decode_tokens_per_s: 4.56 },
+                extra: {
+                  prefill_tokens_per_s: 1.23,
+                  decode_tokens_per_s: 4.56,
+                },
               },
             }
           },
@@ -71,7 +74,9 @@ describe('WebLLM', () => {
         { id: 'not-in-master', enabled: true },
       ],
     } as any)
-    expect(filtered.models?.some((m: any) => m.id === 'not-in-master')).toBe(false)
+    expect(filtered.models?.some((m: any) => m.id === 'not-in-master')).toBe(
+      false,
+    )
   })
 
   it('asyncInitChat reports progress and unloads on reload errors', async () => {
@@ -85,9 +90,13 @@ describe('WebLLM', () => {
     const chat = new ChatUI(engine as any)
 
     const updates: Array<{ kind: string; text: string; append: boolean }> = []
-    await chat.asyncInitChat((kind, text, append) => updates.push({ kind, text, append }))
+    await chat.asyncInitChat((kind, text, append) =>
+      updates.push({ kind, text, append }),
+    )
 
-    expect(updates.some((u) => u.kind === 'init' && u.text === 'loading')).toBe(true)
+    expect(updates.some((u) => u.kind === 'init' && u.text === 'loading')).toBe(
+      true,
+    )
     expect(updates.some((u) => u.kind === 'error')).toBe(true)
     expect(engine.unload).toHaveBeenCalled()
   })
@@ -96,7 +105,9 @@ describe('WebLLM', () => {
     const { default: ChatUI } = await import('../WebLLM')
     const chat = new ChatUI(makeEngine() as any)
     ;(chat as any).requestInProgress = true
-    await expect(chat.onGenerate('hi', vi.fn(), vi.fn())).resolves.toBeUndefined()
+    await expect(
+      chat.onGenerate('hi', vi.fn(), vi.fn()),
+    ).resolves.toBeUndefined()
   })
 
   it('onReset interrupts generation when request is in progress', async () => {
@@ -118,7 +129,9 @@ describe('WebLLM', () => {
     await chat.loadModel({ model: { name: 'm1' } })
     expect(chat.isModelLoading()).toBe(false)
 
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const errSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
     ;(engine.reload as any).mockRejectedValueOnce(new Error('boom'))
     await chat.loadModel({ model: { name: 'm2' } })
     errSpy.mockRestore()
@@ -144,7 +157,9 @@ describe('WebLLM', () => {
       ),
     )
 
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const errSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
 
     await chat.runChatCompletion(
       { conversation: { messages: [] } as any } as any,
@@ -154,7 +169,9 @@ describe('WebLLM', () => {
 
     errSpy.mockRestore()
     fetchSpy.mockRestore()
-    expect((engine.chat.completions.create as any).mock.calls[0]?.[0]?.stream).toBe(true)
+    expect(
+      (engine.chat.completions.create as any).mock.calls[0]?.[0]?.stream,
+    ).toBe(true)
   })
 
   it('runChatCompletion uses finalPromptEngineeredMessage for the last user message when present', async () => {
@@ -197,9 +214,15 @@ describe('WebLLM', () => {
 
     const updates: Array<{ kind: string; text: string; append: boolean }> = []
     const stats = vi.fn()
-    await chat.onGenerate('hello', (k, t, a) => updates.push({ kind: k, text: t, append: a }), stats)
+    await chat.onGenerate(
+      'hello',
+      (k, t, a) => updates.push({ kind: k, text: t, append: a }),
+      stats,
+    )
 
-    expect(updates.some((u) => u.kind === 'left' && u.text.includes('AB'))).toBe(true)
+    expect(
+      updates.some((u) => u.kind === 'left' && u.text.includes('AB')),
+    ).toBe(true)
     expect(stats).toHaveBeenCalled()
   })
 
@@ -210,7 +233,11 @@ describe('WebLLM', () => {
 
     const updates = vi.fn()
     await chat.onGenerate('', updates, vi.fn())
-    expect(updates).not.toHaveBeenCalledWith('right', expect.anything(), expect.anything())
+    expect(updates).not.toHaveBeenCalledWith(
+      'right',
+      expect.anything(),
+      expect.anything(),
+    )
   })
 
   it('onGenerate unloads on generation errors', async () => {
@@ -227,7 +254,11 @@ describe('WebLLM', () => {
     const chat = new ChatUI(engine as any)
 
     const updates: Array<{ kind: string; text: string; append: boolean }> = []
-    await chat.onGenerate('hi', (k, t, a) => updates.push({ kind: k, text: t, append: a }), vi.fn())
+    await chat.onGenerate(
+      'hi',
+      (k, t, a) => updates.push({ kind: k, text: t, append: a }),
+      vi.fn(),
+    )
 
     expect(updates.some((u) => u.kind === 'error')).toBe(true)
     expect(engine.unload).toHaveBeenCalled()

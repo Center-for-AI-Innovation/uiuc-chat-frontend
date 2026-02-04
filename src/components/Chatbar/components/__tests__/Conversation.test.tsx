@@ -54,9 +54,9 @@ describe('ConversationComponent', () => {
 
     // rename flow
     const convoButton = screen.getByRole('button', { name: /old name/i })
-    const actionButtons = Array.from(container.querySelectorAll('button')).filter(
-      (b) => b !== convoButton,
-    )
+    const actionButtons = Array.from(
+      container.querySelectorAll('button'),
+    ).filter((b) => b !== convoButton)
     let input: HTMLElement | null = null
     if (actionButtons[0]) await user.click(actionButtons[0])
     input = screen.queryByRole('textbox')
@@ -73,16 +73,16 @@ describe('ConversationComponent', () => {
     })
 
     // delete flow
-    const postRenameButtons = Array.from(container.querySelectorAll('button')).filter(
-      (b) => b !== convoButton,
-    )
+    const postRenameButtons = Array.from(
+      container.querySelectorAll('button'),
+    ).filter((b) => b !== convoButton)
     const deleteButton = postRenameButtons.at(-1)
     expect(deleteButton).toBeTruthy()
     await user.click(deleteButton!)
 
-    const confirmButtons = Array.from(container.querySelectorAll('button')).filter(
-      (b) => b !== convoButton,
-    )
+    const confirmButtons = Array.from(
+      container.querySelectorAll('button'),
+    ).filter((b) => b !== convoButton)
     // Click all action buttons in confirm state; only the confirm button triggers delete.
     for (const btn of confirmButtons) {
       await user.click(btn)

@@ -60,7 +60,9 @@ describe('EmailListAccordion', () => {
 
     await user.type(input, 'not-an-email')
     await user.keyboard('{Enter}')
-    expect(await screen.findByText(/not-an-email is not a valid email address/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/not-an-email is not a valid email address/i),
+    ).toBeInTheDocument()
 
     await user.clear(input)
     await user.type(input, 'b@example.com')
@@ -79,7 +81,9 @@ describe('EmailListAccordion', () => {
     expect(callSetCourseMetadata).toHaveBeenCalled()
 
     // Delete an email row
-    await user.click(screen.getByRole('button', { name: /Remove a@example.com/i }))
+    await user.click(
+      screen.getByRole('button', { name: /Remove a@example.com/i }),
+    )
     expect(callSetCourseMetadata).toHaveBeenCalled()
   })
 

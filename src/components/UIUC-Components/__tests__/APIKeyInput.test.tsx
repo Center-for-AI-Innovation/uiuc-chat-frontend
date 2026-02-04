@@ -42,4 +42,3 @@ describe('APIKeyInput', () => {
     expect(field.form.handleSubmit).toHaveBeenCalled()
   })
 })
-

@@ -15,7 +15,9 @@ import getProjectStatsHandler, {
 import getModelUsageCountsHandler, {
   getModelUsageCounts,
 } from '~/pages/api/UIUC-api/getModelUsageCounts'
-import getWeeklyTrendsHandler, { getWeeklyTrends } from '~/pages/api/UIUC-api/getWeeklyTrends'
+import getWeeklyTrendsHandler, {
+  getWeeklyTrends,
+} from '~/pages/api/UIUC-api/getWeeklyTrends'
 import getConversationStatsHandler, {
   getConversationStats,
 } from '~/pages/api/UIUC-api/getConversationStats'
@@ -92,48 +94,54 @@ describe('UIUC-api stats routes', () => {
   })
 
   it('handlers return data on success', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
-      const url = typeof input === 'string' ? input : input?.url ?? String(input)
-      if (String(url).includes('getModelUsageCounts')) {
-        return new Response(JSON.stringify([{ model_name: 'gpt', count: 1, percentage: 100 }]), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        })
-      }
-      if (String(url).includes('getWeeklyTrends')) {
-        return new Response(
-          JSON.stringify([
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async (input: any) => {
+        const url =
+          typeof input === 'string' ? input : (input?.url ?? String(input))
+        if (String(url).includes('getModelUsageCounts')) {
+          return new Response(
+            JSON.stringify([{ model_name: 'gpt', count: 1, percentage: 100 }]),
             {
-              current_week_value: 2,
-              metric_name: 'messages',
-              percentage_change: 100,
-              previous_week_value: 1,
+              status: 200,
+              headers: { 'content-type': 'application/json' },
             },
-          ]),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        )
-      }
-      if (String(url).includes('getConversationStats')) {
-        return new Response(JSON.stringify({ points: [] }), {
+          )
+        }
+        if (String(url).includes('getWeeklyTrends')) {
+          return new Response(
+            JSON.stringify([
+              {
+                current_week_value: 2,
+                metric_name: 'messages',
+                percentage_change: 100,
+                previous_week_value: 1,
+              },
+            ]),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          )
+        }
+        if (String(url).includes('getConversationStats')) {
+          return new Response(JSON.stringify({ points: [] }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          })
+        }
+        if (String(url).includes('getProjectStats')) {
+          return new Response(
+            JSON.stringify({
+              total_conversations: 10,
+              total_messages: 30,
+              unique_users: 5,
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          )
+        }
+        return new Response(JSON.stringify({ ok: true }), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         })
-      }
-      if (String(url).includes('getProjectStats')) {
-        return new Response(
-          JSON.stringify({
-            total_conversations: 10,
-            total_messages: 30,
-            unique_users: 5,
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        )
-      }
-      return new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
       })
-    })
 
     const res1 = createMockRes()
     await getProjectStatsHandler(
@@ -221,10 +229,13 @@ describe('UIUC-api stats routes', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
 
     fetchSpy.mockResolvedValueOnce(
-      new Response(JSON.stringify([{ model_name: 'gpt', count: 1, percentage: 100 }]), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
+      new Response(
+        JSON.stringify([{ model_name: 'gpt', count: 1, percentage: 100 }]),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        },
+      ),
     )
     const m2 = await getModelUsageCounts('CS101')
     expect(m2.status).toBe(200)

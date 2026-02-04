@@ -25,4 +25,3 @@ describe('clearLocalStorageOnce', () => {
     expect(localStorage.getItem('a')).toBe('1')
   })
 })
-

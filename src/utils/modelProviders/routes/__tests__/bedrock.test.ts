@@ -4,7 +4,12 @@ import { BedrockModelID } from '../../types/bedrock'
 
 describe('getBedrockModels', () => {
   it('returns empty models when missing creds or disabled', async () => {
-    const provider: any = { enabled: true, accessKeyId: '', secretAccessKey: '', region: '' }
+    const provider: any = {
+      enabled: true,
+      accessKeyId: '',
+      secretAccessKey: '',
+      region: '',
+    }
     const result = await getBedrockModels(provider)
     expect(result.models).toEqual([])
   })
@@ -15,7 +20,9 @@ describe('getBedrockModels', () => {
       accessKeyId: 'a',
       secretAccessKey: 's',
       region: 'us-east-1',
-      models: [{ id: BedrockModelID.Claude_3_Opus, enabled: false, default: true }],
+      models: [
+        { id: BedrockModelID.Claude_3_Opus, enabled: false, default: true },
+      ],
     }
 
     const result = await getBedrockModels(provider)

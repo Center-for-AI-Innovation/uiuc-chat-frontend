@@ -47,7 +47,9 @@ describe('crypto utilities', () => {
     await expect(decrypt('v1.only-two-parts', 'k')).rejects.toThrow(
       /invalid encrypted text format/i,
     )
-    await expect(decrypt('v2.a.b', 'k')).rejects.toThrow(/unsupported encryption version/i)
+    await expect(decrypt('v2.a.b', 'k')).rejects.toThrow(
+      /unsupported encryption version/i,
+    )
   })
 
   it('encryptKeyIfNeeded / decryptKeyIfNeeded are inverse operations', async () => {
@@ -70,12 +72,16 @@ describe('crypto utilities', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.stubEnv('NEXT_PUBLIC_SIGNING_KEY', 'key2')
     const encrypted = await encrypt('raw', 'key1')
-    await expect(decryptKeyIfNeeded(encrypted as string)).rejects.toBeInstanceOf(Error)
+    await expect(
+      decryptKeyIfNeeded(encrypted as string),
+    ).rejects.toBeInstanceOf(Error)
   })
 
   it('encryptKeyIfNeeded returns key unchanged when already encrypted', async () => {
     const encrypted = await encrypt('raw', 'password')
-    await expect(encryptKeyIfNeeded(encrypted as string)).resolves.toBe(encrypted)
+    await expect(encryptKeyIfNeeded(encrypted as string)).resolves.toBe(
+      encrypted,
+    )
   })
 
   it('encryptKeyIfNeeded logs and rethrows when encryption fails', async () => {

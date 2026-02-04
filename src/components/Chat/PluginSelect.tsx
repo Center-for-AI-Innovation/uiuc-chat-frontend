@@ -42,7 +42,9 @@ export const PluginSelect: FC<Props> = ({
       if (!selectElement) return
 
       onPluginChange(
-        PluginList.find((plugin) => plugin.id === selectElement.value) as Plugin,
+        PluginList.find(
+          (plugin) => plugin.id === selectElement.value,
+        ) as Plugin,
       )
     } else {
       onKeyDown(e)

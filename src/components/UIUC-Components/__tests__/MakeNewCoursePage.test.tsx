@@ -84,8 +84,10 @@ describe('MakeNewCoursePage', () => {
       await waitFor(() => expect(createBtn).not.toBeDisabled())
 
       await user.click(createBtn)
-      await waitFor(() => expect((apiUtils as any).createProject).toHaveBeenCalled())
-      await waitFor(() => expect((router.default.push as any)).toHaveBeenCalled())
+      await waitFor(() =>
+        expect((apiUtils as any).createProject).toHaveBeenCalled(),
+      )
+      await waitFor(() => expect(router.default.push as any).toHaveBeenCalled())
     } finally {
       process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG = prev
     }

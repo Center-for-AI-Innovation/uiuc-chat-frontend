@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { getKeycloakBaseFromHost, getKeycloakBaseUrl, initiateSignIn } from '../authHelpers'
+import {
+  getKeycloakBaseFromHost,
+  getKeycloakBaseUrl,
+  initiateSignIn,
+} from '../authHelpers'
 
 function decodeBase64Url(input: string) {
   const normalized = input.replace(/-/g, '+').replace(/_/g, '/')
@@ -31,13 +35,19 @@ describe('initiateSignIn', () => {
 describe('keycloak base URL helpers', () => {
   it('getKeycloakBaseFromHost handles common hostnames', () => {
     expect(getKeycloakBaseFromHost('localhost')).toBe('http://localhost:8080/')
-    expect(getKeycloakBaseFromHost('uiuc.chat')).toBe('https://login.uiuc.chat/')
-    expect(getKeycloakBaseFromHost('example.com')).toBe('https://example.com/keycloak/')
+    expect(getKeycloakBaseFromHost('uiuc.chat')).toBe(
+      'https://login.uiuc.chat/',
+    )
+    expect(getKeycloakBaseFromHost('example.com')).toBe(
+      'https://example.com/keycloak/',
+    )
   })
 
   it('getKeycloakBaseFromHost prefers NEXT_PUBLIC_KEYCLOAK_URL when set', () => {
     vi.stubEnv('NEXT_PUBLIC_KEYCLOAK_URL', 'https://override.example/')
-    expect(getKeycloakBaseFromHost('example.com')).toBe('https://override.example/')
+    expect(getKeycloakBaseFromHost('example.com')).toBe(
+      'https://override.example/',
+    )
     vi.stubEnv('NEXT_PUBLIC_KEYCLOAK_URL', '')
   })
 

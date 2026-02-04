@@ -13,13 +13,26 @@ describe('getAnthropicModels', () => {
     const provider: any = {
       enabled: true,
       apiKey: 'k',
-      models: [{ id: AnthropicModelID.Claude_3_5_Sonnet, enabled: false, default: true, temperature: 0.7 }],
+      models: [
+        {
+          id: AnthropicModelID.Claude_3_5_Sonnet,
+          enabled: false,
+          default: true,
+          temperature: 0.7,
+        },
+      ],
     }
 
     const result = await getAnthropicModels(provider)
     expect(result.models?.[0]?.id).toBe(AnthropicModelID.Claude_Sonnet_4)
     const models = result.models ?? []
-    const existing = models.find((m: any) => m.id === AnthropicModelID.Claude_3_5_Sonnet)
-    expect(existing).toMatchObject({ enabled: false, default: true, temperature: 0.7 })
+    const existing = models.find(
+      (m: any) => m.id === AnthropicModelID.Claude_3_5_Sonnet,
+    )
+    expect(existing).toMatchObject({
+      enabled: false,
+      default: true,
+      temperature: 0.7,
+    })
   })
 })

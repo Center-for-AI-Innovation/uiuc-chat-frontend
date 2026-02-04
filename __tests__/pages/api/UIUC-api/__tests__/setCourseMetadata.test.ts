@@ -148,4 +148,3 @@ describe('UIUC-api course metadata setters', () => {
     expect(res.status).toHaveBeenCalledWith(500)
   })
 })
-

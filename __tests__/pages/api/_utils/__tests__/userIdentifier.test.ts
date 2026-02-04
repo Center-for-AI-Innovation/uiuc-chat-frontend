@@ -8,7 +8,10 @@ describe('getUserIdentifier', () => {
   })
 
   it('falls back to x-user-email header', () => {
-    const req = { user: {}, headers: { 'x-user-email': 'header@example.com' } } as any
+    const req = {
+      user: {},
+      headers: { 'x-user-email': 'header@example.com' },
+    } as any
     expect(getUserIdentifier(req)).toBe('header@example.com')
   })
 
@@ -22,4 +25,3 @@ describe('getUserIdentifier', () => {
     expect(getUserIdentifier(req)).toBeNull()
   })
 })
-

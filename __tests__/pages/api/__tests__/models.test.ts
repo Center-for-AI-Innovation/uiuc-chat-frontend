@@ -59,13 +59,16 @@ vi.mock('~/utils/modelProviders/NCSAHosted', () => ({
 vi.mock('~/utils/modelProviders/routes/openai', () => ({
   getOpenAIModels: hoisted.getOpenAIModels,
 }))
-vi.mock('~/utils/modelProviders/types/NCSAHostedVLM', async (importOriginal) => {
-  const actual = await importOriginal<any>()
-  return {
-    ...actual,
-    getNCSAHostedVLMModels: hoisted.getNCSAHostedVLMModels,
-  }
-})
+vi.mock(
+  '~/utils/modelProviders/types/NCSAHostedVLM',
+  async (importOriginal) => {
+    const actual = await importOriginal<any>()
+    return {
+      ...actual,
+      getNCSAHostedVLMModels: hoisted.getNCSAHostedVLMModels,
+    }
+  },
+)
 vi.mock('~/utils/modelProviders/routes/bedrock', () => ({
   getBedrockModels: hoisted.getBedrockModels,
 }))
@@ -96,7 +99,10 @@ describe('models API', () => {
 
   it('handler returns 400 when projectName is missing', async () => {
     const res = createMockRes()
-    await handler(createMockReq({ method: 'POST', body: {} }) as any, res as any)
+    await handler(
+      createMockReq({ method: 'POST', body: {} }) as any,
+      res as any,
+    )
     expect(res.status).toHaveBeenCalledWith(400)
   })
 

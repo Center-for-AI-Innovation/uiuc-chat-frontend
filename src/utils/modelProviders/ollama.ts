@@ -192,8 +192,7 @@ export const getOllamaModels = async (
 ): Promise<OllamaProvider> => {
   delete ollamaProvider.error // Remove the error property if it exists
   // Avoid importing ProviderNames here to prevent a circular dependency with LLMProvider.
-  ollamaProvider.provider =
-    'Ollama' as unknown as OllamaProvider['provider']
+  ollamaProvider.provider = 'Ollama' as unknown as OllamaProvider['provider']
   try {
     if (!ollamaProvider.baseUrl || !ollamaProvider.enabled) {
       // Don't error here, too confusing for users.

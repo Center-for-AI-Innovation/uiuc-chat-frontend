@@ -5,7 +5,10 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 
 import { server } from '~/test-utils/server'
-import { createTestQueryClient, renderWithProviders } from '~/test-utils/renderWithProviders'
+import {
+  createTestQueryClient,
+  renderWithProviders,
+} from '~/test-utils/renderWithProviders'
 
 vi.mock('@mantine/notifications', () => ({
   notifications: {
@@ -144,14 +147,16 @@ describe('WebsiteIngestForm', () => {
     const axiosMod = await import('axios')
 
     const originalSetTimeout = globalThis.setTimeout
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: any) => {
-      if (ms === 8000) {
-        fn()
-        // @ts-expect-error - minimal timer handle for tests
-        return 0
-      }
-      return originalSetTimeout(fn, ms)
-    })
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(
+      (fn: any, ms?: any) => {
+        if (ms === 8000) {
+          fn()
+          // @ts-expect-error - minimal timer handle for tests
+          return 0
+        }
+        return originalSetTimeout(fn, ms)
+      },
+    )
 
     const { default: WebsiteIngestForm } = await import('../WebsiteIngestForm')
     const queryClient = createTestQueryClient()
@@ -165,8 +170,13 @@ describe('WebsiteIngestForm', () => {
     )
 
     await user.click(screen.getByText(/Configure import/i))
-    await user.type(screen.getAllByPlaceholderText('Enter URL...')[0]!, 'https://example.com')
-    await user.click(screen.getByRole('button', { name: /Ingest the Website/i }))
+    await user.type(
+      screen.getAllByPlaceholderText('Enter URL...')[0]!,
+      'https://example.com',
+    )
+    await user.click(
+      screen.getByRole('button', { name: /Ingest the Website/i }),
+    )
 
     expect((axiosMod as any).default.post).toHaveBeenCalledWith(
       '/api/scrapeWeb',
@@ -183,14 +193,16 @@ describe('WebsiteIngestForm', () => {
     const axiosMod = await import('axios')
 
     const originalSetTimeout = globalThis.setTimeout
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: any) => {
-      if (ms === 8000) {
-        fn()
-        // @ts-expect-error - minimal timer handle for tests
-        return 0
-      }
-      return originalSetTimeout(fn, ms)
-    })
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(
+      (fn: any, ms?: any) => {
+        if (ms === 8000) {
+          fn()
+          // @ts-expect-error - minimal timer handle for tests
+          return 0
+        }
+        return originalSetTimeout(fn, ms)
+      },
+    )
 
     const { default: WebsiteIngestForm } = await import('../WebsiteIngestForm')
     const queryClient = createTestQueryClient()
@@ -212,8 +224,13 @@ describe('WebsiteIngestForm', () => {
       await screen.findByText(/Max URLs should be between 1 and 500/i),
     ).toBeInTheDocument()
 
-    await user.type(screen.getByPlaceholderText('Enter URL...'), 'https://example.com')
-    await user.click(screen.getByRole('button', { name: /Ingest the Website/i }))
+    await user.type(
+      screen.getByPlaceholderText('Enter URL...'),
+      'https://example.com',
+    )
+    await user.click(
+      screen.getByRole('button', { name: /Ingest the Website/i }),
+    )
 
     expect(alertSpy).toHaveBeenCalledWith('Invalid max URLs input (1 to 500)')
     expect((axiosMod as any).default.post).not.toHaveBeenCalled()
@@ -229,14 +246,16 @@ describe('WebsiteIngestForm', () => {
     })
 
     const originalSetTimeout = globalThis.setTimeout
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: any) => {
-      if (ms === 8000) {
-        fn()
-        // @ts-expect-error - minimal timer handle for tests
-        return 0
-      }
-      return originalSetTimeout(fn, ms)
-    })
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(
+      (fn: any, ms?: any) => {
+        if (ms === 8000) {
+          fn()
+          // @ts-expect-error - minimal timer handle for tests
+          return 0
+        }
+        return originalSetTimeout(fn, ms)
+      },
+    )
 
     const { default: WebsiteIngestForm } = await import('../WebsiteIngestForm')
     const queryClient = createTestQueryClient()
@@ -249,8 +268,13 @@ describe('WebsiteIngestForm', () => {
     await user.click(screen.getByText(/Configure import/i))
     await user.clear(screen.getByPlaceholderText('Default 50'))
     await user.type(screen.getByPlaceholderText('Default 50'), '2')
-    await user.type(screen.getByPlaceholderText('Enter URL...'), 'https://example.com')
-    await user.click(screen.getByRole('button', { name: /Ingest the Website/i }))
+    await user.type(
+      screen.getByPlaceholderText('Enter URL...'),
+      'https://example.com',
+    )
+    await user.click(
+      screen.getByRole('button', { name: /Ingest the Website/i }),
+    )
 
     await waitFor(() => {
       const filesJson = screen.getByTestId('files').textContent ?? ''

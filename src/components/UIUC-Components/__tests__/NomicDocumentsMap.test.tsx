@@ -32,7 +32,10 @@ describe('NomicDocumentsMap', () => {
 
     resolveFetch!(
       new Response(
-        JSON.stringify({ map_id: 'map-1', map_link: 'https://example.com/map' }),
+        JSON.stringify({
+          map_id: 'map-1',
+          map_link: 'https://example.com/map',
+        }),
         { status: 200 },
       ),
     )

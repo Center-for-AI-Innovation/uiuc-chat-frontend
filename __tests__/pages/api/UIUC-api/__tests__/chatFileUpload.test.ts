@@ -99,14 +99,18 @@ describe('UIUC-api chat-file-upload', () => {
       res as any,
     )
     expect(res.status).toHaveBeenCalledWith(500)
-    expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create conversation' })
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Failed to create conversation',
+    })
   })
 
   it('returns 500 when backend processing is not ok', async () => {
     hoisted.select.mockImplementationOnce(() => ({
       from: () => ({
         where: () => ({
-          limit: vi.fn().mockResolvedValueOnce([{ id: 'c1', user_email: 'u@example.com' }]),
+          limit: vi
+            .fn()
+            .mockResolvedValueOnce([{ id: 'c1', user_email: 'u@example.com' }]),
         }),
       }),
     }))
@@ -146,7 +150,9 @@ describe('UIUC-api chat-file-upload', () => {
     hoisted.select.mockImplementationOnce(() => ({
       from: () => ({
         where: () => ({
-          limit: vi.fn().mockResolvedValueOnce([{ id: 'c1', user_email: 'u@example.com' }]),
+          limit: vi
+            .fn()
+            .mockResolvedValueOnce([{ id: 'c1', user_email: 'u@example.com' }]),
         }),
       }),
     }))
@@ -194,4 +200,3 @@ describe('UIUC-api chat-file-upload', () => {
     )
   })
 })
-

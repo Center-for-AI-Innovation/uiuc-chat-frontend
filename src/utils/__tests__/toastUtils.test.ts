@@ -10,7 +10,11 @@ describe('toastUtils', () => {
 
     showToast({ message: 'm', type: 'success' })
     expect(show).toHaveBeenCalledWith(
-      expect.objectContaining({ message: 'm', color: 'green', autoClose: 5000 }),
+      expect.objectContaining({
+        message: 'm',
+        color: 'green',
+        autoClose: 5000,
+      }),
     )
   })
 
@@ -38,8 +42,12 @@ describe('toastUtils', () => {
     vi.doMock('@mantine/notifications', () => ({ notifications: { show } }))
 
     vi.resetModules()
-    const { showSuccessToast, showErrorToast, showWarningToast, showInfoToast } =
-      await import('../toastUtils')
+    const {
+      showSuccessToast,
+      showErrorToast,
+      showWarningToast,
+      showInfoToast,
+    } = await import('../toastUtils')
 
     showSuccessToast('a')
     showErrorToast('b')
@@ -60,4 +68,3 @@ describe('toastUtils', () => {
     )
   })
 })
-

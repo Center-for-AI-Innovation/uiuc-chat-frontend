@@ -24,7 +24,7 @@ function createStreamingResponse() {
     status: 200,
     headers: {
       'content-type': 'application/zip',
-      'content-disposition': 'attachment; filename=\"x.zip\"',
+      'content-disposition': 'attachment; filename="x.zip"',
     },
   })
 }
@@ -95,4 +95,3 @@ describe('UIUC-api/downloadConvoHistoryUser', () => {
     fetchSpy.mockRestore()
   })
 })
-

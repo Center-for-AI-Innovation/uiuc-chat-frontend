@@ -68,4 +68,3 @@ describe('VariableModal', () => {
     expect(onClose).toHaveBeenCalled()
   })
 })
-

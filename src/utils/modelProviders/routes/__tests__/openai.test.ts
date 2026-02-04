@@ -42,7 +42,12 @@ describe('getOpenAIModels', () => {
       enabled: true,
       apiKey: 'k',
       models: [
-        { id: OpenAIModelID.GPT_4o, enabled: false, default: true, temperature: 0.9 },
+        {
+          id: OpenAIModelID.GPT_4o,
+          enabled: false,
+          default: true,
+          temperature: 0.9,
+        },
       ],
     }
 
@@ -61,7 +66,11 @@ describe('getOpenAIModels', () => {
 
   it('sets error and clears models on failures', async () => {
     hoisted.modelsList.mockRejectedValueOnce(new Error('boom'))
-    const provider: any = { enabled: true, apiKey: 'k', models: [{ id: OpenAIModelID.GPT_4o }] }
+    const provider: any = {
+      enabled: true,
+      apiKey: 'k',
+      models: [{ id: OpenAIModelID.GPT_4o }],
+    }
 
     const result = await getOpenAIModels(provider, 'proj')
     expect(result.models).toEqual([])
@@ -70,7 +79,11 @@ describe('getOpenAIModels', () => {
 
   it('sets error and clears models when response.data is missing', async () => {
     hoisted.modelsList.mockResolvedValueOnce({ data: undefined })
-    const provider: any = { enabled: true, apiKey: 'k', models: [{ id: OpenAIModelID.GPT_4o }] }
+    const provider: any = {
+      enabled: true,
+      apiKey: 'k',
+      models: [{ id: OpenAIModelID.GPT_4o }],
+    }
 
     const result = await getOpenAIModels(provider, 'proj')
     expect(result.models).toEqual([])

@@ -179,4 +179,3 @@ describe('folder API', () => {
     expect(res.status).toHaveBeenCalledWith(405)
   })
 })
-

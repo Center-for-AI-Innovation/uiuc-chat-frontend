@@ -6,7 +6,11 @@ import { http, HttpResponse } from 'msw'
 
 import { server } from '~/test-utils/server'
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
-import { makeContextWithMetadata, makeConversation, makeMessage } from '~/test-utils/mocks/chat'
+import {
+  makeContextWithMetadata,
+  makeConversation,
+  makeMessage,
+} from '~/test-utils/mocks/chat'
 
 const streamMocks = vi.hoisted(() => ({
   handleContextSearch: vi.fn(async (message: any) => {
@@ -49,11 +53,20 @@ vi.mock('~/hooks/messageQueries', () => ({
 }))
 
 vi.mock('~/hooks/docGroupsQueries', () => ({
-  useFetchEnabledDocGroups: () => ({ data: [{ name: 'Group 1' }], isSuccess: true }),
+  useFetchEnabledDocGroups: () => ({
+    data: [{ name: 'Group 1' }],
+    isSuccess: true,
+  }),
 }))
 
 vi.mock('~/utils/functionCalling/handleFunctionCalling', () => ({
-  useFetchAllWorkflows: () => ({ data: [], isSuccess: true, isLoading: false, isError: false, error: null }),
+  useFetchAllWorkflows: () => ({
+    data: [],
+    isSuccess: true,
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
   handleFunctionCall: vi.fn(async () => []),
   handleToolCall: vi.fn(async () => undefined),
 }))
@@ -90,7 +103,14 @@ vi.mock('../ChatInput', () => ({
       null,
       React.createElement(
         'button',
-        { type: 'button', onClick: () => props.onSend({ id: 'u1', role: 'user', content: 'rewrite this', contexts: [] }, null) },
+        {
+          type: 'button',
+          onClick: () =>
+            props.onSend(
+              { id: 'u1', role: 'user', content: 'rewrite this', contexts: [] },
+              null,
+            ),
+        },
         'send',
       ),
       React.createElement(
@@ -127,7 +147,9 @@ vi.mock('../ChatInput', () => ({
               {
                 id: 'u-img',
                 role: 'user',
-                content: [{ type: 'image_url', image_url: { url: 'http://img' } }],
+                content: [
+                  { type: 'image_url', image_url: { url: 'http://img' } },
+                ],
                 contexts: [],
               },
               null,
@@ -157,7 +179,9 @@ describe('Chat (query rewrite + tool paths)', () => {
         return HttpResponse.json({
           choices: [
             {
-              message: { content: '<vector_query>optimized query</vector_query>' },
+              message: {
+                content: '<vector_query>optimized query</vector_query>',
+              },
             },
           ],
         })
@@ -171,9 +195,14 @@ describe('Chat (query rewrite + tool paths)', () => {
             controller.close()
           },
         })
-        return new HttpResponse(stream, { status: 200, headers: { 'Content-Type': 'text/plain' } })
+        return new HttpResponse(stream, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        })
       }),
-      http.post('*/api/UIUC-api/logConversation', async () => HttpResponse.json({ ok: true })),
+      http.post('*/api/UIUC-api/logConversation', async () =>
+        HttpResponse.json({ ok: true }),
+      ),
     )
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
@@ -181,7 +210,12 @@ describe('Chat (query rewrite + tool paths)', () => {
     const conversation = makeConversation({
       id: 'conv-1',
       messages: [
-        makeMessage({ id: 'u0', role: 'user', content: 'previous', contexts: [] }),
+        makeMessage({
+          id: 'u0',
+          role: 'user',
+          content: 'previous',
+          contexts: [],
+        }),
       ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
@@ -233,7 +267,9 @@ describe('Chat (query rewrite + tool paths)', () => {
 
     server.use(
       http.post('*/api/queryRewrite', async () => {
-        return HttpResponse.json({ choices: [{ message: { content: 'NO_REWRITE_REQUIRED' } }] })
+        return HttpResponse.json({
+          choices: [{ message: { content: 'NO_REWRITE_REQUIRED' } }],
+        })
       }),
       http.post('*/api/allNewRoutingChat', async () => {
         return HttpResponse.json(
@@ -246,7 +282,14 @@ describe('Chat (query rewrite + tool paths)', () => {
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     const conversation = makeConversation({
       id: 'conv-1',
-      messages: [makeMessage({ id: 'u0', role: 'user', content: 'previous', contexts: [] })],
+      messages: [
+        makeMessage({
+          id: 'u0',
+          role: 'user',
+          content: 'previous',
+          contexts: [],
+        }),
+      ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
 
@@ -269,7 +312,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: vi.fn(),
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 
@@ -290,9 +337,14 @@ describe('Chat (query rewrite + tool paths)', () => {
             controller.close()
           },
         })
-        return new HttpResponse(stream, { status: 200, headers: { 'Content-Type': 'text/plain' } })
+        return new HttpResponse(stream, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        })
       }),
-      http.post('*/api/UIUC-api/logConversation', async () => HttpResponse.json({ ok: true })),
+      http.post('*/api/UIUC-api/logConversation', async () =>
+        HttpResponse.json({ ok: true }),
+      ),
     )
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
@@ -300,7 +352,12 @@ describe('Chat (query rewrite + tool paths)', () => {
       id: 'conv-1',
       messages: [
         makeMessage({ id: 'u0', role: 'user', content: 'Q', contexts: [] }),
-        makeMessage({ id: 'a0', role: 'assistant', content: 'A', contexts: [] }),
+        makeMessage({
+          id: 'a0',
+          role: 'assistant',
+          content: 'A',
+          contexts: [],
+        }),
       ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
@@ -323,7 +380,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: vi.fn(),
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 
@@ -339,7 +400,9 @@ describe('Chat (query rewrite + tool paths)', () => {
       http.post('*/api/queryRewrite', async () => {
         return HttpResponse.json({
           choices: {
-            a: { message: { content: '<vector_query>object query</vector_query>' } },
+            a: {
+              message: { content: '<vector_query>object query</vector_query>' },
+            },
           },
         })
       }),
@@ -351,14 +414,24 @@ describe('Chat (query rewrite + tool paths)', () => {
             controller.close()
           },
         })
-        return new HttpResponse(stream, { status: 200, headers: { 'Content-Type': 'text/plain' } })
+        return new HttpResponse(stream, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        })
       }),
     )
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     const conversation = makeConversation({
       id: 'conv-1',
-      messages: [makeMessage({ id: 'u0', role: 'user', content: 'previous', contexts: [] })],
+      messages: [
+        makeMessage({
+          id: 'u0',
+          role: 'user',
+          content: 'previous',
+          contexts: [],
+        }),
+      ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
 
@@ -381,7 +454,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: homeDispatch, handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: homeDispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 
@@ -411,14 +488,24 @@ describe('Chat (query rewrite + tool paths)', () => {
             controller.close()
           },
         })
-        return new HttpResponse(stream, { status: 200, headers: { 'Content-Type': 'text/plain' } })
+        return new HttpResponse(stream, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        })
       }),
     )
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     const conversation = makeConversation({
       id: 'conv-1',
-      messages: [makeMessage({ id: 'u0', role: 'user', content: 'previous', contexts: [] })],
+      messages: [
+        makeMessage({
+          id: 'u0',
+          role: 'user',
+          content: 'previous',
+          contexts: [],
+        }),
+      ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
 
@@ -441,7 +528,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: homeDispatch, handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: homeDispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 
@@ -465,7 +556,8 @@ describe('Chat (query rewrite + tool paths)', () => {
                   choices: [
                     {
                       message: {
-                        content: '<vector_query>nested optimized query</vector_query>',
+                        content:
+                          '<vector_query>nested optimized query</vector_query>',
                       },
                     },
                   ],
@@ -511,8 +603,18 @@ describe('Chat (query rewrite + tool paths)', () => {
           ] as any,
           contexts: [],
         }),
-        makeMessage({ id: 'a0', role: 'assistant', content: 'previous answer', contexts: [] }),
-        makeMessage({ id: 'u1', role: 'user', content: 'most recent user message', contexts: [] }),
+        makeMessage({
+          id: 'a0',
+          role: 'assistant',
+          content: 'previous answer',
+          contexts: [],
+        }),
+        makeMessage({
+          id: 'u1',
+          role: 'user',
+          content: 'most recent user message',
+          contexts: [],
+        }),
       ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
@@ -581,7 +683,14 @@ describe('Chat (query rewrite + tool paths)', () => {
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     const conversation = makeConversation({
       id: 'conv-1',
-      messages: [makeMessage({ id: 'u0', role: 'user', content: 'previous', contexts: [] })],
+      messages: [
+        makeMessage({
+          id: 'u0',
+          role: 'user',
+          content: 'previous',
+          contexts: [],
+        }),
+      ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
 
@@ -603,7 +712,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: homeDispatch, handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: homeDispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 
@@ -639,7 +752,14 @@ describe('Chat (query rewrite + tool paths)', () => {
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     const conversation = makeConversation({
       id: 'conv-1',
-      messages: [makeMessage({ id: 'u0', role: 'user', content: 'previous', contexts: [] })],
+      messages: [
+        makeMessage({
+          id: 'u0',
+          role: 'user',
+          content: 'previous',
+          contexts: [],
+        }),
+      ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
 
@@ -661,7 +781,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: homeDispatch, handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: homeDispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 
@@ -700,7 +824,12 @@ describe('Chat (query rewrite + tool paths)', () => {
           role: 'user',
           content: [
             { type: 'text', text: 'previous with file' },
-            { type: 'file', fileName: 'notes.txt', fileType: 'text/plain', fileUrl: 'cs101/notes.txt' },
+            {
+              type: 'file',
+              fileName: 'notes.txt',
+              fileType: 'text/plain',
+              fileUrl: 'cs101/notes.txt',
+            },
           ] as any,
           contexts: [],
         }),
@@ -726,7 +855,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: homeDispatch, handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: homeDispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 
@@ -745,7 +878,9 @@ describe('Chat (query rewrite + tool paths)', () => {
 
     server.use(
       http.post('*/api/queryRewrite', async () => {
-        return HttpResponse.json({ choices: [{ message: { content: 'NO_REWRITE_REQUIRED' } }] })
+        return HttpResponse.json({
+          choices: [{ message: { content: 'NO_REWRITE_REQUIRED' } }],
+        })
       }),
       http.post('*/api/allNewRoutingChat', async () => {
         const encoder = new TextEncoder()
@@ -755,14 +890,24 @@ describe('Chat (query rewrite + tool paths)', () => {
             controller.close()
           },
         })
-        return new HttpResponse(stream, { status: 200, headers: { 'Content-Type': 'text/plain' } })
+        return new HttpResponse(stream, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        })
       }),
     )
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     const conversation = makeConversation({
       id: 'conv-1',
-      messages: [makeMessage({ id: 'u0', role: 'user', content: 'previous', contexts: [] })],
+      messages: [
+        makeMessage({
+          id: 'u0',
+          role: 'user',
+          content: 'previous',
+          contexts: [],
+        }),
+      ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
 
@@ -784,7 +929,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: vi.fn(),
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 
@@ -808,14 +957,24 @@ describe('Chat (query rewrite + tool paths)', () => {
             controller.close()
           },
         })
-        return new HttpResponse(stream, { status: 200, headers: { 'Content-Type': 'text/plain' } })
+        return new HttpResponse(stream, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        })
       }),
     )
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     const conversation = makeConversation({
       id: 'conv-1',
-      messages: [makeMessage({ id: 'u0', role: 'user', content: 'previous', contexts: [] })],
+      messages: [
+        makeMessage({
+          id: 'u0',
+          role: 'user',
+          content: 'previous',
+          contexts: [],
+        }),
+      ],
       model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
     })
 
@@ -837,7 +996,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: homeDispatch, handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: homeDispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 
@@ -852,7 +1015,9 @@ describe('Chat (query rewrite + tool paths)', () => {
 
     server.use(
       http.post('*/api/queryRewrite', async () => {
-        return HttpResponse.json({ choices: [{ message: { content: 'NO_REWRITE_REQUIRED' } }] })
+        return HttpResponse.json({
+          choices: [{ message: { content: 'NO_REWRITE_REQUIRED' } }],
+        })
       }),
       http.post('*/api/allNewRoutingChat', async () => {
         const encoder = new TextEncoder()
@@ -862,14 +1027,24 @@ describe('Chat (query rewrite + tool paths)', () => {
             controller.close()
           },
         })
-        return new HttpResponse(stream, { status: 200, headers: { 'Content-Type': 'text/plain' } })
+        return new HttpResponse(stream, {
+          status: 200,
+          headers: { 'Content-Type': 'text/plain' },
+        })
       }),
     )
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     const conversation = makeConversation({
       id: 'conv-1',
-      messages: [makeMessage({ id: 'u0', role: 'user', content: 'previous', contexts: [] })],
+      messages: [
+        makeMessage({
+          id: 'u0',
+          role: 'user',
+          content: 'previous',
+          contexts: [],
+        }),
+      ],
       model: { id: '', name: 'GPT-4o mini' } as any,
     })
 
@@ -891,7 +1066,11 @@ describe('Chat (query rewrite + tool paths)', () => {
           loading: false,
           messageIsStreaming: false,
         } as any,
-        homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn(), handleFeedbackUpdate: vi.fn() },
+        homeContext: {
+          dispatch: vi.fn(),
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate: vi.fn(),
+        },
       },
     )
 

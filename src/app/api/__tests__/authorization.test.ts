@@ -60,9 +60,9 @@ describe('app/api/authorization', () => {
     expect(hasCourseAccess({ email: 'admin@example.com' } as any, meta)).toBe(
       true,
     )
-    expect(
-      hasCourseAccess({ email: 'allowed@example.com' } as any, meta),
-    ).toBe(true)
+    expect(hasCourseAccess({ email: 'allowed@example.com' } as any, meta)).toBe(
+      true,
+    )
     expect(hasCourseAccess({ email: 'nope@example.com' } as any, meta)).toBe(
       false,
     )
@@ -106,7 +106,9 @@ describe('app/api/authorization', () => {
     expect(r2.status).toBe(404)
 
     hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      hGet: vi.fn().mockResolvedValueOnce(JSON.stringify({ is_private: false })),
+      hGet: vi
+        .fn()
+        .mockResolvedValueOnce(JSON.stringify({ is_private: false })),
     })
     const publicReq = new Request('http://localhost/api?course_name=PUB', {
       method: 'GET',
@@ -264,10 +266,9 @@ describe('app/api/authorization', () => {
         }),
       ),
     })
-    const mapReqNoUser = new Request(
-      'http://localhost/api?course_name=PUB',
-      { method: 'GET' },
-    )
+    const mapReqNoUser = new Request('http://localhost/api?course_name=PUB', {
+      method: 'GET',
+    })
     const r11 = await mapWrapped(mapReqNoUser as any)
     expect(r11.status).toBe(401)
 

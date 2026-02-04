@@ -17,7 +17,10 @@ import getN8nWorkflowsHandler from '~/pages/api/UIUC-api/getN8nWorkflows'
 describe('UIUC-api backend proxy routes', () => {
   it('getAllCourseData validates method/params and proxies fetch', async () => {
     const res1 = createMockRes()
-    await getAllCourseDataHandler(createMockReq({ method: 'POST' }) as any, res1 as any)
+    await getAllCourseDataHandler(
+      createMockReq({ method: 'POST' }) as any,
+      res1 as any,
+    )
     expect(res1.status).toHaveBeenCalledWith(405)
 
     const res2 = createMockRes()
@@ -55,7 +58,10 @@ describe('UIUC-api backend proxy routes', () => {
 
   it('downloadMITCourse validates inputs and proxies fetch', async () => {
     const res1 = createMockRes()
-    await downloadMITCourseHandler(createMockReq({ method: 'POST' }) as any, res1 as any)
+    await downloadMITCourseHandler(
+      createMockReq({ method: 'POST' }) as any,
+      res1 as any,
+    )
     expect(res1.status).toHaveBeenCalledWith(405)
 
     const res2 = createMockRes()
@@ -99,7 +105,10 @@ describe('UIUC-api backend proxy routes', () => {
 
   it('getN8nWorkflows validates inputs and proxies fetch', async () => {
     const res1 = createMockRes()
-    await getN8nWorkflowsHandler(createMockReq({ method: 'POST' }) as any, res1 as any)
+    await getN8nWorkflowsHandler(
+      createMockReq({ method: 'POST' }) as any,
+      res1 as any,
+    )
     expect(res1.status).toHaveBeenCalledWith(405)
 
     const res2 = createMockRes()
@@ -111,7 +120,9 @@ describe('UIUC-api backend proxy routes', () => {
 
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(new Response('nope', { status: 500, statusText: 'boom' }))
+      .mockResolvedValueOnce(
+        new Response('nope', { status: 500, statusText: 'boom' }),
+      )
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ workflows: [] }), {
           status: 200,
@@ -135,4 +146,3 @@ describe('UIUC-api backend proxy routes', () => {
     fetchSpy.mockRestore()
   })
 })
-

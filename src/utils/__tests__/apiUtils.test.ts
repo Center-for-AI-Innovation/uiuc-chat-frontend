@@ -146,10 +146,9 @@ describe('apiUtils (browser/jsdom)', () => {
   it('fetchCourseMetadata throws when API says success=false', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ success: false, message: 'denied' }),
-        { status: 200 },
-      ),
+      new Response(JSON.stringify({ success: false, message: 'denied' }), {
+        status: 200,
+      }),
     )
 
     await expect(fetchCourseMetadata('CS101')).rejects.toThrow(/denied/i)
@@ -297,7 +296,15 @@ describe('apiUtils (browser/jsdom)', () => {
         {
           id: 'm2',
           role: 'user',
-          content: [{ type: 'text', text: 'hi' }, { type: 'file', fileName: 'a.pdf', fileType: 'application/pdf', fileSize: 1024 }],
+          content: [
+            { type: 'text', text: 'hi' },
+            {
+              type: 'file',
+              fileName: 'a.pdf',
+              fileType: 'application/pdf',
+              fileSize: 1024,
+            },
+          ],
         },
       ],
     } as any
@@ -324,7 +331,10 @@ describe('apiUtils (browser/jsdom)', () => {
           id: 'u1',
           role: 'user',
           content: [
-            { type: 'image_url', image_url: { url: 'https://img.example/x.png' } },
+            {
+              type: 'image_url',
+              image_url: { url: 'https://img.example/x.png' },
+            },
             { type: 'unknown', extra: true },
           ],
         },

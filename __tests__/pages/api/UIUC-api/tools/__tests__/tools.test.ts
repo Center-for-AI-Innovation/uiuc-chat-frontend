@@ -68,7 +68,9 @@ describe('UIUC-api/tools routes', () => {
 
     const res1 = createMockRes()
     await activateWorkflowHandler(
-      createMockReq({ query: { api_key: 'k', id: '1', activate: 'true' } }) as any,
+      createMockReq({
+        query: { api_key: 'k', id: '1', activate: 'true' },
+      }) as any,
       res1 as any,
     )
     expect(res1.status).toHaveBeenCalledWith(200)
@@ -84,7 +86,9 @@ describe('UIUC-api/tools routes', () => {
     )
     const res2 = createMockRes()
     await activateWorkflowHandler(
-      createMockReq({ query: { api_key: 'k', id: '1', activate: 'true' } }) as any,
+      createMockReq({
+        query: { api_key: 'k', id: '1', activate: 'true' },
+      }) as any,
       res2 as any,
     )
     expect(res2.status).toHaveBeenCalledWith(502)
@@ -100,7 +104,9 @@ describe('UIUC-api/tools routes', () => {
     )
     const res3 = createMockRes()
     await activateWorkflowHandler(
-      createMockReq({ query: { api_key: 'k', id: '1', activate: 'true' } }) as any,
+      createMockReq({
+        query: { api_key: 'k', id: '1', activate: 'true' },
+      }) as any,
       res3 as any,
     )
     expect(res3.status).toHaveBeenCalledWith(400)
@@ -220,4 +226,3 @@ describe('UIUC-api/tools routes', () => {
     ).rejects.toThrow('Unable to fetch n8n tools')
   })
 })
-

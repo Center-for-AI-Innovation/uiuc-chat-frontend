@@ -53,12 +53,16 @@ describe('fetchMQRContexts', () => {
       new Response('nope', { status: 500 }),
     )
 
-    await expect(fetchMQRContexts('CS101', 'q', 1, [], 'c')).resolves.toEqual([])
+    await expect(fetchMQRContexts('CS101', 'q', 1, [], 'c')).resolves.toEqual(
+      [],
+    )
   })
 
   it('returns [] when fetch throws', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
-    await expect(fetchMQRContexts('CS101', 'q', 1, [], 'c')).resolves.toEqual([])
+    await expect(fetchMQRContexts('CS101', 'q', 1, [], 'c')).resolves.toEqual(
+      [],
+    )
   })
 })

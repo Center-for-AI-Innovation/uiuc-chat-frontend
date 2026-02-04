@@ -71,10 +71,15 @@ describe('WebScrape', () => {
 
     await user.clear(screen.getByPlaceholderText('Default 50'))
     await user.type(screen.getByPlaceholderText('Default 50'), 'abc')
-    await user.type(screen.getAllByPlaceholderText('Enter URL...')[0]!, 'https://example.com')
+    await user.type(
+      screen.getAllByPlaceholderText('Enter URL...')[0]!,
+      'https://example.com',
+    )
     await user.click(screen.getByRole('button', { name: /Ingest/i }))
 
-    expect(await screen.findByText(/Max URLs should be a valid number/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Max URLs should be a valid number/i),
+    ).toBeInTheDocument()
   })
 
   it('downloads MIT OCW content and shows a notification toast', async () => {
@@ -139,23 +144,23 @@ describe('WebScrape', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const originalSetTimeout = globalThis.setTimeout
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: any) => {
-      if (ms === 8000) {
-        fn()
-        // @ts-expect-error - minimal timer handle for tests
-        return 0
-      }
-      return originalSetTimeout(fn, ms)
-    })
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(
+      (fn: any, ms?: any) => {
+        if (ms === 8000) {
+          fn()
+          // @ts-expect-error - minimal timer handle for tests
+          return 0
+        }
+        return originalSetTimeout(fn, ms)
+      },
+    )
 
-    const fetchSpy = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ ok: true }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        }),
-      )
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
 
     const { WebScrape } = await import('../WebScrape')
     renderWithProviders(
@@ -188,14 +193,16 @@ describe('WebScrape', () => {
     const user = userEvent.setup()
 
     const originalSetTimeout = globalThis.setTimeout
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: any) => {
-      if (ms === 8000) {
-        fn()
-        // @ts-expect-error - minimal timer handle for tests
-        return 0
-      }
-      return originalSetTimeout(fn, ms)
-    })
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(
+      (fn: any, ms?: any) => {
+        if (ms === 8000) {
+          fn()
+          // @ts-expect-error - minimal timer handle for tests
+          return 0
+        }
+        return originalSetTimeout(fn, ms)
+      },
+    )
 
     globalThis.__TEST_ROUTER__ = {
       asPath: '/CS101/dashboard',
@@ -236,14 +243,16 @@ describe('WebScrape', () => {
     const axiosMod = await import('axios')
 
     const originalSetTimeout = globalThis.setTimeout
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: any) => {
-      if (ms === 8000) {
-        fn()
-        // @ts-expect-error - minimal timer handle for tests
-        return 0
-      }
-      return originalSetTimeout(fn, ms)
-    })
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(
+      (fn: any, ms?: any) => {
+        if (ms === 8000) {
+          fn()
+          // @ts-expect-error - minimal timer handle for tests
+          return 0
+        }
+        return originalSetTimeout(fn, ms)
+      },
+    )
 
     const { WebScrape } = await import('../WebScrape')
     renderWithProviders(
@@ -286,14 +295,16 @@ describe('WebScrape', () => {
     )
 
     const originalSetTimeout = globalThis.setTimeout
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: any) => {
-      if (ms === 8000) {
-        fn()
-        // @ts-expect-error - minimal timer handle for tests
-        return 0
-      }
-      return originalSetTimeout(fn, ms)
-    })
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(
+      (fn: any, ms?: any) => {
+        if (ms === 8000) {
+          fn()
+          // @ts-expect-error - minimal timer handle for tests
+          return 0
+        }
+        return originalSetTimeout(fn, ms)
+      },
+    )
 
     const { WebScrape } = await import('../WebScrape')
     renderWithProviders(
@@ -306,11 +317,16 @@ describe('WebScrape', () => {
       { homeContext: { dispatch: vi.fn() } },
     )
 
-    await user.type(screen.getAllByPlaceholderText('Enter URL...')[0]!, 'https://example.com')
+    await user.type(
+      screen.getAllByPlaceholderText('Enter URL...')[0]!,
+      'https://example.com',
+    )
     await user.click(screen.getByRole('button', { name: /Ingest/i }))
 
     // Ensure the loading branch renders at least once.
-    expect(await screen.findByText(/Web scrape in progress/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Web scrape in progress/i),
+    ).toBeInTheDocument()
 
     rejectPost?.(new Error('boom'))
 

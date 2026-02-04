@@ -31,9 +31,7 @@ class ErrorBoundary extends React.Component<
   }
   render() {
     if (this.state.error) {
-      return (
-        <div data-testid="caught-error">{this.state.error.message}</div>
-      )
+      return <div data-testid="caught-error">{this.state.error.message}</div>
     }
     return this.props.children
   }
@@ -53,18 +51,20 @@ describe('shadcn chart', () => {
 
   it('renders ChartStyle only when config contains colors', () => {
     const { container, rerender } = render(
-      <ChartStyle id="chart-1" config={{}} /> as any,
+      (<ChartStyle id="chart-1" config={{}} />) as any,
     )
     expect(container).toBeEmptyDOMElement()
 
     rerender(
-      <ChartStyle
-        id="chart-2"
-        config={{
-          foo: { label: 'Foo', color: 'red' },
-          bar: { label: 'Bar', theme: { light: 'blue', dark: 'green' } },
-        }}
-      /> as any,
+      (
+        <ChartStyle
+          id="chart-2"
+          config={{
+            foo: { label: 'Foo', color: 'red' },
+            bar: { label: 'Bar', theme: { light: 'blue', dark: 'green' } },
+          }}
+        />
+      ) as any,
     )
     const style = container.querySelector('style')
     expect(style).toBeTruthy()
@@ -74,40 +74,42 @@ describe('shadcn chart', () => {
 
   it('renders tooltip + legend content inside ChartContainer', () => {
     render(
-      <ChartContainer
-        config={{
-          value: { label: 'Value', color: 'red' },
-          x: { label: 'X', color: 'blue' },
-        }}
-      >
-        {() => (
-          <div>
-            <ChartTooltipContent
-              active
-              indicator="line"
-              payload={[
-                {
-                  dataKey: 'value',
-                  name: 'value',
-                  value: 42,
-                  color: 'red',
-                  payload: { fill: 'red', value: 'value' },
-                },
-              ]}
-            />
-            <ChartLegendContent
-              payload={[
-                {
-                  dataKey: 'x',
-                  value: 'x',
-                  color: 'blue',
-                  type: 'square',
-                },
-              ]}
-            />
-          </div>
-        )}
-      </ChartContainer> as any,
+      (
+        <ChartContainer
+          config={{
+            value: { label: 'Value', color: 'red' },
+            x: { label: 'X', color: 'blue' },
+          }}
+        >
+          {() => (
+            <div>
+              <ChartTooltipContent
+                active
+                indicator="line"
+                payload={[
+                  {
+                    dataKey: 'value',
+                    name: 'value',
+                    value: 42,
+                    color: 'red',
+                    payload: { fill: 'red', value: 'value' },
+                  },
+                ]}
+              />
+              <ChartLegendContent
+                payload={[
+                  {
+                    dataKey: 'x',
+                    value: 'x',
+                    color: 'blue',
+                    type: 'square',
+                  },
+                ]}
+              />
+            </div>
+          )}
+        </ChartContainer>
+      ) as any,
     )
 
     // Value label appears in tooltip

@@ -51,7 +51,12 @@ describe('UIUC-api/uploadToS3', () => {
     await handler(
       createMockReq({
         method: 'POST',
-        body: { uniqueFileName: 'f', courseName: 'vyriad', user_id: 'u', uploadType: 'chat' },
+        body: {
+          uniqueFileName: 'f',
+          courseName: 'vyriad',
+          user_id: 'u',
+          uploadType: 'chat',
+        },
       }) as any,
       res2 as any,
     )
@@ -59,4 +64,3 @@ describe('UIUC-api/uploadToS3', () => {
     expect(hoisted.createPresignedPost).toHaveBeenCalled()
   })
 })
-

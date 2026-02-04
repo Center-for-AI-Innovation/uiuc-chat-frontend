@@ -57,4 +57,3 @@ describe('UIUC-api/ingestCanvas', () => {
     fetchSpy.mockRestore()
   })
 })
-
