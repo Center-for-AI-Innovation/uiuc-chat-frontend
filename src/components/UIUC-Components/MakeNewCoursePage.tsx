@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import React, { useMemo, useState } from 'react'
 
-import { Button, Card } from '@mantine/core'
+import { Button, Card, Flex, Title } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -18,6 +18,8 @@ import StepPrompt from './MakeNewCoursePageSteps/StepPrompt'
 import StepBranding from './MakeNewCoursePageSteps/StepBranding'
 import StepSuccess from './MakeNewCoursePageSteps/StepSuccess'
 import { useAuth } from 'react-oidc-context'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import GlobalFooter from './GlobalFooter'
 
 const MakeNewCoursePage = ({
   project_name,
@@ -245,7 +247,10 @@ const MakeNewCoursePage = ({
         <Navbar isPlain={false} />
         <Head>
           <title>{project_name}</title>
-          <meta name="description" content="Create a new project on UIUC.chat." />
+          <meta
+            name="description"
+            content="Create a new project on UIUC.chat."
+          />
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
@@ -271,16 +276,17 @@ const MakeNewCoursePage = ({
                   We’re getting ready to transition to{' '}
                   <a
                     href="https://chat.illinois.edu"
-                    className="underline text-[--illinois-orange]"
+                    className="text-[--illinois-orange] underline"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     chat.illinois.edu
                   </a>
-                  . You can create new chatbots there. If you have any questions, please email us at{' '}
+                  . You can create new chatbots there. If you have any
+                  questions, please email us at{' '}
                   <a
                     href="mailto:genaisupport@mx.uillinois.edu"
-                    className="underline text-[--illinois-orange]"
+                    className="text-[--illinois-orange] underline"
                   >
                     genaisupport@mx.uillinois.edu
                   </a>
