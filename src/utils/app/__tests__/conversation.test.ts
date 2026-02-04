@@ -12,7 +12,7 @@ import {
   saveConversationToLocalStorage,
   saveConversationToServer,
   saveConversations,
-} from '../conversation'
+} from '@/hooks/__internal__/conversation'
 
 function makeConversation(overrides: Partial<Conversation> = {}): Conversation {
   return {
@@ -508,7 +508,9 @@ describe('conversation utils', () => {
       new Response('no', { status: 500 }),
     )
 
-    await deleteConversationFromServer('c1', 'CS101')
+    await expect(deleteConversationFromServer('c1', 'CS101')).rejects.toThrow(
+      /Error deleting conversation/,
+    )
     expect(errSpy).toHaveBeenCalled()
   })
 
@@ -516,7 +518,9 @@ describe('conversation utils', () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
 
-    await deleteAllConversationsFromServer('CS101')
+    await expect(deleteAllConversationsFromServer('CS101')).rejects.toThrow(
+      /boom/,
+    )
     expect(errSpy).toHaveBeenCalled()
   })
 
@@ -526,7 +530,9 @@ describe('conversation utils', () => {
       new Response('no', { status: 500 }),
     )
 
-    await deleteAllConversationsFromServer('CS101')
+    await expect(deleteAllConversationsFromServer('CS101')).rejects.toThrow(
+      /Error deleting conversation/,
+    )
     expect(errSpy).toHaveBeenCalled()
   })
 
