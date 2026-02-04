@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { deleteMessagesFromServer, upsertMessageToServer } from '../message'
+import {
+  deleteMessagesFromServer,
+  upsertMessageToServer,
+} from '@/hooks/__internal__/message'
 import { makeMessage } from '~/test-utils/mocks/chat'
 
 describe('upsertMessageToServer', () => {
