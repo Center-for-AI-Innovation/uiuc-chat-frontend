@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { UIUCTool } from '~/types/chat'
+import type { Conversation, Message, UIUCTool } from '~/types/chat'
+import type { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
 import {
   fetchTools,
@@ -188,12 +189,16 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
   })
 
   it('handleFunctionCall uses OpenAICompatible and lowercases modelId for OpenRouter', async () => {
-    const conversation: any = {
+    const conversation = {
       id: 'c1',
       model: { id: 'MiXeD-Model', name: 'm', tokenLimit: 10, enabled: true },
       messages: [{ id: 'u1', role: 'user', content: 'hi' }],
-    }
-    const message: any = { id: 'u1', role: 'user', content: 'hi' }
+    } as unknown as Conversation
+    const message = {
+      id: 'u1',
+      role: 'user',
+      content: 'hi',
+    } as unknown as Message
 
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(
@@ -222,14 +227,67 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
           apiKey: 'compat-key',
           models: [{ id: 'mixed-model', enabled: true }],
         },
-      } as any,
+      } as unknown as AllLLMProviders,
     )
 
-    const [, options] = fetchSpy.mock.calls[0] as any
-    const parsed = JSON.parse(options.body)
+    const [, options] = fetchSpy.mock.calls[0] as unknown as [
+      unknown,
+      RequestInit,
+    ]
+    const parsed = JSON.parse(String(options.body))
     expect(parsed.apiKey).toBe('compat-key')
     expect(parsed.providerBaseUrl).toBe('https://openrouter.ai/api/v1')
     expect(parsed.modelId).toBe('mixed-model')
+  })
+
+  it('handleFunctionCall keeps modelId when OpenAICompatible baseUrl is invalid', async () => {
+    const conversation = {
+      id: 'c1',
+      model: { id: 'MiXeD-Model', name: 'm', tokenLimit: 10, enabled: true },
+      messages: [{ id: 'u1', role: 'user', content: 'hi' }],
+    } as unknown as Conversation
+    const message = {
+      id: 'u1',
+      role: 'user',
+      content: 'hi',
+    } as unknown as Message
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          choices: [
+            { message: { content: 'No tools needed', tool_calls: [] } },
+          ],
+        }),
+        { status: 200 },
+      ),
+    )
+
+    await handleFunctionCall(
+      message,
+      [],
+      [],
+      '',
+      conversation,
+      'ignored-openai-key',
+      'CS101',
+      undefined,
+      {
+        OpenAICompatible: {
+          enabled: true,
+          baseUrl: 'not-a-url',
+          apiKey: 'compat-key',
+          models: [{ id: 'MiXeD-Model', enabled: true }],
+        },
+      } as unknown as AllLLMProviders,
+    )
+
+    const [, options] = fetchSpy.mock.calls[0] as unknown as [
+      unknown,
+      RequestInit,
+    ]
+    const parsed = JSON.parse(String(options.body))
+    expect(parsed.modelId).toBe('MiXeD-Model')
   })
 
   it('handleFunctionCall returns [] when tool is not found in availableTools', async () => {
