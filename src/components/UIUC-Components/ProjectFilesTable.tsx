@@ -34,7 +34,7 @@ import { createRef, useEffect, useRef, useState } from 'react'
 import { createGlobalStyle } from 'styled-components'
 
 import { useMediaQuery } from '@mantine/hooks'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useRouter } from 'next/router'
 import {
@@ -43,6 +43,7 @@ import {
 } from 'src/types/courseMaterials'
 import { useAppendToDocGroup } from '@/hooks/queries/useAppendToDocGroup'
 import { useFetchFailedDocuments } from '~/hooks/queries/useFetchFailedDocuments'
+import { useFetchProjectMaterials } from '@/hooks/queries/useFetchProjectMaterials'
 import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
 import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
 
@@ -149,32 +150,15 @@ export function ProjectFilesTable({
     isError: isErrorDocuments,
     error: documentsError,
     refetch: refetchDocuments,
-  } = useQuery({
+  } = useFetchProjectMaterials({
+    courseName: course_name,
+    from: (page - 1) * PAGE_SIZE,
+    to: (page - 1) * PAGE_SIZE + PAGE_SIZE - 1,
+    filterKey,
+    filterValue,
+    sortColumn: sortStatus.columnAccessor,
+    sortDirection: sortStatus.direction,
     refetchInterval: 12_000,
-    queryKey: [
-      'documents',
-      course_name,
-      page,
-      filterKey,
-      filterValue,
-      sortStatus.columnAccessor,
-      sortStatus.direction,
-    ],
-    // keepPreviousData: true,
-    queryFn: async () => {
-      const from = (page - 1) * PAGE_SIZE
-      const to = from + PAGE_SIZE - 1
-
-      const response = await fetch(
-        `/api/materialsTable/fetchProjectMaterials?from=${from}&to=${to}&course_name=${course_name}&filter_key=${filterKey}&filter_value=${filterValue}&sort_column=${sortStatus.columnAccessor}&sort_direction=${sortStatus.direction}`,
-      )
-      if (!response.ok) {
-        throw new Error('Failed to fetch document groups')
-      }
-
-      const data = await response.json()
-      return data
-    },
   })
 
   const {
