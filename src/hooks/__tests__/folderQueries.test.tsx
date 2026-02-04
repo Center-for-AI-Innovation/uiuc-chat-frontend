@@ -2,22 +2,20 @@ import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import {
-  useCreateFolder,
-  useDeleteFolder,
-  useFetchFolders,
-  useUpdateFolder,
-} from '../folderQueries'
+import { useCreateFolder } from '../queries/useCreateFolder'
+import { useDeleteFolder } from '../queries/useDeleteFolder'
+import { useFetchFolders } from '../queries/useFetchFolders'
+import { useUpdateFolder } from '../queries/useUpdateFolder'
 import type { FolderWithConversation } from '~/types/folder'
 
-vi.mock('~/utils/app/folders', () => ({
+vi.mock('@/hooks/__internal__/folders', () => ({
   fetchFolders: vi.fn(),
   saveFolderToServer: vi.fn(),
   deleteFolderFromServer: vi.fn(),
 }))
 
 const { fetchFolders, saveFolderToServer, deleteFolderFromServer } =
-  await import('~/utils/app/folders')
+  await import('@/hooks/__internal__/folders')
 
 function createWrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: React.ReactNode }) {

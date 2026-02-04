@@ -95,7 +95,7 @@ export function useAppendToDocGroup(
           })
           return {
             ...old,
-            updatedDocuments,
+            final_docs: updatedDocuments,
           }
         },
       )

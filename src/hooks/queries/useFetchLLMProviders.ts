@@ -28,7 +28,7 @@ async function fetchLLMProviders({
   }
 
   const data = (await response.json()) as AllLLMProviders | undefined
-  if (!data) {
+  if (!data || Object.keys(data).length === 0) {
     throw new Error('No LLM providers returned from API')
   }
 

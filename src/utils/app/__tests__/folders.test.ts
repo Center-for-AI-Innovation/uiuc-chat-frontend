@@ -3,7 +3,7 @@ import {
   deleteFolderFromServer,
   fetchFolders,
   saveFolderToServer,
-} from '../folders'
+} from '@/hooks/__internal__/folders'
 import type { FolderWithConversation } from '~/types/folder'
 
 const folder: FolderWithConversation = {
