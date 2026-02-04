@@ -69,6 +69,7 @@ import {
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useQueryClient } from '@tanstack/react-query'
+import { useFetchDefaultPostPrompt } from '@/hooks/queries/useFetchDefaultPostPrompt'
 
 interface PromptEditorProps {
   project_name: string
@@ -257,6 +258,8 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
       projectName: project_name,
       enabled: !!project_name,
     })
+  const { data: defaultPostPrompt, refetch: refetchDefaultPostPrompt } =
+    useFetchDefaultPostPrompt()
   const [
     linkGeneratorOpened,
     { open: openLinkGenerator, close: closeLinkGenerator },
@@ -593,17 +596,17 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
 
   const handleCopyDefaultPrompt = async () => {
     try {
-      const response = await fetch('/api/getDefaultPostPrompt')
-      if (!response.ok) {
-        const errorMessage = `Failed to fetch default prompt: ${response.status} ${response.statusText}`
-        console.error(errorMessage)
-        throw new Error(errorMessage)
+      let prompt = defaultPostPrompt
+      if (!prompt) {
+        const result = await refetchDefaultPostPrompt()
+        prompt = result.data
       }
-      const data = await response.json()
-      const defaultPostPrompt = data.prompt
+      if (!prompt) {
+        throw new Error('Failed to fetch default prompt')
+      }
 
       navigator.clipboard
-        .writeText(defaultPostPrompt)
+        .writeText(prompt)
         .then(() => {
           showPromptToast(
             theme,
