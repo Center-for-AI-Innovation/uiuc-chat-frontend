@@ -5,7 +5,7 @@ import { routeModelRequest } from '~/utils/streamProcessing'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { withCourseAccessFromRequest } from '~/app/api/authorization'
-import { reconstructConversation } from '@/utils/app/conversation'
+import { reconstructConversation } from '@/hooks/__internal__/conversation'
 import { persistMessageServer } from '~/pages/api/conversation'
 
 export const runtime = 'nodejs'
@@ -17,9 +17,8 @@ async function handler(req: AuthenticatedRequest) {
   try {
     const body = await req.json()
     const { conversation, course_name, courseMetadata, mode } = body as ChatBody
-    const hydratedConversation: Conversation | undefined = reconstructConversation(
-      conversation,
-    )
+    const hydratedConversation: Conversation | undefined =
+      reconstructConversation(conversation)
 
     // Build the prompt
     const newConversation = await buildPrompt({
@@ -30,7 +29,8 @@ async function handler(req: AuthenticatedRequest) {
     })
 
     body.conversation = newConversation
-    const lastMessage = newConversation?.messages?.[newConversation.messages.length - 1]
+    const lastMessage =
+      newConversation?.messages?.[newConversation.messages.length - 1]
     if (lastMessage) {
       await persistMessageServer({
         conversation: newConversation,

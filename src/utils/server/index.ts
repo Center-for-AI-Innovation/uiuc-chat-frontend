@@ -93,7 +93,7 @@ export const OpenAIStream = async (
       // NCSA Hosted VLM
       provider = llmProviders[
         ProviderNames.NCSAHostedVLM
-        ] as NCSAHostedVLMProvider
+      ] as NCSAHostedVLMProvider
       // provider.apiKey = await decryptKeyIfNeeded(provider.apiKey!)
       provider.apiKey = process.env.NCSA_HOSTED_API_KEY || ''
       apiType = ProviderNames.NCSAHostedVLM
@@ -152,6 +152,9 @@ export const OpenAIStream = async (
         OPENAI_ORGANIZATION && {
           'OpenAI-Organization': OPENAI_ORGANIZATION,
         }),
+      ...(apiType === ProviderNames.NCSAHostedVLM && {
+        Authorization: `Bearer ${provider!.apiKey}`,
+      }),
     },
     method: 'POST',
     body: body,

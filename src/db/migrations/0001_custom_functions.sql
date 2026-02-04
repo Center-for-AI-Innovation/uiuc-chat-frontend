@@ -1164,31 +1164,32 @@ $$ LANGUAGE plpgsql;
 
 --
 -- Name: subscription tr_check_filters; Type: TRIGGER; Schema: realtime; Owner: supabase_admin
+-- COMMENTED OUT: Supabase-specific trigger - realtime schema doesn't exist in non-Supabase databases
 --
-
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger WHERE tgname = 'tr_check_filters'
-  ) THEN
-    CREATE TRIGGER tr_check_filters
-    BEFORE INSERT OR UPDATE ON realtime.subscription
-    FOR EACH ROW EXECUTE FUNCTION realtime.subscription_check_filters();
-  END IF;
-END;
-$$ LANGUAGE plpgsql;
+-- DO $$
+-- BEGIN
+--   IF NOT EXISTS (
+--     SELECT 1 FROM pg_trigger WHERE tgname = 'tr_check_filters'
+--   ) THEN
+--     CREATE TRIGGER tr_check_filters
+--     BEFORE INSERT OR UPDATE ON realtime.subscription
+--     FOR EACH ROW EXECUTE FUNCTION realtime.subscription_check_filters();
+--   END IF;
+-- END;
+-- $$ LANGUAGE plpgsql;
 
 --
 -- Name: objects update_objects_updated_at; Type: TRIGGER; Schema: storage; Owner: supabase_storage_admin
+-- COMMENTED OUT: Supabase-specific trigger - storage schema doesn't exist in non-Supabase databases
 --
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger WHERE tgname = 'update_objects_updated_at'
-  ) THEN
-    CREATE TRIGGER update_objects_updated_at
-    BEFORE UPDATE ON storage.objects
-    FOR EACH ROW EXECUTE FUNCTION storage.update_updated_at_column();
-  END IF;
-END;
-$$ LANGUAGE plpgsql;
+-- DO $$
+-- BEGIN
+--   IF NOT EXISTS (
+--     SELECT 1 FROM pg_trigger WHERE tgname = 'update_objects_updated_at'
+--   ) THEN
+--     CREATE TRIGGER update_objects_updated_at
+--     BEFORE UPDATE ON storage.objects
+--     FOR EACH ROW EXECUTE FUNCTION storage.update_updated_at_column();
+--   END IF;
+-- END;
+-- $$ LANGUAGE plpgsql;
