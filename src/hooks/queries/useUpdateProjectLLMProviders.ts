@@ -3,80 +3,33 @@ import { debounce } from 'lodash'
 import { useMemo } from 'react'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
-<<<<<<< HEAD:src/hooks/useProjectAPIKeys.ts
-export function useGetProjectLLMProviders({
-  projectName,
-}: {
-  projectName: string
-}) {
-  // USAGE:
-  // const {
-  //   data: projectLLMProviders,
-  //   isLoading: isLoadingprojectLLMProviders,
-  //   isError: isErrorprojectLLMProviders,
-  //   refetch: refetchprojectLLMProviders,
-  // } = useGetProjectLLMProviders(course_name)
-
-  return useQuery({
-    queryKey: ['projectLLMProviders', projectName],
-    queryFn: async () => {
-      const response = await fetch('/api/models', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectName: projectName,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch LLM providers')
-      }
-
-      const data = await response.json()
-      return data as AllLLMProviders
-    },
-    retry: 1, // Limit retries to 1
-  })
-}
-
-export function useSetProjectLLMProviders(queryClient: QueryClient) {
-  const pendingRef = useRef<
-    {
-      resolve: (value: unknown) => void
-      reject: (reason?: unknown) => void
-    }[]
-  >([])
-
-=======
 export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
->>>>>>> 3b85146fb3e0771f56cd6d0a4034601fe98ab7b0:src/hooks/queries/useUpdateProjectLLMProviders.ts
   const debouncedApiCall = useMemo(
     () =>
       debounce(
-        async (variables: { projectName: string; llmProviders: AllLLMProviders }) => {
-          // Capture and clear pending promises at call time so an in-flight request
-          // can't resolve/reject promises added by later mutations.
-          const pending = pendingRef.current
-          pendingRef.current = []
-
-          try {
-            const response = await fetch('/api/UIUC-api/upsertLLMProviders', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(variables),
+        (
+          variables: {
+            projectName: string
+            llmProviders: AllLLMProviders
+          },
+          resolve: (value: any) => void,
+          reject: (reason?: any) => void,
+        ) => {
+          fetch('/api/UIUC-api/upsertLLMProviders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(variables),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error('Failed to set LLM settings.')
+              }
+              return response.json()
             })
-            if (!response.ok) {
-              throw new Error('Failed to set LLM settings.')
-            }
-            const data = await response.json()
-            pending.forEach(({ resolve }) => resolve(data))
-          } catch (err) {
-            pending.forEach(({ reject }) => reject(err))
-          }
+            .then(resolve)
+            .catch(reject)
         },
         1000,
         { maxWait: 10000 },
@@ -90,8 +43,7 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
       llmProviders: AllLLMProviders
     }) => {
       return new Promise((resolve, reject) => {
-        pendingRef.current.push({ resolve, reject })
-        debouncedApiCall(variables)
+        debouncedApiCall(variables, resolve, reject)
       })
     },
     onMutate: async (variables) => {

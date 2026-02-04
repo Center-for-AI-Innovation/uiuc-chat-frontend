@@ -98,7 +98,7 @@ export function LandingPageHeader({
   const [headerHeight, setHeaderHeight] = useState(60)
   const posthog = usePostHog()
   const [menuVisible, setMenuVisible] = useState(false)
-  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const menuButtonRef = useRef<HTMLDivElement>(null)
   const [menuPosition, setMenuPosition] = useState({ right: '20px' })
 
   // Determine which elements should be visible based on screen width
@@ -450,8 +450,7 @@ export function LandingPageHeader({
               aria-label="Toggle Menu"
               className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
               onClick={(e) => toggleMenu(e)}
-              ref={menuButtonRef}
-              type="button"
+              ref={menuButtonRef as React.RefObject<HTMLDivElement>}
             >
               <Menu2 size={24} strokeWidth={2} color="var(--illinois-orange)" />
             </div>
