@@ -14,7 +14,7 @@ Runs end-to-end tests against the production environment.
 
 ## 🚀 ECS Deployment - How It Works
 
-The `deploy-to-ecs.yml` workflow triggers on pushes to `illinois-chat` branch when these files change:
+The `deploy-to-ecs.yml` workflow triggers on pushes to `illinois-chat` and `main` branches when these files change:
 
 - `src/**` - React/Next.js source code
 - `pages/**` - Next.js pages (if using pages router)
