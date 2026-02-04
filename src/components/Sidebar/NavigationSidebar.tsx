@@ -187,6 +187,11 @@ const useStyles = createStyles((theme) => ({
 
     fontWeight: 500,
 
+    '&:focus': {
+      outline: '2px solid var(--background)',
+      outlineOffset: '-3px',
+    },
+
     '&:hover': {
       backgroundColor: 'var(--dashboard-button-hover)',
       transform: 'translateY(-1px)',
@@ -238,7 +243,12 @@ const useStyles = createStyles((theme) => ({
     '&:hover': {
       backgroundColor: 'var(--navbar-hover-background)',
       color: 'var(--navbar-hover)',
-      transform: 'translateX(4px)',
+      transform: 'translateX(0px)' /* 4px */,
+    },
+
+    '&:focus': {
+      outline: '2px solid var(--foreground-faded)',
+      outlineOffset: '-3px',
     },
 
     '&[data-active="true"]': {
@@ -249,6 +259,10 @@ const useStyles = createStyles((theme) => ({
       '&:hover': {
         backgroundColor: 'var(--dashboard-button-hover)',
         color: 'var(--dashboard-button-foreground)',
+      },
+
+      '&:focus': {
+        outline: '2px solid var(--background)',
       },
     },
 
@@ -297,61 +311,6 @@ function NavText({
   )
 }
 
-// Icon Components
-export function DashboardIcon() {
-  return <IconHome size={20} strokeWidth={2} />
-}
-
-export function LLMIcon() {
-  return (
-    <Brain
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
-export function MessageCodeIcon() {
-  return (
-    <MessageCode
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
-export function ReportIcon() {
-  return (
-    <ReportAnalytics
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
-export function ApiIcon() {
-  return (
-    <Code
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
-export function ChartDots3Icon() {
-  return (
-    <ChartDots3
-      size={18}
-      strokeWidth={2}
-      style={{ marginRight: '3px', marginLeft: '3px' }}
-    />
-  )
-}
-
 export function CollapsedThemeToggle() {
   const { theme, setTheme } = useTheme()
 
@@ -368,13 +327,41 @@ export function CollapsedThemeToggle() {
   const getCurrentIcon = () => {
     switch (theme) {
       case 'system':
-        return <IconDeviceLaptop size={16} className="text-[--foreground]" />
+        return (
+          <IconDeviceLaptop
+            size={16}
+            className="text-[--foreground]"
+            role="img"
+            aria-label="Toggle system theme"
+          />
+        )
       case 'light':
-        return <IconSun size={16} className="text-[--foreground]" />
+        return (
+          <IconSun
+            size={16}
+            className="text-[--foreground]"
+            role="img"
+            aria-label="Toggle light theme"
+          />
+        )
       case 'dark':
-        return <IconMoon size={16} className="text-[--foreground]" />
+        return (
+          <IconMoon
+            size={16}
+            className="text-[--foreground]"
+            role="img"
+            aria-label="Toggle dark theme"
+          />
+        )
       default:
-        return <IconDeviceLaptop size={16} className="text-[--foreground]" />
+        return (
+          <IconDeviceLaptop
+            size={16}
+            className="text-[--foreground]"
+            role="img"
+            aria-label="Toggle system theme"
+          />
+        )
     }
   }
 
@@ -417,32 +404,74 @@ export default function NavigationSidebar({
   const navItems: NavItem[] = [
     {
       name: <NavText>Dashboard</NavText>,
-      icon: <DashboardIcon />,
+      icon: (
+        <IconHome size={20} strokeWidth={2} role="img" aria-label="Dashboard" />
+      ),
       link: course_name ? `/${course_name}/dashboard` : '/dashboard',
     },
     {
       name: <NavText>LLMs</NavText>,
-      icon: <LLMIcon />,
+      icon: (
+        <Brain
+          size={18}
+          strokeWidth={2}
+          style={{ marginRight: '3px', marginLeft: '3px' }}
+          role="img"
+          aria-label="LLMs"
+        />
+      ),
       link: course_name ? `/${course_name}/llms` : '/llms',
     },
     {
       name: <NavText>Analysis</NavText>,
-      icon: <ReportIcon />,
+      icon: (
+        <ReportAnalytics
+          size={18}
+          strokeWidth={2}
+          style={{ marginRight: '3px', marginLeft: '3px' }}
+          role="img"
+          aria-label="Analysis"
+        />
+      ),
       link: course_name ? `/${course_name}/analysis` : '/analysis',
     },
     {
       name: <NavText>Prompting</NavText>,
-      icon: <MessageCodeIcon />,
+      icon: (
+        <MessageCode
+          size={18}
+          strokeWidth={2}
+          style={{ marginRight: '3px', marginLeft: '3px' }}
+          role="img"
+          aria-label="Prompting"
+        />
+      ),
       link: course_name ? `/${course_name}/prompt` : '/prompt',
     },
     {
       name: <NavText>Tools</NavText>,
-      icon: <ChartDots3Icon />,
+      icon: (
+        <ChartDots3
+          size={18}
+          strokeWidth={2}
+          style={{ marginRight: '3px', marginLeft: '3px' }}
+          role="img"
+          aria-label="Tools"
+        />
+      ),
       link: course_name ? `/${course_name}/tools` : '/tools',
     },
     {
       name: <NavText>API</NavText>,
-      icon: <ApiIcon />,
+      icon: (
+        <Code
+          size={18}
+          strokeWidth={2}
+          style={{ marginRight: '3px', marginLeft: '3px' }}
+          role="img"
+          aria-label="API"
+        />
+      ),
       link: course_name ? `/${course_name}/api` : '/api',
     },
   ]
@@ -468,6 +497,7 @@ export default function NavigationSidebar({
       {/* Mobile Toggle Button - Hidden on md+ */}
       {!isOpen && (
         <button
+          aria-label="Toggle sidebar"
           className={`${classes.toggleButton} md:hidden`}
           onClick={onToggle}
         >
@@ -503,7 +533,7 @@ export default function NavigationSidebar({
               >
                 <span>Chatbot</span>
                 <span>/</span>
-                <span className="font-semibold text-[--foreground]">
+                <span className="line-clamp-3 break-all font-semibold text-[--foreground]">
                   {course_name}
                 </span>
               </div>
@@ -514,15 +544,26 @@ export default function NavigationSidebar({
               onClick={onCollapseToggle}
             >
               {isCollapsed ? (
-                <IconLayoutSidebarLeftExpand size={20} strokeWidth={2} />
+                <IconLayoutSidebarLeftExpand
+                  size={20}
+                  strokeWidth={2}
+                  role="img"
+                  aria-label="Expand Sidebar"
+                />
               ) : (
-                <IconLayoutSidebarLeftCollapse size={20} strokeWidth={2} />
+                <IconLayoutSidebarLeftCollapse
+                  size={20}
+                  strokeWidth={2}
+                  role="img"
+                  aria-label="Collapse Sidebar"
+                />
               )}
             </button>
           </div>
 
           {/* Chat Button */}
           <button
+            tabIndex={0}
             className={`${classes.chatButton} ${isCollapsed ? 'collapsed' : ''}`}
             onClick={handleChatNavigation}
             onMouseEnter={() => {
@@ -534,7 +575,12 @@ export default function NavigationSidebar({
               }
             }}
           >
-            <IconChevronLeft size={16} strokeWidth={3} />
+            <IconChevronLeft
+              size={16}
+              strokeWidth={3}
+              role="img"
+              aria-label="Back to Chat"
+            />
             <span
               className={`md:${isCollapsed ? 'hidden' : 'inline'} ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
             >
@@ -546,6 +592,8 @@ export default function NavigationSidebar({
           <div className={classes.navSection}>
             {navItems.map((item, index) => (
               <Link
+                tabIndex={0}
+                role="button"
                 key={index}
                 href={item.link}
                 prefetch={false}

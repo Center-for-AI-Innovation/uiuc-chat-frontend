@@ -104,14 +104,15 @@ export function LandingPageHeader({
   // Determine which elements should be visible based on screen width
   const showMyChatbotsInNav = windowWidth >= 580 // New: My Chatbots button
   const showDocsInNav = windowWidth >= 680 // Adjusted to make room for My Chatbots
-  const showNewsInNav = windowWidth >= 740 // Adjusted to make room for My Chatbots
+  // const showNewsInNav = windowWidth >= 740 // Adjusted to make room for My Chatbots
+  const showNewsInNav = false // News button temporarily hidden
   const showNewProjectInNav = windowWidth >= 864 // Adjusted to make room for My Chatbots
 
   // Fix for hamburger menu logic to ensure menu is shown until all items are visible in nav
   const showHamburgerMenu =
     (!showMyChatbotsInNav ||
       !showDocsInNav ||
-      !showNewsInNav ||
+      // !showNewsInNav || // News button hidden
       !showNewProjectInNav) &&
     forGeneralPurposeNotLandingpage === false
 
@@ -188,7 +189,7 @@ export function LandingPageHeader({
     if (
       showMyChatbotsInNav &&
       showDocsInNav &&
-      showNewsInNav &&
+      // showNewsInNav && // News button hidden
       showNewProjectInNav
     ) {
       setIsMenuOpen(false)
@@ -198,7 +199,7 @@ export function LandingPageHeader({
     windowWidth,
     showMyChatbotsInNav,
     showDocsInNav,
-    showNewsInNav,
+    // showNewsInNav, // News button hidden
     showNewProjectInNav,
   ])
 
@@ -241,7 +242,12 @@ export function LandingPageHeader({
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           {forGeneralPurposeNotLandingpage === false && (
             <>
-              <Link href="/new" className={classes.link}>
+              <Link
+                href="/new"
+                className={classes.link}
+                role="button"
+                tabIndex={0}
+              >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconSparkles
                     size={20}
@@ -256,6 +262,8 @@ export function LandingPageHeader({
                 </span>
               </Link>
               <Link
+                role="button"
+                tabIndex={0}
                 href="https://docs.uiuc.chat/"
                 className={classes.link}
                 target="_blank"
@@ -293,30 +301,34 @@ export function LandingPageHeader({
         style={{ paddingTop: '16px' }}
       >
         <div
-          className={`relative flex grow items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
+          className={`relative flex grow items-center gap-0 font-bold ${montserrat_heading.variable} font-montserratHeading`}
         >
           <div style={{ width: '2.5rem', height: '2.5rem' }}>
             <img
+              alt="Illinois Logo"
               src="/media/logo_illinois.png"
               width="auto"
               height="100%"
             ></img>
           </div>
-          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
-            Illinois
-          </div>
-          <br />
-          <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[1.8rem]">
-            Chat
+
+          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange-branding] sm:ml-2 sm:text-[1.8rem]">
+            Illinois <span className="text-[--foreground]">Chat</span>
           </div>
         </div>
 
         {/* Navigation links on desktop */}
-        <div className="hidden sm:flex sm:flex-row sm:items-center sm:gap-3">
+        <div
+          role="navigation"
+          aria-label="Main"
+          className="hidden sm:flex sm:flex-row sm:items-center sm:gap-3"
+        >
           {forGeneralPurposeNotLandingpage === false && (
             <>
               {showDocsInNav && (
                 <Link
+                  role="button"
+                  tabIndex={0}
                   href="https://docs.uiuc.chat/"
                   className={classes.link}
                   target="_blank"
@@ -343,6 +355,8 @@ export function LandingPageHeader({
 
               {showNewsInNav && (
                 <Link
+                  role="button"
+                  tabIndex={0}
                   href="http://news.uiuc.chat/"
                   target="_blank"
                   className={classes.link}
@@ -367,7 +381,12 @@ export function LandingPageHeader({
               )}
 
               {showMyChatbotsInNav && (
-                <Link href="/chatbots" className={classes.link}>
+                <Link
+                  href="/chatbots"
+                  className={classes.link}
+                  role="button"
+                  tabIndex={0}
+                >
                   <span className="flex items-center">
                     <IconHome
                       size={18}
@@ -388,7 +407,12 @@ export function LandingPageHeader({
               )}
 
               {showNewProjectInNav && (
-                <Link href="/new" className={classes.link}>
+                <Link
+                  href="/new"
+                  className={classes.link}
+                  role="button"
+                  tabIndex={0}
+                >
                   <span className="flex items-center">
                     <IconSparkles
                       size={18}
@@ -420,15 +444,17 @@ export function LandingPageHeader({
 
           {/* Hamburger menu for small screens */}
           {showHamburgerMenu && (
-            <button
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Toggle Menu"
               className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
               onClick={(e) => toggleMenu(e)}
               ref={menuButtonRef}
               type="button"
-              aria-label="Open menu"
             >
               <Menu2 size={24} strokeWidth={2} color="var(--illinois-orange)" />
-            </button>
+            </div>
           )}
         </div>
 
@@ -452,6 +478,8 @@ export function LandingPageHeader({
                   {/* Show Docs in dropdown whenever not visible in main nav */}
                   {!showDocsInNav && (
                     <Link
+                      role="button"
+                      tabIndex={0}
                       href="https://docs.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       target="_blank"
@@ -477,8 +505,10 @@ export function LandingPageHeader({
                     </Link>
                   )}
 
-                  {!showNewsInNav && (
+                  {/* {!showNewsInNav && (
                     <Link
+                      role="button"
+                      tabIndex={0}
                       href="http://news.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       target="_blank"
@@ -502,11 +532,13 @@ export function LandingPageHeader({
                         </span>
                       </div>
                     </Link>
-                  )}
+                  )} */}
 
                   {/* Show My Chatbots in dropdown whenever not visible in main nav */}
                   {!showMyChatbotsInNav && (
                     <Link
+                      role="button"
+                      tabIndex={0}
                       href="/chatbots"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}
@@ -532,6 +564,8 @@ export function LandingPageHeader({
 
                   {!showNewProjectInNav && (
                     <Link
+                      role="button"
+                      tabIndex={0}
                       href="/new"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
                       onClick={(e) => handleLinkClick(e)}
@@ -788,6 +822,9 @@ const useStyles = createStyles((theme) => ({
 
     '&:hover': {
       backgroundColor: 'rgba(255, 95, 5, 0.05)',
+    },
+    '&:focus': {
+      outline: '2px solid var(--dashboard-button)',
     },
   },
   userAvatar: {

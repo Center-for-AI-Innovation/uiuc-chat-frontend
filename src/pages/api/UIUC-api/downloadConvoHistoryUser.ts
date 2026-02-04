@@ -1,8 +1,7 @@
 import { getBackendUrl } from '~/utils/apiUtils'
 import { type NextApiResponse } from 'next'
-import { type AuthenticatedRequest} from '~/utils/authMiddleware'
+import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
-
 
 export default withCourseAccessFromRequest('any')(handler)
 
@@ -34,9 +33,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 
   if (typeof projectName !== 'string') {
-    return res
-      .status(400)
-      .json({ error: 'projectName must be strings' })
+    return res.status(400).json({ error: 'projectName must be strings' })
   }
 
   if (!isValidEmail(userEmail)) {

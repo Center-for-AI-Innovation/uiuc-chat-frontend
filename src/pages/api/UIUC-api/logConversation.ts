@@ -50,7 +50,9 @@ const logConversation = async (
   let sanitizedConversation: Conversation | null = null
 
   if (!course_name) {
-    return res.status(400).json({ error: 'Missing course_name in request body' })
+    return res
+      .status(400)
+      .json({ error: 'Missing course_name in request body' })
   }
 
   if (!conversation && !delta) {
@@ -103,14 +105,18 @@ const logConversation = async (
           : []
 
     let mergedMessages: Message[] = []
-    if (existingConversation?.messages && Array.isArray(existingConversation.messages) && existingConversation.messages.length > 0) {
+    if (
+      existingConversation?.messages &&
+      Array.isArray(existingConversation.messages) &&
+      existingConversation.messages.length > 0
+    ) {
       // Start with existing messages
       mergedMessages = [...existingConversation.messages]
 
       // Handle edit case: if earliestEditedMessageId is provided, truncate messages from that point
       if (delta.earliestEditedMessageId) {
         const editIndex = mergedMessages.findIndex(
-          (m) => m.id === delta.earliestEditedMessageId
+          (m) => m.id === delta.earliestEditedMessageId,
         )
         if (editIndex >= 0) {
           // Keep only messages BEFORE the edited message (truncate from edit point onwards)
@@ -124,7 +130,9 @@ const logConversation = async (
           // Skip messages without IDs (shouldn't happen, but be safe)
           continue
         }
-        const existingIndex = mergedMessages.findIndex((m) => m.id === deltaMsg.id)
+        const existingIndex = mergedMessages.findIndex(
+          (m) => m.id === deltaMsg.id,
+        )
         if (existingIndex >= 0) {
           // Replace existing message (in place, preserving order)
           mergedMessages[existingIndex] = deltaMsg
@@ -161,7 +169,9 @@ const logConversation = async (
   }
 
   if (!sanitizedConversation) {
-    return res.status(400).json({ error: 'Unable to construct conversation payload' })
+    return res
+      .status(400)
+      .json({ error: 'Unable to construct conversation payload' })
   }
 
   const conversationId = sanitizedConversation.id?.toString?.() || null
@@ -270,17 +280,13 @@ const logConversation = async (
       ),
     },
     outputs: {
-      Assistant: sanitizeForLogging(
-        latestAssistantMessage?.content,
-      ),
+      Assistant: sanitizeForLogging(latestAssistantMessage?.content),
     },
     project_name: 'uiuc-chat-production',
     metadata: {
       projectName: course_name,
       conversation_id: conversationId,
-      tools: sanitizeForLogging(
-        previousUserMessage?.tools,
-      ),
+      tools: sanitizeForLogging(previousUserMessage?.tools),
     }, // "conversation_id" is a SPECIAL KEYWORD. CANNOT BE ALTERED: https://docs.smith.langchain.com/old/monitoring/faq/threads
     // id: conversation.id, // DON'T USE - breaks the threading support
   })

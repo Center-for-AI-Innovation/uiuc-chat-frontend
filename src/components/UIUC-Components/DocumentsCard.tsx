@@ -123,23 +123,23 @@ function DocumentsCard({
             >
               Project Files
             </Title>
-
-            <Button
-              variant="subtle"
-              leftIcon={<IconFileExport size={20} />}
-              onClick={() => setExportModalOpened(true)}
-              className={`
-                ${montserrat_paragraph.variable} 
-                rounded-md bg-[--dashboard-button] px-4
-                font-montserratParagraph text-sm
-                text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] sm:text-base
-              `}
-            >
-              <span className="hidden sm:inline">
-                Export All Documents & Embeddings
-              </span>
-              <span className="inline sm:hidden">Export All</span>
-            </Button>
+            {/*FIXME: Export temporarily disabled because chunks larger than 200 MB aren’t stored in the database.*/}
+            {/*<Button*/}
+            {/*  variant="subtle"*/}
+            {/*  leftIcon={<IconFileExport size={20} />}*/}
+            {/*  onClick={() => setExportModalOpened(true)}*/}
+            {/*  className={`*/}
+            {/*    ${montserrat_paragraph.variable} */}
+            {/*    rounded-md bg-[--dashboard-button] px-4*/}
+            {/*    font-montserratParagraph text-sm*/}
+            {/*    text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] sm:text-base*/}
+            {/*  `}*/}
+            {/*>*/}
+            {/*  <span className="hidden sm:inline">*/}
+            {/*    Export All Documents & Embeddings*/}
+            {/*  </span>*/}
+            {/*  <span className="inline sm:hidden">Export All</span>*/}
+            {/*</Button>*/}
           </div>
         </div>
 

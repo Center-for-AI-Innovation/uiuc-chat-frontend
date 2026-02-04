@@ -6,22 +6,26 @@
 const { getKeycloakBaseUrl } = require('./shared-utils')
 
 async function updateKeycloakRedirectURIs() {
-  const keycloakBaseUrl = getKeycloakBaseUrl();
+  const keycloakBaseUrl = getKeycloakBaseUrl()
   const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM
   const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
   const adminUser = process.env.KEYCLOAK_ADMIN_USERNAME
   const adminPass = process.env.KEYCLOAK_ADMIN_PASSWORD
-  const branchURL = process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}` : null
+  const branchURL = process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL}`
+    : null
 
   // Check if all required environment variables are present
   if (!keycloakBaseUrl || !realm || !clientId || !adminUser || !adminPass) {
-    console.log('Skipping Keycloak configuration update - missing required environment variables')
+    console.log(
+      'Skipping Keycloak configuration update - missing required environment variables',
+    )
     console.log('Required vars:', {
       keycloakBaseUrl: !!keycloakBaseUrl,
       realm: !!realm,
       clientId: !!clientId,
       adminUser: !!adminUser,
-      adminPass: !!adminPass
+      adminPass: !!adminPass,
     })
     return
   }
@@ -47,14 +51,18 @@ async function updateKeycloakRedirectURIs() {
     )
 
     if (!tokenResponse.ok) {
-      console.log('Failed to get Keycloak access token, skipping configuration update')
+      console.log(
+        'Failed to get Keycloak access token, skipping configuration update',
+      )
       return
     }
 
     const { access_token } = await tokenResponse.json()
 
     if (!access_token) {
-      console.log('No access token received from Keycloak, skipping configuration update')
+      console.log(
+        'No access token received from Keycloak, skipping configuration update',
+      )
       return
     }
 
@@ -69,7 +77,9 @@ async function updateKeycloakRedirectURIs() {
     )
 
     if (!clientResponse.ok) {
-      console.log('Failed to get Keycloak client configuration, skipping update')
+      console.log(
+        'Failed to get Keycloak client configuration, skipping update',
+      )
       return
     }
 
@@ -84,11 +94,11 @@ async function updateKeycloakRedirectURIs() {
     // Ensure redirectUris and webOrigins are arrays before creating Sets
     const currentRedirectUris = new Set(client.redirectUris || [])
     const currentWebOrigins = new Set(client.webOrigins || [])
-    
+
     // Track all URLs we're adding for logging
     const addedUrls = {
       redirectUris: {},
-      webOrigins: {}
+      webOrigins: {},
     }
 
     // Use branchURL if available
@@ -96,44 +106,50 @@ async function updateKeycloakRedirectURIs() {
       // Add to redirect URIs
       currentRedirectUris.add(branchURL)
       currentRedirectUris.add(`${branchURL}/*`)
-      
+
       // Add to web origins
       currentWebOrigins.add(branchURL)
-      
+
       // Add to tracking
       addedUrls.redirectUris.branchUrl = branchURL
       addedUrls.redirectUris.branchUrlWildcard = `${branchURL}/*`
       addedUrls.webOrigins.branchUrl = branchURL
-      
+
       console.log(`Adding branch URL: ${branchURL}`)
     } else {
       console.log('No branch URL available - cannot add URLs')
     }
 
     // Update client
-    const updateResponse = await fetch(`${keycloakBaseUrl}admin/realms/${realm}/clients/${client.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${access_token}`,
+    const updateResponse = await fetch(
+      `${keycloakBaseUrl}admin/realms/${realm}/clients/${client.id}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${access_token}`,
+        },
+        body: JSON.stringify({
+          ...client,
+          redirectUris: Array.from(currentRedirectUris),
+          webOrigins: Array.from(currentWebOrigins),
+        }),
       },
-      body: JSON.stringify({
-        ...client,
-        redirectUris: Array.from(currentRedirectUris),
-        webOrigins: Array.from(currentWebOrigins),
-      }),
-    })
+    )
 
     if (updateResponse.ok) {
       console.log('Successfully updated Keycloak client configuration:', {
         branchURL: branchURL || 'not available',
-        addedUrls
+        addedUrls,
       })
     } else {
       console.log('Failed to update Keycloak client configuration')
     }
   } catch (error) {
-    console.log('Error updating Keycloak client configuration (non-fatal):', error.message)
+    console.log(
+      'Error updating Keycloak client configuration (non-fatal):',
+      error.message,
+    )
     // Don't exit with error code - let the build continue
   }
 }
