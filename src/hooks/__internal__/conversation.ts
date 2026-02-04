@@ -63,7 +63,18 @@ export async function fetchConversationHistory(
     })
 
     finalResponse = cleanConversationHistory(cleanedConversations)
-    finalResponse.nextCursor = nextCursor
+    const parsedNextCursor = (() => {
+      if (typeof nextCursor === 'number') {
+        return Number.isFinite(nextCursor) ? nextCursor : null
+      }
+      if (typeof nextCursor === 'string') {
+        const n = Number(nextCursor)
+        return Number.isFinite(n) ? n : null
+      }
+      return null
+    })()
+
+    finalResponse.nextCursor = parsedNextCursor
 
     // Sync with local storage
     const selectedConversation = localStorage.getItem('selectedConversation')
