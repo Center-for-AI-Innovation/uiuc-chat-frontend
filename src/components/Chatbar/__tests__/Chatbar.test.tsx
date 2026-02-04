@@ -31,12 +31,21 @@ const mocks = vi.hoisted(() => ({
   saveConversationToServer: vi.fn(async () => ({})),
 }))
 
-vi.mock('~/hooks/conversationQueries', () => ({
+vi.mock('@/hooks/queries/useDeleteConversation', () => ({
   useDeleteConversation: () => ({ mutate: mocks.deleteConversationMutate }),
+}))
+
+vi.mock('@/hooks/queries/useDeleteAllConversations', () => ({
   useDeleteAllConversations: () => ({
     mutate: mocks.deleteAllConversationsMutate,
   }),
+}))
+
+vi.mock('@/hooks/queries/useUpdateConversation', () => ({
   useUpdateConversation: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
+}))
+
+vi.mock('@/hooks/queries/useFetchConversationHistory', () => ({
   useFetchConversationHistory: () => ({
     data: { pages: [[]] },
     error: null,
@@ -49,7 +58,7 @@ vi.mock('~/hooks/conversationQueries', () => ({
   }),
 }))
 
-vi.mock('~/utils/app/conversation', () => ({
+vi.mock('@/hooks/__internal__/conversation', () => ({
   saveConversationToServer: mocks.saveConversationToServer,
 }))
 

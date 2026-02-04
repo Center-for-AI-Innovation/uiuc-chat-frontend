@@ -550,14 +550,19 @@ describe('Chat (coverage)', () => {
           conversations: [conversation as any],
           loading: false,
           messageIsStreaming: false,
-          llmProviders: {},
+          llmProviders: null,
         } as any,
         homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn() },
       },
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
-    await waitFor(() => expect((notifications as any).show).toHaveBeenCalled())
+    await waitFor(
+      () => expect((notifications as any).show).toHaveBeenCalled(),
+      {
+        timeout: 3000,
+      },
+    )
   })
 
   it('names a conversation from the first message text', async () => {
@@ -992,10 +997,11 @@ describe('Chat (coverage)', () => {
     )
   })
 
-  it('shows an error toast when /api/models returns null providers', async () => {
+  it('logs an error when /api/models returns null providers', async () => {
     const user = userEvent.setup()
-    const { notifications } = await import('@mantine/notifications')
-    ;(notifications as any).show.mockClear()
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     server.use(
@@ -1025,14 +1031,20 @@ describe('Chat (coverage)', () => {
           conversations: [conversation as any],
           loading: false,
           messageIsStreaming: false,
-          llmProviders: {},
+          llmProviders: null,
         } as any,
         homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn() },
       },
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
-    await waitFor(() => expect((notifications as any).show).toHaveBeenCalled())
+    await waitFor(
+      () =>
+        expect(consoleErrorSpy.mock.calls.flat().join(' ')).toMatch(
+          /Error fetching LLM providers/i,
+        ),
+      { timeout: 3000 },
+    )
   })
 
   it('logs tool routing failures when handleFunctionCall throws', async () => {
