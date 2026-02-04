@@ -942,13 +942,12 @@ CRITICAL: The optimized prompt must:
                       color: 'var(--dashboard-button)',
                     }}
                   />
-                  <Text
-                    size="md"
-                    weight={600}
-                    className={`${montserrat_paragraph.variable} select-text font-montserratParagraph text-[--dashboard-foreground]`}
+                  <Title
+                    className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
+                    order={4}
                   >
                     Prompt Engineering Guide
-                  </Text>
+                  </Title>
                 </Flex>
                 <div
                   className="transition-transform duration-200"
