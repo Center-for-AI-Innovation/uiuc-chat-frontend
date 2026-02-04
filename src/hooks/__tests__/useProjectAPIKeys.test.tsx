@@ -2,10 +2,8 @@ import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import {
-  useGetProjectLLMProviders,
-  useSetProjectLLMProviders,
-} from '../useProjectAPIKeys'
+import { useFetchLLMProviders } from '../queries/useFetchLLMProviders'
+import { useUpdateProjectLLMProviders } from '../queries/useUpdateProjectLLMProviders'
 import {
   ProviderNames,
   type AllLLMProviders,
@@ -27,8 +25,8 @@ function makeProviders(): AllLLMProviders {
   return base as unknown as AllLLMProviders
 }
 
-describe('useProjectAPIKeys hooks', () => {
-  it('useGetProjectLLMProviders fetches providers', async () => {
+describe('LLM provider hooks', () => {
+  it('useFetchLLMProviders fetches providers', async () => {
     const providers = makeProviders()
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify(providers), {
@@ -43,7 +41,7 @@ describe('useProjectAPIKeys hooks', () => {
     const Wrapper = createWrapper(queryClient)
 
     const { result } = renderHook(
-      () => useGetProjectLLMProviders({ projectName: 'proj' }),
+      () => useFetchLLMProviders({ projectName: 'proj' }),
       { wrapper: Wrapper },
     )
 
@@ -51,7 +49,7 @@ describe('useProjectAPIKeys hooks', () => {
     expect(result.current.data).toEqual(providers)
   })
 
-  it('useGetProjectLLMProviders throws on non-ok responses', async () => {
+  it('useFetchLLMProviders reports an error on non-ok responses', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
       Promise.resolve(new Response('nope', { status: 500 })),
     )
@@ -62,7 +60,7 @@ describe('useProjectAPIKeys hooks', () => {
     const Wrapper = createWrapper(queryClient)
 
     const { result } = renderHook(
-      () => useGetProjectLLMProviders({ projectName: 'proj' }),
+      () => useFetchLLMProviders({ projectName: 'proj' }),
       { wrapper: Wrapper },
     )
 
@@ -72,8 +70,7 @@ describe('useProjectAPIKeys hooks', () => {
     expect(result.current.error).toBeInstanceOf(Error)
   })
 
-  it('useSetProjectLLMProviders debounces server writes', async () => {
-    vi.useFakeTimers()
+  it('useUpdateProjectLLMProviders debounces server writes', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
       Promise.resolve(
         new Response(JSON.stringify({ ok: true }), {
@@ -86,13 +83,13 @@ describe('useProjectAPIKeys hooks', () => {
     const queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
-        mutations: { retry: false },
+        mutations: { retry: false, gcTime: Infinity },
       },
     })
     const Wrapper = createWrapper(queryClient)
 
     const { result } = renderHook(
-      () => useSetProjectLLMProviders(queryClient),
+      () => useUpdateProjectLLMProviders(queryClient),
       {
         wrapper: Wrapper,
       },
@@ -106,7 +103,7 @@ describe('useProjectAPIKeys hooks', () => {
     // Not fired yet due to debounce
     expect(fetchSpy).not.toHaveBeenCalled()
 
-    await vi.advanceTimersByTimeAsync(1000)
+    await new Promise((resolve) => setTimeout(resolve, 1100))
 
     await expect(Promise.all([p1, p2])).resolves.toBeTruthy()
     expect(fetchSpy).toHaveBeenCalledTimes(1)
@@ -114,11 +111,9 @@ describe('useProjectAPIKeys hooks', () => {
       '/api/UIUC-api/upsertLLMProviders',
       expect.objectContaining({ method: 'POST' }),
     )
+  }, 15_000)
 
-    vi.useRealTimers()
-  })
-
-  it('useSetProjectLLMProviders rejects pending promises and invalidates on error', async () => {
+  it('useUpdateProjectLLMProviders rejects pending promises and invalidates on error', async () => {
     vi.useFakeTimers()
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
@@ -138,7 +133,7 @@ describe('useProjectAPIKeys hooks', () => {
 
     const Wrapper = createWrapper(queryClient)
     const { result } = renderHook(
-      () => useSetProjectLLMProviders(queryClient),
+      () => useUpdateProjectLLMProviders(queryClient),
       {
         wrapper: Wrapper,
       },
@@ -166,7 +161,7 @@ describe('useProjectAPIKeys hooks', () => {
     vi.useRealTimers()
   })
 
-  it('useSetProjectLLMProviders does not resolve promises from later mutations with an earlier in-flight request', async () => {
+  it('useUpdateProjectLLMProviders does not resolve promises from later mutations with an earlier in-flight request', async () => {
     vi.useFakeTimers()
 
     let resolveFirst: (r: Response) => void
@@ -191,7 +186,7 @@ describe('useProjectAPIKeys hooks', () => {
     })
     const Wrapper = createWrapper(queryClient)
     const { result } = renderHook(
-      () => useSetProjectLLMProviders(queryClient),
+      () => useUpdateProjectLLMProviders(queryClient),
       {
         wrapper: Wrapper,
       },

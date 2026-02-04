@@ -14,6 +14,8 @@ export function useDeleteFolder(
     onMutate: async (deletedFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
+      const oldFolder = queryClient.getQueryData(['folders', course_name])
+
       queryClient.setQueryData(
         ['folders', course_name],
         (oldData: FolderWithConversation[] | undefined) => {
@@ -24,18 +26,16 @@ export function useDeleteFolder(
         },
       )
 
-      const oldFolder = queryClient.getQueryData(['folders', course_name])
-
       return { oldFolder, deletedFolder }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       queryClient.setQueryData(['folders', course_name], context?.oldFolder)
       console.error('Error deleting folder from server:', error, context)
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (_data, _variables, _context) => {
       // No need to do anything here because the folders query will be invalidated
     },
-    onSettled: (data, error, variables, context) => {
+    onSettled: (_data, _error, _variables, _context) => {
       queryClient.invalidateQueries({ queryKey: ['folders', course_name] })
       queryClient.invalidateQueries({
         queryKey: ['conversationHistory', course_name],

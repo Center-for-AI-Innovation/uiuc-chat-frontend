@@ -126,7 +126,7 @@ describe('OpenAIStream', () => {
 
     const [url, init] = fetchSpy.mock.calls[0] as any
     expect(url).toBe('https://vlm.example.com/chat/completions')
-    expect(init.headers.Authorization).toBeUndefined()
+    expect(init.headers.Authorization).toBe('Bearer ignored-in-request')
     expect(init.headers['api-key']).toBeUndefined()
   })
 

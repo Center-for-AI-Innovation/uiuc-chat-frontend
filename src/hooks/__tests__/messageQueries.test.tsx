@@ -2,14 +2,16 @@ import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook } from '@testing-library/react'
-import { useDeleteMessages } from '../messageQueries'
+import { useDeleteMessages } from '../queries/useDeleteMessages'
 import type { Message } from '~/types/chat'
 
-vi.mock('~/utils/app/message', () => ({
+vi.mock('@/hooks/__internal__/message', () => ({
   deleteMessagesFromServer: vi.fn(),
 }))
 
-const { deleteMessagesFromServer } = await import('~/utils/app/message')
+const { deleteMessagesFromServer } = await import(
+  '@/hooks/__internal__/message'
+)
 
 describe('useDeleteMessages', () => {
   it('maps deletedMessages to messageIds', async () => {
