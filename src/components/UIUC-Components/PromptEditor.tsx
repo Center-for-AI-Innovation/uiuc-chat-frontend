@@ -46,8 +46,8 @@ import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
 import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
 import {
   DEFAULT_SYSTEM_PROMPT,
@@ -262,6 +262,8 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const { data: defaultPostPrompt, refetch: refetchDefaultPostPrompt } =
     useFetchDefaultPostPrompt()
   const { mutateAsync: routeChatAsync } = useRouteChat()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useSetCourseMetadata(project_name)
   const [
     linkGeneratorOpened,
     { open: openLinkGenerator, close: closeLinkGenerator },
@@ -388,7 +390,6 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const handleSystemPromptSubmit = async (
     newSystemPrompt: string | undefined,
   ) => {
-    let success = false
     if (courseMetadata && project_name) {
       const updatedCourseMetadata = {
         ...courseMetadata,
@@ -397,17 +398,17 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         documentsOnly,
         systemPromptOnly,
       }
-      success = await callSetCourseMetadata(project_name, updatedCourseMetadata)
-      if (success) {
+      try {
+        await setCourseMetadataAsync(updatedCourseMetadata)
         setCourseMetadata(updatedCourseMetadata)
+        showToastOnPromptUpdate(theme)
+        return
+      } catch {
+        // fall through to error handling
       }
     }
-    if (!success) {
-      console.log('Error updating course metadata')
-      showToastOnPromptUpdate(theme, true)
-    } else {
-      showToastOnPromptUpdate(theme)
-    }
+    console.log('Error updating course metadata')
+    showToastOnPromptUpdate(theme, true)
   }
 
   // Reset system prompt
@@ -420,24 +421,21 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         documentsOnly: false,
         systemPromptOnly: false,
       }
-      const success = await callSetCourseMetadata(
-        project_name,
-        updatedCourseMetadata,
-      )
-      if (!success) {
-        alert('Error resetting system prompt')
-        showToastOnPromptUpdate(theme, true, true)
-      } else {
+      try {
+        await setCourseMetadataAsync(updatedCourseMetadata)
         setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT ?? '')
         setCourseMetadata(updatedCourseMetadata)
         setGuidedLearning(false)
         setDocumentsOnly(false)
         setSystemPromptOnly(false)
         showToastOnPromptUpdate(theme, false, true)
+        return
+      } catch {
+        // fall through to error handling
       }
-    } else {
-      alert('Error resetting system prompt')
     }
+    alert('Error resetting system prompt')
+    showToastOnPromptUpdate(theme, true, true)
   }
 
   // Update system prompt with toggle changes
@@ -499,11 +497,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     } as CourseMetadata
 
     try {
-      const success = await callSetCourseMetadata(project_name, updatedMetadata)
-      if (!success) {
-        showPromptToast(theme, 'Error', 'Failed to update settings', true)
-        return
-      }
+      await setCourseMetadataAsync(updatedMetadata)
 
       setCourseMetadata(updatedMetadata)
       initialSwitchStateRef.current = currentSwitchState

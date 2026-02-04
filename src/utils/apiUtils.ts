@@ -1,10 +1,6 @@
 // utils/apiUtils.ts
 import { CoreMessage } from 'ai'
 import { Conversation, Message } from '~/types/chat'
-import {
-  type CourseMetadata,
-  type CourseMetadataOptionalForUpsert,
-} from '~/types/courseMetadata'
 // Configuration for runtime environment
 
 export const getBaseUrl = () => {
@@ -31,47 +27,6 @@ export const getBackendUrl = (): string => {
 
   // Remove trailing slash if present for consistency
   return backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl
-}
-
-/**
- * Calls the API to set or update course metadata.
- * @param {string} courseName - The name of the course.
- * @param {CourseMetadata | CourseMetadataOptionalForUpsert} courseMetadata - The metadata of the course.
- * @returns {Promise<boolean>} - A promise that resolves to a boolean indicating success or failure.
- */
-export const callSetCourseMetadata = async (
-  courseName: string,
-  courseMetadata: CourseMetadata | CourseMetadataOptionalForUpsert,
-): Promise<boolean> => {
-  try {
-    const endpoint = '/api/UIUC-api/upsertCourseMetadata'
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ courseName, courseMetadata }),
-    })
-    const data = await response.json()
-
-    if (data.success) {
-      // console.debug('Course metadata updated successfully', {
-      //   course_name: courseName,
-      //   course_metadata: courseMetadata,
-      // })
-      return true
-    } else {
-      console.error('Error setting course metadata', {
-        course_name: courseName,
-        error: data.error,
-      })
-      return false
-    }
-  } catch (error) {
-    console.error('Error setting course metadata', {
-      course_name: courseName,
-      error,
-    })
-    return false
-  }
 }
 
 /**
@@ -211,7 +166,6 @@ export function convertConversationToCoreMessagesWithoutSystem(
 
 // Export all functions as part of the API Utils module
 export default {
-  callSetCourseMetadata,
   fetchPresignedUrl,
 }
 /**

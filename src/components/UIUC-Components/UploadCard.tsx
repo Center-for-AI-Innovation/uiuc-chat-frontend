@@ -14,7 +14,7 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
 import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import SetExampleQuestions from './SetExampleQuestions'
@@ -104,6 +104,8 @@ export const UploadCard = memo(function UploadCard({
   )
   const queryClient = useQueryClient()
   const uploadToS3Mutation = useUploadToS3()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useSetCourseMetadata(projectName)
   const [introMessage, setIntroMessage] = useState(
     initialMetadata?.course_intro_message || '',
   )
@@ -304,16 +306,12 @@ export const UploadCard = memo(function UploadCard({
                 onClick={async () => {
                   if (metadata) {
                     metadata.project_description = projectDescription
-                    const resp = await callSetCourseMetadata(
-                      projectName,
-                      metadata,
-                    )
-                    if (!resp) {
+                    await setCourseMetadataAsync(metadata).catch(() => {
                       console.log(
                         'Error upserting course metadata for course: ',
                         projectName,
                       )
-                    }
+                    })
                   }
                 }}
               >
@@ -373,16 +371,12 @@ export const UploadCard = memo(function UploadCard({
                           metadata.course_intro_message = introMessage
                           // Update the courseMetadata object
 
-                          const resp = await callSetCourseMetadata(
-                            projectName,
-                            metadata,
-                          )
-                          if (!resp) {
+                          await setCourseMetadataAsync(metadata).catch(() => {
                             console.log(
                               'Error upserting course metadata for course: ',
                               projectName,
                             )
-                          }
+                          })
                         }
                       }}
                     >
@@ -446,7 +440,7 @@ export const UploadCard = memo(function UploadCard({
                         })
                       if (banner_s3_image && metadata) {
                         metadata.banner_image_s3 = banner_s3_image
-                        await callSetCourseMetadata(projectName, metadata)
+                        await setCourseMetadataAsync(metadata)
                       }
                     }
                   }}

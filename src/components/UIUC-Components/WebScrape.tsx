@@ -25,7 +25,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useRouter } from 'next/router'
 import { useMediaQuery } from '@mantine/hooks'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Montserrat } from 'next/font/google'
@@ -93,6 +93,8 @@ export const WebScrape = ({
     'discussions',
   ])
   const ingestCanvasMutation = useIngestCanvas(courseName)
+  const { mutateAsync: setCourseMetadataAsync } =
+    useSetCourseMetadata(courseName)
 
   const handleCanvasOptionChange = (value: string) => {
     if (selectedCanvasOptions.includes(value)) {
@@ -118,7 +120,7 @@ export const WebScrape = ({
 
       if (is_new_course) {
         // set course exists in new metadata endpoint
-        const response = await callSetCourseMetadata(courseName, {
+        await setCourseMetadataAsync({
           course_owner: current_user_email,
           // Don't set properties we don't know about. We'll just upsert and use the defaults.
           course_admins: [],
@@ -138,9 +140,6 @@ export const WebScrape = ({
           allow_logged_in_users: undefined,
           is_frozen: undefined,
         })
-        if (!response) {
-          throw new Error('Error while setting course metadata')
-        }
       }
 
       let data = null

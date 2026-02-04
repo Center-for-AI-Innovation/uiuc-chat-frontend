@@ -12,7 +12,7 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
 import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 
 const BrandingForm = ({
@@ -24,6 +24,8 @@ const BrandingForm = ({
 }) => {
   const queryClient = useQueryClient()
   const uploadToS3Mutation = useUploadToS3()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useSetCourseMetadata(project_name)
   const [introMessage, setIntroMessage] = useState('')
   const [isIntroMessageUpdated, setIsIntroMessageUpdated] = useState(false)
   const [metadata, setMetadata] = useState<CourseMetadata | null>(null)
@@ -69,7 +71,7 @@ const BrandingForm = ({
 
       if (banner_s3_image && metadata) {
         metadata.banner_image_s3 = banner_s3_image
-        await callSetCourseMetadata(project_name, metadata)
+        await setCourseMetadataAsync(metadata)
       }
     }
   }
@@ -119,17 +121,12 @@ const BrandingForm = ({
                   metadata.course_intro_message = introMessage
                   // Update the courseMetadata object
 
-                  const resp = await callSetCourseMetadata(
-                    project_name,
-                    metadata,
-                  )
-
-                  if (!resp) {
+                  await setCourseMetadataAsync(metadata).catch(() => {
                     console.log(
                       'Error upserting course metadata for course: ',
                       project_name,
                     )
-                  }
+                  })
                 }
               }}
             >
@@ -149,17 +146,12 @@ const BrandingForm = ({
                     metadata.course_intro_message = introMessage
                     // Update the courseMetadata object
 
-                    const resp = await callSetCourseMetadata(
-                      project_name,
-                      metadata,
-                    )
-
-                    if (!resp) {
+                    await setCourseMetadataAsync(metadata).catch(() => {
                       console.log(
                         'Error upserting course metadata for course: ',
                         project_name,
                       )
-                    }
+                    })
                   }
                 }}
               >
