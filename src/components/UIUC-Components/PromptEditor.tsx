@@ -42,7 +42,7 @@ import { v4 as uuidv4 } from 'uuid'
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
 import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
-import CustomSwitch from '~/components/Switches/CustomSwitch'
+import { Switch } from '@/components/shadcn/ui/switch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -1644,40 +1644,52 @@ CRITICAL: The optimized prompt must:
                 </Title>
 
                 <Flex direction="column" gap="md">
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Smart Document Search"
                     tooltip="Optimizes queries to better search through course materials."
                     checked={vectorSearchRewrite}
-                    onChange={(value: boolean) => {
+                    onCheckedChange={(value: boolean) => {
                       handleSettingChange({
                         vector_search_rewrite_disabled: !value,
                       })
                     }}
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Guided Learning"
                     tooltip="AI provides hints instead of direct answers to encourage learning."
                     checked={guidedLearning}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ guidedLearning: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Document-Based References Only"
                     tooltip="Restricts AI to only use information from provided documents."
                     checked={documentsOnly}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ documentsOnly: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Bypass Illinois Chat's internal prompting"
                     tooltip="Full control over bot behavior without internal prompting."
                     checked={systemPromptOnly}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ systemPromptOnly: value })
                     }
                   />
@@ -1978,11 +1990,14 @@ CRITICAL: The optimized prompt must:
                 </Indicator>
               </Flex>
 
-              <CustomSwitch
+              <Switch
+                variant="labeled"
+                showLabels
+                showThumbIcon
                 label="Smart Document Search"
                 tooltip="When enabled, Illinois Chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
                 checked={vectorSearchRewrite}
-                onChange={(value: boolean) => {
+                onCheckedChange={(value: boolean) => {
                   handleSettingChange({
                     vector_search_rewrite_disabled: !value,
                   })
@@ -2023,29 +2038,38 @@ CRITICAL: The optimized prompt must:
 
               <Flex direction="column" gap="md">
                 <div className="flex flex-col gap-1">
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Guided Learning"
                     tooltip="When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources."
                     checked={guidedLearning}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ guidedLearning: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Document-Based References Only"
                     tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
                     checked={documentsOnly}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ documentsOnly: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Bypass Illinois Chat's internal prompting"
                     tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
                     checked={systemPromptOnly}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ systemPromptOnly: value })
                     }
                   />
