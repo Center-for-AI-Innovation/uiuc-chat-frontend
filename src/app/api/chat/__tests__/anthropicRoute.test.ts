@@ -133,7 +133,10 @@ describe('app/api/chat/anthropic POST', () => {
     const req = new Request('http://localhost', {
       method: 'POST',
       body: JSON.stringify({
-        chatBody: { conversation: null, llmProviders: { Anthropic: { apiKey: 'k' } } },
+        chatBody: {
+          conversation: null,
+          llmProviders: { Anthropic: { apiKey: 'k' } },
+        },
       }),
     })
     const res = await POST(req as any)
@@ -144,7 +147,10 @@ describe('app/api/chat/anthropic POST', () => {
     const req = new Request('http://localhost', {
       method: 'POST',
       body: JSON.stringify({
-        chatBody: { conversation: makeConversation(), llmProviders: { Anthropic: {} } },
+        chatBody: {
+          conversation: makeConversation(),
+          llmProviders: { Anthropic: {} },
+        },
       }),
     })
     const res = await POST(req as any)

@@ -12,7 +12,12 @@ describe('upsertMessageToServer', () => {
     )
 
     await expect(
-      upsertMessageToServer(makeMessage(), 'conv-1', 'user@example.com', 'TEST101'),
+      upsertMessageToServer(
+        makeMessage(),
+        'conv-1',
+        'user@example.com',
+        'TEST101',
+      ),
     ).resolves.toEqual({ id: 'm1' })
   })
 
@@ -40,7 +45,12 @@ describe('upsertMessageToServer', () => {
     )
 
     await expect(
-      upsertMessageToServer(makeMessage(), 'conv-1', 'user@example.com', 'TEST101'),
+      upsertMessageToServer(
+        makeMessage(),
+        'conv-1',
+        'user@example.com',
+        'TEST101',
+      ),
     ).rejects.toThrow(/Server error/)
   })
 
@@ -49,8 +59,12 @@ describe('upsertMessageToServer', () => {
 
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy
-      .mockRejectedValueOnce(Object.assign(new Error('reset'), { code: 'ECONNRESET' }))
-      .mockRejectedValueOnce(Object.assign(new Error('reset'), { code: 'ECONNRESET' }))
+      .mockRejectedValueOnce(
+        Object.assign(new Error('reset'), { code: 'ECONNRESET' }),
+      )
+      .mockRejectedValueOnce(
+        Object.assign(new Error('reset'), { code: 'ECONNRESET' }),
+      )
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ ok: true }), {
           status: 200,
@@ -77,7 +91,12 @@ describe('upsertMessageToServer', () => {
     fetchSpy.mockRejectedValueOnce(new Error('boom'))
 
     await expect(
-      upsertMessageToServer(makeMessage(), 'conv-1', 'user@example.com', 'TEST101'),
+      upsertMessageToServer(
+        makeMessage(),
+        'conv-1',
+        'user@example.com',
+        'TEST101',
+      ),
     ).rejects.toThrow(/boom/)
     expect(fetchSpy).toHaveBeenCalledTimes(1)
   })
@@ -86,7 +105,9 @@ describe('upsertMessageToServer', () => {
 describe('deleteMessagesFromServer (deprecated)', () => {
   it('resolves on success', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 200 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('', { status: 200 }),
+    )
 
     await expect(
       deleteMessagesFromServer(['m1', 'm2'], 'TEST101', 'user@example.com'),
@@ -113,10 +134,16 @@ describe('deleteMessagesFromServer (deprecated)', () => {
 
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy
-      .mockRejectedValueOnce(Object.assign(new Error('reset'), { code: 'ECONNRESET' }))
+      .mockRejectedValueOnce(
+        Object.assign(new Error('reset'), { code: 'ECONNRESET' }),
+      )
       .mockResolvedValueOnce(new Response('', { status: 200 }))
 
-    const promise = deleteMessagesFromServer(['m1'], 'TEST101', 'user@example.com')
+    const promise = deleteMessagesFromServer(
+      ['m1'],
+      'TEST101',
+      'user@example.com',
+    )
 
     await vi.runAllTimersAsync()
     await expect(promise).resolves.toBeUndefined()

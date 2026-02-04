@@ -13,12 +13,17 @@ function makeAuth(overrides: Partial<any> = {}) {
 
 describe('get_user_permission', () => {
   it('throws when course metadata is missing/empty', () => {
-    expect(() => get_user_permission({} as any, makeAuth())).toThrow('No course metadata')
+    expect(() => get_user_permission({} as any, makeAuth())).toThrow(
+      'No course metadata',
+    )
   })
 
   it('returns no_permission while auth is loading or erroring', () => {
     expect(
-      get_user_permission({ is_private: true } as any, makeAuth({ isLoading: true })),
+      get_user_permission(
+        { is_private: true } as any,
+        makeAuth({ isLoading: true }),
+      ),
     ).toBe('no_permission')
 
     expect(
@@ -36,17 +41,25 @@ describe('get_user_permission', () => {
       course_admins: ['admin@example.com'],
     }
 
-    expect(get_user_permission(meta, makeAuth({ isAuthenticated: false }))).toBe('view')
+    expect(
+      get_user_permission(meta, makeAuth({ isAuthenticated: false })),
+    ).toBe('view')
     expect(
       get_user_permission(
         meta,
-        makeAuth({ isAuthenticated: true, user: { profile: { email: 'owner@example.com' } } }),
+        makeAuth({
+          isAuthenticated: true,
+          user: { profile: { email: 'owner@example.com' } },
+        }),
       ),
     ).toBe('edit')
     expect(
       get_user_permission(
         meta,
-        makeAuth({ isAuthenticated: true, user: { profile: { email: 'someone@example.com' } } }),
+        makeAuth({
+          isAuthenticated: true,
+          user: { profile: { email: 'someone@example.com' } },
+        }),
       ),
     ).toBe('view')
   })
@@ -60,37 +73,53 @@ describe('get_user_permission', () => {
       allow_logged_in_users: false,
     }
 
-    expect(get_user_permission(meta, makeAuth({ isAuthenticated: false }))).toBe('no_permission')
+    expect(
+      get_user_permission(meta, makeAuth({ isAuthenticated: false })),
+    ).toBe('no_permission')
     expect(
       get_user_permission(
         meta,
-        makeAuth({ isAuthenticated: true, user: { profile: { email: 'owner@example.com' } } }),
+        makeAuth({
+          isAuthenticated: true,
+          user: { profile: { email: 'owner@example.com' } },
+        }),
       ),
     ).toBe('edit')
     expect(
       get_user_permission(
         meta,
-        makeAuth({ isAuthenticated: true, user: { profile: { email: 'admin@example.com' } } }),
+        makeAuth({
+          isAuthenticated: true,
+          user: { profile: { email: 'admin@example.com' } },
+        }),
       ),
     ).toBe('edit')
     expect(
       get_user_permission(
         meta,
-        makeAuth({ isAuthenticated: true, user: { profile: { email: 'approved@example.com' } } }),
+        makeAuth({
+          isAuthenticated: true,
+          user: { profile: { email: 'approved@example.com' } },
+        }),
       ),
     ).toBe('view')
     expect(
       get_user_permission(
         { ...meta, allow_logged_in_users: true },
-        makeAuth({ isAuthenticated: true, user: { profile: { email: 'x@example.com' } } }),
+        makeAuth({
+          isAuthenticated: true,
+          user: { profile: { email: 'x@example.com' } },
+        }),
       ),
     ).toBe('view')
     expect(
       get_user_permission(
         meta,
-        makeAuth({ isAuthenticated: true, user: { profile: { email: 'x@example.com' } } }),
+        makeAuth({
+          isAuthenticated: true,
+          user: { profile: { email: 'x@example.com' } },
+        }),
       ),
     ).toBe('no_permission')
   })
 })
-

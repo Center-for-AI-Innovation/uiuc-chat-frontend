@@ -35,4 +35,3 @@ describe('UIUC-api/getMaintenanceModeDetails', () => {
     expect(res2.status).toHaveBeenCalledWith(500)
   })
 })
-

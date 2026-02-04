@@ -32,7 +32,10 @@ import OpenAIProviderInput from '../OpenAIProviderInput'
 import SambaNovaProviderInput from '../SambaNovaProviderInput'
 import WebLLMProviderInput from '../WebLLMProviderInput'
 
-function useFormHarness(defaultValues: any, onSubmit: () => Promise<void> | void) {
+function useFormHarness(
+  defaultValues: any,
+  onSubmit: () => Promise<void> | void,
+) {
   return useForm({
     defaultValues,
     onSubmit: async () => {
@@ -203,7 +206,9 @@ describe('Provider inputs (coverage)', () => {
     )
 
     expect(screen.getAllByTestId('model-toggles').length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/bad key|bad endpoint/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/bad key|bad endpoint/i).length).toBeGreaterThan(
+      0,
+    )
 
     // Azure endpoint field is wired (visible while enabled).
     const endpointInput = await screen.findByLabelText(/Azure Endpoint/i)
@@ -283,7 +288,10 @@ describe('Provider inputs (coverage)', () => {
     }
 
     function WebLLMHarness({ enabled }: { enabled: boolean }) {
-      const form = useFormHarness({ providers: { WebLLM: { enabled } } }, onSubmit)
+      const form = useFormHarness(
+        { providers: { WebLLM: { enabled } } },
+        onSubmit,
+      )
       return (
         <WebLLMProviderInput
           provider={{ enabled } as any}
@@ -358,23 +366,32 @@ describe('Provider inputs (coverage)', () => {
 
     // SambaNova only shows model toggles when apiKey is present.
     expect(
-      within(screen.getByTestId('samba-with-key')).getAllByTestId('model-toggles')
-        .length,
+      within(screen.getByTestId('samba-with-key')).getAllByTestId(
+        'model-toggles',
+      ).length,
     ).toBeGreaterThan(0)
     expect(
-      within(screen.getByTestId('samba-empty-key')).queryByTestId('model-toggles'),
+      within(screen.getByTestId('samba-empty-key')).queryByTestId(
+        'model-toggles',
+      ),
     ).toBeNull()
 
     // setTimeout-submitting providers (toggle should call onSubmit after timers run)
-    await user.click(screen.getByRole('switch', { name: /Enable Ollama provider/i }))
+    await user.click(
+      screen.getByRole('switch', { name: /Enable Ollama provider/i }),
+    )
     await user.click(
       screen.getByRole('switch', { name: /Enable NCSA Hosted LLMs provider/i }),
     )
     await user.click(
       screen.getByRole('switch', { name: /Enable NCSA Hosted VLMs provider/i }),
     )
-    await user.click(screen.getByRole('switch', { name: /Enable WebLLM provider/i }))
-    await user.click(screen.getByRole('switch', { name: /Enable OpenAI provider/i }))
+    await user.click(
+      screen.getByRole('switch', { name: /Enable WebLLM provider/i }),
+    )
+    await user.click(
+      screen.getByRole('switch', { name: /Enable OpenAI provider/i }),
+    )
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled())
   })

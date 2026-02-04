@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-import { createTestQueryClient, renderWithProviders } from '~/test-utils/renderWithProviders'
+import {
+  createTestQueryClient,
+  renderWithProviders,
+} from '~/test-utils/renderWithProviders'
 
 vi.mock('framer-motion', () => ({
   motion: new Proxy(
@@ -19,7 +22,11 @@ function Harness({ Component, queryClient }: any) {
   return (
     <div>
       <div data-testid="files">{JSON.stringify(files)}</div>
-      <Component project_name="CS101" setUploadFiles={setFiles} queryClient={queryClient} />
+      <Component
+        project_name="CS101"
+        setUploadFiles={setFiles}
+        queryClient={queryClient}
+      />
     </div>
   )
 }
@@ -30,14 +37,16 @@ describe('CanvasIngestForm', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const originalSetTimeout = globalThis.setTimeout
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: any) => {
-      if (ms === 8000) {
-        fn()
-        // @ts-expect-error - minimal timer handle for tests
-        return 0
-      }
-      return originalSetTimeout(fn, ms)
-    })
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(
+      (fn: any, ms?: any) => {
+        if (ms === 8000) {
+          fn()
+          // @ts-expect-error - minimal timer handle for tests
+          return 0
+        }
+        return originalSetTimeout(fn, ms)
+      },
+    )
 
     globalThis.__TEST_ROUTER__ = {
       asPath: '/CS101/upload',
@@ -63,10 +72,13 @@ describe('CanvasIngestForm', () => {
 
     const { default: CanvasIngestForm } = await import('../CanvasIngestForm')
 
-    renderWithProviders(<Harness Component={CanvasIngestForm} queryClient={queryClient} />, {
-      queryClient,
-      homeContext: { dispatch: vi.fn() },
-    })
+    renderWithProviders(
+      <Harness Component={CanvasIngestForm} queryClient={queryClient} />,
+      {
+        queryClient,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
 
     await user.click(await screen.findByText(/Configure import/i))
 
@@ -79,7 +91,9 @@ describe('CanvasIngestForm', () => {
     await user.click(screen.getByLabelText('Files'))
     await user.click(screen.getByLabelText('Files'))
 
-    const ingestBtn = screen.getByRole('button', { name: /Ingest Canvas Content/i })
+    const ingestBtn = screen.getByRole('button', {
+      name: /Ingest Canvas Content/i,
+    })
     await waitFor(() => expect(ingestBtn).toBeEnabled())
     await user.click(ingestBtn)
 
@@ -100,14 +114,16 @@ describe('CanvasIngestForm', () => {
     const alertSpy = vi.spyOn(globalThis, 'alert').mockImplementation(() => {})
 
     const originalSetTimeout = globalThis.setTimeout
-    vi.spyOn(globalThis, 'setTimeout').mockImplementation((fn: any, ms?: any) => {
-      if (ms === 8000) {
-        fn()
-        // @ts-expect-error - minimal timer handle for tests
-        return 0
-      }
-      return originalSetTimeout(fn, ms)
-    })
+    vi.spyOn(globalThis, 'setTimeout').mockImplementation(
+      (fn: any, ms?: any) => {
+        if (ms === 8000) {
+          fn()
+          // @ts-expect-error - minimal timer handle for tests
+          return 0
+        }
+        return originalSetTimeout(fn, ms)
+      },
+    )
 
     globalThis.__TEST_ROUTER__ = {
       asPath: '/CS101/upload',
@@ -131,10 +147,13 @@ describe('CanvasIngestForm', () => {
     const queryClient = createTestQueryClient()
     const { default: CanvasIngestForm } = await import('../CanvasIngestForm')
 
-    renderWithProviders(<Harness Component={CanvasIngestForm} queryClient={queryClient} />, {
-      queryClient,
-      homeContext: { dispatch: vi.fn() },
-    })
+    renderWithProviders(
+      <Harness Component={CanvasIngestForm} queryClient={queryClient} />,
+      {
+        queryClient,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
 
     await user.click(await screen.findByText(/Configure import/i))
     fireEvent.change(
@@ -142,7 +161,9 @@ describe('CanvasIngestForm', () => {
       { target: { value: 'https://canvas.illinois.edu/courses/456' } },
     )
 
-    const ingestBtn = screen.getByRole('button', { name: /Ingest Canvas Content/i })
+    const ingestBtn = screen.getByRole('button', {
+      name: /Ingest Canvas Content/i,
+    })
     await waitFor(() => expect(ingestBtn).toBeEnabled())
     await user.click(ingestBtn)
 

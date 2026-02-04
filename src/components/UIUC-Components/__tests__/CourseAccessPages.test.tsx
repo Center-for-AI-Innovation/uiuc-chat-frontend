@@ -23,19 +23,19 @@ describe('Course access pages', () => {
     renderWithProviders(
       <CanViewOnlyCourse
         course_name="CS101"
-        course_metadata={{ course_owner: 'owner@example.com', course_admins: ['a@example.com'] } as any}
+        course_metadata={
+          {
+            course_owner: 'owner@example.com',
+            course_admins: ['a@example.com'],
+          } as any
+        }
       />,
     )
 
-    expect(
-      screen.getByText(/You cannot edit this page/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/You cannot edit this page/i)).toBeInTheDocument()
     expect(
       screen.getByRole('link', { name: /uiuc\.chat\/CS101/i }),
-    ).toHaveAttribute(
-      'href',
-      '/CS101/chat',
-    )
+    ).toHaveAttribute('href', '/CS101/chat')
     expect(screen.getByText(/owner@example\.com/i)).toBeInTheDocument()
     expect(screen.getByText(/a@example\.com/i)).toBeInTheDocument()
   })
@@ -50,7 +50,10 @@ describe('Course access pages', () => {
     server.use(
       http.get('*/api/UIUC-api/getCourseMetadata', async () => {
         return HttpResponse.json({
-          course_metadata: { course_owner: 'owner@example.com', course_admins: [] },
+          course_metadata: {
+            course_owner: 'owner@example.com',
+            course_admins: [],
+          },
         })
       }),
     )
@@ -71,7 +74,10 @@ describe('Course access pages', () => {
     server.use(
       http.get('*/api/UIUC-api/getCourseMetadata', async () => {
         return HttpResponse.json({
-          course_metadata: { course_owner: 'owner@example.com', course_admins: [] },
+          course_metadata: {
+            course_owner: 'owner@example.com',
+            course_admins: [],
+          },
         })
       }),
     )

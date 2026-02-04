@@ -37,9 +37,9 @@ describe('Folder', () => {
     expect(await screen.findByText('child')).toBeInTheDocument()
 
     // Rename: click the first action button (pencil) -> input -> Enter triggers update.
-    const actionButtons = Array.from(container.querySelectorAll('button')).filter(
-      (b) => b !== screen.getByRole('button', { name: /folder 1/i }),
-    )
+    const actionButtons = Array.from(
+      container.querySelectorAll('button'),
+    ).filter((b) => b !== screen.getByRole('button', { name: /folder 1/i }))
     expect(actionButtons.length).toBeGreaterThanOrEqual(2)
     await user.click(actionButtons[0]!)
     const input = await screen.findByRole('textbox')
@@ -48,13 +48,13 @@ describe('Folder', () => {
     expect(handleUpdateFolder).toHaveBeenCalledWith('f1', 'Renamed')
 
     // Delete: click trash action then confirm check.
-    const buttonsAfterRename = Array.from(container.querySelectorAll('button')).filter(
-      (b) => b !== screen.getByRole('button', { name: /folder 1/i }),
-    )
+    const buttonsAfterRename = Array.from(
+      container.querySelectorAll('button'),
+    ).filter((b) => b !== screen.getByRole('button', { name: /folder 1/i }))
     await user.click(buttonsAfterRename.at(-1)!)
-    const confirmButtons = Array.from(container.querySelectorAll('button')).filter(
-      (b) => b !== screen.getByRole('button', { name: /folder 1/i }),
-    )
+    const confirmButtons = Array.from(
+      container.querySelectorAll('button'),
+    ).filter((b) => b !== screen.getByRole('button', { name: /folder 1/i }))
     // click until delete is called (check then cancel).
     for (const b of confirmButtons) {
       await user.click(b)
@@ -63,4 +63,3 @@ describe('Folder', () => {
     expect(handleDeleteFolder).toHaveBeenCalledWith('f1')
   })
 })
-

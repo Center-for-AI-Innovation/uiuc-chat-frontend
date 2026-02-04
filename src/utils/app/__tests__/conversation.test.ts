@@ -53,7 +53,11 @@ describe('conversation utils', () => {
       ],
     })
 
-    const payload = createLogConversationPayload('CS101', conversation, conversation.messages[1] as any)
+    const payload = createLogConversationPayload(
+      'CS101',
+      conversation,
+      conversation.messages[1] as any,
+    )
     expect(payload).toMatchObject({
       course_name: 'CS101',
       delta: {
@@ -101,13 +105,21 @@ describe('conversation utils', () => {
       ],
     })
 
-    const payload = createLogConversationPayload('CS101', conversation, conversation.messages[1] as any)
-    expect((payload as any).delta.messagesDelta).toEqual([conversation.messages[1]])
+    const payload = createLogConversationPayload(
+      'CS101',
+      conversation,
+      conversation.messages[1] as any,
+    )
+    expect((payload as any).delta.messagesDelta).toEqual([
+      conversation.messages[1],
+    ])
   })
 
   it('createLogConversationPayload returns full conversation when message is null', () => {
     const conversation = makeConversation({ id: 'c9' })
-    expect(createLogConversationPayload('CS101', conversation, null as any)).toEqual({
+    expect(
+      createLogConversationPayload('CS101', conversation, null as any),
+    ).toEqual({
       course_name: 'CS101',
       conversation,
     })
@@ -121,7 +133,15 @@ describe('conversation utils', () => {
           role: 'assistant',
           content: 'x',
           contexts: [null, { id: 1 } as any],
-          tools: [{ id: 't1', name: 't', readableName: 't', description: 'd', contexts: [null, { id: 2 } as any] }] as any,
+          tools: [
+            {
+              id: 't1',
+              name: 't',
+              readableName: 't',
+              description: 'd',
+              contexts: [null, { id: 2 } as any],
+            },
+          ] as any,
         } as any,
       ],
     })
@@ -132,7 +152,10 @@ describe('conversation utils', () => {
   })
 
   it('reconstructConversation falls back and normalizes missing messages', () => {
-    const fallback = makeConversation({ id: 'fallback', messages: undefined as any })
+    const fallback = makeConversation({
+      id: 'fallback',
+      messages: undefined as any,
+    })
     const rebuilt = reconstructConversation(undefined, fallback)!
     expect(rebuilt.id).toBe('fallback')
     expect(rebuilt.messages).toEqual([])
@@ -145,7 +168,9 @@ describe('conversation utils', () => {
 
     const ok = saveConversationToLocalStorage(conversation)
     expect(ok).toBe(true)
-    expect(JSON.parse(localStorage.getItem('selectedConversation') || '{}').id).toBe('c1')
+    expect(
+      JSON.parse(localStorage.getItem('selectedConversation') || '{}').id,
+    ).toBe('c1')
   })
 
   it('saveConversationToLocalStorage preserves feedback on the last message', () => {
@@ -163,8 +188,14 @@ describe('conversation utils', () => {
 
     const ok = saveConversationToLocalStorage(conversation)
     expect(ok).toBe(true)
-    const saved = JSON.parse(localStorage.getItem('selectedConversation') || '{}')
-    expect(saved.messages[1]?.feedback).toEqual({ isPositive: true, category: 'c', details: 'd' })
+    const saved = JSON.parse(
+      localStorage.getItem('selectedConversation') || '{}',
+    )
+    expect(saved.messages[1]?.feedback).toEqual({
+      isPositive: true,
+      category: 'c',
+      details: 'd',
+    })
   })
 
   it('saveConversationToLocalStorage returns false when there are no messages', () => {
@@ -173,12 +204,18 @@ describe('conversation utils', () => {
   })
 
   it('saveConversationToLocalStorage falls back to minimal payload on quota errors', () => {
-    localStorage.setItem('conversationHistory', JSON.stringify([{ id: 'old' }, { id: 'older' }]))
+    localStorage.setItem(
+      'conversationHistory',
+      JSON.stringify([{ id: 'old' }, { id: 'older' }]),
+    )
 
     const originalSetItem = Storage.prototype.setItem
     let conversationHistoryWrites = 0
     let selectedConversationWrites = 0
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key: string, value: string) {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      key: string,
+      value: string,
+    ) {
       if (key === 'selectedConversation') {
         selectedConversationWrites += 1
         if (selectedConversationWrites === 1) {
@@ -196,7 +233,14 @@ describe('conversation utils', () => {
 
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const conversation = makeConversation({
-      messages: [{ id: 'm1', role: 'user', content: 'hi', feedback: { isPositive: true, category: null, details: null } } as any],
+      messages: [
+        {
+          id: 'm1',
+          role: 'user',
+          content: 'hi',
+          feedback: { isPositive: true, category: null, details: null },
+        } as any,
+      ],
     })
 
     const ok = saveConversationToLocalStorage(conversation)
@@ -280,7 +324,10 @@ describe('conversation utils', () => {
   it('saveConversationToLocalStorage logs when minimal quota fallback also fails', () => {
     const originalSetItem = Storage.prototype.setItem
     let selectedConversationWrites = 0
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key: string, value: string) {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      key: string,
+      value: string,
+    ) {
       if (key === 'selectedConversation') {
         selectedConversationWrites += 1
         if (selectedConversationWrites <= 2) {
@@ -294,7 +341,14 @@ describe('conversation utils', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
     const conversation = makeConversation({
-      messages: [{ id: 'm1', role: 'user', content: 'hi', feedback: { isPositive: true } } as any],
+      messages: [
+        {
+          id: 'm1',
+          role: 'user',
+          content: 'hi',
+          feedback: { isPositive: true },
+        } as any,
+      ],
     })
 
     expect(saveConversationToLocalStorage(conversation)).toBe(true)
@@ -305,7 +359,10 @@ describe('conversation utils', () => {
   it('saveConversationToLocalStorage logs when minimal quota fallback also fails without feedback', () => {
     const originalSetItem = Storage.prototype.setItem
     let selectedConversationWrites = 0
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key: string, value: string) {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      key: string,
+      value: string,
+    ) {
       if (key === 'selectedConversation') {
         selectedConversationWrites += 1
         if (selectedConversationWrites <= 2) {
@@ -334,7 +391,14 @@ describe('conversation utils', () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const conversation = makeConversation({
-      messages: [{ id: 'm1', role: 'user', content: 'hi', feedback: { isPositive: true } } as any],
+      messages: [
+        {
+          id: 'm1',
+          role: 'user',
+          content: 'hi',
+          feedback: { isPositive: true },
+        } as any,
+      ],
     })
 
     expect(saveConversationToLocalStorage(conversation)).toBe(true)
@@ -360,7 +424,12 @@ describe('conversation utils', () => {
 
     const messages: any = {
       length: 1,
-      0: { id: 'm1', role: 'user', content: 'hi', feedback: { isPositive: true } },
+      0: {
+        id: 'm1',
+        role: 'user',
+        content: 'hi',
+        feedback: { isPositive: true },
+      },
       map: () => {
         throw new Error('boom')
       },
@@ -375,40 +444,55 @@ describe('conversation utils', () => {
     const conversation = makeConversation({ userEmail: 'u@example.com' })
     const message = { id: 'm1', role: 'user', content: 'hi' } as any
 
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: true }), { status: 200 }),
-    )
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      )
 
-    await expect(saveConversationToServer(conversation, 'CS101', message)).resolves.toEqual({ ok: true })
+    await expect(
+      saveConversationToServer(conversation, 'CS101', message),
+    ).resolves.toEqual({ ok: true })
     const init = fetchSpy.mock.calls[0]?.[1] as any
-    expect(JSON.parse(init.body)).toMatchObject({ course_name: 'CS101', delta: expect.any(Object) })
+    expect(JSON.parse(init.body)).toMatchObject({
+      course_name: 'CS101',
+      delta: expect.any(Object),
+    })
   })
 
   it('saveConversationToServer throws when the server responds non-ok', async () => {
     const conversation = makeConversation({ userEmail: 'u@example.com' })
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('nope', { status: 500 }))
-
-    await expect(saveConversationToServer(conversation, 'CS101', null)).rejects.toThrow(
-      /Failed to save conversation to server/,
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('nope', { status: 500 }),
     )
+
+    await expect(
+      saveConversationToServer(conversation, 'CS101', null),
+    ).rejects.toThrow(/Failed to save conversation to server/)
   })
 
   it('saveConversationToServer posts full conversation when forceFullPayload=true', async () => {
     const conversation = makeConversation({ userEmail: 'u@example.com' })
 
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ ok: true }), { status: 200 }),
-    )
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      )
 
-    await saveConversationToServer(conversation, 'CS101', null, { forceFullPayload: true })
+    await saveConversationToServer(conversation, 'CS101', null, {
+      forceFullPayload: true,
+    })
     const init = fetchSpy.mock.calls[0]?.[1] as any
-    expect(JSON.parse(init.body)).toMatchObject({ conversation: expect.any(Object) })
+    expect(JSON.parse(init.body)).toMatchObject({
+      conversation: expect.any(Object),
+    })
   })
 
   it('deleteConversationFromServer and deleteAllConversationsFromServer send DELETE requests', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response('', { status: 200 }),
-    )
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('', { status: 200 }))
 
     await deleteConversationFromServer('c1', 'CS101')
     await deleteAllConversationsFromServer('CS101')
@@ -420,7 +504,9 @@ describe('conversation utils', () => {
 
   it('deleteConversationFromServer logs errors when response is non-ok', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('no', { status: 500 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('no', { status: 500 }),
+    )
 
     await deleteConversationFromServer('c1', 'CS101')
     expect(errSpy).toHaveBeenCalled()
@@ -436,7 +522,9 @@ describe('conversation utils', () => {
 
   it('deleteAllConversationsFromServer logs errors when response is non-ok', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('no', { status: 500 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('no', { status: 500 }),
+    )
 
     await deleteAllConversationsFromServer('CS101')
     expect(errSpy).toHaveBeenCalled()
@@ -451,41 +539,70 @@ describe('conversation utils', () => {
       temperature: 0.5,
       folderId: null,
       messages: [
-        { id: 'b', role: 'user', content: '2', created_at: '2024-01-02T00:00:00Z' },
-        { id: 'a', role: 'user', content: '1', created_at: '2024-01-01T00:00:00Z' },
+        {
+          id: 'b',
+          role: 'user',
+          content: '2',
+          created_at: '2024-01-02T00:00:00Z',
+        },
+        {
+          id: 'a',
+          role: 'user',
+          content: '1',
+          created_at: '2024-01-01T00:00:00Z',
+        },
       ],
     }
 
     localStorage.setItem('selectedConversation', JSON.stringify({ id: 'c1' }))
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ conversations: [unsorted], nextCursor: 1 }), { status: 200 }),
+      new Response(
+        JSON.stringify({ conversations: [unsorted], nextCursor: 1 }),
+        { status: 200 },
+      ),
     )
 
     const result = await fetchConversationHistory('', 'CS101', 0)
     expect(result.nextCursor).toBe(1)
     expect(result.conversations[0]?.messages?.[0]?.id).toBe('a')
-    expect(JSON.parse(localStorage.getItem('selectedConversation') || '{}').messages[0].id).toBe('a')
+    expect(
+      JSON.parse(localStorage.getItem('selectedConversation') || '{}')
+        .messages[0].id,
+    ).toBe('a')
   })
 
   it('fetchConversationHistory returns empty response when server returns non-ok', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('no', { status: 500 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('no', { status: 500 }),
+    )
 
     const out = await fetchConversationHistory('', 'CS101', 0)
     expect(out).toEqual({ conversations: [], nextCursor: null })
   })
 
   it('fetchConversationHistory does not sync selectedConversation when not found', async () => {
-    localStorage.setItem('selectedConversation', JSON.stringify({ id: 'missing' }))
+    localStorage.setItem(
+      'selectedConversation',
+      JSON.stringify({ id: 'missing' }),
+    )
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ conversations: [makeConversation()], nextCursor: null }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
+      new Response(
+        JSON.stringify({
+          conversations: [makeConversation()],
+          nextCursor: null,
+        }),
+        {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        },
+      ),
     )
 
     await fetchConversationHistory('', 'CS101', 0)
-    expect(JSON.parse(localStorage.getItem('selectedConversation') || '{}').id).toBe('missing')
+    expect(
+      JSON.parse(localStorage.getItem('selectedConversation') || '{}').id,
+    ).toBe('missing')
   })
 
   it('fetchLastConversation returns null when no conversations exist', async () => {
@@ -498,14 +615,23 @@ describe('conversation utils', () => {
 
   it('fetchLastConversation returns the first conversation on success', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ conversations: [makeConversation({ id: 'c-first' })] }), { status: 200 }),
+      new Response(
+        JSON.stringify({
+          conversations: [makeConversation({ id: 'c-first' })],
+        }),
+        { status: 200 },
+      ),
     )
 
-    await expect(fetchLastConversation('CS101')).resolves.toMatchObject({ id: 'c-first' })
+    await expect(fetchLastConversation('CS101')).resolves.toMatchObject({
+      id: 'c-first',
+    })
   })
 
   it('fetchLastConversation returns null when response is non-ok', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('no', { status: 500 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('no', { status: 500 }),
+    )
     await expect(fetchLastConversation('CS101')).resolves.toBeNull()
   })
 
@@ -530,7 +656,14 @@ describe('conversation utils', () => {
       messages: [{ id: 'm1', role: 'user', content: 'hi' } as any],
     })
 
-    const payload = createLogConversationPayload('CS101', conversation, conversation.messages[0] as any, 'missing')
-    expect((payload as any).delta.messagesDelta).toEqual([conversation.messages[0]])
+    const payload = createLogConversationPayload(
+      'CS101',
+      conversation,
+      conversation.messages[0] as any,
+      'missing',
+    )
+    expect((payload as any).delta.messagesDelta).toEqual([
+      conversation.messages[0],
+    ])
   })
 })

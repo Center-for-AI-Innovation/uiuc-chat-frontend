@@ -63,7 +63,11 @@ describe('app/api/chat/vlm POST', () => {
     const req = new Request('http://localhost', {
       method: 'POST',
       body: JSON.stringify({
-        conversation: { model: { id: 'vlm-model' }, temperature: 0.2, messages: [] },
+        conversation: {
+          model: { id: 'vlm-model' },
+          temperature: 0.2,
+          messages: [],
+        },
         stream: false,
       }),
     })

@@ -229,7 +229,11 @@ function makeProps(variant: 'base' | 'truthy' | 'empty' = 'base') {
         )
           return listDefault
         if (key.startsWith('set') || key.includes('set')) return vi.fn()
-        if (key.includes('toggle') || key.includes('close') || key.includes('open'))
+        if (
+          key.includes('toggle') ||
+          key.includes('close') ||
+          key.includes('open')
+        )
           return vi.fn()
         if (
           key.includes('loading') ||
@@ -297,7 +301,10 @@ export async function runComponentsSmokeShard(
   const nativeFetch = globalThis.fetch
   vi.spyOn(globalThis, 'fetch').mockImplementation((input: any, init?: any) => {
     const url = typeof input === 'string' ? input : String(input?.url ?? '')
-    if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
+    if (
+      url.startsWith('http://localhost') ||
+      url.startsWith('http://127.0.0.1')
+    ) {
       return nativeFetch(input, init)
     }
     // Allow the MSW handlers to handle relative URLs (the global fetch wrapper normalizes them).
@@ -367,7 +374,8 @@ export async function runComponentsSmokeShard(
     if (importOnly) continue
 
     const candidates: any[] = []
-    if (isLikelyReactComponent(mod.default, 'default')) candidates.push(mod.default)
+    if (isLikelyReactComponent(mod.default, 'default'))
+      candidates.push(mod.default)
     for (const [exportName, value] of Object.entries(mod)) {
       if (exportName === 'default') continue
       if (isLikelyReactComponent(value, exportName)) candidates.push(value)
@@ -395,12 +403,12 @@ export async function runComponentsSmokeShard(
               wrapper: Wrapper,
             },
           )
-        // Give React effects (including react-query queryFns) a chance to run before unmounting.
-        if (path.includes('/UIUC-Components/')) {
-          await Promise.resolve()
-          await new Promise((r) => setTimeout(r, 0))
-        }
-        unmount()
+          // Give React effects (including react-query queryFns) a chance to run before unmounting.
+          if (path.includes('/UIUC-Components/')) {
+            await Promise.resolve()
+            await new Promise((r) => setTimeout(r, 0))
+          }
+          unmount()
         } catch {
           // Some components are inherently integration-heavy; importing them still improves coverage.
         }

@@ -102,7 +102,9 @@ describe('ChatNavbar', () => {
     expect(handleNewConversation).toHaveBeenCalled()
 
     await user.click(
-      screen.getByRole('button', { name: /Open or close show model settings/i }),
+      screen.getByRole('button', {
+        name: /Open or close show model settings/i,
+      }),
     )
     expect(dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -166,10 +168,16 @@ describe('ChatNavbar', () => {
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat', push: vi.fn() }
 
     const ChatNavbar = (await import('../ChatNavbar')).default
-    renderWithProviders(<ChatNavbar bannerUrl="http://example.com/banner.png" isgpt4 />, {
-      homeState: { showModelSettings: false } as any,
-      homeContext: { dispatch: vi.fn(), handleNewConversation: vi.fn() } as any,
-    })
+    renderWithProviders(
+      <ChatNavbar bannerUrl="http://example.com/banner.png" isgpt4 />,
+      {
+        homeState: { showModelSettings: false } as any,
+        homeContext: {
+          dispatch: vi.fn(),
+          handleNewConversation: vi.fn(),
+        } as any,
+      },
+    )
 
     const img = await screen.findByRole('img', {
       name: /course creator uploaded a logo/i,
@@ -214,6 +222,8 @@ describe('ChatNavbar', () => {
     window.innerWidth = 1000
     window.dispatchEvent(new Event('resize'))
 
-    await waitFor(() => expect(screen.queryByTestId('hamburger-menu')).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByTestId('hamburger-menu')).not.toBeInTheDocument(),
+    )
   })
 })

@@ -52,7 +52,11 @@ function FormHarness({
   })
 
   return (
-    <BedrockProviderInput provider={provider} form={form as any} isLoading={false} />
+    <BedrockProviderInput
+      provider={provider}
+      form={form as any}
+      isLoading={false}
+    />
   )
 }
 
@@ -61,7 +65,13 @@ describe('BedrockProviderInput', () => {
     const { container } = render(
       <BedrockProviderInput
         provider={{ enabled: false } as any}
-        form={{ Field: () => null, state: { values: {} }, handleSubmit: vi.fn() } as any}
+        form={
+          {
+            Field: () => null,
+            state: { values: {} },
+            handleSubmit: vi.fn(),
+          } as any
+        }
         isLoading
       />,
     )

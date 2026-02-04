@@ -19,4 +19,3 @@ describe('useCreateReducer', () => {
     expect(result.current.state).toEqual({ count: 0, name: 'x' })
   })
 })
-

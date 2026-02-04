@@ -18,7 +18,9 @@ vi.mock('react-oidc-context', () => ({
 
 function createWrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    return (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
   }
 }
 
@@ -54,7 +56,14 @@ describe('docGroupsQueries hooks', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          documents: [{ name: 'g1', enabled: true, course_name: courseName, doc_count: 0 }],
+          documents: [
+            {
+              name: 'g1',
+              enabled: true,
+              course_name: courseName,
+              doc_count: 0,
+            },
+          ],
         }),
         { status: 200, headers: { 'content-type': 'application/json' } },
       ),
@@ -79,7 +88,14 @@ describe('docGroupsQueries hooks', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          documents: [{ name: 'g1', enabled: true, course_name: courseName, doc_count: 0 }],
+          documents: [
+            {
+              name: 'g1',
+              enabled: true,
+              course_name: courseName,
+              doc_count: 0,
+            },
+          ],
         }),
         { status: 200, headers: { 'content-type': 'application/json' } },
       ),
@@ -112,7 +128,10 @@ describe('docGroupsQueries hooks', () => {
     vi.spyOn(globalThis, 'fetch').mockReturnValueOnce(deferred.promise as any)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -141,10 +160,12 @@ describe('docGroupsQueries hooks', () => {
       ),
     )
     await waitFor(() =>
-      expect(queryClient.getQueryData(['documents', courseName, page])).toEqual({
-        final_docs: [{ ...record, doc_groups: ['g2'] }],
-        total_count: 1,
-      }),
+      expect(queryClient.getQueryData(['documents', courseName, page])).toEqual(
+        {
+          final_docs: [{ ...record, doc_groups: ['g2'] }],
+          total_count: 1,
+        },
+      ),
     )
 
     deferred.resolve(
@@ -161,7 +182,10 @@ describe('docGroupsQueries hooks', () => {
     vi.spyOn(globalThis, 'fetch').mockReturnValueOnce(deferred.promise as any)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -212,7 +236,10 @@ describe('docGroupsQueries hooks', () => {
     )
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -241,10 +268,12 @@ describe('docGroupsQueries hooks', () => {
       ]),
     )
     await waitFor(() =>
-      expect(queryClient.getQueryData(['documents', courseName, page])).toEqual({
-        final_docs: [{ ...record, doc_groups: ['g1'] }],
-        total_count: 1,
-      }),
+      expect(queryClient.getQueryData(['documents', courseName, page])).toEqual(
+        {
+          final_docs: [{ ...record, doc_groups: ['g1'] }],
+          total_count: 1,
+        },
+      ),
     )
 
     await expect(promise).resolves.toBeTruthy()
@@ -255,7 +284,10 @@ describe('docGroupsQueries hooks', () => {
     vi.spyOn(globalThis, 'fetch').mockReturnValueOnce(deferred.promise as any)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -281,7 +313,9 @@ describe('docGroupsQueries hooks', () => {
     )
 
     deferred.resolve(new Response('nope', { status: 500 }))
-    await expect(promise).rejects.toThrow('Failed to update document group status')
+    await expect(promise).rejects.toThrow(
+      'Failed to update document group status',
+    )
 
     await waitFor(() =>
       expect(queryClient.getQueryData(['documentGroups', courseName])).toEqual(
@@ -295,7 +329,10 @@ describe('docGroupsQueries hooks', () => {
     vi.spyOn(globalThis, 'fetch').mockReturnValueOnce(deferred.promise as any)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -325,10 +362,12 @@ describe('docGroupsQueries hooks', () => {
       ]),
     )
     await waitFor(() =>
-      expect(queryClient.getQueryData(['documents', courseName, page])).toEqual({
-        final_docs: [{ ...record, doc_groups: [] }],
-        total_count: 1,
-      }),
+      expect(queryClient.getQueryData(['documents', courseName, page])).toEqual(
+        {
+          final_docs: [{ ...record, doc_groups: [] }],
+          total_count: 1,
+        },
+      ),
     )
 
     deferred.resolve(new Response('nope', { status: 500 }))

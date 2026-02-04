@@ -940,37 +940,37 @@ export const Chat = memo(
         let reader
         let startOfCallToLLM
 
-          if (
-            selectedConversation.model &&
-            webLLMModels.some(
-              (model) => model.name === selectedConversation.model.name,
+        if (
+          selectedConversation.model &&
+          webLLMModels.some(
+            (model) => model.name === selectedConversation.model.name,
+          )
+        ) {
+          // Is WebLLM model
+          while (chat_ui.isModelLoading() == true) {
+            await new Promise((resolve) => setTimeout(resolve, 10))
+          }
+          try {
+            response = await chat_ui.runChatCompletion(
+              finalChatBody,
+              getCurrentPageName(),
+              courseMetadata,
             )
-          ) {
-            // Is WebLLM model
-            while (chat_ui.isModelLoading() == true) {
-              await new Promise((resolve) => setTimeout(resolve, 10))
-            }
-            try {
-              response = await chat_ui.runChatCompletion(
-                finalChatBody,
-                getCurrentPageName(),
-                courseMetadata,
-              )
-            } catch (error) {
-              errorToast({
-                title: 'Error running Web LLM models.',
-                message:
-                  (error as Error).message ||
-                  'In Chat.tsx, we errored when running WebLLM model.',
-              })
-              homeDispatch({ field: 'loading', value: false })
-              homeDispatch({ field: 'messageIsStreaming', value: false })
-              return
-            }
-          } else {
-            try {
-              // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
-              startOfCallToLLM = performance.now()
+          } catch (error) {
+            errorToast({
+              title: 'Error running Web LLM models.',
+              message:
+                (error as Error).message ||
+                'In Chat.tsx, we errored when running WebLLM model.',
+            })
+            homeDispatch({ field: 'loading', value: false })
+            homeDispatch({ field: 'messageIsStreaming', value: false })
+            return
+          }
+        } else {
+          try {
+            // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
+            startOfCallToLLM = performance.now()
 
             try {
               response = await routeChatAsync(finalChatBody)
@@ -1026,19 +1026,19 @@ export const Chat = memo(
           return
         }
 
-          let data
-          // Only create a stream reader when we actually plan to consume the body as a stream.
-          // Plugin responses are handled via `response.json()` below, which is incompatible with
-          // `getReader()` (it locks the body and makes it unusable for JSON parsing).
-          if (!plugin && response instanceof Response) {
-            data = response.body
-            if (!data) {
-              homeDispatch({ field: 'loading', value: false })
-              homeDispatch({ field: 'messageIsStreaming', value: false })
-              return
-            }
-            reader = data.getReader()
+        let data
+        // Only create a stream reader when we actually plan to consume the body as a stream.
+        // Plugin responses are handled via `response.json()` below, which is incompatible with
+        // `getReader()` (it locks the body and makes it unusable for JSON parsing).
+        if (!plugin && response instanceof Response) {
+          data = response.body
+          if (!data) {
+            homeDispatch({ field: 'loading', value: false })
+            homeDispatch({ field: 'messageIsStreaming', value: false })
+            return
           }
+          reader = data.getReader()
+        }
 
         if (!plugin) {
           homeDispatch({ field: 'loading', value: false })

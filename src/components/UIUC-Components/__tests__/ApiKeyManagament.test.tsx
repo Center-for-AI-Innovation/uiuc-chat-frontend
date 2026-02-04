@@ -57,7 +57,9 @@ describe('ApiKeyManagament', () => {
       { homeContext: { dispatch: vi.fn() } },
     )
 
-    await user.click(await screen.findByRole('button', { name: /Generate API Key/i }))
+    await user.click(
+      await screen.findByRole('button', { name: /Generate API Key/i }),
+    )
     await waitFor(() =>
       expect(showNotification as any).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'Success' }),
@@ -96,7 +98,10 @@ describe('ApiKeyManagament', () => {
       { homeContext: { dispatch: vi.fn() } },
     )
 
-    expect(fetchSpy.mock.calls.some(([url]) => String(url).includes('/api/chat-api/keys/fetch'))).toBe(false)
+    expect(
+      fetchSpy.mock.calls.some(([url]) =>
+        String(url).includes('/api/chat-api/keys/fetch'),
+      ),
+    ).toBe(false)
   })
 })
-

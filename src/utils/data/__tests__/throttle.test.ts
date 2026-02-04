@@ -25,4 +25,3 @@ describe('throttle', () => {
     vi.useRealTimers()
   })
 })
-
