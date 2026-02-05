@@ -614,28 +614,16 @@ export default function APIKeyInputForm({
           form.handleSubmit()
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-          }}
-        >
+        <div>
           {/* Default Model Section */}
           <div className="rounded-lg border border-[--dashboard-border] bg-[--dashboard-sidebar-background] p-4">
-            <Title
-              className={`${montserrat_heading.variable} mb-2 font-montserratHeading text-[--foreground]`}
-              order={4}
-            >
+            <h4 className="text-lg font-bold text-[--foreground]">
               Default Model
-            </Title>
-            <Text
-              className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph`}
-              size="sm"
-            >
+            </h4>
+            <p className="mb-3 text-sm text-[--foreground-faded]">
               Choose the default model for your chatbot. Users can still
               override this default.
-            </Text>
+            </p>
             <div className="flex justify-center">
               {llmProviders && (
                 <NewModelDropdown
@@ -661,18 +649,13 @@ export default function APIKeyInputForm({
             </div>
           </div>
 
-          <Title
-            className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
-            order={4}
-          >
+          {/* Open source LLMs */}
+          <h4 className="mt-6 text-lg font-bold text-[--foreground]">
             Open source LLMs
-          </Title>
-          <Text
-            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-            size="sm"
-          >
+          </h4>
+          <p className="mb-3 text-sm text-[--foreground-faded]">
             Your weights, your rules.
-          </Text>
+          </p>
           <Flex
             direction={{ base: 'column', '75rem': 'row' }}
             wrap="wrap"
@@ -703,19 +686,13 @@ export default function APIKeyInputForm({
             />
           </Flex>
 
-          <Title
-            className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
-            order={4}
-          >
+          <h4 className="mt-6 text-lg font-bold text-[--foreground]">
             Closed source LLMs
-          </Title>
-          <Text
-            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-            size="sm"
-          >
+          </h4>
+          <p className="mb-3 text-sm text-[--foreground-faded]">
             The best performers, but you gotta pay their prices and follow their
             rules.
-          </Text>
+          </p>
           <Flex
             direction={{ base: 'column', '75rem': 'row' }}
             wrap="wrap"
