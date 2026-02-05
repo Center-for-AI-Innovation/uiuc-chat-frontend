@@ -44,6 +44,7 @@ import {
   type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
+import { Skeleton } from '@/components/shadcn/ui/skeleton'
 import { GetCurrentPageName } from '../CanViewOnlyCourse'
 import GlobalFooter from '../GlobalFooter'
 import AnthropicProviderInput from './providers/AnthropicProviderInput'
@@ -625,7 +626,9 @@ export default function APIKeyInputForm({
               override this default.
             </p>
             <div className="flex justify-center">
-              {llmProviders && (
+              {isLoadingLLMProviders ? (
+                <Skeleton className="h-10 w-full rounded-md bg-[--dashboard-background-faded]" />
+              ) : llmProviders ? (
                 <NewModelDropdown
                   value={findDefaultModel(llmProviders) as AnySupportedModel}
                   onChange={(newDefaultModel) => {
@@ -645,7 +648,7 @@ export default function APIKeyInputForm({
                   llmProviders={llmProviders}
                   isSmallScreen={isSmallScreen}
                 />
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -982,7 +985,9 @@ export default function APIKeyInputForm({
                         </Text>
                         <br />
                         <div className="flex justify-center">
-                          {llmProviders && (
+                          {isLoadingLLMProviders ? (
+                            <Skeleton className="h-10 w-full rounded-md bg-[--dashboard-background-faded]" />
+                          ) : llmProviders ? (
                             <NewModelDropdown
                               value={
                                 findDefaultModel(
@@ -1006,7 +1011,7 @@ export default function APIKeyInputForm({
                               llmProviders={llmProviders}
                               isSmallScreen={isSmallScreen}
                             />
-                          )}
+                          ) : null}
                         </div>
                         <div className="pt-6"></div>
                         {/* <div>
