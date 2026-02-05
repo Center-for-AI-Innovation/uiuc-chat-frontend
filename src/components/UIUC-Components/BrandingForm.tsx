@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 
-import { Button, FileInput } from '@mantine/core'
+import { FileInput } from '@mantine/core'
+
+import { Button } from '@/components/shadcn/ui/button'
 import { IconFileUpload } from '@tabler/icons-react'
 
 import { FormInput } from '@/components/shadcn/ui/form-input'
@@ -94,9 +96,9 @@ const BrandingForm = ({
             <div>
               <Button
                 type="submit"
-                size={'xs'}
+                variant="dashboard"
+                size="sm"
                 disabled={!isIntroMessageUpdated}
-                className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-faded] disabled:opacity-50"
                 onClick={async () => {
                   setIsIntroMessageUpdated(false)
 
@@ -127,7 +129,8 @@ const BrandingForm = ({
             <>
               <Button
                 type="submit"
-                className="relative m-1 hidden w-[30%] self-end bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
+                variant="dashboard"
+                className="relative m-1 hidden w-[30%] self-end"
                 onClick={async () => {
                   setIsIntroMessageUpdated(false)
 
