@@ -304,14 +304,13 @@ const Home: NextPage = () => {
 
           {!useIllinoisChatConfig && (
             <div className="mt-12 w-[100vw] rounded-lg bg-[--dashboard-background-faded] p-8 pb-14">
-              <div className="mb-6 w-full pt-8 text-center">
+              <div className="mb-0 w-full text-center">
                 <h2
                   className={`
-                  pt-12
                   text-2xl font-bold sm:pt-2 
                   ${montserrat_heading.variable} font-montserratHeading
                 `}
-                  style={{ color: 'var(--illinois-blue)' }}
+                  style={{ color: 'var(--foreground)' }}
                 >
                   Flagship Chatbots
                 </h2>
@@ -325,8 +324,10 @@ const Home: NextPage = () => {
                 </p>
               </div>
 
-              <div className="w-full max-w-5xl">
-                <FlagshipChatbots />
+              <div className="w-full">
+                <div className="ml-auto mr-auto max-w-5xl">
+                  <FlagshipChatbots />
+                </div>
               </div>
             </div>
           )}

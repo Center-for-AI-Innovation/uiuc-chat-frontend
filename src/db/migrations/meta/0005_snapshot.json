@@ -1099,9 +1099,7 @@
         "llm-convo-monitor_convo_id_unique": {
           "name": "llm-convo-monitor_convo_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "convo_id"
-          ]
+          "columns": ["convo_id"]
         }
       },
       "policies": {},

@@ -1,21 +1,21 @@
 // Generated schema.ts based on PostgreSQL database
+import { relations } from 'drizzle-orm'
 import {
+  bigint,
+  bigserial,
+  boolean,
+  date,
+  doublePrecision,
+  integer,
+  jsonb,
   pgTable,
   serial,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
-  integer,
-  boolean,
-  jsonb,
-  bigint,
-  date,
-  doublePrecision,
-  bigserial,
-  uniqueIndex,
 } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
 
 // API keys table
 export const apiKeys = pgTable('api_keys', {
@@ -225,7 +225,7 @@ export const courseNames = pgTable('course_names', {
 export const docGroups = pgTable(
   'doc_groups',
   {
-    id: serial('id').primaryKey(),
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
     name: text('name').notNull(),
     course_name: text('course_name').notNull(),
     created_at: timestamp('created_at').defaultNow(),
