@@ -1,8 +1,5 @@
 import { ChatBody } from '~/types/chat'
-import {
-  type OllamaProvider,
-  ProviderNames,
-} from '~/utils/modelProviders/LLMProvider'
+import type { OllamaProvider } from '~/utils/modelProviders/LLMProvider'
 
 export interface OllamaModel {
   id: string
@@ -194,7 +191,8 @@ export const getOllamaModels = async (
   ollamaProvider: OllamaProvider,
 ): Promise<OllamaProvider> => {
   delete ollamaProvider.error // Remove the error property if it exists
-  ollamaProvider.provider = ProviderNames.Ollama
+  // Avoid importing ProviderNames here to prevent a circular dependency with LLMProvider.
+  ollamaProvider.provider = 'Ollama' as unknown as OllamaProvider['provider']
   try {
     if (!ollamaProvider.baseUrl || !ollamaProvider.enabled) {
       // Don't error here, too confusing for users.

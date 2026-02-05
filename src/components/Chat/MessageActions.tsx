@@ -150,13 +150,13 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       >
         <button
           tabIndex={0}
-          aria-label="Copy"
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
             isLastMessage
               ? 'opacity-100'
               : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
           }`}
           onClick={copyOnClick}
+          aria-label="Copy message"
         >
           {messagedCopied ? (
             <IconCheck

@@ -450,7 +450,7 @@ export function LandingPageHeader({
               aria-label="Toggle Menu"
               className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
               onClick={(e) => toggleMenu(e)}
-              ref={menuButtonRef}
+              ref={menuButtonRef as React.RefObject<HTMLDivElement>}
             >
               <Menu2 size={24} strokeWidth={2} color="var(--illinois-orange)" />
             </div>
