@@ -32,7 +32,7 @@ export default function ProviderCard({
 }: ProviderCardProps) {
   if (isLoading) {
     return (
-      <Skeleton className="h-[200px] min-w-[min(330px,100%)] flex-[1_1_calc(50%_-_0.5rem)] rounded-lg" />
+      <Skeleton className="h-[200px] min-w-[min(330px,100%)] flex-[1_1_calc(50%_-_0.5rem)] rounded-lg bg-[--dashboard-background-faded]" />
     )
   }
 
