@@ -205,7 +205,7 @@ export const UploadCard = memo(function UploadCard({
             </div>
           </div>
 
-          <div className="px-4 pt-2 sm:px-6 sm:pt-2 md:px-8">
+          <div className="px-4 pt-8 sm:px-6 sm:pt-8 md:px-8">
             <LargeDropzone
               courseName={projectName}
               current_user_email={current_user_email as string}
