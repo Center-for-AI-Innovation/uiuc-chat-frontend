@@ -242,7 +242,7 @@
   ); /* var(--dashboard-background-faded); */
 
   --dashboard-button-foreground: var(--illinois-white);
-  --dashboard-button: var(--illinois-blue);
+  --dashboard-button: var(--illinois-orange);
   --dashboard-button-hover: color-mix(
     in srgb,
     var(--dashboard-button),

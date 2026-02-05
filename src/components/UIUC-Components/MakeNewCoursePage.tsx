@@ -250,12 +250,19 @@ const MakeNewCoursePage = ({
       </Head>
       <main
         className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          padding: '1rem',
-        }}
+        style={
+          {
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+            padding: '1rem',
+            '--dashboard-button': 'var(--illinois-blue)',
+            '--dashboard-button-hover':
+              'color-mix(in srgb, var(--illinois-blue), black 20%)',
+            '--dashboard-table-selected':
+              'color-mix(in srgb, var(--illinois-blue), var(--illinois-white) 20%)',
+          } as React.CSSProperties
+        }
       >
         {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
         <div className="mt-12 flex w-full flex-1 flex-col items-center justify-start py-0 pb-20">
