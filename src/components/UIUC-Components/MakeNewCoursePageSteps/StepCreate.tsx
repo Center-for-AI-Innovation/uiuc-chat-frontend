@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 
-import { Loader, Textarea, TextInput } from '@mantine/core'
+import { LoaderCircle } from 'lucide-react'
+
+import {
+  FormInput,
+  type FormInputStatus,
+} from '@/components/shadcn/ui/form-input'
 
 import HeaderStepNavigation from './HeaderStepNavigation'
 
@@ -36,32 +41,40 @@ const StepCreate = ({
     onUpdateDescription(projectDescription)
   }, [projectDescription])
 
+  const getNameStatus = (): FormInputStatus => {
+    if (!projectName) return 'default'
+    if (isCheckingAvailability) return 'loading'
+    if (isCourseAvailable) return 'success'
+    return 'error'
+  }
+
   return (
     <>
       <div className="step">
         <HeaderStepNavigation
           project_name="" //don't send project name for create page
           title="Create a new chatbot"
-          description="What’s it all about?"
+          description="What's it all about?"
         />
 
         <div className="step_content mt-6">
-          <TextInput
-            type="text"
+          <FormInput
+            as="input"
             value={projectName}
             label="Name"
+            required
             placeholder="example-project"
             description="The name will be used as part of the unique url across the entire campus chatbots."
             className="mt-4"
-            classNames={componentClasses.input}
             autoComplete="off"
-            data-lpignore="true"
-            data-form-type="other"
             disabled={!is_new_course}
-            radius={'md'}
-            size={'md'}
             autoFocus
-            withAsterisk
+            status={getNameStatus()}
+            rightSlot={
+              isCheckingAvailability ? (
+                <LoaderCircle className="size-4 animate-spin text-[--foreground-faded]" />
+              ) : undefined
+            }
             onInput={(e) =>
               setProjectName(
                 (e.target as HTMLInputElement).value.replaceAll(' ', '-'),
@@ -79,7 +92,7 @@ const StepCreate = ({
 
                 {isCheckingAvailability && (
                   <div className="flex items-center gap-1 text-[--foreground-faded]">
-                    <Loader size="xs" />
+                    <LoaderCircle className="size-3 animate-spin" />
                     <span>(checking...)</span>
                   </div>
                 )}
@@ -98,15 +111,12 @@ const StepCreate = ({
 
           <div className="text-sm text-[--foreground-faded]"></div>
 
-          <Textarea
+          <FormInput
+            as="textarea"
             value={projectDescription}
             label="Description"
             placeholder="Describe your project, goals, expected impact etc...."
-            description=""
             className="mt-6"
-            classNames={componentClasses.input}
-            radius={'md'}
-            size={'md'}
             minRows={4}
             onChange={(e) => setProjectDescription(e.target.value)}
           />
@@ -114,23 +124,6 @@ const StepCreate = ({
       </div>
     </>
   )
-}
-
-const componentClasses = {
-  input: {
-    label: 'font-semibold text-base text-[--foreground]',
-    input: `
-      mt-3
-      px-3
-
-      placeholder:text-[--foreground-faded]
-      text-[--foreground] bg-[--background]
-
-      border-[--foreground-faded] focus:border-[--foreground]
-      overflow-ellipsis
-    `,
-    description: 'text-sm text-[--foreground-faded]',
-  },
 }
 
 export default StepCreate
