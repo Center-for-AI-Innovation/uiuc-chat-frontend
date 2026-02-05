@@ -17,6 +17,8 @@ export function useCreateFolder(
     onMutate: async (newFolder: FolderWithConversation) => {
       await queryClient.cancelQueries({ queryKey: ['folders', course_name] })
 
+      const oldFolders = queryClient.getQueryData(['folders', course_name])
+
       queryClient.setQueryData(
         ['folders', course_name],
         (oldData: FolderInterface[] | undefined) => {
@@ -25,18 +27,16 @@ export function useCreateFolder(
         },
       )
 
-      const oldFolders = queryClient.getQueryData(['folders', course_name])
-
       return { newFolder, oldFolders }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       queryClient.setQueryData(['folders', course_name], context?.oldFolders)
       console.error('Error saving updated folder to server:', error, context)
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (_data, _variables, _context) => {
       // No need to do anything here because the folders query will be invalidated
     },
-    onSettled: (data, error, variables, context) => {
+    onSettled: (_data, _error, _variables, _context) => {
       queryClient.invalidateQueries({ queryKey: ['folders', course_name] })
     },
   })

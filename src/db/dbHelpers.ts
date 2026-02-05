@@ -52,7 +52,7 @@ export async function addDocumentsToDocGroup(
     const groupArray = `{${doc.doc_groups.map((v) => `"${v.replace(/"/g, '\\"')}"`).join(',')}}`
     if (doc.url) {
       const result = await db.execute(sql`
-        select add_document_to_group(
+        select add_document_to_group_url(
           ${courseName},
           ${doc.s3_path},
           ${doc.url},
@@ -72,7 +72,7 @@ export async function addDocumentsToDocGroup(
       return success
     } else {
       const result = await db.execute(sql`
-        select add_document_to_group_url(
+        select add_document_to_group(
           ${courseName},
           ${doc.s3_path},
           ${doc.url},
