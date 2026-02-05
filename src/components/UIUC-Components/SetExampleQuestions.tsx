@@ -48,53 +48,54 @@ export default function SetExampleQuestions({
 
   // Register step leave callback
   useEffect(() => {
+    const saveAllQuestions = async (): Promise<boolean> => {
+      const validQuestions = questions
+        .map((q) => q.value.trim())
+        .filter((q) => q !== '')
+
+      try {
+        const success = await callSetCourseMetadata(course_name, {
+          ...course_metadata,
+          example_questions: validQuestions,
+        })
+
+        if (success) {
+          originalValuesRef.current = validQuestions
+          setQuestions((prev) =>
+            prev.map((q) => ({
+              ...q,
+              status: q.value.trim() !== '' ? 'saved' : 'idle',
+              errorMessage: undefined,
+            })),
+          )
+          return true
+        } else {
+          throw new Error('Failed to save questions')
+        }
+      } catch (error) {
+        return false
+      }
+    }
+
+    const saveAllPendingQuestions = async () => {
+      const questionsToSave = questions.filter(
+        (q, i) =>
+          q.value.trim() !== '' &&
+          q.status !== 'saved' &&
+          q.value !== originalValuesRef.current[i],
+      )
+
+      if (questionsToSave.length > 0) {
+        await saveAllQuestions()
+      }
+    }
+
     if (onStepLeave) {
       onStepLeave(async () => {
         await saveAllPendingQuestions()
       })
     }
-  }, [onStepLeave, questions])
-
-  const saveAllPendingQuestions = async () => {
-    const questionsToSave = questions.filter(
-      (q, i) =>
-        q.value.trim() !== '' &&
-        q.status !== 'saved' &&
-        q.value !== originalValuesRef.current[i],
-    )
-
-    if (questionsToSave.length > 0) {
-      await saveAllQuestions()
-    }
-  }
-
-  const saveAllQuestions = async (): Promise<boolean> => {
-    const validQuestions = questions
-      .map((q) => q.value.trim())
-      .filter((q) => q !== '')
-
-    try {
-      const success = await callSetCourseMetadata(course_name, {
-        example_questions: validQuestions,
-      })
-
-      if (success) {
-        originalValuesRef.current = validQuestions
-        setQuestions((prev) =>
-          prev.map((q) => ({
-            ...q,
-            status: q.value.trim() !== '' ? 'saved' : 'idle',
-            errorMessage: undefined,
-          })),
-        )
-        return true
-      } else {
-        throw new Error('Failed to save questions')
-      }
-    } catch (error) {
-      return false
-    }
-  }
+  }, [onStepLeave, questions, course_name, course_metadata])
 
   const saveQuestion = useCallback(
     async (index: number) => {
@@ -130,6 +131,7 @@ export default function SetExampleQuestions({
 
       try {
         const success = await callSetCourseMetadata(course_name, {
+          ...course_metadata,
           example_questions: allQuestions,
         })
 
@@ -163,7 +165,7 @@ export default function SetExampleQuestions({
         )
       }
     },
-    [questions, course_name],
+    [questions, course_name, course_metadata],
   )
 
   const deleteQuestion = async (index: number) => {
@@ -179,6 +181,7 @@ export default function SetExampleQuestions({
 
     try {
       const success = await callSetCourseMetadata(course_name, {
+        ...course_metadata,
         example_questions: validQuestions,
       })
 
@@ -354,10 +357,10 @@ export default function SetExampleQuestions({
 
         <Button
           type="button"
-          variant="outline"
+          variant="dashboard"
           size="sm"
           onClick={addNewQuestion}
-          className="w-fit border-[--dashboard-border] text-[--foreground] hover:bg-[--background-darker]"
+          className="w-fit"
         >
           <Plus className="size-4" />
           Add new question
