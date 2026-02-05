@@ -49,6 +49,8 @@ interface FormInputProps {
   onChange?: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>
   onInput?: React.FormEventHandler<HTMLInputElement | HTMLTextAreaElement>
   onFocus?: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>
+  onBlur?: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>
+  onKeyDown?: React.KeyboardEventHandler<HTMLInputElement | HTMLTextAreaElement>
   name?: string
   autoComplete?: string
   minRows?: number
@@ -80,6 +82,8 @@ const FormInput = React.forwardRef<
       onChange,
       onInput,
       onFocus,
+      onBlur,
+      onKeyDown,
       name,
       autoComplete,
       minRows = 2,
@@ -168,6 +172,10 @@ const FormInput = React.forwardRef<
                 ;(onInput as React.FormEventHandler<HTMLTextAreaElement>)?.(e)
               }}
               onFocus={onFocus as React.FocusEventHandler<HTMLTextAreaElement>}
+              onBlur={onBlur as React.FocusEventHandler<HTMLTextAreaElement>}
+              onKeyDown={
+                onKeyDown as React.KeyboardEventHandler<HTMLTextAreaElement>
+              }
               name={name}
               autoComplete={autoComplete}
             />
@@ -183,6 +191,10 @@ const FormInput = React.forwardRef<
               onChange={onChange as React.ChangeEventHandler<HTMLInputElement>}
               onInput={onInput as React.FormEventHandler<HTMLInputElement>}
               onFocus={onFocus as React.FocusEventHandler<HTMLInputElement>}
+              onBlur={onBlur as React.FocusEventHandler<HTMLInputElement>}
+              onKeyDown={
+                onKeyDown as React.KeyboardEventHandler<HTMLInputElement>
+              }
               name={name}
               autoComplete={autoComplete}
             />
