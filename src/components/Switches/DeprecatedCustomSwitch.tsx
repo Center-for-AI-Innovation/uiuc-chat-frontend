@@ -1,3 +1,8 @@
+/* -------------------------------------------------------------------------- */
+/*                           WARNING: DEPRECATED!!!                           */
+/* -------------------------------------------------------------------------- */
+// Use components/shadcn/ui/switch instead
+
 import React, { useState } from 'react'
 import { Switch, Tooltip, Text } from '@mantine/core'
 import { IconCheck, IconInfoCircle, IconX } from '@tabler/icons-react'
