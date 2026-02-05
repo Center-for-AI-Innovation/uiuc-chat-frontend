@@ -12,6 +12,11 @@ export const ContextCards = ({
 }: {
   contexts: ContextWithMetadata[]
 }) => {
+  if (!Array.isArray(contexts)) {
+    console.error('contexts is not an array:', contexts)
+    return null // or return a loading state or error state
+  }
+
   console.log(
     'ContextCards received contexts:',
     contexts.map((c) => ({
@@ -21,11 +26,6 @@ export const ContextCards = ({
       hasUrl: !!c.url,
     })),
   )
-
-  if (!Array.isArray(contexts)) {
-    console.error('contexts is not an array:', contexts)
-    return null // or return a loading state or error state
-  }
 
   return (
     <>

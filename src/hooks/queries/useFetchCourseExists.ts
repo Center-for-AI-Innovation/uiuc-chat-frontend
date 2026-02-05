@@ -24,7 +24,7 @@ async function fetchCourseExists({
   }
 
   const data: CourseExistsResponse = await response.json()
-  return Boolean(data)
+  return Boolean(data.exists)
 }
 
 export function useFetchCourseExists({
