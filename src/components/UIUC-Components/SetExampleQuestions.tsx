@@ -31,12 +31,14 @@ export default function SetExampleQuestions({
 }) {
   const example_questions = course_metadata?.example_questions || []
   const [questions, setQuestions] = useState<QuestionState[]>(() => {
-    const initialQuestions =
-      example_questions.length > 0 ? example_questions : []
-    return initialQuestions.map((q) => ({
-      value: q,
-      status: 'saved' as const,
-    }))
+    if (example_questions.length > 0) {
+      return example_questions.map((q) => ({
+        value: q,
+        status: 'saved' as const,
+      }))
+    }
+    // Always show at least one empty input field
+    return [{ value: '', status: 'idle' as const }]
   })
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -187,7 +189,12 @@ export default function SetExampleQuestions({
 
       if (success) {
         originalValuesRef.current = validQuestions
-        setQuestions(newQuestions)
+        // Keep at least one empty input field
+        setQuestions(
+          newQuestions.length > 0
+            ? newQuestions
+            : [{ value: '', status: 'idle' }],
+        )
       } else {
         throw new Error('Failed to delete question')
       }
