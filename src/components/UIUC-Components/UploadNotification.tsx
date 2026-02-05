@@ -81,7 +81,7 @@ function UploadNotificationContent({
       return response.json()
     },
     staleTime: 10000,
-    enabled: !!projectName,
+    enabled: !!projectName && files.length > 0,
   })
   useEffect(() => {
     if (files && Array.isArray(files)) {

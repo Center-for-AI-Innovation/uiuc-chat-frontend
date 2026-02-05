@@ -50,7 +50,7 @@ const MakeNewCoursePage = ({
   }, [])
 
   // Debounce project name input to avoid excessive API calls
-  const [debouncedProjectName] = useDebouncedValue(projectName, 500)
+  const [debouncedProjectName] = useDebouncedValue(projectName, 1000)
 
   // Check project name availability using React Query
   const { data: courseExists, isFetching: isCheckingAvailability } =
