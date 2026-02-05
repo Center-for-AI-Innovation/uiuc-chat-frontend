@@ -35,10 +35,14 @@ export default function AzureProviderInput({
       <form.Field name={`providers.${ProviderNames.Azure}.AzureEndpoint`}>
         {(field: any) => (
           <div className="mb-3">
-            <Label className="text-[--dashboard-foreground-faded]">
+            <Label
+              htmlFor="azure-endpoint"
+              className="text-[--dashboard-foreground-faded]"
+            >
               Azure Endpoint
             </Label>
             <Input
+              id="azure-endpoint"
               placeholder="https://your-resource-name.openai.azure.com/"
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}

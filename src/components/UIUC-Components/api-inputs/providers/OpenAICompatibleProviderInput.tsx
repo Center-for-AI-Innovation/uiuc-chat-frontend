@@ -29,10 +29,14 @@ export default function OpenAICompatibleProviderInput({
       <form.Field name={`providers.${ProviderNames.OpenAICompatible}.baseUrl`}>
         {(baseUrlField: any) => (
           <div className="mb-4">
-            <Label className="text-[--dashboard-foreground-faded]">
+            <Label
+              htmlFor="openai-compatible-base-url"
+              className="text-[--dashboard-foreground-faded]"
+            >
               Base URL
             </Label>
             <Input
+              id="openai-compatible-base-url"
               placeholder="https://api.example.com/v1"
               value={baseUrlField.state.value || ''}
               onChange={(e) => {
