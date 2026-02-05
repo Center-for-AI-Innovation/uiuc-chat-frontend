@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react'
 
-import { LoaderCircle } from 'lucide-react'
+import { CheckCircle, LoaderCircle, XCircle } from 'lucide-react'
 
 import {
   FormInput,
   type FormInputStatus,
 } from '@/components/shadcn/ui/form-input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/shadcn/ui/tooltip'
 
 import HeaderStepNavigation from './HeaderStepNavigation'
 
@@ -58,29 +64,51 @@ const StepCreate = ({
         />
 
         <div className="step_content mt-6">
-          <FormInput
-            as="input"
-            value={projectName}
-            label="Name"
-            required
-            placeholder="example-project"
-            description="The name will be used as part of the unique url across the entire campus chatbots."
-            className="mt-4"
-            autoComplete="off"
-            disabled={!is_new_course}
-            autoFocus
-            status={getNameStatus()}
-            rightSlot={
-              isCheckingAvailability ? (
-                <LoaderCircle className="size-4 animate-spin text-[--foreground-faded]" />
-              ) : undefined
-            }
-            onInput={(e) =>
-              setProjectName(
-                (e.target as HTMLInputElement).value.replaceAll(' ', '-'),
-              )
-            }
-          />
+          <TooltipProvider>
+            <Tooltip
+              open={
+                !isCheckingAvailability &&
+                isCourseAvailable === false &&
+                projectName.length > 0
+              }
+            >
+              <TooltipTrigger asChild>
+                <FormInput
+                  as="input"
+                  value={projectName}
+                  label="Name"
+                  required
+                  placeholder="example-project"
+                  description="The name will be used as part of the unique url across the entire campus chatbots."
+                  className="mt-4"
+                  autoComplete="off"
+                  disabled={!is_new_course}
+                  autoFocus
+                  status={getNameStatus()}
+                  rightSlot={
+                    isCheckingAvailability ? (
+                      <LoaderCircle className="size-4 animate-spin text-[--foreground-faded]" />
+                    ) : isCourseAvailable && projectName ? (
+                      <CheckCircle className="size-4 text-green-500" />
+                    ) : isCourseAvailable === false && projectName ? (
+                      <XCircle className="size-4 text-red-500" />
+                    ) : undefined
+                  }
+                  onInput={(e) =>
+                    setProjectName(
+                      (e.target as HTMLInputElement).value.replaceAll(' ', '-'),
+                    )
+                  }
+                />
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="border-red-500 bg-red-500 text-white"
+              >
+                This name is already taken. Please choose a different name.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <div className="mt-1 hidden min-h-[1.35rem] text-sm">
             {projectName && (

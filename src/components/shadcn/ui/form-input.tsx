@@ -16,7 +16,8 @@ const formInputGroupVariants = cva(
       status: {
         default:
           'border-[--dashboard-border] focus-within:border-[--foreground]',
-        success: 'border-[--illinois-prairie]',
+        success:
+          'border-[--dashboard-border] focus-within:border-[--foreground]',
         error: 'border-[--error]',
         loading:
           'border-[--foreground-faded] focus-within:border-[--foreground]',
