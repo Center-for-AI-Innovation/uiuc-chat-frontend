@@ -1645,6 +1645,7 @@ CRITICAL: The optimized prompt must:
 
                 <Flex direction="column" gap="md">
                   <Switch
+                    size="lg"
                     variant="labeled"
                     showLabels
                     showThumbIcon
@@ -1659,6 +1660,7 @@ CRITICAL: The optimized prompt must:
                   />
 
                   <Switch
+                    size="lg"
                     variant="labeled"
                     showLabels
                     showThumbIcon
@@ -1671,6 +1673,7 @@ CRITICAL: The optimized prompt must:
                   />
 
                   <Switch
+                    size="lg"
                     variant="labeled"
                     showLabels
                     showThumbIcon
@@ -1683,6 +1686,7 @@ CRITICAL: The optimized prompt must:
                   />
 
                   <Switch
+                    size="lg"
                     variant="labeled"
                     showLabels
                     showThumbIcon

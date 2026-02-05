@@ -14,7 +14,7 @@ import {
 import { cn } from '@/components/shadcn/lib/utils'
 
 const switchVariants = cva(
-  'peer relative inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-60',
+  'peer relative inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60',
   {
     variants: {
       variant: {
@@ -44,7 +44,7 @@ const switchThumbVariants = cva(
         sm: 'h-4 w-4 data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
         default:
           'h-5 w-5 data-[state=checked]:translate-x-6 data-[state=unchecked]:translate-x-0',
-        lg: 'h-[22px] w-[22px] data-[state=checked]:translate-x-7 data-[state=unchecked]:translate-x-0',
+        lg: 'h-[24px] w-[24px] data-[state=checked]:translate-x-7 data-[state=unchecked]:translate-x-0',
       },
     },
     defaultVariants: {
