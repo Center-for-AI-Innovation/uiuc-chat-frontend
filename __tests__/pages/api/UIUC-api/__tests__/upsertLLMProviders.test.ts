@@ -60,7 +60,9 @@ describe('UIUC-api/upsertLLMProviders', () => {
 
   it('encrypts provider keys and saves combined providers', async () => {
     hoisted.ensureRedisConnected.mockResolvedValueOnce({
-      get: hoisted.redisGet.mockResolvedValueOnce(JSON.stringify({ OpenAI: { apiKey: 'old' } })),
+      get: hoisted.redisGet.mockResolvedValueOnce(
+        JSON.stringify({ OpenAI: { apiKey: 'old' } }),
+      ),
       set: hoisted.redisSet.mockResolvedValueOnce(undefined),
     })
 
@@ -80,4 +82,3 @@ describe('UIUC-api/upsertLLMProviders', () => {
     expect(hoisted.redisSet).toHaveBeenCalled()
   })
 })
-

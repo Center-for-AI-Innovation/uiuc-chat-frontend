@@ -49,6 +49,7 @@ export const ClearConversations: FC<Props> = ({ onClearConversations }) => {
     </div>
   ) : (
     <SidebarButton
+      ariaLabel={t('Clear conversations')}
       text={t('Clear conversations')}
       icon={<IconTrash size={18} />}
       onClick={() => setIsConfirming(true)}

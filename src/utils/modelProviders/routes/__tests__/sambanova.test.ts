@@ -13,12 +13,16 @@ describe('getSambaNovaModels', () => {
     const provider: any = {
       enabled: true,
       apiKey: 'k',
-      models: [{ id: SambaNovaModelID.DeepSeek_R1, enabled: false, default: true }],
+      models: [
+        { id: SambaNovaModelID.DeepSeek_R1, enabled: false, default: true },
+      ],
     }
 
     const result = await getSambaNovaModels(provider)
     const models = result.models ?? []
-    const existing = models.find((m: any) => m.id === SambaNovaModelID.DeepSeek_R1)
+    const existing = models.find(
+      (m: any) => m.id === SambaNovaModelID.DeepSeek_R1,
+    )
     expect(existing).toMatchObject({ enabled: false, default: true })
   })
 

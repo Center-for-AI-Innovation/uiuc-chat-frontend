@@ -57,13 +57,13 @@ export default function MITIngestForm({
     }
   }
 
-  const handleIngest = () => {
+  const handleIngest = async () => {
     setOpen(false)
     if (isUrlValid) {
       const newFile: FileUpload = {
         name: url,
         status: 'uploading',
-        type: 'github',
+        type: 'mit',
       }
       setUploadFiles((prevFiles) => [...prevFiles, newFile])
       setUploadFiles((prevFiles) =>
@@ -71,8 +71,30 @@ export default function MITIngestForm({
           file.name === url ? { ...file, status: 'ingesting' } : file,
         ),
       )
-      let data = null
-      data = downloadMITCourse(url, project_name, 'local_dir') // no await -- do in background
+      try {
+        const data = await downloadMITCourse(url, project_name, 'local_dir')
+        if (data) {
+          setUploadFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.name === url ? { ...file, status: 'complete' } : file,
+            ),
+          )
+        } else {
+          // downloadMITCourse returned null, treat as error
+          setUploadFiles((prevFiles) =>
+            prevFiles.map((file) =>
+              file.name === url ? { ...file, status: 'error' } : file,
+            ),
+          )
+        }
+      } catch (error) {
+        console.error('Error during MIT course import:', error)
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'error' } : file,
+          ),
+        )
+      }
     } else {
       alert('Invalid URL (please include https://)')
     }
@@ -104,14 +126,18 @@ export default function MITIngestForm({
           }
         }}
       >
-        <DialogTrigger asChild>
+        <DialogTrigger
+          asChild
+          tabIndex={0}
+          className="focus:bg-[--dashboard-background-dark]"
+        >
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[--dashboard-border] bg-transparent px-6 py-4 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
+            <div className="-ml-2 mb-2 flex items-center justify-between">
+              <div className="flex items-center space-x-1">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full">
                   <Image
                     src="/media/mitocw_logo.jpg"
                     alt="MIT OCW Logo"

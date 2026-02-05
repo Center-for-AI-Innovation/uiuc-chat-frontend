@@ -1,7 +1,4 @@
-import {
-  ProviderNames,
-  type OpenAICompatibleProvider,
-} from '../LLMProvider'
+import { ProviderNames, type OpenAICompatibleProvider } from '../LLMProvider'
 import { OpenAICompatibleModels } from '../types/openaiCompatible'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 
@@ -67,7 +64,9 @@ export const getOpenAICompatibleModels = async (
         )
       }
 
-      const data = (await response.json()) as ModelsApiResponse | ModelResponse[]
+      const data = (await response.json()) as
+        | ModelsApiResponse
+        | ModelResponse[]
       // Handle both OpenAI-compatible format (data.data) and direct array format
       const modelsData = Array.isArray(data) ? data : data.data
       if (Array.isArray(modelsData)) {
@@ -82,12 +81,9 @@ export const getOpenAICompatibleModels = async (
       )
       // If fetching fails, show no models and set error message
       const errorMessage =
-        fetchError instanceof Error
-          ? fetchError.message
-          : 'Unknown error'
+        fetchError instanceof Error ? fetchError.message : 'Unknown error'
       openAICompatibleProvider.error =
-        errorMessage ||
-        'Failed to fetch available models from endpoint.'
+        errorMessage || 'Failed to fetch available models from endpoint.'
       // Return empty models array when fetch fails
       openAICompatibleProvider.models = []
       return openAICompatibleProvider

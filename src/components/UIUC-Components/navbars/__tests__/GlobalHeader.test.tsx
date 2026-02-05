@@ -14,7 +14,9 @@ describe('GlobalHeader', () => {
     globalThis.__TEST_AUTH__ = { isLoading: true, isAuthenticated: false }
     const Header = (await import('../GlobalHeader')).default
     const { container } = renderWithProviders(<Header />)
-    expect(container.querySelectorAll('.skeleton-box').length).toBeGreaterThan(0)
+    expect(container.querySelectorAll('.skeleton-box').length).toBeGreaterThan(
+      0,
+    )
   })
 
   it('renders AuthMenu once loaded', async () => {
@@ -37,9 +39,8 @@ describe('GlobalHeader', () => {
     window.dispatchEvent(new Event('resize'))
 
     renderWithProviders(<LandingPageHeader />)
-    await user.click(screen.getByRole('button', { name: /Open menu/i }))
+    await user.click(screen.getByRole('button', { name: /Toggle Menu/i }))
     expect(await screen.findByText('Docs')).toBeInTheDocument()
-
     ;(window as any).innerWidth = prevWidth
     window.dispatchEvent(new Event('resize'))
   })

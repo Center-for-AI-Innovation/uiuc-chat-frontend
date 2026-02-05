@@ -34,7 +34,9 @@ describe('CodeBlock', () => {
     act(() => {
       vi.advanceTimersByTime(2000)
     })
-    expect(screen.getByRole('button', { name: /Copy code/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /Copy code/i }),
+    ).toBeInTheDocument()
   })
 
   it('does not attempt to copy if clipboard API is unavailable', async () => {
@@ -50,7 +52,9 @@ describe('CodeBlock', () => {
 
   it('downloads content as a file when a name is provided', async () => {
     const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('my.js')
-    const createSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test')
+    const createSpy = vi
+      .spyOn(URL, 'createObjectURL')
+      .mockReturnValue('blob:test')
     const revokeSpy = vi.spyOn(URL, 'revokeObjectURL')
     const clickSpy = vi
       .spyOn(HTMLAnchorElement.prototype, 'click')

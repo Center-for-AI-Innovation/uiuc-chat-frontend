@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { deleteFolderFromServer, fetchFolders, saveFolderToServer } from '../folders'
+import {
+  deleteFolderFromServer,
+  fetchFolders,
+  saveFolderToServer,
+} from '@/hooks/__internal__/folders'
 import type { FolderWithConversation } from '~/types/folder'
 
 const folder: FolderWithConversation = {
@@ -15,14 +19,18 @@ describe('folder API helpers', () => {
       new Response('oops', { status: 500 }),
     )
 
-    await expect(fetchFolders('TEST101', 'user@example.com')).resolves.toEqual([])
+    await expect(fetchFolders('TEST101', 'user@example.com')).resolves.toEqual(
+      [],
+    )
   })
 
   it('fetchFolders returns [] when fetch throws', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
 
-    await expect(fetchFolders('TEST101', 'user@example.com')).resolves.toEqual([])
+    await expect(fetchFolders('TEST101', 'user@example.com')).resolves.toEqual(
+      [],
+    )
     expect(errSpy).toHaveBeenCalled()
   })
 
@@ -40,15 +48,18 @@ describe('folder API helpers', () => {
   })
 
   it('saveFolderToServer posts folder payload', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('', { status: 200 }),
-    )
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('', { status: 200 }))
 
     await saveFolderToServer(folder, 'TEST101', 'user@example.com')
 
-    expect(fetchSpy).toHaveBeenCalledWith('/api/folder', expect.objectContaining({
-      method: 'POST',
-    }))
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/folder',
+      expect.objectContaining({
+        method: 'POST',
+      }),
+    )
   })
 
   it('saveFolderToServer logs errors when response is non-ok', async () => {
@@ -57,27 +68,34 @@ describe('folder API helpers', () => {
       new Response('no', { status: 500, statusText: 'Nope' }),
     )
 
-    await expect(saveFolderToServer(folder, 'TEST101', 'user@example.com')).resolves.toBeUndefined()
+    await expect(
+      saveFolderToServer(folder, 'TEST101', 'user@example.com'),
+    ).resolves.toBeUndefined()
     expect(errSpy).toHaveBeenCalled()
   })
 
   it('deleteFolderFromServer sends delete payload', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('', { status: 200 }),
-    )
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response('', { status: 200 }))
 
     await deleteFolderFromServer(folder, 'TEST101', 'user@example.com')
 
-    expect(fetchSpy).toHaveBeenCalledWith('/api/folder', expect.objectContaining({
-      method: 'DELETE',
-    }))
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/folder',
+      expect.objectContaining({
+        method: 'DELETE',
+      }),
+    )
   })
 
   it('deleteFolderFromServer logs errors when fetch throws', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
 
-    await expect(deleteFolderFromServer(folder, 'TEST101', 'user@example.com')).resolves.toBeUndefined()
+    await expect(
+      deleteFolderFromServer(folder, 'TEST101', 'user@example.com'),
+    ).resolves.toBeUndefined()
     expect(errSpy).toHaveBeenCalled()
   })
 
@@ -87,7 +105,9 @@ describe('folder API helpers', () => {
       new Response('no', { status: 500 }),
     )
 
-    await expect(deleteFolderFromServer(folder, 'TEST101', 'user@example.com')).resolves.toBeUndefined()
+    await expect(
+      deleteFolderFromServer(folder, 'TEST101', 'user@example.com'),
+    ).resolves.toBeUndefined()
     expect(errSpy).toHaveBeenCalled()
   })
 })

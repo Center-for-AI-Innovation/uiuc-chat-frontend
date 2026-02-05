@@ -8,4 +8,3 @@ describe('superAdmins', () => {
     expect(superAdmins[0]).toMatch(/@/)
   })
 })
-

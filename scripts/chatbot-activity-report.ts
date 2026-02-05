@@ -61,7 +61,9 @@ async function generateChatbotActivityReport() {
 
     // Parse course metadata
     const courseMetadatas: Map<string, CourseMetadata> = new Map()
-    for (const [courseName, metadataJson] of Object.entries(courseMetadatasRaw)) {
+    for (const [courseName, metadataJson] of Object.entries(
+      courseMetadatasRaw,
+    )) {
       try {
         const metadata = JSON.parse(metadataJson) as CourseMetadata
         courseMetadatas.set(courseName, metadata)
@@ -70,7 +72,9 @@ async function generateChatbotActivityReport() {
       }
     }
 
-    console.log(`Found ${courseMetadatas.size} course metadata entries in Redis\n`)
+    console.log(
+      `Found ${courseMetadatas.size} course metadata entries in Redis\n`,
+    )
 
     // Combine activity data with owner emails
     const reportRows: ChatbotReportRow[] = chatbotActivities.map((activity) => {
@@ -93,8 +97,10 @@ async function generateChatbotActivityReport() {
 
     // Generate CSV output
     const csvLines: string[] = []
-    csvLines.push('Chatbot Name,Created At,Last Modified,Last Used,Owner Email,Admin Emails')
-    
+    csvLines.push(
+      'Chatbot Name,Created At,Last Modified,Last Used,Owner Email,Admin Emails',
+    )
+
     for (const row of reportRows) {
       const chatbotName = (row.chatbot_name || 'N/A').replace(/,/g, ';')
       const createdAt: string = row.created_at
@@ -116,10 +122,13 @@ async function generateChatbotActivityReport() {
 
     // Write CSV to file
     const csvContent = csvLines.join('\n')
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0]
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[:.]/g, '-')
+      .split('T')[0]
     const csvFileName = `chatbot-activity-report-${timestamp}.csv`
     const csvFilePath = join(process.cwd(), csvFileName)
-    
+
     writeFileSync(csvFilePath, csvContent, 'utf-8')
     console.log(`\n\nCSV file saved to: ${csvFilePath}`)
 

@@ -19,10 +19,12 @@ async function handleOllamaReasoningStream(
   conversation: Conversation,
   thinkParam: boolean | string,
 ): Promise<Response> {
-  const messages = convertConversatonToVercelAISDKv3(conversation).map((msg) => ({
-    role: msg.role,
-    content: msg.content,
-  }))
+  const messages = convertConversatonToVercelAISDKv3(conversation).map(
+    (msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }),
+  )
 
   const response = await fetch(`${baseUrl}/api/chat`, {
     method: 'POST',
@@ -154,8 +156,12 @@ export async function runOllamaChat(
       )
     }
 
-    const baseUrl = await decryptKeyIfNeeded(ollamaProvider.baseUrl!) as string
-    const isReasoningModel = OllamaReasoningModels.has(conversation.model.id as OllamaModelIDs)
+    const baseUrl = (await decryptKeyIfNeeded(
+      ollamaProvider.baseUrl!,
+    )) as string
+    const isReasoningModel = OllamaReasoningModels.has(
+      conversation.model.id as OllamaModelIDs,
+    )
     const isGptOss = GPT_OSS_MODELS.has(conversation.model.id as OllamaModelIDs)
 
     if (isReasoningModel && stream) {
@@ -270,7 +276,11 @@ function convertConversatonToVercelAISDKv3(
     if (message.role === 'system') return // Skip system message as it's already added
 
     let content: string
-    if (index === conversation.messages.length - 1 && message.role === 'user' && message.finalPromtEngineeredMessage) {
+    if (
+      index === conversation.messages.length - 1 &&
+      message.role === 'user' &&
+      message.finalPromtEngineeredMessage
+    ) {
       content = message.finalPromtEngineeredMessage
     } else if (Array.isArray(message.content)) {
       content = message.content

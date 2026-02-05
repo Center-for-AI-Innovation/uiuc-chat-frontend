@@ -64,14 +64,14 @@ vi.mock('mantine-datatable', () => ({
           ))}
         </div>
         <div>
-          {records.length === 0 ? props.noRecordsIcon ?? null : null}
+          {records.length === 0 ? (props.noRecordsIcon ?? null) : null}
           {records.map((record: any, index: number) => (
             <div key={record.id ?? record.s3_path ?? record.url ?? index}>
               {columns.map((col: any, cIdx: number) => (
                 <div key={cIdx}>
                   {col.render
                     ? col.render(record, index)
-                    : record[col.accessor] ?? null}
+                    : (record[col.accessor] ?? null)}
                 </div>
               ))}
             </div>
@@ -106,8 +106,8 @@ vi.mock('@mantine/core', async (importOriginal) => {
   }
 })
 
-vi.mock('~/hooks/docGroupsQueries', () => ({
-  useGetDocumentGroups: () => ({
+vi.mock('@/hooks/queries/useFetchDocumentGroups', () => ({
+  useFetchDocumentGroups: () => ({
     data: [
       { id: 1, name: 'Group A', doc_count: 1, enabled: true },
       { id: 2, name: 'Group B', doc_count: 0, enabled: true },
@@ -117,11 +117,17 @@ vi.mock('~/hooks/docGroupsQueries', () => ({
     error: null,
     refetch: vi.fn(),
   }),
+}))
+
+vi.mock('@/hooks/queries/useAppendToDocGroup', () => ({
   useAppendToDocGroup: () => ({
     mutate: vi.fn(async () => undefined),
     isPending: false,
   }),
-  useRemoveFromDocGroup: () => ({
+}))
+
+vi.mock('@/hooks/queries/useDeleteFromDocGroup', () => ({
+  useDeleteFromDocGroup: () => ({
     mutate: vi.fn(async () => undefined),
     isPending: false,
   }),
@@ -140,9 +146,7 @@ vi.mock('~/pages/util/handleExport', () => ({
 }))
 
 describe('ProjectFilesTable', () => {
-  it(
-    'renders success tab, filters/sorts, views and deletes documents, and opens export modal',
-    async () => {
+  it('renders success tab, filters/sorts, views and deletes documents, and opens export modal', async () => {
     const user = userEvent.setup()
     vi.spyOn(console, 'debug').mockImplementation(() => {})
     vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -150,28 +154,31 @@ describe('ProjectFilesTable', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
 
     server.use(
-      http.get('*/api/materialsTable/fetchProjectMaterials*', async ({ request }) => {
-        const url = new URL(request.url)
-        const filterKey = url.searchParams.get('filter_key') ?? ''
-        const filterValue = url.searchParams.get('filter_value') ?? ''
-        const sortDir = url.searchParams.get('sort_direction') ?? 'desc'
+      http.get(
+        '*/api/materialsTable/fetchProjectMaterials*',
+        async ({ request }) => {
+          const url = new URL(request.url)
+          const filterKey = url.searchParams.get('filter_key') ?? ''
+          const filterValue = url.searchParams.get('filter_value') ?? ''
+          const sortDir = url.searchParams.get('sort_direction') ?? 'desc'
 
-        return HttpResponse.json({
-          final_docs: [
-            {
-              id: 1,
-              course_name: 'CS101',
-              readable_filename: `file1-${filterKey}-${filterValue}-${sortDir}.txt`,
-              url: '',
-              s3_path: 'cs101/file1.txt',
-              base_url: 'http://base',
-              created_at: new Date('2024-01-01T00:00:00.000Z').toISOString(),
-              doc_groups: ['Group A'],
-            },
-          ],
-          total_count: 1,
-        })
-      }),
+          return HttpResponse.json({
+            final_docs: [
+              {
+                id: 1,
+                course_name: 'CS101',
+                readable_filename: `file1-${filterKey}-${filterValue}-${sortDir}.txt`,
+                url: '',
+                s3_path: 'cs101/file1.txt',
+                base_url: 'http://base',
+                created_at: new Date('2024-01-01T00:00:00.000Z').toISOString(),
+                doc_groups: ['Group A'],
+              },
+            ],
+            total_count: 1,
+          })
+        },
+      ),
       http.get('*/api/materialsTable/fetchFailedDocuments*', async () => {
         return HttpResponse.json({
           final_docs: [],
@@ -206,13 +213,21 @@ describe('ProjectFilesTable', () => {
     // Filter (updates queryKey and triggers refetch).
     await user.type(screen.getByLabelText('File Name'), 'hello')
     await waitFor(() =>
-      expect(fetchSpy.mock.calls.some(([url]) => /filter_key=readable_filename/.test(String(url)))).toBe(true),
+      expect(
+        fetchSpy.mock.calls.some(([url]) =>
+          /filter_key=readable_filename/.test(String(url)),
+        ),
+      ).toBe(true),
     )
 
     // Sort (updates queryKey and triggers refetch).
     await user.click(screen.getByRole('button', { name: /sort-toggle/i }))
     await waitFor(() =>
-      expect(fetchSpy.mock.calls.some(([url]) => /sort_direction=asc|sort_direction=desc/.test(String(url)))).toBe(true),
+      expect(
+        fetchSpy.mock.calls.some(([url]) =>
+          /sort_direction=asc|sort_direction=desc/.test(String(url)),
+        ),
+      ).toBe(true),
     )
 
     // View action uses presigned URL and window.open.
@@ -225,9 +240,7 @@ describe('ProjectFilesTable', () => {
     await user.click(
       screen.getByRole('button', { name: /Add Document to Groups/i }),
     )
-    await user.click(
-      screen.getByRole('button', { name: /set-groups-bulk/i }),
-    )
+    await user.click(screen.getByRole('button', { name: /set-groups-bulk/i }))
 
     // Delete action opens modal.
     await user.click(screen.getByRole('button', { name: /Delete document/i }))
@@ -238,16 +251,16 @@ describe('ProjectFilesTable', () => {
     await user.click(screen.getByRole('button', { name: /^Delete$/ }))
 
     const axiosMod = await import('axios')
-    await waitFor(() => expect((axiosMod as any).default.delete).toHaveBeenCalled())
+    await waitFor(() =>
+      expect((axiosMod as any).default.delete).toHaveBeenCalled(),
+    )
 
     // Export modal is wired and openable.
     await user.click(screen.getByRole('button', { name: /^Export$/ }))
     expect(
       await screen.findByText(/export all the documents and embeddings/i),
     ).toBeInTheDocument()
-    },
-    20_000,
-  )
+  }, 20_000)
 
   it('shows a toast when attempting to delete more than 100 selected records', async () => {
     const user = userEvent.setup()
@@ -256,7 +269,20 @@ describe('ProjectFilesTable', () => {
 
     server.use(
       http.get('*/api/materialsTable/fetchProjectMaterials*', async () => {
-        return HttpResponse.json({ final_docs: [{ id: 1, readable_filename: 'f.txt', s3_path: 'cs101/f.txt', url: '', base_url: '', created_at: new Date().toISOString(), doc_groups: [] }], total_count: 1 })
+        return HttpResponse.json({
+          final_docs: [
+            {
+              id: 1,
+              readable_filename: 'f.txt',
+              s3_path: 'cs101/f.txt',
+              url: '',
+              base_url: '',
+              created_at: new Date().toISOString(),
+              doc_groups: [],
+            },
+          ],
+          total_count: 1,
+        })
       }),
       http.get('*/api/materialsTable/fetchFailedDocuments*', async () => {
         return HttpResponse.json({
@@ -281,7 +307,9 @@ describe('ProjectFilesTable', () => {
       { homeContext: { dispatch: vi.fn() } },
     )
 
-    await user.click(await screen.findByRole('button', { name: /select-many/i }))
+    await user.click(
+      await screen.findByRole('button', { name: /select-many/i }),
+    )
     const deleteLabels = await screen.findAllByText(/Delete 101/i)
     await user.click(deleteLabels[0]!.closest('button') as HTMLElement)
 
@@ -290,9 +318,7 @@ describe('ProjectFilesTable', () => {
     )
   })
 
-  it(
-    'renders failed tab and shows error details modal via "Read more"',
-    async () => {
+  it('renders failed tab and shows error details modal via "Read more"', async () => {
     const user = userEvent.setup()
 
     const scrollHeight = Object.getOwnPropertyDescriptor(
@@ -356,13 +382,13 @@ describe('ProjectFilesTable', () => {
     await user.click(await screen.findByText(/Read more/i))
     expect(await screen.findByText(/Error Details/i)).toBeInTheDocument()
 
-    if (scrollHeight) Object.defineProperty(HTMLElement.prototype, 'scrollHeight', scrollHeight)
+    if (scrollHeight)
+      Object.defineProperty(HTMLElement.prototype, 'scrollHeight', scrollHeight)
     else delete (HTMLElement.prototype as any).scrollHeight
-    if (clientHeight) Object.defineProperty(HTMLElement.prototype, 'clientHeight', clientHeight)
+    if (clientHeight)
+      Object.defineProperty(HTMLElement.prototype, 'clientHeight', clientHeight)
     else delete (HTMLElement.prototype as any).clientHeight
-    },
-    20_000,
-  )
+  }, 20_000)
 
   it('renders an error-state table when document fetch fails', async () => {
     const { showNotification } = await import('@mantine/notifications')
@@ -394,9 +420,11 @@ describe('ProjectFilesTable', () => {
       { homeContext: { dispatch: vi.fn() } },
     )
 
-    await waitFor(() => expect((showNotification as any)).toHaveBeenCalled())
+    await waitFor(() => expect(showNotification as any).toHaveBeenCalled())
     expect(
-      await screen.findByText(/Ah! We hit a wall when fetching your documents/i),
+      await screen.findByText(
+        /Ah! We hit a wall when fetching your documents/i,
+      ),
     ).toBeInTheDocument()
   })
 })
