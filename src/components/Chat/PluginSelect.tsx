@@ -28,25 +28,22 @@ export const PluginSelect: FC<Props> = ({
       if (selectElement) {
         selectElement.selectedIndex =
           (selectElement.selectedIndex + 1) % optionCount
-        selectElement.dispatchEvent(new Event('change'))
+        selectElement.dispatchEvent(new Event('change', { bubbles: true }))
       }
     } else if (e.key === '/' && e.shiftKey && e.metaKey) {
       e.preventDefault()
       if (selectElement) {
         selectElement.selectedIndex =
           (selectElement.selectedIndex - 1 + optionCount) % optionCount
-        selectElement.dispatchEvent(new Event('change'))
+        selectElement.dispatchEvent(new Event('change', { bubbles: true }))
       }
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      if (selectElement) {
-        selectElement.dispatchEvent(new Event('change'))
-      }
+      if (!selectElement) return
 
       onPluginChange(
         PluginList.find(
-          (plugin) =>
-            plugin.name === selectElement?.selectedOptions[0]?.innerText,
+          (plugin) => plugin.id === selectElement.value,
         ) as Plugin,
       )
     } else {

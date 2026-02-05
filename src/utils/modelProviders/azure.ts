@@ -196,17 +196,18 @@ export const getAzureModels = async (
 
     const responseJson = await response.json()
 
-    // gpt-5-thinking will not be explictly listed in the response, it will just be gpt-5
-    // so we need to add it manually if gpt-5 is in the response
-    const gpt5ThinkingModel = responseJson.data.find(
-      (model: any) => model.model === 'gpt-5',
+    // gpt-5-thinking may not be explicitly listed in the response; Azure often only returns "gpt-5".
+    // If we see a gpt-5 deployment, synthesize a gpt-5-thinking entry that points at the same deployment id.
+    const gpt5Deployment = responseJson.data.find(
+      (model: any) => model?.model === 'gpt-5',
     )
-    if (gpt5ThinkingModel) {
+    const hasThinkingAlready = responseJson.data.some(
+      (model: any) => model?.model === 'gpt-5-thinking',
+    )
+    if (gpt5Deployment && !hasThinkingAlready) {
       responseJson.data.push({
-        id: 'gpt-5-thinking',
-        object: 'model',
-        created: 1728288000,
-        owned_by: 'openai',
+        ...gpt5Deployment,
+        model: 'gpt-5-thinking',
       })
     }
 

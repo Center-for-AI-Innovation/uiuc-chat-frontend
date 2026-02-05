@@ -1,21 +1,21 @@
 // Generated schema.ts based on PostgreSQL database
+import { relations } from 'drizzle-orm'
 import {
+  bigint,
+  bigserial,
+  boolean,
+  date,
+  doublePrecision,
+  integer,
+  jsonb,
   pgTable,
   serial,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
-  integer,
-  boolean,
-  jsonb,
-  bigint,
-  date,
-  doublePrecision,
-  bigserial,
-  uniqueIndex,
 } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
 
 // API keys table
 export const apiKeys = pgTable('api_keys', {
@@ -162,7 +162,7 @@ export const conversations = pgTable('conversations', {
 
 // Documents table
 export const documents = pgTable('documents', {
-  id: serial('id').primaryKey(),
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
   s3_path: text('s3_path'),
   course_name: text('course_name'),
   url: text('url'),
@@ -225,13 +225,13 @@ export const courseNames = pgTable('course_names', {
 export const docGroups = pgTable(
   'doc_groups',
   {
-    id: serial('id').primaryKey(),
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
     name: text('name').notNull(),
     course_name: text('course_name').notNull(),
     created_at: timestamp('created_at').defaultNow(),
     enabled: boolean('enabled').default(true),
     private: boolean('private').default(true),
-    doc_count: integer('doc_count').default(0),
+    doc_count: bigint('doc_count', { mode: 'number' }).default(0),
   },
   (table) => {
     return {
@@ -247,16 +247,17 @@ export const docGroups = pgTable(
 export const documentsDocGroups = pgTable(
   'documents_doc_groups',
   {
-    id: serial('id').primaryKey(),
-    document_id: integer('document_id').notNull(),
-    doc_group_id: integer('doc_group_id').notNull(),
+    document_id: bigint('document_id', { mode: 'number' }).notNull(),
+    doc_group_id: bigint('doc_group_id', { mode: 'number' }).notNull(),
     created_at: timestamp('created_at').defaultNow(),
   },
   (table) => {
     return {
-      docIDsUnique: uniqueIndex(
-        'documents_doc_groups_document_group_id_unique',
-      ).on(table.document_id, table.doc_group_id),
+      // Composite primary key to mirror DB schema
+      pk: uniqueIndex('documents_doc_groups_pkey').on(
+        table.document_id,
+        table.doc_group_id,
+      ),
     }
   },
 )
