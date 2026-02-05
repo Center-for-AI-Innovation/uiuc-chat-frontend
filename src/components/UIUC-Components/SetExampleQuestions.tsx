@@ -217,13 +217,23 @@ export default function SetExampleQuestions({
   }
 
   const handleInputChange = (value: string, index: number) => {
-    setQuestions((prev) =>
-      prev.map((q, i) =>
+    setQuestions((prev) => {
+      const updated = prev.map((q, i) =>
         i === index
-          ? { ...q, value, status: 'idle', errorMessage: undefined }
+          ? { ...q, value, status: 'idle' as const, errorMessage: undefined }
           : q,
-      ),
-    )
+      )
+
+      // When user starts typing, ensure there's an empty input at the end
+      const hasEmptyAfter = updated
+        .slice(index + 1)
+        .some((q) => q.value.trim() === '')
+      if (value.trim() !== '' && !hasEmptyAfter) {
+        updated.push({ value: '', status: 'idle' as const })
+      }
+
+      return updated
+    })
   }
 
   const handleBlur = (index: number) => {
@@ -240,18 +250,10 @@ export default function SetExampleQuestions({
       // Save current question
       saveQuestion(index)
 
-      // Navigate to next question or create new one
-      if (index === questions.length - 1) {
-        // Last question - create new one
-        addNewQuestion()
-        // Focus will be set in useEffect after render
-        setTimeout(() => {
-          inputRefs.current[questions.length]?.focus()
-        }, 0)
-      } else {
-        // Move to next question
+      // Focus the next input after React re-renders
+      setTimeout(() => {
         inputRefs.current[index + 1]?.focus()
-      }
+      }, 0)
     }
   }
 
