@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 
-import { Button, FileInput, Textarea } from '@mantine/core'
+import { Button, FileInput } from '@mantine/core'
 import { IconFileUpload } from '@tabler/icons-react'
 
-//import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { FormInput } from '@/components/shadcn/ui/form-input'
 
 import SetExampleQuestions from './SetExampleQuestions'
 
@@ -78,24 +78,12 @@ const BrandingForm = ({
           <div className="mb-3 font-semibold">Greeting</div>
 
           <div className="flex flex-col gap-2">
-            {/* TODO: Update placeholder color to placeholder:text-[--foreground-faded] */}
-            <Textarea
-              autosize
+            <FormInput
+              as="textarea"
               minRows={2}
               maxRows={5}
               placeholder="Enter a greeting to help users get started with your bot, shown before they start chatting."
-              className="w-full placeholder:text-[--foreground-faded]"
-              styles={{
-                input: {
-                  color: 'var(--foreground)',
-                  backgroundColor: 'var(--background)',
-                  borderColor: 'var(--dashboard-border)',
-
-                  '&:focus': {
-                    borderColor: 'var(--background-darker)',
-                  },
-                },
-              }}
+              className="w-full"
               value={introMessage}
               onChange={(e) => {
                 setIntroMessage(e.target.value)

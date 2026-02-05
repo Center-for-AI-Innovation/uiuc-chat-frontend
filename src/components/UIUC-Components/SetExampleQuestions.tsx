@@ -1,5 +1,8 @@
-import { TextInput, Button, Group, Box } from '@mantine/core'
+import { Button, Group } from '@mantine/core'
 import { useState, useEffect } from 'react'
+
+import { FormInput } from '@/components/shadcn/ui/form-input'
+
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 
@@ -63,7 +66,7 @@ export default function SetExampleQuestions({
   }
 
   return (
-    <Box>
+    <div>
       <form
         className="flex flex-col gap-3"
         onSubmit={(event) => {
@@ -74,29 +77,16 @@ export default function SetExampleQuestions({
         {inputList.map((value, i) => {
           return (
             <div className="flex flex-col gap-2" key={i}>
-              <TextInput
-                // withAsterisk
+              <FormInput
+                as="input"
                 name="question"
                 placeholder="Add sample queries to illustrate usage of your AI."
                 className="w-full"
-                styles={{
-                  input: {
-                    color: 'var(--foreground)',
-                    backgroundColor: 'var(--background)',
-                    borderColor: 'var(--dashboard-border)',
-                    padding: 'calc(var(--padding) * .75)',
-                    paddingRight: '6rem', //make room for button
-                    marginTop: '.25rem',
-
-                    '&:focus': {
-                      borderColor: 'var(--background-darker)',
-                    },
-                  },
-                }}
                 value={value}
-                onChange={(e) => handleInputChange(e, i)}
+                onChange={(e) =>
+                  handleInputChange(e as React.ChangeEvent<HTMLInputElement>, i)
+                }
                 onFocus={() => handleInputFocus(i)}
-                // onBlur={() => handleInputBlur(i)} I couldn't get this working to remove boxes...
               />
 
               <div>
@@ -104,7 +94,7 @@ export default function SetExampleQuestions({
                   type="submit"
                   size={'xs'}
                   disabled={value === ''}
-                  className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-fadaed] disabled:opacity-50"
+                  className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-faded] disabled:opacity-50"
                   onClick={async () => {}}
                 >
                   Save
@@ -113,18 +103,7 @@ export default function SetExampleQuestions({
             </div>
           )
         })}
-        {/*
-        <Group position="right" mt="md">
-          <Button
-            tabIndex={0}
-            className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
-            type="submit"
-          >
-            Add
-          </Button>
-        </Group>
-*/}
       </form>
-    </Box>
+    </div>
   )
 }
