@@ -13,6 +13,7 @@ import {
   IconChevronUp,
   IconChevronDown,
   IconSelector,
+  IconAlertCircle,
 } from '@tabler/icons-react'
 import { useFetchAllCourseMetadata } from '~/hooks/queries/useFetchAllCourseMetadata'
 
@@ -111,7 +112,18 @@ const ListProjectTable: React.FC = () => {
   }
 
   const sortData = () => {
-    if (!rawData) return
+    // Ensure rawData is always an array before proceeding
+    if ((!Array.isArray(rawData) || rawData.length === 0) && isFullyLoaded) {
+      setRows([])
+      console.log('No projects found')
+      notifications.show({
+        title: 'No projects found',
+        message: 'No projects found',
+        color: 'red',
+        icon: <IconAlertCircle />,
+      })
+      return
+    }
 
     const sortedData = [...rawData].sort((a, b) => {
       const courseNameA = Object.keys(a)[0] ?? ''

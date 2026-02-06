@@ -159,7 +159,7 @@ export const Chatbar = ({
       ) {
         // console.log('Raw conversation history:', conversationHistory)
         const allConversations = conversationHistory.pages
-          .flatMap((page) => (Array.isArray(page) ? page : []))
+          .flatMap((page) => page?.conversations ?? [])
           .filter((conversation) => conversation !== undefined)
         homeDispatch({ field: 'conversations', value: allConversations })
         // console.log('Dispatching conversations: ', allConversations)

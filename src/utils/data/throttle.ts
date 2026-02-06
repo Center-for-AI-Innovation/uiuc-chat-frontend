@@ -3,22 +3,23 @@ export function throttle<T extends (...args: any[]) => any>(
   limit: number,
 ): T {
   let lastFunc: ReturnType<typeof setTimeout>
-  let lastRan: number
+  let lastRan: number | undefined
 
   return ((...args) => {
-    if (!lastRan) {
+    if (lastRan === undefined) {
       func(...args)
       lastRan = Date.now()
     } else {
+      const lastRanAtSchedule = lastRan
       clearTimeout(lastFunc)
       lastFunc = setTimeout(
         () => {
-          if (Date.now() - lastRan >= limit) {
+          if (Date.now() - lastRanAtSchedule >= limit) {
             func(...args)
             lastRan = Date.now()
           }
         },
-        limit - (Date.now() - lastRan),
+        limit - (Date.now() - lastRanAtSchedule),
       )
     }
   }) as T

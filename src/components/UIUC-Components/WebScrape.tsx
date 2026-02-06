@@ -43,15 +43,6 @@ interface WebScrapeProps {
   current_user_email: string
 }
 
-const shouldShowFields = (inputUrl: string) => {
-  return !(
-    inputUrl.includes('coursera.org') ||
-    inputUrl.includes('ocw.mit.edu') ||
-    inputUrl.includes('github.com') ||
-    inputUrl.includes('canvas.illinois.edu')
-  )
-}
-
 const validateUrl = (url: string) => {
   const courseraRegex = /^https?:\/\/(www\.)?coursera\.org\/learn\/.+/
   const mitRegex = /^https?:\/\/ocw\.mit\.edu\/.+/
@@ -95,14 +86,6 @@ export const WebScrape = ({
   const ingestCanvasMutation = useIngestCanvas(courseName)
   const { mutateAsync: setCourseMetadataAsync } =
     useSetCourseMetadata(courseName)
-
-  const handleCanvasOptionChange = (value: string) => {
-    if (selectedCanvasOptions.includes(value)) {
-      setSelectedCanvasOptions((prev) => prev.filter((item) => item !== value))
-    } else {
-      setSelectedCanvasOptions((prev) => [...prev, value])
-    }
-  }
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -310,6 +293,7 @@ export const WebScrape = ({
         withBorder: true,
         loading: false,
       })
+      throw error
     }
   }
 
