@@ -36,7 +36,6 @@ import {
   IconLink,
   IconSparkles,
 } from '@tabler/icons-react'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useDebouncedCallback } from 'use-debounce'
 import { v4 as uuidv4 } from 'uuid'
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
@@ -900,14 +899,14 @@ CRITICAL: The optimized prompt must:
               <div className="flex items-center gap-2">
                 <Title
                   order={2}
-                  className={`${montserrat_heading.variable} font-montserratHeading text-lg text-[--foreground] sm:text-2xl`}
+                  className={` text-lg text-[--foreground] sm:text-2xl`}
                 >
                   Prompting
                 </Title>
                 <Text className="text-[--foreground]">/</Text>
                 <Title
                   order={3}
-                  className={`${montserrat_heading.variable} font-montserratHeading text-base text-[--illinois-orange] sm:text-xl`}
+                  className={` text-base text-[--illinois-orange] sm:text-xl`}
                 >
                   {project_name}
                 </Title>
@@ -943,7 +942,7 @@ CRITICAL: The optimized prompt must:
                     }}
                   />
                   <Title
-                    className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
+                    className={`label pl-1 pr-0 text-[--dashboard-foreground] md:pl-0 md:pr-2`}
                     order={4}
                   >
                     Prompt Engineering Guide
@@ -965,10 +964,7 @@ CRITICAL: The optimized prompt must:
 
               <Collapse in={insightsOpen} transitionDuration={200}>
                 <div className="mt-4 px-2 text-[--dashboard-foreground]">
-                  <Text
-                    size="md"
-                    className={`${montserrat_paragraph.variable} select-text font-montserratParagraph`}
-                  >
+                  <Text size="md" className={`select-text`}>
                     For additional insights and best practices on prompt
                     creation, please review:
                     <List
@@ -989,7 +985,7 @@ CRITICAL: The optimized prompt must:
                     >
                       <List.Item>
                         <a
-                          className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] `}
                           href="https://platform.openai.com/docs/guides/prompt-engineering"
                           target="_blank"
                           rel="noopener noreferrer"
@@ -1008,7 +1004,7 @@ CRITICAL: The optimized prompt must:
                       </List.Item>
                       <List.Item>
                         <a
-                          className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] `}
                           href="https://docs.anthropic.com/claude/prompt-library"
                           target="_blank"
                           rel="noopener noreferrer"
@@ -1027,7 +1023,7 @@ CRITICAL: The optimized prompt must:
                       </List.Item>
                     </List>
                     <Text
-                      className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
+                      className={`label inline-block select-text`}
                       size="md"
                       style={{ marginTop: '1.5rem' }}
                     >
@@ -1083,7 +1079,7 @@ CRITICAL: The optimized prompt must:
                 <Flex justify="space-between" align="center" mb="md">
                   <Flex align="center" className="-mt-2 gap-4">
                     <Title
-                      className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
+                      className={`label pl-1 pr-0 text-[--dashboard-foreground] md:pl-0 md:pr-2`}
                       order={4}
                     >
                       System Prompt
@@ -1209,7 +1205,6 @@ CRITICAL: The optimized prompt must:
                           '&:focus': {
                             borderColor: '#6e56cf',
                           },
-                          fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                           cursor: 'pointer',
                           minWidth: 0,
                           flex: '1 1 auto',
@@ -1261,7 +1256,6 @@ CRITICAL: The optimized prompt must:
                             color: 'var(--foreground)',
                             backgroundColor: 'var(--foreground-faded)',
                           },
-                          fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                           cursor: 'pointer',
                           whiteSpace: 'normal',
                           lineHeight: 1.2,
@@ -1333,7 +1327,6 @@ CRITICAL: The optimized prompt must:
                           color: theme.white,
                           fontSize: '0.875rem',
                           padding: '0.5rem 0.75rem',
-                          fontFamily: 'var(--font-montserratParagraph)',
                           maxWidth: '300px',
                         },
                         arrow: {
@@ -1386,10 +1379,7 @@ CRITICAL: The optimized prompt must:
                   )}
                 </Flex>
 
-                <form
-                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                  onSubmit={handleSubmitPromptOptimization}
-                >
+                <form className={``} onSubmit={handleSubmitPromptOptimization}>
                   <Textarea
                     autosize
                     minRows={isEmbedded ? 4 : 3}
@@ -1403,7 +1393,6 @@ CRITICAL: The optimized prompt must:
                       input: {
                         color: 'var(--foreground)',
                         backgroundColor: 'var(--background)',
-                        fontFamily: 'var(--font-montserratParagraph)',
                         '&:focus': { borderColor: 'var(--dashboard-button)' },
                       },
                     }}
@@ -1413,7 +1402,7 @@ CRITICAL: The optimized prompt must:
                     <Button
                       variant="filled"
                       radius="md"
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                      className={``}
                       type="button"
                       onClick={() => handleSystemPromptSubmit(baseSystemPrompt)}
                       sx={() => ({
@@ -1459,7 +1448,7 @@ CRITICAL: The optimized prompt must:
                             />
                           )
                         }
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                        className={``}
                         sx={() => ({
                           background: 'var(--dashboard-button) !important',
                           border: 'none',
@@ -1497,15 +1486,11 @@ CRITICAL: The optimized prompt must:
               onClose={close}
               size="xl"
               title={
-                <Text
-                  className={`${montserrat_heading.variable} font-montserratHeading`}
-                  size="lg"
-                  weight={700}
-                >
+                <Text className={``} size="lg" weight={700}>
                   Optimized System Prompt
                 </Text>
               }
-              className={`${montserrat_heading.variable} rounded-xl font-montserratHeading`}
+              className={`rounded-xl`}
               centered
               radius="lg"
               styles={{
@@ -1572,7 +1557,7 @@ CRITICAL: The optimized prompt must:
                             lineHeight: '1.6',
                             fontSize: '0.95rem',
                           }}
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={``}
                         >
                           {message.content}
                         </div>
@@ -1587,7 +1572,7 @@ CRITICAL: The optimized prompt must:
                     variant="outline"
                     radius="md"
                     onClick={close}
-                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                    className={``}
                     styles={() => ({
                       root: {
                         color: 'var(--foreground)',
@@ -1602,7 +1587,7 @@ CRITICAL: The optimized prompt must:
                   </Button>
                   <Button
                     radius="md"
-                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                    className={``}
                     onClick={() => {
                       const lastMessage = messages[messages.length - 1]
                       if (lastMessage && lastMessage.role === 'assistant') {
@@ -1636,10 +1621,7 @@ CRITICAL: The optimized prompt must:
             {/* Behavior Settings - shown inline when embedded */}
             {isEmbedded && (
               <div className="mt-6 rounded-xl bg-[--dashboard-background-faded] p-4 sm:p-6">
-                <Title
-                  order={4}
-                  className={`${montserrat_heading.variable} mb-4 font-montserratHeading text-[--foreground]`}
-                >
+                <Title order={4} className={`mb-4 text-[--foreground]`}>
                   AI Behavior Settings
                 </Title>
 
@@ -1714,7 +1696,7 @@ CRITICAL: The optimized prompt must:
                     onClose={closeResetModal}
                     title={
                       <Text
-                        className={`${montserrat_heading.variable} font-montserratHeading`}
+                        className={``}
                         size="lg"
                         weight={700}
                         variant="gradient"
@@ -1764,7 +1746,7 @@ CRITICAL: The optimized prompt must:
                           style={{ marginTop: '2px' }}
                         />
                         <Text
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={``}
                           size="sm"
                           weight={500}
                           style={{
@@ -1786,7 +1768,7 @@ CRITICAL: The optimized prompt must:
                       <div>
                         <Text
                           size="sm"
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={``}
                           weight={600}
                           style={{
                             color: '#D1D1D1',
@@ -1824,7 +1806,7 @@ CRITICAL: The optimized prompt must:
                       <Text
                         size="sm"
                         style={{ color: '#D1D1D1' }}
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                        className={``}
                       >
                         This cannot be undone. Please confirm you wish to
                         proceed.
@@ -1836,7 +1818,7 @@ CRITICAL: The optimized prompt must:
                           color="gray"
                           radius="md"
                           onClick={closeResetModal}
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={``}
                           styles={(theme) => ({
                             root: {
                               borderColor: theme.colors.gray[6],
@@ -1853,7 +1835,7 @@ CRITICAL: The optimized prompt must:
                           variant="filled"
                           color="red"
                           radius="md"
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={``}
                           sx={(theme) => ({
                             backgroundColor: `${theme.colors.red[8]} !important`,
                             border: 'none',
@@ -1892,7 +1874,7 @@ CRITICAL: The optimized prompt must:
                       radius="md"
                       leftIcon={<IconAlertTriangle size={16} />}
                       onClick={openResetModal}
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                      className={``}
                       sx={(theme) => ({
                         backgroundColor: `${theme.colors.red[8]} !important`,
                         border: 'none',
@@ -1913,7 +1895,7 @@ CRITICAL: The optimized prompt must:
                       radius="md"
                       leftIcon={<IconLink size={16} />}
                       onClick={openLinkGenerator}
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                      className={``}
                       sx={() => ({
                         background: 'var(--dashboard-button) !important',
                         border: 'none',
@@ -1962,7 +1944,7 @@ CRITICAL: The optimized prompt must:
             <Flex direction="column" m="1rem" gap="md">
               <Flex align="flex-start">
                 <Title
-                  className={`${montserrat_heading.variable} font-montserratHeading`}
+                  className={``}
                   order={3}
                   pl="md"
                   pr="md"
@@ -1972,13 +1954,7 @@ CRITICAL: The optimized prompt must:
                   Document Search Optimization
                 </Title>
                 <Indicator
-                  label={
-                    <Text
-                      className={`${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      New
-                    </Text>
-                  }
+                  label={<Text className={``}>New</Text>}
                   color="var(--dashboard-button)"
                   size={13}
                   styles={{
@@ -1988,9 +1964,7 @@ CRITICAL: The optimized prompt must:
                     },
                   }}
                 >
-                  <span
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  ></span>
+                  <span className={``}></span>
                 </Indicator>
               </Flex>
 
@@ -2011,20 +1985,11 @@ CRITICAL: The optimized prompt must:
               <Divider />
 
               <Flex align="center" style={{ paddingTop: '15px' }}>
-                <Title
-                  className={`label ${montserrat_heading.variable} mr-[8px] font-montserratHeading`}
-                  order={3}
-                >
+                <Title className={`label mr-[8px]`} order={3}>
                   AI Behavior Settings
                 </Title>
                 <Indicator
-                  label={
-                    <Text
-                      className={`${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      New
-                    </Text>
-                  }
+                  label={<Text className={``}>New</Text>}
                   color="var(--dashboard-button)"
                   size={13}
                   styles={{
@@ -2034,9 +1999,7 @@ CRITICAL: The optimized prompt must:
                     },
                   }}
                 >
-                  <span
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  ></span>
+                  <span className={``}></span>
                 </Indicator>
               </Flex>
 
@@ -2099,7 +2062,7 @@ CRITICAL: The optimized prompt must:
                     onClose={closeResetModal}
                     title={
                       <Text
-                        className={`${montserrat_heading.variable} font-montserratHeading`}
+                        className={``}
                         size="lg"
                         weight={700}
                         variant="gradient"
@@ -2149,7 +2112,7 @@ CRITICAL: The optimized prompt must:
                           style={{ marginTop: '2px' }}
                         />
                         <Text
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={``}
                           size="sm"
                           weight={500}
                           style={{
@@ -2171,7 +2134,7 @@ CRITICAL: The optimized prompt must:
                       <div>
                         <Text
                           size="sm"
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={``}
                           weight={600}
                           style={{
                             color: '#D1D1D1',
@@ -2209,7 +2172,7 @@ CRITICAL: The optimized prompt must:
                       <Text
                         size="sm"
                         style={{ color: '#D1D1D1' }}
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                        className={``}
                       >
                         This cannot be undone. Please confirm you wish to
                         proceed.
@@ -2221,7 +2184,7 @@ CRITICAL: The optimized prompt must:
                           color="gray"
                           radius="md"
                           onClick={closeResetModal}
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={``}
                           styles={(theme) => ({
                             root: {
                               borderColor: theme.colors.gray[6],
@@ -2238,7 +2201,7 @@ CRITICAL: The optimized prompt must:
                           variant="filled"
                           color="red"
                           radius="md"
-                          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                          className={``}
                           sx={(theme) => ({
                             backgroundColor: `${theme.colors.red[8]} !important`,
                             border: 'none',
@@ -2280,7 +2243,7 @@ CRITICAL: The optimized prompt must:
                       color="red"
                       radius="md"
                       leftIcon={<IconAlertTriangle size={16} />}
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                      className={``}
                       sx={(theme) => ({
                         backgroundColor: `${theme.colors.red[8]} !important`,
                         border: 'none',
@@ -2303,7 +2266,7 @@ CRITICAL: The optimized prompt must:
                       radius="md"
                       leftIcon={<IconLink size={16} />}
                       onClick={openLinkGenerator}
-                      className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                      className={``}
                       sx={() => ({
                         background: 'var(--dashboard-button) !important',
                         border: 'none',

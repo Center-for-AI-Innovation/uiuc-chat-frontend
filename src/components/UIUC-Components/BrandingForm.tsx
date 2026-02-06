@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 
-import { Button, FileInput, Textarea } from '@mantine/core'
+import { FileInput } from '@mantine/core'
+
+import { Button } from '@/components/shadcn/ui/button'
 import { IconFileUpload } from '@tabler/icons-react'
 
-//import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { FormInput } from '@/components/shadcn/ui/form-input'
 
 import SetExampleQuestions from './SetExampleQuestions'
 
@@ -75,28 +77,15 @@ const BrandingForm = ({
     <>
       <div className="branding_form">
         <div className="set_greeting form-control relative">
-          <div className="mt-4 font-semibold">Greeting</div>
+          <div className="mb-3 font-semibold">Greeting</div>
 
-          <div className="-mx-3 mt-1 flex items-start gap-2">
-            <Textarea
-              autosize
+          <div className="flex flex-col gap-2">
+            <FormInput
+              as="textarea"
               minRows={2}
               maxRows={5}
               placeholder="Enter a greeting to help users get started with your bot, shown before they start chatting."
               className="w-full"
-              styles={{
-                input: {
-                  color: 'var(--foreground)',
-                  backgroundColor: 'var(--background)',
-                  borderColor: 'var(--dashboard-border)',
-                  padding: 'calc(var(--padding) * .75)',
-                  paddingRight: '7rem', //make room for the button
-
-                  '&:focus': {
-                    borderColor: 'var(--background-darker)',
-                  },
-                },
-              }}
               value={introMessage}
               onChange={(e) => {
                 setIntroMessage(e.target.value)
@@ -104,41 +93,44 @@ const BrandingForm = ({
               }}
             />
 
-            <Button
-              type="submit"
-              size={'xs'}
-              disabled={!isIntroMessageUpdated}
-              className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-faded] disabled:opacity-50"
-              onClick={async () => {
-                setIsIntroMessageUpdated(false)
+            <div>
+              <Button
+                type="submit"
+                variant="dashboard"
+                size="sm"
+                disabled={!isIntroMessageUpdated}
+                onClick={async () => {
+                  setIsIntroMessageUpdated(false)
 
-                if (metadata) {
-                  metadata.course_intro_message = introMessage
-                  // Update the courseMetadata object
+                  if (metadata) {
+                    metadata.course_intro_message = introMessage
+                    // Update the courseMetadata object
 
-                  const resp = await callSetCourseMetadata(
-                    project_name,
-                    metadata,
-                  )
-
-                  if (!resp) {
-                    console.log(
-                      'Error upserting course metadata for course: ',
+                    const resp = await callSetCourseMetadata(
                       project_name,
+                      metadata,
                     )
+
+                    if (!resp) {
+                      console.log(
+                        'Error upserting course metadata for course: ',
+                        project_name,
+                      )
+                    }
                   }
-                }
-              }}
-            >
-              Update
-            </Button>
+                }}
+              >
+                Update
+              </Button>
+            </div>
           </div>
 
           {isIntroMessageUpdated && (
             <>
               <Button
                 type="submit"
-                className="relative m-1 hidden w-[30%] self-end bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
+                variant="dashboard"
+                className="relative m-1 hidden w-[30%] self-end"
                 onClick={async () => {
                   setIsIntroMessageUpdated(false)
 
@@ -167,9 +159,9 @@ const BrandingForm = ({
         </div>
 
         <div className="set_example_questions">
-          <div className="mt-4 font-semibold">Example questions</div>
+          <div className="mb-3 mt-6 font-semibold">Example questions</div>
 
-          <div className="-mx-3 mt-1">
+          <div>
             <SetExampleQuestions
               course_name={project_name}
               course_metadata={metadata as CourseMetadataOptionalForUpsert}
@@ -178,9 +170,12 @@ const BrandingForm = ({
         </div>
 
         <div className="upload_logo form-control">
-          <div className="mt-4 font-semibold">Add a logo</div>
+          <div className="mt-6 font-semibold">Add a logo</div>
+          <div className="mb-3 text-sm text-[--foreground-faded]">
+            This logo will appear in the header of the chat window.
+          </div>
 
-          <div className="-mx-3 mt-1">
+          <div>
             {/* TODO: maybe change this to a button to trigger the upload like the other inputs? */}
             {/* TODO: show current logo and ability to remove logo */}
             <FileInput
@@ -200,10 +195,6 @@ const BrandingForm = ({
               }
               onChange={onUploadLogo}
             />
-          </div>
-
-          <div className="text-sm text-[--foreground-faded]">
-            This logo will appear in the header of the chat window.
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import { useRouter } from 'next/router'
 import React, { useMemo, useState } from 'react'
 
 import { Button, Card, Flex, Title } from '@mantine/core'
@@ -33,6 +34,7 @@ const MakeNewCoursePage = ({
   project_description?: string
 }) => {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const auth = useAuth()
   const user_id = auth.user?.profile.email || current_user_email
 
@@ -50,7 +52,7 @@ const MakeNewCoursePage = ({
   }, [])
 
   // Debounce project name input to avoid excessive API calls
-  const [debouncedProjectName] = useDebouncedValue(projectName, 500)
+  const [debouncedProjectName] = useDebouncedValue(projectName, 1000)
 
   // Check project name availability using React Query
   const { data: courseExists, isFetching: isCheckingAvailability } =
@@ -127,13 +129,13 @@ const MakeNewCoursePage = ({
           | undefined
       }
     />,
-    <StepLLM key="llm" project_name={projectName} />,
-    <StepPrompt key="prompt" project_name={projectName} />,
     <StepBranding
       key="branding"
       project_name={projectName}
       user_id={user_id}
     />,
+    <StepLLM key="llm" project_name={projectName} />,
+    <StepPrompt key="prompt" project_name={projectName} />,
     <StepSuccess key="success" project_name={projectName} />,
   ]
 
@@ -311,19 +313,26 @@ const MakeNewCoursePage = ({
       </Head>
       <main
         className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          padding: '1rem',
-        }}
+        style={
+          {
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+            padding: '1rem',
+            '--dashboard-button': 'var(--illinois-blue)',
+            '--dashboard-button-hover':
+              'color-mix(in srgb, var(--illinois-blue), black 20%)',
+            '--dashboard-table-selected':
+              'color-mix(in srgb, var(--illinois-blue), var(--illinois-white) 20%)',
+          } as React.CSSProperties
+        }
       >
         {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
         <div className="mt-12 flex w-full flex-1 flex-col items-center justify-start py-0 pb-20">
           <Card
             padding="none"
             withBorder={true}
-            radius="md"
+            radius="lg"
             className="mt-16 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
           >
             <div className="step_container min-h-[16rem]">
@@ -362,56 +371,89 @@ const MakeNewCoursePage = ({
               ))}
             </div>
 
-            <Button
-              size="sm"
-              radius="sm"
-              className={isLastStep ? 'opacity-0' : ''}
-              classNames={componentClasses.buttonPrimary}
-              onClick={async () => {
-                if (currentStep === 0) {
-                  if (!hasCreatedProject) {
-                    if (
-                      projectName === '' ||
-                      isLoading ||
-                      !isCourseAvailable ||
-                      isWaitingForAvailabilityCheck
-                    ) {
-                      return
-                    }
+            <div className="flex items-center gap-3">
+              <Button
+                size="sm"
+                radius="sm"
+                className={isLastStep ? 'opacity-0' : ''}
+                classNames={componentClasses.buttonPrimary}
+                onClick={async () => {
+                  if (currentStep === 0) {
+                    if (!hasCreatedProject) {
+                      if (
+                        projectName === '' ||
+                        isLoading ||
+                        !isCourseAvailable ||
+                        isWaitingForAvailabilityCheck
+                      ) {
+                        return
+                      }
 
+                      const isCreated = await handleSubmit(
+                        projectName,
+                        projectDescription,
+                        current_user_email,
+                        useIllinoisChatConfig,
+                      )
+
+                      if (!isCreated) {
+                        return
+                      }
+
+                      setHasCreatedProject(true)
+                    }
+                  }
+
+                  if (!isLastStep) {
+                    goToNextStep()
+                  }
+                }}
+                disabled={
+                  isLastStep ||
+                  shouldBlockNavigation ||
+                  (currentStep === 0 &&
+                    !hasCreatedProject &&
+                    (projectName === '' ||
+                      !isCourseAvailable ||
+                      isLoading ||
+                      isWaitingForAvailabilityCheck))
+                }
+                loading={isLoading && currentStep === 0}
+              >
+                Continue
+              </Button>
+
+              <Button
+                size="sm"
+                radius="sm"
+                classNames={componentClasses.button}
+                disabled={
+                  isLoading ||
+                  (projectName === '' && !hasCreatedProject) ||
+                  (!hasCreatedProject &&
+                    (!isCourseAvailable || isWaitingForAvailabilityCheck))
+                }
+                onClick={async () => {
+                  if (!hasCreatedProject) {
                     const isCreated = await handleSubmit(
                       projectName,
                       projectDescription,
                       current_user_email,
                       useIllinoisChatConfig,
                     )
-
-                    if (!isCreated) {
-                      return
+                    if (isCreated) {
+                      setHasCreatedProject(true)
+                      router.push(`/${projectName}/chat`)
                     }
-
-                    setHasCreatedProject(true)
+                  } else {
+                    router.push(`/${projectName}/chat`)
                   }
-                }
-
-                if (!isLastStep) {
-                  goToNextStep()
-                }
-              }}
-              disabled={
-                isLastStep ||
-                shouldBlockNavigation ||
-                (currentStep === 0 &&
-                  !hasCreatedProject &&
-                  (projectName === '' ||
-                    !isCourseAvailable ||
-                    isLoading ||
-                    isWaitingForAvailabilityCheck))
-              }
-              loading={isLoading && currentStep === 0}
-            >
-              Continue
-            </Button>
+                }}
+                loading={isLoading && !hasCreatedProject}
+              >
+                Start Chatting
+              </Button>
+            </div>
           </div>
         </div>
       </main>
