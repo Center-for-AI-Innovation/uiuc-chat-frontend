@@ -5,6 +5,7 @@ import { Button, Card, Flex, Title } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { createProject } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
@@ -19,6 +20,7 @@ import StepSuccess from './MakeNewCoursePageSteps/StepSuccess'
 import { useAuth } from 'react-oidc-context'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
+import GlobalFooter from './GlobalFooter'
 
 const MakeNewCoursePage = ({
   project_name,

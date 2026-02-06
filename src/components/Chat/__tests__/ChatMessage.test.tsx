@@ -28,13 +28,9 @@ vi.mock('framer-motion', () => ({
     React.createElement(React.Fragment, null, children),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchPresignedUrl: vi.fn(async () => 'http://localhost/api/file'),
-  }
-})
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(async () => 'http://localhost/api/file'),
+}))
 
 vi.mock('@/hooks/__internal__/conversation', async (importOriginal) => {
   const actual: any = await importOriginal()
@@ -737,7 +733,7 @@ describe('ChatMessage', () => {
   it('handles thumbnail fetch errors and invalid web URLs', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('@/hooks/__internal__/downloadPresignedUrl')
     ;(api.fetchPresignedUrl as any).mockRejectedValueOnce(
       new Error('thumb fail'),
     )
@@ -801,7 +797,7 @@ describe('ChatMessage', () => {
   it('refreshes S3 citation links, preserves #page anchors, and skips non-S3 links', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('@/hooks/__internal__/downloadPresignedUrl')
     ;(api.fetchPresignedUrl as any).mockResolvedValue(
       'http://localhost/new-presigned',
     )
@@ -986,7 +982,7 @@ describe('ChatMessage', () => {
   it('validates image URLs, handles invalid URLs, and tolerates presigned URL failures', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('@/hooks/__internal__/downloadPresignedUrl')
     ;(api.fetchPresignedUrl as any).mockRejectedValueOnce(new Error('fail'))
 
     const { ChatMessage } = await import('../ChatMessage')

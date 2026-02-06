@@ -3,16 +3,16 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('uuid', () => ({ v4: () => 'test-uuid' }))
 
 import {
-  callSetCourseMetadata,
   convertConversatonToVercelAISDKv3,
   convertConversationToCoreMessagesWithoutSystem,
   createProject,
-  fetchCourseMetadata,
-  fetchPresignedUrl,
   getBackendUrl,
   getBaseUrl,
-  uploadToS3,
 } from '../apiUtils'
+import { callSetCourseMetadata } from '~/hooks/__internal__/setCourseMetadata'
+import { fetchPresignedUrl } from '~/hooks/__internal__/downloadPresignedUrl'
+import { fetchCourseMetadata } from '~/hooks/__internal__/fetchCourseMetadata'
+import { uploadToS3 } from '~/hooks/queries/useUploadToS3'
 
 describe('apiUtils (browser/jsdom)', () => {
   it('getBaseUrl returns empty string in the browser', () => {
@@ -96,15 +96,23 @@ describe('apiUtils (browser/jsdom)', () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(fetchMock as any)
 
     const file = new File(['hello'], 'hello.txt', { type: 'text/plain' })
-    const key = await uploadToS3(file, 'user', 'course', 'document-group')
+    const key = await uploadToS3({
+      file,
+      uniqueFileName: 'test-uuid.txt',
+      courseName: 'course',
+      user_id: 'user',
+      uploadType: 'document-group',
+    })
     expect(key).toBe('uploads/test-uuid.txt')
   })
 
-  it('uploadToS3 returns undefined and logs on errors', async () => {
+  it('uploadToS3 throws on errors', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
     const file = new File(['hello'], 'hello.txt', { type: 'text/plain' })
-    await expect(uploadToS3(file, 'user', 'course')).resolves.toBeUndefined()
+    await expect(
+      uploadToS3({ file, uniqueFileName: 'hello.txt', courseName: 'course' }),
+    ).rejects.toThrow('boom')
   })
 
   it('fetchPresignedUrl returns url when API responds ok', async () => {
@@ -128,6 +136,23 @@ describe('apiUtils (browser/jsdom)', () => {
     await expect(fetchPresignedUrl('path')).resolves.toBeNull()
   })
 
+  it('fetchPresignedUrl accepts optional courseName, page, and fileName parameters', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ url: 'https://signed.example/file' }), {
+        status: 200,
+      }),
+    )
+
+    await fetchPresignedUrl('path', 'CS101', '3', 'doc.pdf')
+    const body = JSON.parse((fetchSpy.mock.calls[0]![1] as any).body)
+    expect(body).toEqual({
+      filePath: 'path',
+      courseName: 'CS101',
+      page: '3',
+      fileName: 'doc.pdf',
+    })
+  })
+
   it('fetchCourseMetadata parses is_private when it is a string', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(
@@ -139,7 +164,7 @@ describe('apiUtils (browser/jsdom)', () => {
       ),
     )
 
-    const metadata = await fetchCourseMetadata('CS101')
+    const metadata = await fetchCourseMetadata({ courseName: 'CS101' })
     expect(metadata).toEqual({ is_private: true })
   })
 
@@ -151,7 +176,9 @@ describe('apiUtils (browser/jsdom)', () => {
       }),
     )
 
-    await expect(fetchCourseMetadata('CS101')).rejects.toThrow(/denied/i)
+    await expect(fetchCourseMetadata({ courseName: 'CS101' })).rejects.toThrow(
+      /denied/i,
+    )
   })
 
   it('fetchCourseMetadata throws when response is not ok', async () => {
@@ -160,7 +187,9 @@ describe('apiUtils (browser/jsdom)', () => {
       new Response('nope', { status: 500, statusText: 'fail' }),
     )
 
-    await expect(fetchCourseMetadata('CS101')).rejects.toThrow(/fail/i)
+    await expect(fetchCourseMetadata({ courseName: 'CS101' })).rejects.toThrow(
+      /fail/i,
+    )
   })
 
   it('createProject returns true on success', async () => {

@@ -188,9 +188,7 @@ describe('MakeQueryAnalysisPage', () => {
     await waitFor(() => expect(downloadConversationHistory).toHaveBeenCalled())
   })
 
-  it('logs an error when course metadata fetch fails', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
+  it('shows a loading spinner when course metadata fetch fails', async () => {
     globalThis.__TEST_ROUTER__ = {
       asPath: '/CS101/analysis',
       replace: vi.fn(),
@@ -211,7 +209,15 @@ describe('MakeQueryAnalysisPage', () => {
 
     renderWithProviders(<MakeQueryAnalysisPage course_name="CS101" />)
 
-    await waitFor(() => expect(console.error).toHaveBeenCalled())
+    // When metadata fetch fails, courseMetadata is null so the component
+    // stays on the loading spinner indefinitely.
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toBeInTheDocument()
+    })
+    // Ensure we never navigate past the loading state to the main content.
+    expect(
+      screen.queryByText(/Conversation Visualizations/i),
+    ).not.toBeInTheDocument()
   })
 
   it('shows the empty-state when there is no conversation data for the selected range', async () => {

@@ -243,6 +243,8 @@ export const Chatbar = ({
       setIsExporting(true)
       try {
         await downloadConvoHistoryAsync({ projectName: courseName })
+      } catch (error) {
+        console.error('Failed to export conversation history:', error)
       } finally {
         setIsExporting(false)
       }

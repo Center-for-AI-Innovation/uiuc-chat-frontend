@@ -202,6 +202,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       await generateApiKey.mutateAsync({
         courseName: course_name,
       })
+      await queryClient.invalidateQueries({
+        queryKey: ['chatApiKey', course_name],
+      })
       showNotification({
         title: 'Success',
         message: 'API key generated successfully.',
@@ -220,6 +223,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       await rotateApiKey.mutateAsync({
         courseName: course_name,
       })
+      await queryClient.invalidateQueries({
+        queryKey: ['chatApiKey', course_name],
+      })
       showNotification({
         title: 'Success',
         message: 'API key rotated successfully.',
@@ -236,6 +242,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   const handleDelete = () => {
     deleteChatApiKey.mutate(undefined, {
       onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['chatApiKey', course_name],
+        })
         showNotification({
           title: 'Success',
           message: 'API key deleted successfully.',

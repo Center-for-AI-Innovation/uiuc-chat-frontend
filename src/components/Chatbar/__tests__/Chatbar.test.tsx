@@ -270,8 +270,11 @@ describe('Chatbar', () => {
     const user = userEvent.setup()
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(
-      new TypeError('fetch failed'),
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
     )
 
     renderWithProviders(
@@ -291,8 +294,18 @@ describe('Chatbar', () => {
       },
     )
 
+    // Set up rejection after mount fetches complete.
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(
+      new TypeError('fetch failed'),
+    )
+
     await user.click(screen.getByText(/Export history/i))
-    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('downloadConvoHistoryUser'),
+        expect.anything(),
+      ),
+    )
   })
 
   it('updates the OpenAI API key via ChatbarSettings', async () => {

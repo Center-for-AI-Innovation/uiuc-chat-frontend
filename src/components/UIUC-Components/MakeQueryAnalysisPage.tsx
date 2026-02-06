@@ -245,7 +245,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     : filteredStatsErrorObj
       ? false
       : filteredConversationStats
-        ? Object.keys(filteredConversationStats.per_day).length > 0
+        ? Object.keys(filteredConversationStats.per_day ?? {}).length > 0
         : true
 
   const [view, setView] = useState('hour')

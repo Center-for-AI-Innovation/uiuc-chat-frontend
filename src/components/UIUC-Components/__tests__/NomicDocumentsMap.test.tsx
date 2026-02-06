@@ -1,6 +1,7 @@
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { renderWithProviders } from '~/test-utils/renderWithProviders'
 
 vi.mock('framer-motion', () => {
   const motion = new Proxy(
@@ -27,7 +28,9 @@ describe('NomicDocumentsMap', () => {
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async () => fetchPromise)
 
-    const { container } = render(<NomicDocumentsMap course_name="CS101" />)
+    const { container } = renderWithProviders(
+      <NomicDocumentsMap course_name="CS101" />,
+    )
     expect(container.querySelector('.skeleton-box')).toBeTruthy()
 
     resolveFetch!(
@@ -56,7 +59,7 @@ describe('NomicDocumentsMap', () => {
       }),
     )
 
-    render(<NomicDocumentsMap course_name="CS101" />)
+    renderWithProviders(<NomicDocumentsMap course_name="CS101" />)
 
     await waitFor(() =>
       expect(

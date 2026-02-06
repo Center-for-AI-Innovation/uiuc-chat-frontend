@@ -1,11 +1,11 @@
 import { useAuth } from 'react-oidc-context'
-import { Table, Title, Text } from '@mantine/core'
+import { Table, Text } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { useRouter } from 'next/router'
-import { DataTable } from 'mantine-datatable'
 import styled from 'styled-components'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { montserrat_heading } from 'fonts'
 import Link from 'next/link'
 import React from 'react'
 import { useMediaQuery } from '@mantine/hooks'
@@ -75,22 +75,20 @@ const ResponsiveTableWrapper = styled.div`
 type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'privacy' | 'owner' | 'admins'
 
+const EMPTY_COURSES: { [key: string]: CourseMetadata }[] = []
+
 const ListProjectTable: React.FC = () => {
   const auth = useAuth()
-  const [courses, setProjects] = useState<
-    { [key: string]: CourseMetadata }[] | null
-  >(null)
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const [rows, setRows] = useState<JSX.Element[]>([])
-  const isMobile = useMediaQuery('(max-width: 768px)')
   const [sortColumn, setSortColumn] = useState<SortableColumn>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
-  const { data: rawData = [], isFetched } = useFetchAllCourseMetadata({
-    currUserEmail: auth.user?.profile.email || '',
-    enabled: !auth.isLoading && auth.isAuthenticated === true,
-  })
+  const { data: rawData = EMPTY_COURSES, isFetched } =
+    useFetchAllCourseMetadata({
+      currUserEmail: auth.user?.profile.email || '',
+      enabled: !auth.isLoading && auth.isAuthenticated === true,
+    })
 
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {
