@@ -29,7 +29,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import HomeContext from '~/pages/api/home/home.context'
 
-import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { useDownloadPresignedUrlQuery } from '~/hooks/queries/useDownloadPresignedUrl'
 import { ChatInput } from './ChatInput'
 import { ChatLoader } from './ChatLoader'
 import { ErrorMessageDiv } from './ErrorMessageDiv'
@@ -116,7 +116,11 @@ export const Chat = memo(
     const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
     const { mutateAsync: routeChatAsync } = useRouteChat()
     // const
-    const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+    const bannerS3Path = courseMetadata?.banner_image_s3 || undefined
+    const { data: bannerUrl } = useDownloadPresignedUrlQuery(
+      bannerS3Path,
+      courseName,
+    )
     const getCurrentPageName = () => {
       // /CS-125/dashboard --> CS-125
       return router.asPath.slice(1).split('/')[0] as string
@@ -147,19 +151,6 @@ export const Chat = memo(
     } = useFetchAllWorkflows(getCurrentPageName())
 
     const permission = get_user_permission(courseMetadata, auth)
-
-    useEffect(() => {
-      if (
-        courseMetadata?.banner_image_s3 &&
-        courseMetadata.banner_image_s3 !== ''
-      ) {
-        fetchPresignedUrl(courseMetadata.banner_image_s3, courseName).then(
-          (url) => {
-            setBannerUrl(url)
-          },
-        )
-      }
-    }, [courseMetadata])
 
     const {
       state: {

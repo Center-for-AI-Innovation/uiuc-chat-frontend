@@ -31,7 +31,10 @@ import {
 } from '@/types/chat'
 import { useTranslation } from 'next-i18next'
 import HomeContext from '~/pages/api/home/home.context'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
+import {
+  useDownloadPresignedUrl,
+  useDownloadPresignedUrlQuery,
+} from '~/hooks/queries/useDownloadPresignedUrl'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
 import { generateSecureKey } from '~/utils/cryptoRandom'
@@ -225,7 +228,6 @@ const FilePreviewModal: React.FC<{
     dispatch: homeDispatch,
   } = useContext(HomeContext)
 
-  const [actualFileUrl, setActualFileUrl] = useState<string>('')
   const [textContent, setTextContent] = useState<string>('')
 
   // Handle PDFs and Office documents that can be displayed in iframes
@@ -236,14 +238,11 @@ const FilePreviewModal: React.FC<{
     fileType?.includes('text') ||
     fileName.toLowerCase().match(/\.(txt|md|html|xml|csv|py|srt|vtt)$/i)
 
-  useEffect(() => {
-    if (fileUrl && isOpen) {
-      // Convert S3 key to presigned URL
-      fetchPresignedUrl(fileUrl, courseName).then((url) => {
-        setActualFileUrl(url || '')
-      })
-    }
-  }, [fileUrl, isOpen, courseName])
+  const { data: presignedUrlData } = useDownloadPresignedUrlQuery(
+    isOpen ? fileUrl : undefined,
+    courseName,
+  )
+  const actualFileUrl = presignedUrlData || ''
 
   // Load text content for text files
   useEffect(() => {
@@ -455,6 +454,7 @@ export const ChatMessage = memo(
   }: Props) => {
     const { t } = useTranslation('chat')
     const logConversationMutation = useLogConversation(courseName)
+    const { mutateAsync: downloadPresignedUrl } = useDownloadPresignedUrl()
     const { activeSidebarMessageId, setActiveSidebarMessageId } =
       useReactContext(SourcesSidebarContext)
 
@@ -808,10 +808,10 @@ export const ChatMessage = memo(
       courseName: string,
     ): Promise<string> {
       try {
-        const presignedUrl = await fetchPresignedUrl(
-          uploadedImageUrl,
+        const presignedUrl = await downloadPresignedUrl({
+          filePath: uploadedImageUrl,
           courseName,
-        )
+        })
         return presignedUrl as string
       } catch (error) {
         console.error(
@@ -984,10 +984,10 @@ export const ChatMessage = memo(
                 '-pg1-thumb.png',
               )
               try {
-                const presignedUrl = await fetchPresignedUrl(
-                  thumbnailPath,
+                const presignedUrl = await downloadPresignedUrl({
+                  filePath: thumbnailPath,
                   courseName,
-                )
+                })
                 return presignedUrl as string
               } catch (e) {
                 console.error('Failed to fetch thumbnail:', e)
@@ -1161,7 +1161,10 @@ export const ChatMessage = memo(
       courseName: string,
     ): Promise<string> {
       const s3path = extractPathFromUrl(originalLink)
-      return (await fetchPresignedUrl(s3path, courseName)) as string
+      return (await downloadPresignedUrl({
+        filePath: s3path,
+        courseName,
+      })) as string
     }
 
     // Modify the useEffect for refreshing S3 links
@@ -1627,12 +1630,11 @@ export const ChatMessage = memo(
         // For non-previewable files, trigger direct download
         if (fileUrl) {
           try {
-            const presignedUrl = await fetchPresignedUrl(
-              fileUrl,
+            const presignedUrl = await downloadPresignedUrl({
+              filePath: fileUrl,
               courseName,
-              undefined,
               fileName,
-            )
+            })
             if (presignedUrl) {
               const link = document.createElement('a')
               link.href = presignedUrl

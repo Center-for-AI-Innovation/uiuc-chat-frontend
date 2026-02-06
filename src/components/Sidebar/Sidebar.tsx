@@ -8,7 +8,7 @@ import {
 import { type ReactNode } from 'react'
 import Image from 'next/image'
 import { useTranslation } from 'react-i18next'
-import { useFetchPresignedUrl } from '@/hooks/queries/useFetchPresignedUrl'
+import { useDownloadPresignedUrlQuery } from '@/hooks/queries/useDownloadPresignedUrl'
 
 import { IconSettings } from '@tabler/icons-react'
 
@@ -65,9 +65,9 @@ const Sidebar = <T,>({
   const permission = courseMetadata
     ? get_user_permission(courseMetadata, auth)
     : 'no_permission'
-  const { data: presignedBannerUrl } = useFetchPresignedUrl(
-    courseName,
+  const { data: presignedBannerUrl } = useDownloadPresignedUrlQuery(
     courseMetadata?.banner_image_s3,
+    courseName,
   )
   const imageSrc =
     courseName === 'chat'

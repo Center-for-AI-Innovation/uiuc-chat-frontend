@@ -48,7 +48,7 @@ import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
 import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
 
 import handleExport from '~/pages/util/handleExport'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
 import { LoadingSpinner } from './LoadingSpinner'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
 
@@ -115,6 +115,7 @@ export function ProjectFilesTable({
     setCurrentError(error)
   }
 
+  const { mutateAsync: getPresignedUrl } = useDownloadPresignedUrl()
   const appendToDocGroup = useAppendToDocGroup(course_name, queryClient, page)
   const removeFromDocGroup = useDeleteFromDocGroup(
     course_name,
@@ -1176,9 +1177,9 @@ export function ProjectFilesTable({
                       const openModal = async (action: string) => {
                         let urlToOpen = materials.url
                         if (!materials.url && materials.s3_path) {
-                          const presignedUrl = await fetchPresignedUrl(
-                            materials.s3_path,
-                          )
+                          const presignedUrl = await getPresignedUrl({
+                            filePath: materials.s3_path,
+                          })
                           urlToOpen = presignedUrl
                         }
                         if (action === 'view' && urlToOpen) {

@@ -1,11 +1,11 @@
 // src/components/UIUC-Components/ContextCards.tsx
 import { Card, Image, Text, Group } from '@mantine/core'
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import axios from 'axios'
 import { type ContextWithMetadata } from '~/types/chat'
 import { montserrat_paragraph } from 'fonts'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { useDownloadPresignedUrlQuery } from '~/hooks/queries/useDownloadPresignedUrl'
 
 export const ContextCards = ({
   contexts,
@@ -84,37 +84,26 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
     hasUrl: !!context.url,
   })
 
-  const [presignedUrl, setPresignedUrl] = useState<string | null>(null)
-  const [presignedUrlPng, setPresignedUrlPng] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (context.url != '' && context.url != null) {
-      setPresignedUrl(context.url)
-    } else if (context.s3_path) {
-      const effectivePageNumber = getEffectivePageNumber(context)
-      fetchPresignedUrl(context.s3_path).then((url) => {
-        setPresignedUrl(
-          url + (effectivePageNumber ? `#page=${effectivePageNumber}` : ''),
-        )
-      })
-    }
-
-    // ONLY PDFs have thumbnail images
-    if (context.s3_path && context.s3_path.endsWith('.pdf')) {
-      const s3_thumbnail_path = context.s3_path.replace(
-        '.pdf',
-        '-pg1-thumb.png',
-      )
-      fetchPresignedUrl(s3_thumbnail_path).then((url) => {
-        setPresignedUrlPng(url)
-      })
-    } else {
-      // No thumbnail for non-PDFs
-      setPresignedUrlPng(null)
-    }
-  }, [context])
-
   const effectivePageNumber = getEffectivePageNumber(context)
+
+  // Only fetch S3 presigned URL when there's no direct URL
+  const needsS3Url = !context.url && !!context.s3_path
+  const { data: s3PresignedUrl } = useDownloadPresignedUrlQuery(
+    needsS3Url ? context.s3_path : undefined,
+  )
+
+  // Only fetch thumbnail for PDFs
+  const isPdf = context.s3_path?.endsWith('.pdf')
+  const thumbnailPath = isPdf
+    ? context.s3_path!.replace('.pdf', '-pg1-thumb.png')
+    : undefined
+  const { data: presignedUrlPng } = useDownloadPresignedUrlQuery(thumbnailPath)
+
+  const presignedUrl =
+    context.url ||
+    (s3PresignedUrl
+      ? `${s3PresignedUrl}${effectivePageNumber ? `#page=${effectivePageNumber}` : ''}`
+      : null)
 
   return (
     <div className="box-sizing: border-box; border: 100px solid #ccc;">

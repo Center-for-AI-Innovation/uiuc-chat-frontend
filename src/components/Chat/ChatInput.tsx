@@ -5,7 +5,6 @@ import {
   type Conversation,
 } from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
-import { type Prompt } from '@/types/prompt'
 import { Text } from '@mantine/core'
 import {
   IconArrowDown,
@@ -13,19 +12,13 @@ import {
   IconRepeat,
   IconSend,
   IconX,
-  IconFileTypeTxt,
-  IconFileTypePdf,
-  IconFileTypeDocx,
-  IconFile,
   IconPaperclip,
 } from '@tabler/icons-react'
 import { useTranslation } from 'next-i18next'
 import {
   type KeyboardEvent,
   type MutableRefObject,
-  useCallback,
   useContext,
-  useEffect,
   useRef,
   useState,
 } from 'react'
@@ -36,15 +29,10 @@ import HomeContext from '~/pages/api/home/home.context'
 import { PluginSelect } from './PluginSelect'
 import { PromptList } from './PromptList'
 import { VariableModal } from './VariableModal'
+import { FileUploadPreview } from './FileUploadPreview'
 
 import { Tooltip, useMantineTheme } from '@mantine/core'
-import {
-  showToast,
-  showErrorToast,
-  showWarningToast,
-  showInfoToast,
-} from '~/utils/toastUtils'
-import { Montserrat } from 'next/font/google'
+import { showErrorToast, showWarningToast } from '~/utils/toastUtils'
 
 import React from 'react'
 
@@ -53,8 +41,10 @@ import { type CSSProperties } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
-import { fetchPresignedUrl } from 'src/utils/apiUtils'
-import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
+import { useFileUpload } from '~/hooks/useFileUpload'
+import { usePromptAutocomplete } from '~/hooks/usePromptAutocomplete'
+import { useTextareaAutosize } from '~/hooks/useTextareaAutosize'
+import { useChatInputFocus } from '~/hooks/useChatInputFocus'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import {
   selectBestModel,
@@ -64,73 +54,8 @@ import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
-import { useFetchContexts } from '@/hooks/queries/useFetchContexts'
-import { useChatFileUpload } from '@/hooks/queries/useChatFileUpload'
 import { type ChatBody, ContextWithMetadata } from '~/types/chat'
-
-const montserrat_med = Montserrat({
-  weight: '500',
-  subsets: ['latin'],
-})
-
-// Helper function to create a unique key for file comparison
-const createFileKey = (file: File): string => {
-  return `${file.name}-${file.type}`
-}
-
-// Helper function to remove duplicates from an array of files
-const removeDuplicateFiles = (files: File[]): File[] => {
-  const fileKeys = new Set<string>()
-  return files.filter((file) => {
-    const fileKey = createFileKey(file)
-    if (fileKeys.has(fileKey)) {
-      return false
-    }
-    fileKeys.add(fileKey)
-    return true
-  })
-}
-
-// constant created to check the types of files allowed to be uploaded
-const ALLOWED_FILE_EXTENSIONS = [
-  'html',
-  'py',
-  'pdf',
-  'txt',
-  'md',
-  'srt',
-  'vtt',
-  'docx',
-  'ppt',
-  'pptx',
-  'xlsx',
-  'xls',
-  'xlsm',
-  'xlsb',
-  'xltx',
-  'xltm',
-  'xlt',
-  'xml',
-  'xlam',
-  'xla',
-  'xlw',
-  'xlr',
-  'csv',
-  'png',
-  'jpg',
-  'jpeg',
-]
-
-type FileUploadStatus = {
-  file: File
-  status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error'
-
-  // BG: url for image file
-  url?: string
-
-  // BG: contexts for non-image file
-  contexts?: ContextWithMetadata[]
-}
+import { ALLOWED_FILE_EXTENSIONS, isImageFile } from '~/utils/fileUploadUtils'
 
 interface Props {
   onSend: (message: Message, plugin: Plugin | null) => Promise<void>
@@ -144,37 +69,6 @@ interface Props {
   courseName: string
   chat_ui?: ChatUI
   onRegenerate?: () => void
-}
-
-async function createNewConversation(
-  courseName: string,
-  homeDispatch: any,
-): Promise<Conversation> {
-  const conversationId = uuidv4()
-  const newConversation: Conversation = {
-    id: conversationId,
-    name: `File Upload - ${new Date().toLocaleString()}`,
-    messages: [],
-    model: {
-      id: 'gpt-4o-mini',
-      name: 'GPT-4o mini',
-      tokenLimit: 128000,
-      enabled: true,
-    },
-    prompt:
-      'You are a helpful assistant. You can analyze uploaded files and answer questions.',
-    temperature: 0.5,
-    folderId: null,
-    createdAt: new Date().toISOString(),
-  }
-
-  homeDispatch({ field: 'selectedConversation', value: newConversation })
-  homeDispatch({
-    field: 'conversations',
-    value: (prev: Conversation[]) => [newConversation, ...prev],
-  })
-
-  return newConversation
 }
 
 export const ChatInput = ({
@@ -191,7 +85,6 @@ export const ChatInput = ({
   onRegenerate,
 }: Props) => {
   const { t } = useTranslation('chat')
-  const uploadToS3Mutation = useUploadToS3()
 
   const {
     state: {
@@ -205,41 +98,47 @@ export const ChatInput = ({
     dispatch: homeDispatch,
   } = useContext(HomeContext)
 
+  const {
+    fileUploads,
+    fileUploadRef,
+    handleFileSelection,
+    removeFileUpload,
+    clearFileUploads,
+    hasProcessingFiles,
+  } = useFileUpload({ courseName, user_id, selectedConversation, homeDispatch })
+
   const [content, setContent] = useState<string>(() => inputContent)
+
+  const {
+    showPromptList,
+    filteredPrompts,
+    activePromptIndex,
+    setActivePromptIndex,
+    promptListRef,
+    handleInitModal,
+    isModalVisible,
+    closeModal,
+    variables,
+    handlePromptKeyDown,
+    handlePromptSelect,
+    onTextChange,
+  } = usePromptAutocomplete({ prompts, content, setContent })
   const [isTyping, setIsTyping] = useState<boolean>(false)
-  const [showPromptList, setShowPromptList] = useState(false)
-  const [activePromptIndex, setActivePromptIndex] = useState(0)
-  const [promptInputValue, setPromptInputValue] = useState('')
-  const [variables, setVariables] = useState<string[]>([])
-  const [isModalVisible, setIsModalVisible] = useState(false)
   const [showPluginSelect, setShowPluginSelect] = useState(false)
   const [plugin, setPlugin] = useState<Plugin | null>(null)
-  const [isDragging, setIsDragging] = useState<boolean>(false)
-  const promptListRef = useRef<HTMLUListElement | null>(null)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
-  const [isFocused, setIsFocused] = useState(false)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
-  const fileUploadRef = useRef<HTMLInputElement | null>(null)
-  const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
   const { mutateAsync: routeChatAsync } = useRouteChat()
-  const { mutateAsync: fetchContextsAsync } = useFetchContexts()
-  const { mutateAsync: chatFileUploadAsync } = useChatFileUpload()
-
-  const handleFocus = () => {
-    setIsFocused(true)
-    if (chatInputParentContainerRef.current) {
-      chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
-    }
-  }
-
-  const handleBlur = () => {
-    setIsFocused(false)
-    if (chatInputParentContainerRef.current) {
-      chatInputParentContainerRef.current.style.boxShadow = 'none'
-    }
-  }
+  const { resetHeight } = useTextareaAutosize({ textareaRef, content })
+  const { isFocused, handleFocus, handleBlur } = useChatInputFocus({
+    textareaRef,
+    chatInputParentContainerRef,
+    chatInputContainerRef,
+    inputContent,
+    setContent,
+  })
 
   const handleTextClick = () => {
     homeDispatch({
@@ -248,36 +147,10 @@ export const ChatInput = ({
     })
   }
 
-  const removeButtonStyle: CSSProperties = {
-    position: 'absolute',
-    top: '-8px',
-    right: '-8px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--message-background)',
-    color: 'rgba(from var(--message) r g b / .35)',
-    cursor: 'pointer',
-    zIndex: 2,
-  }
-
-  const removeButtonHoverStyle: CSSProperties = {
-    color: 'var(--message)',
-    backgroundColor: 'var(--message-background)',
-    borderColor: 'var(--foreground)',
-  }
-
   const chatInputContainerStyle: CSSProperties = {
     paddingBottom: '0',
     paddingLeft: '10px',
   }
-
-  const filteredPrompts = prompts.filter((prompt) =>
-    prompt.name.toLowerCase().includes(promptInputValue.toLowerCase()),
-  )
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // TODO: Update this to use tokens, instead of characters
@@ -292,19 +165,10 @@ export const ChatInput = ({
     }
 
     setContent(value)
-    updatePromptListVisibility(value)
+    onTextChange(value)
   }
 
-  type Role = 'user' | 'system'
-
   const handleSend = async () => {
-    const hasProcessingFiles = fileUploads.some(
-      (fu) =>
-        fu.status === 'processing' ||
-        fu.status === 'uploading' ||
-        fu.status === 'uploaded', // BG: haven't finished processing the file
-    )
-
     if (messageIsStreaming || hasProcessingFiles) {
       if (hasProcessingFiles) {
         showWarningToast(
@@ -338,13 +202,7 @@ export const ChatInput = ({
       fileContent = fileUploads
         .filter((fu) => fu.status === 'completed')
         .map((fu) => {
-          const isImageFile =
-            fu.file.type.startsWith('image/') ||
-            ['png', 'jpg', 'jpeg'].includes(
-              fu.file.name.split('.').pop()?.toLowerCase() || '',
-            )
-
-          if (isImageFile) {
+          if (isImageFile(fu.file)) {
             // For image files, create image_url content
             return {
               type: 'image_url' as MessageType,
@@ -398,23 +256,14 @@ export const ChatInput = ({
     // Clear the composer immediately so the text disappears
     setContent('')
     setInputContent('')
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'inherit'
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-      textareaRef.current.style.overflow =
-        textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
-    }
+    resetHeight()
 
     // Send the message
     onSend(messageForChat, plugin)
 
     // Reset states
     setPlugin(null)
-    setFileUploads([]) // Clear file uploads after sending message
-
-    if (fileUploadRef.current) {
-      fileUploadRef.current.value = ''
-    }
+    clearFileUploads()
   }
 
   const handleStopConversation = () => {
@@ -432,48 +281,9 @@ export const ChatInput = ({
     return mobileRegex.test(userAgent)
   }
 
-  const handleInitModal = () => {
-    const selectedPrompt = filteredPrompts[activePromptIndex]
-    if (selectedPrompt) {
-      setContent((prevContent) => {
-        const newContent = prevContent?.replace(
-          /\/\w*$/,
-          selectedPrompt.content,
-        )
-        return newContent
-      })
-      handlePromptSelect(selectedPrompt)
-    }
-    setShowPromptList(false)
-  }
-
-  const handleKeyDown = async (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (showPromptList) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setActivePromptIndex((prevIndex) =>
-          prevIndex < prompts.length - 1 ? prevIndex + 1 : prevIndex,
-        )
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setActivePromptIndex((prevIndex) =>
-          prevIndex > 0 ? prevIndex - 1 : prevIndex,
-        )
-      } else if (e.key === 'Tab') {
-        e.preventDefault()
-        setActivePromptIndex((prevIndex) =>
-          prevIndex < prompts.length - 1 ? prevIndex + 1 : 0,
-        )
-      } else if (e.key === 'Enter') {
-        e.preventDefault()
-        handleInitModal()
-      } else if (e.key === 'Escape') {
-        e.preventDefault()
-        setShowPromptList(false)
-      } else {
-        setActivePromptIndex(0)
-      }
-    } else if (e.key === 'Enter' && !isTyping && !isMobile() && !e.shiftKey) {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (handlePromptKeyDown(e)) return
+    if (e.key === 'Enter' && !isTyping && !isMobile() && !e.shiftKey) {
       e.preventDefault()
       handleSend()
     } else if (e.key === '/' && e.metaKey) {
@@ -481,51 +291,6 @@ export const ChatInput = ({
       setShowPluginSelect(!showPluginSelect)
     }
   }
-
-  const parseVariables = (content: string) => {
-    const regex = /{{(.*?)}}/g
-    const foundVariables = []
-    let match
-
-    while ((match = regex.exec(content)) !== null) {
-      foundVariables.push(match[1])
-    }
-
-    return foundVariables
-  }
-
-  const updatePromptListVisibility = useCallback((text: string) => {
-    const match = text.match(/\/\w*$/)
-
-    if (match) {
-      setShowPromptList(true)
-      setPromptInputValue(match[0].slice(1))
-    } else {
-      setShowPromptList(false)
-      setPromptInputValue('')
-    }
-  }, [])
-
-  const handlePromptSelect = useCallback(
-    (prompt: Prompt) => {
-      const parsedVariables = parseVariables(prompt.content)
-      const filteredVariables = parsedVariables.filter(
-        (variable) => variable !== undefined,
-      ) as string[]
-      setVariables(filteredVariables)
-
-      if (filteredVariables.length > 0) {
-        setIsModalVisible(true)
-      } else {
-        setContent((prevContent) => {
-          const updatedContent = prevContent?.replace(/\/\w*$/, prompt.content)
-          return updatedContent
-        })
-        updatePromptListVisibility(prompt.content)
-      }
-    },
-    [parseVariables, setContent, updatePromptListVisibility],
-  )
 
   const handleSubmit = async () => {
     if (messageIsStreaming) {
@@ -552,324 +317,7 @@ export const ChatInput = ({
     }
   }
 
-  async function handleFileSelection(newFiles: File[]) {
-    const allFiles = [...fileUploads.map((f) => f.file), ...newFiles]
-
-    // 1. Validation: number of files
-    if (allFiles.length > 5) {
-      showToast({
-        title: 'Too Many Files',
-        message:
-          'You can upload a maximum of 5 files at once. Please remove some files before adding new ones.',
-        type: 'error',
-        autoClose: 6000,
-      })
-      return
-    }
-
-    // 2. Validation: total size
-    const totalSize = allFiles.reduce((sum, file) => sum + file.size, 0)
-    const limit = 15 * 1024 * 1024
-    if (totalSize > limit) {
-      showToast({
-        title: 'Files Too Large',
-        message: `The total size of all files cannot exceed ${limit / 1024 / 1024}MB. Please remove large files or upload smaller ones.`,
-        type: 'error',
-        autoClose: 6000,
-      })
-      return
-    }
-
-    // 3. Validation: file types
-    for (const file of newFiles) {
-      const ext = file.name.split('.').pop()?.toLowerCase()
-      if (!ext || !ALLOWED_FILE_EXTENSIONS.includes(ext)) {
-        showToast({
-          title: 'Unsupported File Type',
-          message: `The file "${file.name}" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(', ')}.`,
-          type: 'error',
-          autoClose: 6000,
-        })
-        return
-      }
-    }
-
-    // Prevent duplicates by name and type
-    const existingFiles = new Set(
-      fileUploads.map((fu) => createFileKey(fu.file)),
-    )
-    const uniqueNewFiles = newFiles.filter(
-      (file) => !existingFiles.has(createFileKey(file)),
-    )
-
-    if (uniqueNewFiles.length === 0) {
-      showWarningToast(
-        'All selected files are already uploaded or in progress.',
-        'Duplicate Files',
-      )
-      return
-    }
-
-    // Check for duplicates within the new files themselves
-    const finalUniqueFiles = removeDuplicateFiles(uniqueNewFiles)
-
-    if (finalUniqueFiles.length === 0) {
-      showWarningToast('All selected files are duplicates.', 'Duplicate Files')
-      return
-    }
-
-    if (finalUniqueFiles.length < uniqueNewFiles.length) {
-      const duplicateCount = uniqueNewFiles.length - finalUniqueFiles.length
-      showInfoToast(
-        `${duplicateCount} duplicate file(s) were removed from the selection.`,
-        'Duplicate Files Removed',
-      )
-    }
-
-    for (const file of finalUniqueFiles) {
-      // Check if file is an image
-      const isImageFile =
-        file.type.startsWith('image/') ||
-        ['png', 'jpg', 'jpeg'].includes(
-          file.name.split('.').pop()?.toLowerCase() || '',
-        )
-
-      // Add to fileUploads
-      setFileUploads((prev) => [
-        ...prev,
-        {
-          file,
-          status: 'uploading' as const,
-        },
-      ])
-
-      // Upload all files to S3 and update status
-      try {
-        const s3Key = await uploadToS3Mutation.mutateAsync({
-          file,
-          uniqueFileName: `${crypto.randomUUID()}.${file.name.split('.').pop()}`,
-          courseName,
-          user_id,
-          uploadType: 'chat',
-        })
-
-        setFileUploads((prev) =>
-          prev.map((f) =>
-            f.file.name === file.name
-              ? { ...f, status: 'uploaded', url: s3Key }
-              : f,
-          ),
-        )
-
-        // **NEW: Immediately process the file after S3 upload**
-        setFileUploads((prev) =>
-          prev.map((f) =>
-            f.file.name === file.name ? { ...f, status: 'processing' } : f,
-          ),
-        )
-
-        // Create conversation if needed
-        let conversation = selectedConversation
-        if (!conversation?.id) {
-          conversation = await createNewConversation(courseName, homeDispatch)
-        }
-
-        // image file returns a presigned URL for display
-        // non-image file returns a context from context search service
-        if (isImageFile) {
-          console.log('=== FILE UPLOAD STEP 4A: Processing image file ===')
-          // For image files, generate a presigned URL for display
-          if (s3Key) {
-            const presignedUrl = await fetchPresignedUrl(s3Key, courseName)
-            console.log('Generated presigned URL for image:', presignedUrl)
-            if (presignedUrl) {
-              setFileUploads((prev) =>
-                prev.map((f) =>
-                  f.file.name === file.name
-                    ? { ...f, status: 'completed', url: presignedUrl }
-                    : f,
-                ),
-              )
-              console.log('Image file processing completed')
-            } else {
-              // Fallback to S3 key if presigned URL generation fails
-              setFileUploads((prev) =>
-                prev.map((f) =>
-                  f.file.name === file.name
-                    ? { ...f, status: 'completed', url: s3Key }
-                    : f,
-                ),
-              )
-              console.log(
-                'Image file processing completed (fallback to S3 key)',
-              )
-            }
-          } else {
-            // Handle case where s3Key is undefined
-            setFileUploads((prev) =>
-              prev.map((f) =>
-                f.file.name === file.name ? { ...f, status: 'error' } : f,
-              ),
-            )
-            console.log('Image file processing failed: no S3 key')
-          }
-        } else {
-          // For non-image files, use the regular file processing
-          await chatFileUploadAsync({
-            conversationId: conversation.id,
-            courseName: courseName,
-            user_id: user_id,
-            s3Key: s3Key || '',
-            fileName: file.name,
-            fileType: file.type,
-            model: conversation.model?.id,
-          })
-
-          // Add a small delay to allow backend processing to complete
-          await new Promise((resolve) => setTimeout(resolve, 2000))
-
-          const allContexts = await fetchContextsAsync({
-            course_name: courseName,
-            user_id,
-            search_query: file.name, // Use filename as search query
-            token_limit: 4000,
-            doc_groups: ['All Documents'],
-            conversation_id: conversation.id,
-          })
-
-          // Filter by filename to ensure we get contexts for this specific file
-          const contexts = allContexts.filter(
-            (context: ContextWithMetadata) =>
-              context.readable_filename === file.name,
-          )
-
-          setFileUploads((prev) =>
-            prev.map((f) =>
-              f.file.name === file.name
-                ? { ...f, status: 'completed', contexts }
-                : f,
-            ),
-          )
-        }
-      } catch (error) {
-        setFileUploads((prev) =>
-          prev.map((f) =>
-            f.file.name === file.name ? { ...f, status: 'error' } : f,
-          ),
-        )
-        showErrorToast(
-          `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        )
-      }
-    }
-  }
-
   const theme = useMantineTheme()
-
-  useEffect(() => {
-    if (promptListRef.current) {
-      promptListRef.current.scrollTop = activePromptIndex * 30
-    }
-  }, [activePromptIndex])
-
-  useEffect(() => {
-    if (textareaRef && textareaRef.current) {
-      textareaRef.current.style.height = 'inherit'
-      textareaRef.current.style.height = `${textareaRef.current?.scrollHeight}px`
-      textareaRef.current.style.overflow = `${
-        textareaRef?.current?.scrollHeight > 400 ? 'auto' : 'hidden'
-      }`
-    }
-  }, [content])
-
-  useEffect(() => {
-    const handleFocus = () => {
-      if (chatInputParentContainerRef.current) {
-        chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
-      }
-    }
-
-    const handleBlur = () => {
-      if (chatInputParentContainerRef.current) {
-        chatInputParentContainerRef.current.style.boxShadow = 'none'
-      }
-    }
-
-    const textArea = textareaRef.current
-    textArea?.addEventListener('focus', handleFocus)
-    textArea?.addEventListener('blur', handleBlur)
-
-    return () => {
-      textArea?.removeEventListener('focus', handleFocus)
-      textArea?.removeEventListener('blur', handleBlur)
-    }
-  }, [textareaRef, chatInputParentContainerRef, isFocused])
-
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (
-        promptListRef.current &&
-        !promptListRef.current.contains(e.target as Node)
-      ) {
-        setShowPromptList(false)
-      }
-    }
-
-    window.addEventListener('click', handleOutsideClick)
-
-    return () => {
-      window.removeEventListener('click', handleOutsideClick)
-    }
-  }, [])
-
-  useEffect(() => {
-    // This will focus the div as soon as the component mounts
-    if (chatInputContainerRef.current) {
-      chatInputContainerRef.current.focus()
-    }
-  }, [])
-
-  useEffect(() => {
-    setContent(inputContent)
-    if (textareaRef.current) {
-      textareaRef.current.focus()
-    }
-  }, [inputContent, textareaRef])
-
-  // Debounce the resize handler to avoid too frequent updates
-  const handleResize = useCallback(() => {
-    if (textareaRef.current) {
-      // Reset height to auto to recalculate
-      textareaRef.current.style.height = 'auto'
-      // Set new height based on scrollHeight
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-      // Update overflow if needed
-      textareaRef.current.style.overflow =
-        textareaRef.current.scrollHeight > 400 ? 'auto' : 'hidden'
-    }
-  }, [])
-
-  // Add resize observer effect
-  useEffect(() => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    // Create resize observer
-    const resizeObserver = new ResizeObserver(handleResize)
-
-    // Observe both the textarea and window resize events
-    resizeObserver.observe(textarea)
-    window.addEventListener('resize', handleResize)
-
-    // Initial size adjustment
-    handleResize()
-
-    // Cleanup
-    return () => {
-      resizeObserver.disconnect()
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [handleResize])
 
   return (
     <div
@@ -917,229 +365,19 @@ export const ChatInput = ({
             ref={chatInputContainerRef}
             className="chat-input-container rbg-[--message-background] m-0 w-full resize-none p-0"
             tabIndex={0}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             onClick={() => textareaRef.current?.focus()}
             style={{
               ...chatInputContainerStyle,
               pointerEvents: 'auto',
             }}
           >
-            {/* File upload preview section */}
             {fileUploads.length > 0 && (
-              <div
-                style={{
-                  marginBottom: '16px',
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '12px',
-                }}
-              >
-                {fileUploads.map((fu, index) => {
-                  const getFileIcon = (name: string, type?: string) => {
-                    const extension = name.split('.').pop()?.toLowerCase()
-                    const iconProps = { size: 20 }
-
-                    if (type?.includes('pdf') || extension === 'pdf') {
-                      return (
-                        <IconFileTypePdf
-                          {...iconProps}
-                          style={{ color: 'var(--illinois-orange)' }}
-                        />
-                      )
-                    }
-                    if (
-                      type?.includes('doc') ||
-                      extension === 'docx' ||
-                      extension === 'doc'
-                    ) {
-                      return (
-                        <IconFileTypeDocx
-                          {...iconProps}
-                          style={{ color: 'var(--illinois-orange)' }}
-                        />
-                      )
-                    }
-                    if (type?.includes('text') || extension === 'txt') {
-                      return (
-                        <IconFileTypeTxt
-                          {...iconProps}
-                          style={{ color: 'var(--illinois-orange)' }}
-                        />
-                      )
-                    }
-                    return (
-                      <IconFile
-                        {...iconProps}
-                        style={{ color: 'var(--illinois-orange)' }}
-                      />
-                    )
-                  }
-
-                  const getStatusIcon = (status: string) => {
-                    switch (status) {
-                      case 'uploading':
-                      case 'processing':
-                        return (
-                          <div
-                            style={{
-                              height: '16px',
-                              width: '16px',
-                              animation: 'spin 1s linear infinite',
-                              borderRadius: '50%',
-                              border: '2px solid var(--primary)',
-                              borderTopColor: 'transparent',
-                            }}
-                          />
-                        )
-                      case 'completed':
-                        return (
-                          <div
-                            style={{
-                              display: 'flex',
-                              height: '16px',
-                              width: '16px',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '50%',
-                              backgroundColor: 'var(--illinois-prairie)',
-                            }}
-                          >
-                            <svg
-                              style={{
-                                height: '10px',
-                                width: '10px',
-                                color: 'white',
-                              }}
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                        )
-                      case 'error':
-                        return (
-                          <div
-                            style={{
-                              display: 'flex',
-                              height: '16px',
-                              width: '16px',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '50%',
-                              backgroundColor: 'var(--destructive)',
-                            }}
-                          >
-                            <svg
-                              style={{
-                                height: '10px',
-                                width: '10px',
-                                color: 'white',
-                              }}
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                        )
-                      default:
-                        return null
-                    }
-                  }
-
-                  const truncateFileName = (name: string, maxLength = 25) => {
-                    if (name.length <= maxLength) return name
-                    const extension = name.split('.').pop()
-                    const nameWithoutExt = name.substring(
-                      0,
-                      name.lastIndexOf('.'),
-                    )
-                    return `${nameWithoutExt.substring(0, maxLength - 3)}...${extension ? `.${extension}` : ''}`
-                  }
-
-                  return (
-                    <div
-                      key={index}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        borderRadius: '8px',
-                        border: '1px solid var(--border)',
-                        backgroundColor: 'var(--background-faded)',
-                        padding: '8px 12px',
-                        transition: 'all 0.2s ease',
-                      }}
-                    >
-                      {getFileIcon(fu.file.name, fu.file.type)}
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span
-                          style={{
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            color: 'var(--foreground)',
-                          }}
-                        >
-                          {truncateFileName(fu.file.name)}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            color: 'var(--foreground-faded)',
-                          }}
-                        >
-                          {fu.status === 'uploading' && 'Uploading...'}
-                          {fu.status === 'processing' && 'Processing...'}
-                          {fu.status === 'completed' && 'Ready for chat'}
-                          {fu.status === 'error' && 'Upload failed'}
-                        </span>
-                      </div>
-                      {getStatusIcon(fu.status)}
-                      <button
-                        onClick={() => {
-                          setFileUploads((prev) =>
-                            prev.filter((_, i) => i !== index),
-                          )
-                        }}
-                        title="Remove file"
-                        aria-label="Remove file"
-                        style={{
-                          marginLeft: '8px',
-                          color: 'var(--foreground-faded)',
-                          cursor: 'pointer',
-                          background: 'none',
-                          border: 'none',
-                          padding: '4px',
-                          borderRadius: '4px',
-                          transition: 'all 0.2s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.color = 'var(--foreground)'
-                          e.currentTarget.style.backgroundColor =
-                            'var(--background-dark)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.color =
-                            'var(--foreground-faded)'
-                          e.currentTarget.style.backgroundColor = 'transparent'
-                        }}
-                      >
-                        <IconX size={16} />
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
+              <FileUploadPreview
+                fileUploads={fileUploads}
+                onRemove={removeFileUpload}
+              />
             )}
 
             {/* Main input area */}
@@ -1275,7 +513,7 @@ export const ChatInput = ({
                   prompt={filteredPrompts[activePromptIndex]}
                   variables={variables}
                   onSubmit={handleSubmit}
-                  onClose={() => setIsModalVisible(false)}
+                  onClose={closeModal}
                 />
               </div>
             )}

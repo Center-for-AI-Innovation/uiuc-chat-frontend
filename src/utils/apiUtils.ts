@@ -29,36 +29,6 @@ export const getBackendUrl = (): string => {
   return backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl
 }
 
-/**
- * Fetches a pre-signed URL for downloading a file.
- * @param {string} filePath - The path of the file to download.
- * @param {string} [page] - The page from which the request originates.
- * @returns {Promise<string | null>} - A promise that resolves to the pre-signed URL or null.
- */
-export async function fetchPresignedUrl(
-  filePath: string,
-  courseName?: string,
-  page?: string,
-  fileName?: string,
-): Promise<string | null> {
-  try {
-    const endpoint = `${getBaseUrl()}/api/download`
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filePath, courseName, page, fileName }),
-    })
-
-    if (!response.ok)
-      throw new Error(`Server responded with status code ${response.status}`)
-    const data = await response.json()
-    return data.url
-  } catch (error) {
-    console.error('Error fetching presigned URL', { error })
-    return null
-  }
-}
-
 export function convertConversatonToVercelAISDKv3(
   conversation: Conversation,
 ): CoreMessage[] {
@@ -165,9 +135,7 @@ export function convertConversationToCoreMessagesWithoutSystem(
 }
 
 // Export all functions as part of the API Utils module
-export default {
-  fetchPresignedUrl,
-}
+export default {}
 /**
  * Create a new project
  * @param project_name - The name of the project

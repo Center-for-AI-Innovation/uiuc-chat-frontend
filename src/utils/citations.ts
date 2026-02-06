@@ -1,5 +1,5 @@
 import { type ContextWithMetadata, type Message } from '~/types/chat'
-import { fetchPresignedUrl } from './apiUtils'
+import { fetchPresignedUrl } from '@/hooks/__internal__/downloadPresignedUrl'
 import sanitizeHtml, { type IOptions } from 'sanitize-html'
 
 // Strict sanitization options for text content
