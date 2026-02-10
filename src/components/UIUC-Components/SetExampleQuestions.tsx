@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Check, Plus, Trash2 } from 'lucide-react'
+import { Check, Trash2 } from 'lucide-react'
 
 import { FormInput } from '@/components/shadcn/ui/form-input'
-import { Button } from '@/components/shadcn/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -11,6 +10,7 @@ import {
 } from '@/components/shadcn/ui/tooltip'
 import { Spinner } from '@/components/shadcn/ui/spinner'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
 
@@ -29,19 +29,38 @@ export default function SetExampleQuestions({
   course_metadata: CourseMetadataOptionalForUpsert
   onStepLeave?: (callback: () => Promise<void>) => void
 }) {
+  const queryClient = useQueryClient()
   const example_questions = course_metadata?.example_questions || []
+
+  const updateCache = useCallback(
+    (newQuestions: string[]) => {
+      queryClient.setQueryData(
+        ['courseMetadata', course_name],
+        (prev: CourseMetadataOptionalForUpsert | undefined) =>
+          prev ? { ...prev, example_questions: newQuestions } : prev,
+      )
+    },
+    [queryClient, course_name],
+  )
   const [questions, setQuestions] = useState<QuestionState[]>(() => {
     if (example_questions.length > 0) {
-      return example_questions.map((q) => ({
-        value: q,
-        status: 'saved' as const,
-      }))
+      return [
+        ...example_questions.map((q) => ({
+          value: q,
+          status: 'saved' as const,
+        })),
+        // Always include an empty placeholder at the end
+        { value: '', status: 'idle' as const },
+      ]
     }
-    // Always show at least one empty input field
     return [{ value: '', status: 'idle' as const }]
   })
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  // Keep a ref to the latest questions so callbacks never read stale state
+  const questionsRef = useRef(questions)
+  questionsRef.current = questions
 
   // Track original values to detect changes
   const originalValuesRef = useRef<string[]>(
@@ -51,7 +70,8 @@ export default function SetExampleQuestions({
   // Register step leave callback
   useEffect(() => {
     const saveAllQuestions = async (): Promise<boolean> => {
-      const validQuestions = questions
+      const latestQuestions = questionsRef.current
+      const validQuestions = latestQuestions
         .map((q) => q.value.trim())
         .filter((q) => q !== '')
 
@@ -63,6 +83,7 @@ export default function SetExampleQuestions({
 
         if (success) {
           originalValuesRef.current = validQuestions
+          updateCache(validQuestions)
           setQuestions((prev) =>
             prev.map((q) => ({
               ...q,
@@ -80,7 +101,8 @@ export default function SetExampleQuestions({
     }
 
     const saveAllPendingQuestions = async () => {
-      const questionsToSave = questions.filter(
+      const latestQuestions = questionsRef.current
+      const questionsToSave = latestQuestions.filter(
         (q, i) =>
           q.value.trim() !== '' &&
           q.status !== 'saved' &&
@@ -97,14 +119,16 @@ export default function SetExampleQuestions({
         await saveAllPendingQuestions()
       })
     }
-  }, [onStepLeave, questions, course_name, course_metadata])
+  }, [onStepLeave, course_name, course_metadata, updateCache])
 
   const saveQuestion = useCallback(
-    async (index: number) => {
-      const question = questions[index]
+    async (index: number, currentValue?: string) => {
+      const latestQuestions = questionsRef.current
+      const question = latestQuestions[index]
       if (!question) return
 
-      const trimmedValue = question.value.trim()
+      // Use the passed-in value (from the DOM) if provided, otherwise fall back to state
+      const trimmedValue = (currentValue ?? question.value).trim()
 
       // Skip if empty or unchanged
       if (
@@ -126,8 +150,8 @@ export default function SetExampleQuestions({
         ),
       )
 
-      // Get all valid questions for the save
-      const allQuestions = questions
+      // Get all valid questions for the save, using the current value for this index
+      const allQuestions = latestQuestions
         .map((q, i) => (i === index ? trimmedValue : q.value.trim()))
         .filter((q) => q !== '')
 
@@ -140,6 +164,7 @@ export default function SetExampleQuestions({
         if (success) {
           // Update original values ref
           originalValuesRef.current = allQuestions
+          updateCache(allQuestions)
           setQuestions((prev) =>
             prev.map((q, i) =>
               i === index
@@ -167,11 +192,11 @@ export default function SetExampleQuestions({
         )
       }
     },
-    [questions, course_name, course_metadata],
+    [course_name, course_metadata, updateCache],
   )
 
   const deleteQuestion = async (index: number) => {
-    const newQuestions = questions.filter((_, i) => i !== index)
+    const newQuestions = questionsRef.current.filter((_, i) => i !== index)
     const validQuestions = newQuestions
       .map((q) => q.value.trim())
       .filter((q) => q !== '')
@@ -189,6 +214,7 @@ export default function SetExampleQuestions({
 
       if (success) {
         originalValuesRef.current = validQuestions
+        updateCache(validQuestions)
         // Keep at least one empty input field
         setQuestions(
           newQuestions.length > 0
@@ -236,8 +262,11 @@ export default function SetExampleQuestions({
     })
   }
 
-  const handleBlur = (index: number) => {
-    saveQuestion(index)
+  const handleBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>,
+    index: number,
+  ) => {
+    saveQuestion(index, e.target.value)
   }
 
   const handleKeyDown = (
@@ -247,22 +276,14 @@ export default function SetExampleQuestions({
     if (e.key === 'Enter') {
       e.preventDefault()
 
-      // Save current question
-      saveQuestion(index)
+      // Save current question, passing value directly from the DOM
+      saveQuestion(index, e.currentTarget.value)
 
       // Focus the next input after React re-renders
       setTimeout(() => {
         inputRefs.current[index + 1]?.focus()
       }, 0)
     }
-  }
-
-  const addNewQuestion = () => {
-    setQuestions((prev) => [...prev, { value: '', status: 'idle' }])
-    // Focus the new input after render
-    setTimeout(() => {
-      inputRefs.current[questions.length]?.focus()
-    }, 0)
   }
 
   const renderRightSlot = (question: QuestionState, index: number) => {
@@ -319,7 +340,7 @@ export default function SetExampleQuestions({
                       value={question.value}
                       status="error"
                       onChange={(e) => handleInputChange(e.target.value, index)}
-                      onBlur={() => handleBlur(index)}
+                      onBlur={(e) => handleBlur(e, index)}
                       onKeyDown={(e) =>
                         handleKeyDown(
                           e as React.KeyboardEvent<HTMLInputElement>,
@@ -348,7 +369,7 @@ export default function SetExampleQuestions({
                 className="w-full"
                 value={question.value}
                 onChange={(e) => handleInputChange(e.target.value, index)}
-                onBlur={() => handleBlur(index)}
+                onBlur={(e) => handleBlur(e, index)}
                 onKeyDown={(e) =>
                   handleKeyDown(
                     e as React.KeyboardEvent<HTMLInputElement>,
@@ -363,17 +384,6 @@ export default function SetExampleQuestions({
             )}
           </div>
         ))}
-
-        <Button
-          type="button"
-          variant="dashboard"
-          size="sm"
-          onClick={addNewQuestion}
-          className="w-fit"
-        >
-          <Plus className="size-4" />
-          Add new question
-        </Button>
       </div>
     </TooltipProvider>
   )

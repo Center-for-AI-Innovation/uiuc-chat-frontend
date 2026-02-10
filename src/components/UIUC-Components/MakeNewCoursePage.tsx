@@ -2,7 +2,9 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import React, { useMemo, useState } from 'react'
 
-import { Button, Card, Flex, Title } from '@mantine/core'
+import { Card, Flex, Title } from '@mantine/core'
+import { Button } from '@/components/shadcn/ui/button'
+import { LoaderCircle } from 'lucide-react'
 import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -319,21 +321,15 @@ const MakeNewCoursePage = ({
             alignItems: 'center',
             minHeight: '100vh',
             padding: '1rem',
-            '--dashboard-button': 'var(--illinois-blue)',
-            '--dashboard-button-hover':
-              'color-mix(in srgb, var(--illinois-blue), black 20%)',
-            '--dashboard-table-selected':
-              'color-mix(in srgb, var(--illinois-blue), var(--illinois-white) 20%)',
           } as React.CSSProperties
         }
       >
-        {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
-        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-start py-0 pb-20">
+        <div className="flex w-full flex-1 flex-col items-center justify-center pb-20 pt-16">
           <Card
             padding="none"
             withBorder={true}
             radius="lg"
-            className="mt-16 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
+            className="my-8 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
           >
             <div className="step_container min-h-[16rem]">
               {allSteps[currentStep]}
@@ -350,9 +346,8 @@ const MakeNewCoursePage = ({
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[--dashboard-border] bg-[--background]">
           <div className="mx-auto flex max-w-[860px] items-center justify-between px-4 py-4">
             <Button
+              variant="outline"
               size="sm"
-              radius="sm"
-              classNames={componentClasses.button}
               onClick={goToPreviousStep}
               disabled={isFirstStep || shouldBlockNavigation}
             >
@@ -373,10 +368,9 @@ const MakeNewCoursePage = ({
 
             <div className="flex items-center gap-3">
               <Button
+                variant="dashboard"
                 size="sm"
-                radius="sm"
                 className={isLastStep ? 'opacity-0' : ''}
-                classNames={componentClasses.buttonPrimary}
                 onClick={async () => {
                   if (currentStep === 0) {
                     if (!hasCreatedProject) {
@@ -418,15 +412,16 @@ const MakeNewCoursePage = ({
                       isLoading ||
                       isWaitingForAvailabilityCheck))
                 }
-                loading={isLoading && currentStep === 0}
               >
+                {isLoading && currentStep === 0 && (
+                  <LoaderCircle className="size-4 animate-spin" />
+                )}
                 Continue
               </Button>
 
               <Button
+                variant="outline"
                 size="sm"
-                radius="sm"
-                classNames={componentClasses.button}
                 disabled={
                   isLoading ||
                   (projectName === '' && !hasCreatedProject) ||
@@ -449,8 +444,10 @@ const MakeNewCoursePage = ({
                     router.push(`/${projectName}/chat`)
                   }
                 }}
-                loading={isLoading && !hasCreatedProject}
               >
+                {isLoading && !hasCreatedProject && (
+                  <LoaderCircle className="size-4 animate-spin" />
+                )}
                 Start Chatting
               </Button>
             </div>
@@ -459,37 +456,6 @@ const MakeNewCoursePage = ({
       </main>
     </>
   )
-}
-
-const componentClasses = {
-  button: {
-    root: `
-      !text-[#13294B]
-      bg-transparent
-      border-[#13294B]
-
-      hover:!text-[#13294B]
-      hover:bg-[#13294B]/10
-      hover:border-[#13294B]
-
-      disabled:bg-transparent
-      disabled:border-[--button-disabled]
-      disabled:!text-[--button-disabled-text-color]
-    `,
-  },
-
-  buttonPrimary: {
-    root: `
-      !text-white
-      bg-[#13294B]
-
-      hover:!text-white
-      hover:bg-[#13294B]/90
-
-      disabled:bg-[#13294B]/50
-      disabled:!text-white/50
-    `,
-  },
 }
 
 export default MakeNewCoursePage

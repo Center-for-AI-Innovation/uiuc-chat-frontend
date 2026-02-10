@@ -221,7 +221,7 @@ const NewModelDropdown: React.FC<{
   return (
     <>
       <Select
-        className="menu z-[50] w-full"
+        className="menu z-[30] w-full"
         size="md"
         placeholder="Select a model"
         // searchable
