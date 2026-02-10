@@ -270,6 +270,7 @@ function UploadNotificationContent({
             color="gray"
             compact
             onClick={toggleMinimize}
+            aria-label={isMinimized ? 'Expand uploads' : 'Minimize uploads'}
             className="h-8 w-8 rounded-md p-0 text-[--modal-button] hover:bg-[--background-dark] hover:text-[--modal-button-text-hover]"
           >
             {isMinimized ? (
@@ -283,6 +284,7 @@ function UploadNotificationContent({
             color="gray"
             compact
             onClick={onClose}
+            aria-label="Close uploads"
             className="h-8 w-8 rounded-md p-0 text-[--modal-button] hover:bg-[--background-dark] hover:text-[--modal-button-text-hover]"
           >
             <IconX size={18} />
