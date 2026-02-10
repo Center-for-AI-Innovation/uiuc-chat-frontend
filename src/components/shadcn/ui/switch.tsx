@@ -147,7 +147,9 @@ const Switch = React.forwardRef<
             <span
               className={cn(
                 switchTrackLabelVariants({ size, position: 'on' }),
-                checked ? 'text-white opacity-100' : 'opacity-0',
+                checked
+                  ? 'text-white opacity-100 dark:text-[var(--illinois-blue)]'
+                  : 'opacity-0',
               )}
             >
               {onLabel}
@@ -171,7 +173,7 @@ const Switch = React.forwardRef<
               <IconCheck
                 size={12}
                 className={cn(
-                  'stroke-[3]',
+                  'stroke-[3] dark:text-[var(--illinois-blue)]',
                   disabled
                     ? 'text-gray-400'
                     : 'text-[var(--dashboard-button,hsl(var(--primary)))]',
