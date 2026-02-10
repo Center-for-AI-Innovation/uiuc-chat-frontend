@@ -874,7 +874,8 @@ CRITICAL: The optimized prompt must:
         'Failed to optimize prompt. Please try again.',
         true,
       )
-      setIsOptimizing(false) // Keep this here for error cases
+    } finally {
+      setIsOptimizing(false)
     }
   }
 

@@ -3,7 +3,6 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react'
 import {
-  Button,
   Collapse,
   Divider,
   Flex,
@@ -21,6 +20,7 @@ import {
   Tooltip,
   useMantineTheme,
 } from '@mantine/core'
+import { Button } from '@/components/shadcn/ui/button'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import {
@@ -873,7 +873,8 @@ CRITICAL: The optimized prompt must:
         'Failed to optimize prompt. Please try again.',
         true,
       )
-      setIsOptimizing(false) // Keep this here for error cases
+    } finally {
+      setIsOptimizing(false)
     }
   }
 
@@ -1190,7 +1191,6 @@ CRITICAL: The optimized prompt must:
                       styles={(theme) => ({
                         root: {
                           width: '320px',
-                          zIndex: 200,
                           '@media (max-width: 768px)': {
                             width: '240px',
                           },
@@ -1231,7 +1231,6 @@ CRITICAL: The optimized prompt must:
                           width: '100%',
                           maxWidth: '100%',
                           position: 'absolute',
-                          zIndex: 200,
                           overflow: 'visible',
                           '@media (max-width: 768px)': {
                             width: 'auto',
@@ -1400,81 +1399,27 @@ CRITICAL: The optimized prompt must:
 
                   <Group mt="md" spacing="sm">
                     <Button
-                      variant="filled"
-                      radius="md"
-                      className={``}
+                      variant="dashboard"
                       type="button"
                       onClick={() => handleSystemPromptSubmit(baseSystemPrompt)}
-                      sx={() => ({
-                        backgroundColor: `var(--dashboard-button) !important`,
-                        border: 'none',
-                        color: '#fff',
-                        padding: '10px 20px',
-                        fontWeight: 600,
-                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          backgroundColor: `var(--dashboard-button-hover) !important`,
-                          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
-                        },
-                        '&:active': {
-                          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                        },
-                      })}
-                      style={{ minWidth: 'fit-content' }}
                     >
                       Update System Prompt
                     </Button>
 
-                    <span
-                      style={
-                        {
-                          '--spinner': 'var(--dashboard-button)',
-                        } as React.CSSProperties
-                      }
+                    <Button
+                      variant="dashboard"
+                      onClick={handleSubmitPromptOptimization}
+                      disabled={!llmProviders || isOptimizing}
                     >
-                      <Button
-                        onClick={handleSubmitPromptOptimization}
-                        disabled={!llmProviders || isOptimizing}
-                        variant="filled"
-                        radius="md"
-                        leftIcon={
-                          isOptimizing ? (
-                            <LoadingSpinner size="sm" />
-                          ) : (
-                            <IconSparkles
-                              stroke={1}
-                              color="var(--dashboard-button-foreground)"
-                            />
-                          )
-                        }
-                        className={``}
-                        sx={() => ({
-                          background: 'var(--dashboard-button) !important',
-                          border: 'none',
-                          color:
-                            'var(--dashboard-button-foreground) !important',
-                          padding: '10px 20px',
-                          fontWeight: 600,
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            background:
-                              'var(--dashboard-button-hover) !important',
-                          },
-                          '&:active': {},
-                          '&:disabled': {
-                            opacity: 0.7,
-                            cursor: 'not-allowed',
-                            transform: 'none',
-                          },
-                        })}
-                        style={{ minWidth: 'fit-content' }}
-                      >
-                        {isOptimizing
-                          ? 'Optimizing...'
-                          : 'Optimize System Prompt'}
-                      </Button>
-                    </span>
+                      {isOptimizing ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <IconSparkles size={16} stroke={1} />
+                      )}
+                      {isOptimizing
+                        ? 'Optimizing...'
+                        : 'Optimize System Prompt'}
+                    </Button>
                   </Group>
                 </form>
               </div>
@@ -1568,26 +1513,11 @@ CRITICAL: The optimized prompt must:
                 </Paper>
 
                 <Group position="right" spacing="sm">
-                  <Button
-                    variant="outline"
-                    radius="md"
-                    onClick={close}
-                    className={``}
-                    styles={() => ({
-                      root: {
-                        color: 'var(--foreground)',
-                        borderColor: 'var(--background-faded)',
-                        '&:hover': {
-                          backgroundColor: 'var(--background-faded)',
-                        },
-                      },
-                    })}
-                  >
+                  <Button variant="outline" onClick={close}>
                     Cancel
                   </Button>
                   <Button
-                    radius="md"
-                    className={``}
+                    variant="dashboard"
                     onClick={() => {
                       const lastMessage = messages[messages.length - 1]
                       if (lastMessage && lastMessage.role === 'assistant') {
@@ -1597,20 +1527,6 @@ CRITICAL: The optimized prompt must:
                       }
                       close()
                     }}
-                    sx={() => ({
-                      color: 'var(--dashboard-button-foreground)',
-                      background: 'var(--dashboard-button) !important',
-                      border: 'none',
-                      padding: '10px 20px',
-                      fontWeight: 600,
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        background: 'var(--dashboard-button-hover) !important',
-                      },
-                      '&:active': {
-                        transform: 'translateY(0)',
-                      },
-                    })}
                   >
                     Update System Prompt
                   </Button>
@@ -1813,47 +1729,11 @@ CRITICAL: The optimized prompt must:
                       </Text>
 
                       <Group position="right" mt="md">
-                        <Button
-                          variant="outline"
-                          color="gray"
-                          radius="md"
-                          onClick={closeResetModal}
-                          className={``}
-                          styles={(theme) => ({
-                            root: {
-                              borderColor: theme.colors.gray[6],
-                              color: '#fff',
-                              '&:hover': {
-                                backgroundColor: theme.colors.gray[8],
-                              },
-                            },
-                          })}
-                        >
+                        <Button variant="outline" onClick={closeResetModal}>
                           Cancel
                         </Button>
                         <Button
-                          variant="filled"
-                          color="red"
-                          radius="md"
-                          className={``}
-                          sx={(theme) => ({
-                            backgroundColor: `${theme.colors.red[8]} !important`,
-                            border: 'none',
-                            color: '#fff',
-                            padding: '10px 20px',
-                            fontWeight: 600,
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              backgroundColor: `${theme.colors.red[9]} !important`,
-                              transform: 'translateY(-1px)',
-                              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
-                            },
-                            '&:active': {
-                              transform: 'translateY(0)',
-                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                            },
-                          })}
+                          variant="danger"
                           onClick={() => {
                             resetSystemPrompt()
                             closeResetModal()
@@ -1868,47 +1748,13 @@ CRITICAL: The optimized prompt must:
                   {/* Action Buttons */}
                   <Divider my="md" />
                   <Flex direction="column" gap="md">
-                    <Button
-                      variant="filled"
-                      color="red"
-                      radius="md"
-                      leftIcon={<IconAlertTriangle size={16} />}
-                      onClick={openResetModal}
-                      className={``}
-                      sx={(theme) => ({
-                        backgroundColor: `${theme.colors.red[8]} !important`,
-                        border: 'none',
-                        color: '#fff',
-                        padding: '10px 20px',
-                        fontWeight: 600,
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          backgroundColor: `${theme.colors.red[9]} !important`,
-                        },
-                      })}
-                    >
+                    <Button variant="danger" onClick={openResetModal}>
+                      <IconAlertTriangle size={16} />
                       Reset Prompting Settings
                     </Button>
 
-                    <Button
-                      variant="filled"
-                      radius="md"
-                      leftIcon={<IconLink size={16} />}
-                      onClick={openLinkGenerator}
-                      className={``}
-                      sx={() => ({
-                        background: 'var(--dashboard-button) !important',
-                        border: 'none',
-                        color: '#fff',
-                        padding: '10px 20px',
-                        fontWeight: 600,
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          background:
-                            'var(--dashboard-button-hover) !important',
-                        },
-                      })}
-                    >
+                    <Button variant="dashboard" onClick={openLinkGenerator}>
+                      <IconLink size={16} />
                       Generate Share Link
                     </Button>
                   </Flex>
@@ -2179,47 +2025,11 @@ CRITICAL: The optimized prompt must:
                       </Text>
 
                       <Group position="right" mt="md">
-                        <Button
-                          variant="outline"
-                          color="gray"
-                          radius="md"
-                          onClick={closeResetModal}
-                          className={``}
-                          styles={(theme) => ({
-                            root: {
-                              borderColor: theme.colors.gray[6],
-                              color: '#fff',
-                              '&:hover': {
-                                backgroundColor: theme.colors.gray[8],
-                              },
-                            },
-                          })}
-                        >
+                        <Button variant="outline" onClick={closeResetModal}>
                           Cancel
                         </Button>
                         <Button
-                          variant="filled"
-                          color="red"
-                          radius="md"
-                          className={``}
-                          sx={(theme) => ({
-                            backgroundColor: `${theme.colors.red[8]} !important`,
-                            border: 'none',
-                            color: '#fff',
-                            padding: '10px 20px',
-                            fontWeight: 600,
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              backgroundColor: `${theme.colors.red[9]} !important`,
-                              transform: 'translateY(-1px)',
-                              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
-                            },
-                            '&:active': {
-                              transform: 'translateY(0)',
-                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                            },
-                          })}
+                          variant="danger"
                           onClick={() => {
                             resetSystemPrompt()
                             closeResetModal()
@@ -2238,49 +2048,13 @@ CRITICAL: The optimized prompt must:
                     justify="flex-start"
                     gap="md"
                   >
-                    <Button
-                      variant="filled"
-                      color="red"
-                      radius="md"
-                      leftIcon={<IconAlertTriangle size={16} />}
-                      className={``}
-                      sx={(theme) => ({
-                        backgroundColor: `${theme.colors.red[8]} !important`,
-                        border: 'none',
-                        color: '#fff',
-                        padding: '10px 20px',
-                        fontWeight: 600,
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          backgroundColor: `${theme.colors.red[9]} !important`,
-                        },
-                        '&:active': {},
-                      })}
-                      onClick={openResetModal}
-                    >
+                    <Button variant="danger" onClick={openResetModal}>
+                      <IconAlertTriangle size={16} />
                       Reset Prompting Settings
                     </Button>
 
-                    <Button
-                      variant="filled"
-                      radius="md"
-                      leftIcon={<IconLink size={16} />}
-                      onClick={openLinkGenerator}
-                      className={``}
-                      sx={() => ({
-                        background: 'var(--dashboard-button) !important',
-                        border: 'none',
-                        color: '#fff',
-                        padding: '10px 20px',
-                        fontWeight: 600,
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          background:
-                            'var(--dashboard-button-hover) !important',
-                        },
-                        '&:active': {},
-                      })}
-                    >
+                    <Button variant="dashboard" onClick={openLinkGenerator}>
+                      <IconLink size={16} />
                       Generate Share Link
                     </Button>
                   </Flex>

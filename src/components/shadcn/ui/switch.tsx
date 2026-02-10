@@ -19,9 +19,9 @@ const switchVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent data-[state=checked]:bg-primary data-[state=unchecked]:bg-input',
+          'border-transparent data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=unchecked]:bg-white/15',
         labeled:
-          'data-[state=checked]:border-[var(--dashboard-button)] data-[state=checked]:bg-[var(--dashboard-button)] data-[state=unchecked]:border-[var(--dashboard-background-darker)] data-[state=unchecked]:bg-[var(--dashboard-background-dark)]',
+          'data-[state=checked]:border-[var(--dashboard-button)] data-[state=checked]:bg-[var(--dashboard-button)] data-[state=unchecked]:border-[var(--dashboard-background-darker)] data-[state=unchecked]:bg-[var(--dashboard-background-dark)] dark:data-[state=unchecked]:border-white/25 dark:data-[state=unchecked]:bg-white/15',
       },
       size: {
         sm: 'h-5 w-10',
@@ -37,7 +37,7 @@ const switchVariants = cva(
 )
 
 const switchThumbVariants = cva(
-  'pointer-events-none flex items-center justify-center rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.2)] ring-0 transition-all duration-300',
+  'pointer-events-none flex items-center justify-center rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.2)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4)] ring-0 transition-all duration-300',
   {
     variants: {
       size: {
@@ -155,7 +155,9 @@ const Switch = React.forwardRef<
             <span
               className={cn(
                 switchTrackLabelVariants({ size, position: 'off' }),
-                !checked ? 'text-gray-400 opacity-100' : 'opacity-0',
+                !checked
+                  ? 'text-gray-400 opacity-100 dark:text-gray-300'
+                  : 'opacity-0',
               )}
             >
               {offLabel}
@@ -221,7 +223,7 @@ const Switch = React.forwardRef<
                     >
                       <IconInfoCircle
                         size={16}
-                        className="text-gray-400 transition-all duration-200 ease-in-out group-hover:text-gray-500"
+                        className="text-gray-400 transition-all duration-200 ease-in-out group-hover:text-gray-500 dark:text-gray-300 dark:group-hover:text-gray-200"
                       />
                     </span>
                   </TooltipTrigger>
