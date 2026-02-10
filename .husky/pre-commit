@@ -1,3 +1,4 @@
 #!/bin/sh
 set -e
 trunk fmt
+npm run test -- run

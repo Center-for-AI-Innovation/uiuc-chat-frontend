@@ -178,6 +178,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         res.status(500).json({ error: 'Error deleting folder' })
         console.error('Error deleting folder:', error)
       }
+      break
 
     default:
       res.setHeader('Allow', ['GET', 'POST'])
