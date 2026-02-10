@@ -1,4 +1,8 @@
-import { type QueryClient, useMutation } from '@tanstack/react-query'
+import {
+  type InfiniteData,
+  type QueryClient,
+  useMutation,
+} from '@tanstack/react-query'
 import { type Conversation, type ConversationPage } from '~/types/chat'
 import { deleteConversationFromServer } from '@/hooks/__internal__/conversation'
 
@@ -8,6 +12,13 @@ export function useDeleteConversation(
   course_name: string,
   search_term: string,
 ) {
+  const normalizedSearchTerm = search_term || ''
+  const conversationHistoryKey = [
+    'conversationHistory',
+    course_name,
+    normalizedSearchTerm,
+  ] as const
+
   return useMutation({
     mutationKey: ['deleteConversation', user_email, course_name],
     mutationFn: async (deleteConversation: Conversation) =>
@@ -17,62 +28,45 @@ export function useDeleteConversation(
         deleteConversation.userEmail || user_email,
       ),
     onMutate: async (deletedConversation: Conversation) => {
-      // Step 1: Cancel the query to prevent it from refetching
-      await queryClient.cancelQueries({
-        queryKey: [
-          'conversationHistory',
-          deletedConversation.userEmail,
-          course_name,
-          '',
-        ],
-      })
-      // Step 2: Perform the optimistic update
+      const previousConversationHistory = queryClient.getQueryData<
+        InfiniteData<ConversationPage>
+      >(conversationHistoryKey)
+
+      await queryClient.cancelQueries({ queryKey: conversationHistoryKey })
+
       queryClient.setQueryData(
-        ['conversationHistory', course_name, ''],
-        (oldData: ConversationPage | undefined) => {
-          if (!oldData || !oldData.conversations) return oldData
-          console.log('oldData: ', oldData)
+        conversationHistoryKey,
+        (oldData: InfiniteData<ConversationPage> | undefined) => {
+          if (!oldData) return oldData
           return {
             ...oldData,
-            conversations: oldData.conversations.filter(
-              (c: Conversation) => c.id !== deletedConversation.id,
-            ),
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              conversations: page.conversations.filter(
+                (c) => c.id !== deletedConversation.id,
+              ),
+            })),
           }
         },
       )
-      // Step 3: Create a context object with the deleted conversation
-      const oldConversation = queryClient.getQueryData([
-        'conversationHistory',
-        deletedConversation.userEmail,
-        course_name,
-        search_term,
-      ])
-      // Step 4: Return the deleted and old conversation to the success handler
-      return { oldConversation, deletedConversation }
+
+      return { previousConversationHistory }
     },
-    onError: (error, variables, context) => {
-      // An error happened!
-      // Rollback the optimistic update
+    onError: (error, _variables, context) => {
       queryClient.setQueryData(
-        ['conversationHistory', course_name, search_term],
-        context?.oldConversation,
+        conversationHistoryKey,
+        context?.previousConversationHistory,
       )
-      console.error(
-        'Error saving updated conversation to server:',
-        error,
-        context,
-      )
+      console.error('Error deleting conversation from server:', error, context)
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (_data, _variables, _context) => {
       // The mutation was successful!
       // Do something with the updated conversation
       // updateConversation(data)
     },
-    onSettled: (data, error, variables, context) => {
-      // The mutation is done!
-      // Do something here, like closing a modal
+    onSettled: (_data, _error, _variables, _context) => {
       queryClient.invalidateQueries({
-        queryKey: ['conversationHistory', course_name, search_term],
+        queryKey: conversationHistoryKey,
       })
     },
   })
