@@ -1,14 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { type DocInProgress, type DocsInProgressResponse } from './types'
 
-export interface DocInProgress {
-  readable_filename: string
-  base_url: string
-  url: string
-}
-
-interface DocsInProgressResponse {
-  documents: DocInProgress[]
-}
+export type { DocInProgress }
 
 async function fetchDocsInProgress(
   courseName: string,

@@ -9,7 +9,7 @@ import {
 } from '@tabler/icons-react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import EmailListAccordion from './EmailListAccordion'
-import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { motion } from 'framer-motion'
 import { Accordion } from '@/components/shadcn/accordion'
@@ -67,7 +67,7 @@ export default function ShareSettingsModal({
 
   const queryClient = useQueryClient()
   const { mutateAsync: setCourseMetadataAsync } =
-    useSetCourseMetadata(projectName)
+    useUpdateCourseMetadata(projectName)
   const [metadata, setMetadata] = useState<CourseMetadata>(initialMetadata)
 
   // Only update from props when modal is opened

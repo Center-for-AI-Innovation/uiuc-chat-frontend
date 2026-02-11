@@ -1,10 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { type CourseDocument } from '~/types/courseMaterials'
-
-export interface ProjectMaterialsResponse {
-  final_docs?: CourseDocument[]
-  total_count?: number
-}
+import { type ProjectMaterialsResponse } from './types'
 
 async function fetchProjectMaterials({
   courseName,

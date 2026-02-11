@@ -5,7 +5,7 @@ import {
 } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '@/hooks/__internal__/setCourseMetadata'
 
-export function useSetCourseMetadata(courseName: string) {
+export function useUpdateCourseMetadata(courseName: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationKey: ['setCourseMetadata', courseName],

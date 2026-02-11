@@ -1,9 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-
-interface NomicMapData {
-  map_id: string
-  map_link: string
-}
+import { type NomicMapData } from './types'
 
 async function fetchNomicMapForQueries(
   courseName: string,

@@ -3,9 +3,9 @@ import handleExport from '../__internal__/handleExport'
 
 export { handleExport }
 
-export function useHandleExportMutation() {
+export function useExportConversationMutation() {
   return useMutation({
-    mutationKey: ['handleExport'],
+    mutationKey: ['exportConversation'],
     mutationFn: (course_name: string) => handleExport(course_name),
   })
 }

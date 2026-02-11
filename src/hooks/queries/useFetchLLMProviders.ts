@@ -1,14 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
-
-interface FetchLLMProvidersVariables {
-  projectName: string
-}
-
-interface UseFetchLLMProvidersOptions extends FetchLLMProvidersVariables {
-  enabled?: boolean
-}
+import {
+  type FetchLLMProvidersVariables,
+  type UseFetchLLMProvidersOptions,
+} from './types'
 
 async function fetchLLMProviders({
   projectName,

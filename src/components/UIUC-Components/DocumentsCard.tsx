@@ -4,7 +4,7 @@ import { IconFileExport } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { useHandleExportMutation } from '~/hooks/queries/useHandleExport'
+import { useExportConversationMutation } from '~/hooks/queries/useExportConversation'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
@@ -61,7 +61,7 @@ function DocumentsCard({
   const [tabValue, setTabValue] = useState<string | null>('success')
   const [failedCount, setFailedCount] = useState<number>(0)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
-  const handleExportMutation = useHandleExportMutation()
+  const exportConversationMutation = useExportConversationMutation()
   const [exportModalOpened, setExportModalOpened] = useState(false)
   const router = useRouter()
   const { classes, theme } = useStyles()
@@ -106,7 +106,9 @@ function DocumentsCard({
               onClick={async () => {
                 setExportModalOpened(false)
                 const result =
-                  await handleExportMutation.mutateAsync(getCurrentPageName())
+                  await exportConversationMutation.mutateAsync(
+                    getCurrentPageName(),
+                  )
                 if (result && result.message) {
                   showToastOnUpdate(theme, false, false, result.message)
                 }

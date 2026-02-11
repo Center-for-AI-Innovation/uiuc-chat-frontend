@@ -1,13 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchCourseMetadata } from '../__internal__/fetchCourseMetadata'
-
-interface FetchCourseMetadataVariables {
-  courseName: string
-}
-
-interface UseFetchCourseMetadataOptions extends FetchCourseMetadataVariables {
-  enabled?: boolean
-}
+import { type UseFetchCourseMetadataOptions } from './types'
 
 export function useFetchCourseMetadata({
   courseName,

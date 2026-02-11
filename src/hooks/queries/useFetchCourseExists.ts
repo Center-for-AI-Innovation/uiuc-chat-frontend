@@ -1,16 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-
-interface FetchCourseExistsVariables {
-  courseName: string
-}
-
-interface UseFetchCourseExistsOptions extends FetchCourseExistsVariables {
-  enabled?: boolean
-}
-
-interface CourseExistsResponse {
-  exists: boolean
-}
+import {
+  type FetchCourseExistsVariables,
+  type UseFetchCourseExistsOptions,
+  type CourseExistsResponse,
+} from './types'
 
 async function fetchCourseExists({
   courseName,

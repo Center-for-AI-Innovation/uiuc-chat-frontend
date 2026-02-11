@@ -1,10 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-
-interface ModelUsage {
-  model_name: string
-  count: number
-  percentage: number
-}
+import { type ModelUsage } from './types'
 
 async function fetchModelUsageCounts(
   courseName: string,

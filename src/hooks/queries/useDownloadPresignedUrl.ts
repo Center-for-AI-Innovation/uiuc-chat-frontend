@@ -1,14 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { fetchPresignedUrl } from '@/hooks/__internal__/downloadPresignedUrl'
 
-// --- Mutation hook (for imperative use in event handlers) ---
+import { type DownloadPresignedUrlRequest } from './types'
 
-type DownloadPresignedUrlRequest = {
-  filePath: string
-  courseName?: string
-  page?: string
-  fileName?: string
-}
+// --- Mutation hook (for imperative use in event handlers) ---
 
 export function useDownloadPresignedUrl() {
   return useMutation({

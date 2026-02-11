@@ -1,21 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { type FailedDocument, type FailedDocumentsResponse } from './types'
 
-export interface FailedDocument {
-  id: string | number
-  course_name: string
-  readable_filename: string
-  s3_path: string
-  url: string
-  base_url: string
-  created_at: string
-  error: string
-}
-
-export interface FailedDocumentsResponse {
-  final_docs: FailedDocument[]
-  total_count: number
-  recent_fail_count: number
-}
+export type { FailedDocument, FailedDocumentsResponse }
 
 async function fetchFailedDocuments({
   courseName,

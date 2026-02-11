@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 
-export function useGenerateApiKey() {
+export function useCreateApiKey() {
   return useMutation({
     mutationFn: async ({ courseName }: { courseName: string }) => {
       const response = await fetch(

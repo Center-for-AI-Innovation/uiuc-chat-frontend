@@ -40,7 +40,7 @@ import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useFetchN8nApiKey } from '~/hooks/queries/useFetchN8nApiKey'
 import { useTestN8nAPI } from '~/hooks/queries/useTestN8nAPI'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
-import { useUpsertN8nAPIKey } from '~/hooks/queries/useUpsertN8nAPIKey'
+import { useUpdateN8nApiKey } from '~/hooks/queries/useUpdateN8nApiKey'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 
 // Utility function for responsive card widths based on sidebar state
@@ -93,7 +93,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
 
   const testN8nAPI = useTestN8nAPI()
   const { data: fetchedN8nApiKey } = useFetchN8nApiKey(currentPageName)
-  const upsertN8nAPIKey = useUpsertN8nAPIKey()
+  const updateN8nApiKey = useUpdateN8nApiKey()
 
   const notificationStyles = (isError = false) => {
     return {
@@ -160,7 +160,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     }
 
     console.log('Saving n8n API Key:', n8nApiKeyTextbox)
-    upsertN8nAPIKey.mutate(
+    updateN8nApiKey.mutate(
       {
         course_name: currentPageName,
         n8n_api_key: n8nApiKeyTextbox,

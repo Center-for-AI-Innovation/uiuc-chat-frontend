@@ -1,7 +1,7 @@
 import { TextInput, Button, Box } from '@mantine/core'
 import { useState, useEffect } from 'react'
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
-import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 
 export default function SetExampleQuestions({
   course_name,
@@ -11,7 +11,7 @@ export default function SetExampleQuestions({
   course_metadata: CourseMetadataOptionalForUpsert
 }) {
   const { mutateAsync: setCourseMetadataAsync } =
-    useSetCourseMetadata(course_name)
+    useUpdateCourseMetadata(course_name)
   const example_questions = course_metadata?.example_questions || ['']
   const [inputList, setInputList] = useState(
     example_questions.length > 0 ? example_questions : [''],

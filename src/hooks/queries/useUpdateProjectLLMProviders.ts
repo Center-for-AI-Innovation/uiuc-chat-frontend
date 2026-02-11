@@ -2,11 +2,7 @@ import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { debounce } from 'lodash'
 import { useMemo, useRef } from 'react'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
-
-type PendingPromise = {
-  resolve: (value: unknown) => void
-  reject: (reason?: unknown) => void
-}
+import { type PendingPromise } from './types'
 
 export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
   const pendingRef = useRef<PendingPromise[]>([])

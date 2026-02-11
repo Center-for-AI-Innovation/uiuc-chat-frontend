@@ -1,23 +1,8 @@
 import { useMutation } from '@tanstack/react-query'
-
-type ChatFileUploadRequest = {
-  conversationId: string
-  courseName: string
-  user_id: string
-  s3Key: string
-  fileName: string
-  fileType: string
-  model?: string
-}
-
-type ChatFileUploadResponse = {
-  success?: boolean
-  fileUploadId?: string
-  message?: string
-  error?: string
-  details?: string
-  chunks_created?: number
-}
+import {
+  type ChatFileUploadRequest,
+  type ChatFileUploadResponse,
+} from './types'
 
 async function chatFileUpload(
   body: ChatFileUploadRequest,

@@ -14,7 +14,7 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import SetExampleQuestions from './SetExampleQuestions'
@@ -105,7 +105,7 @@ export const UploadCard = memo(function UploadCard({
   const queryClient = useQueryClient()
   const uploadToS3Mutation = useUploadToS3()
   const { mutateAsync: setCourseMetadataAsync } =
-    useSetCourseMetadata(projectName)
+    useUpdateCourseMetadata(projectName)
   const [introMessage, setIntroMessage] = useState(
     initialMetadata?.course_intro_message || '',
   )

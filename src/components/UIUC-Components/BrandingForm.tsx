@@ -12,7 +12,7 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 
 const BrandingForm = ({
@@ -25,7 +25,7 @@ const BrandingForm = ({
   const queryClient = useQueryClient()
   const uploadToS3Mutation = useUploadToS3()
   const { mutateAsync: setCourseMetadataAsync } =
-    useSetCourseMetadata(project_name)
+    useUpdateCourseMetadata(project_name)
   const [introMessage, setIntroMessage] = useState('')
   const [isIntroMessageUpdated, setIsIntroMessageUpdated] = useState(false)
   const [metadata, setMetadata] = useState<CourseMetadata | null>(null)

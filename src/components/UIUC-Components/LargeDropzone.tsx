@@ -27,7 +27,7 @@ import { useRouter } from 'next/router'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import SupportedFileUploadTypes from './SupportedFileUploadTypes'
 import { useMediaQuery } from '@mantine/hooks'
-import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import { v4 as uuidv4 } from 'uuid'
 import { type FileUpload } from './UploadNotification'
 import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
@@ -110,7 +110,7 @@ export function LargeDropzone({
   const uploadToS3Mutation = useUploadToS3()
   const ingestMutation = useIngest()
   const { mutateAsync: setCourseMetadataAsync } =
-    useSetCourseMetadata(courseName)
+    useUpdateCourseMetadata(courseName)
 
   const ingestFiles = async (files: File[] | null, is_new_course: boolean) => {
     if (!files) return

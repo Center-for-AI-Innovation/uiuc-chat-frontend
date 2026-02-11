@@ -25,7 +25,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useRouter } from 'next/router'
 import { useMediaQuery } from '@mantine/hooks'
-import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Montserrat } from 'next/font/google'
@@ -85,7 +85,7 @@ export const WebScrape = ({
   ])
   const ingestCanvasMutation = useIngestCanvas(courseName)
   const { mutateAsync: setCourseMetadataAsync } =
-    useSetCourseMetadata(courseName)
+    useUpdateCourseMetadata(courseName)
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,

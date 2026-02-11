@@ -3,16 +3,12 @@ import {
   fetchContexts,
   fetchMQRContexts,
 } from '../__internal__/fetchContextsForChat'
+import {
+  type FetchContextsForChatParams,
+  type FetchMQRContextsParams,
+} from './types'
 
 export { fetchContexts, fetchMQRContexts }
-
-interface FetchContextsForChatParams {
-  course_name: string
-  search_query: string
-  token_limit?: number
-  doc_groups?: string[]
-  conversation_id?: string
-}
 
 export function useFetchContextsForChatMutation() {
   return useMutation({
@@ -32,14 +28,6 @@ export function useFetchContextsForChatMutation() {
         conversation_id,
       ),
   })
-}
-
-interface FetchMQRContextsParams {
-  course_name: string
-  search_query: string
-  token_limit?: number
-  doc_groups?: string[]
-  conversation_id: string
 }
 
 export function useFetchMQRContextsMutation() {

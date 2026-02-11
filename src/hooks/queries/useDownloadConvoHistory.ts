@@ -1,16 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
-
-type DownloadConvoHistoryRequest = {
-  projectName: string
-}
-
-type DownloadResult = {
-  message: string
-}
+import {
+  type DownloadConvoHistoryRequest,
+  type DownloadConvoHistoryResult,
+} from './types'
 
 async function downloadConvoHistory({
   projectName,
-}: DownloadConvoHistoryRequest): Promise<DownloadResult> {
+}: DownloadConvoHistoryRequest): Promise<DownloadConvoHistoryResult> {
   const response = await fetch(
     `/api/UIUC-api/downloadConvoHistoryUser?projectName=${encodeURIComponent(projectName)}`,
     {

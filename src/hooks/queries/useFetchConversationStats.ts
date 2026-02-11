@@ -1,12 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-
-interface ConversationStatsResponse {
-  per_day: { [date: string]: number }
-  per_hour: { [hour: string]: number }
-  per_weekday: { [day: string]: number }
-  heatmap: { [day: string]: { [hour: string]: number } }
-  total_count?: number
-}
+import { type ConversationStatsResponse } from './types'
 
 async function fetchConversationStats(
   courseName: string,

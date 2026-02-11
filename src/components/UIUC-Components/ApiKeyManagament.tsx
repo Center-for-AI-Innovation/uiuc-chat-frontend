@@ -27,7 +27,7 @@ import { type AuthContextProps } from 'react-oidc-context'
 import { useDeleteChatApiKey } from '~/hooks/queries/useDeleteChatApiKey'
 import { useFetchChatApiKey } from '~/hooks/queries/useFetchChatApiKey'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
-import { useGenerateApiKey } from '~/hooks/queries/useGenerateApiKey'
+import { useCreateApiKey } from '~/hooks/queries/useCreateApiKey'
 import { useRotateApiKey } from '~/hooks/queries/useRotateApiKey'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
@@ -72,7 +72,7 @@ const ApiKeyManagement = ({
     courseName: course_name,
     enabled: Boolean(course_name),
   })
-  const generateApiKey = useGenerateApiKey()
+  const createApiKey = useCreateApiKey()
   const rotateApiKey = useRotateApiKey()
   type Language = 'curl' | 'python' | 'node'
 
@@ -199,7 +199,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
   const handleGenerate = async () => {
     try {
-      await generateApiKey.mutateAsync({
+      await createApiKey.mutateAsync({
         courseName: course_name,
       })
       await queryClient.invalidateQueries({

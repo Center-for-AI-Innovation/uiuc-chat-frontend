@@ -47,7 +47,7 @@ import { useFetchProjectMaterials } from '@/hooks/queries/useFetchProjectMateria
 import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
 import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
 
-import { useHandleExportMutation } from '~/hooks/queries/useHandleExport'
+import { useExportConversationMutation } from '~/hooks/queries/useExportConversation'
 import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
 import { LoadingSpinner } from './LoadingSpinner'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
@@ -102,7 +102,7 @@ export function ProjectFilesTable({
   const isBetweenSmallAndMediumScreen = useMediaQuery('(max-width: 878px)')
   const [showMultiSelect, setShowMultiSelect] = useState(false)
   const [isDeletingDocuments, setIsDeletingDocuments] = useState(false)
-  const handleExportMutation = useHandleExportMutation()
+  const exportConversationMutation = useExportConversationMutation()
   const [exportModalOpened, setExportModalOpened] = useState(false)
   const [showDeleteButton, setShowDeleteButton] = useState(false)
   const [selectedCount, setSelectedCount] = useState(0)
@@ -1429,7 +1429,9 @@ export function ProjectFilesTable({
               onClick={async () => {
                 setExportModalOpened(false)
                 const result =
-                  await handleExportMutation.mutateAsync(getCurrentPageName())
+                  await exportConversationMutation.mutateAsync(
+                    getCurrentPageName(),
+                  )
                 if (result && result.message) {
                   showToastOnUpdate(theme, false, false, result.message)
                 }

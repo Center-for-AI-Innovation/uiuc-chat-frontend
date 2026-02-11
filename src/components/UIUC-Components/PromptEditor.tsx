@@ -47,7 +47,7 @@ import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsAp
 import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
-import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
 import {
   DEFAULT_SYSTEM_PROMPT,
@@ -263,7 +263,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     useFetchDefaultPostPrompt()
   const { mutateAsync: routeChatAsync } = useRouteChat()
   const { mutateAsync: setCourseMetadataAsync } =
-    useSetCourseMetadata(project_name)
+    useUpdateCourseMetadata(project_name)
   const [
     linkGeneratorOpened,
     { open: openLinkGenerator, close: closeLinkGenerator },

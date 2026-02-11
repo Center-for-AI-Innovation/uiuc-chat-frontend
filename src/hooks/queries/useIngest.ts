@@ -1,15 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-
-type IngestRequest = {
-  uniqueFileName: string
-  courseName: string
-  readableFilename: string
-}
-
-type IngestResponse = {
-  task_id?: string
-  error?: string
-}
+import { type IngestRequest, type IngestResponse } from './types'
 
 async function ingest(body: IngestRequest): Promise<IngestResponse> {
   const response = await fetch('/api/UIUC-api/ingest', {

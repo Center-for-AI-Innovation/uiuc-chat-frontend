@@ -1,11 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { type WeeklyTrend } from './types'
 
-export interface WeeklyTrend {
-  current_week_value: number
-  metric_name: string
-  percentage_change: number
-  previous_week_value: number
-}
+export type { WeeklyTrend }
 
 async function fetchWeeklyTrends(courseName: string): Promise<WeeklyTrend[]> {
   const response = await fetch('/api/UIUC-api/getWeeklyTrends', {

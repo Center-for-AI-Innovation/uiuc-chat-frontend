@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 
-export function useUpsertN8nAPIKey() {
+export function useUpdateN8nApiKey() {
   return useMutation({
     mutationFn: async ({
       course_name,

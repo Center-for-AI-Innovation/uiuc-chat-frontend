@@ -6,7 +6,7 @@ import React, {
   type KeyboardEvent,
 } from 'react'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import {
   Accordion,
   AccordionContent,
@@ -120,7 +120,7 @@ function EmailListAccordion({
 }) {
   const queryClient = useQueryClient()
   const { mutateAsync: setCourseMetadataAsync } =
-    useSetCourseMetadata(course_name)
+    useUpdateCourseMetadata(course_name)
   const emailAddresses = metadata.approved_emails_list || []
   const courseAdmins = metadata.course_admins || []
   const [value, setValue] = useState<string>('')

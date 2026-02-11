@@ -1,14 +1,8 @@
 import { useMutation } from '@tanstack/react-query'
 import { createProject } from '@/hooks/__internal__/createProject'
+import { type CreateProjectParams } from './types'
 
 export { createProject }
-
-interface CreateProjectParams {
-  project_name: string
-  project_description: string | undefined
-  project_owner_email: string
-  is_private?: boolean
-}
 
 export function useCreateProjectMutation() {
   return useMutation({

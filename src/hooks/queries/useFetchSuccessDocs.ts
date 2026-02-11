@@ -1,10 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-
-interface SuccessDoc {
-  readable_filename: string
-  base_url: string
-  url: string
-}
+import { type SuccessDoc } from './types'
 
 async function fetchSuccessDocs(courseName: string): Promise<SuccessDoc[]> {
   const response = await fetch(
