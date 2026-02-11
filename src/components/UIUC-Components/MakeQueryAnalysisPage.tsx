@@ -38,7 +38,7 @@ import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
 import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
-import downloadConversationHistory from '../../pages/util/downloadConversationHistory'
+import { useDownloadConversationHistoryMutation } from '~/hooks/queries/useDownloadConversationHistory'
 import { useFetchConversationStats } from '~/hooks/queries/useFetchConversationStats'
 import { useFetchModelUsageCounts } from '~/hooks/queries/useFetchModelUsageCounts'
 import { useFetchProjectStats } from '~/hooks/queries/useFetchProjectStats'
@@ -141,6 +141,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const currentPageName = GetCurrentPageName()
 
+  const downloadConversationHistoryMutation =
+    useDownloadConversationHistoryMutation()
   const [isLoading, setIsLoading] = useState(false)
 
   const { data: projectStatsData } = useFetchProjectStats({
@@ -272,7 +274,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const handleDownload = async (courseName: string) => {
     setIsLoading(true)
     try {
-      const result = await downloadConversationHistory(courseName)
+      const result =
+        await downloadConversationHistoryMutation.mutateAsync(courseName)
       showToastOnUpdate(theme, false, false, result.message)
     } finally {
       setIsLoading(false)
