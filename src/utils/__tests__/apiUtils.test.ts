@@ -5,10 +5,10 @@ vi.mock('uuid', () => ({ v4: () => 'test-uuid' }))
 import {
   convertConversatonToVercelAISDKv3,
   convertConversationToCoreMessagesWithoutSystem,
-  createProject,
   getBackendUrl,
   getBaseUrl,
 } from '../apiUtils'
+import { createProject } from '~/hooks/__internal__/createProject'
 import { callSetCourseMetadata } from '~/hooks/__internal__/setCourseMetadata'
 import { fetchPresignedUrl } from '~/hooks/__internal__/downloadPresignedUrl'
 import { fetchCourseMetadata } from '~/hooks/__internal__/fetchCourseMetadata'

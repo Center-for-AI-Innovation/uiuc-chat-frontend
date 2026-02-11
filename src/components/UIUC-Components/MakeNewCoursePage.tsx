@@ -6,7 +6,7 @@ import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { createProject } from '~/utils/apiUtils'
+import { useCreateProjectMutation } from '~/hooks/queries/useCreateProject'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
 import UploadNotification, { type FileUpload } from './UploadNotification'
@@ -41,6 +41,7 @@ const MakeNewCoursePage = ({
   const [projectDescription, setProjectDescription] = useState(
     project_description || '',
   )
+  const createProjectMutation = useCreateProjectMutation()
   const [isLoading, setIsLoading] = useState(false)
   const [hasCreatedProject, setHasCreatedProject] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
@@ -150,12 +151,12 @@ const MakeNewCoursePage = ({
   ): Promise<boolean> => {
     setIsLoading(true)
     try {
-      const result = await createProject(
+      const result = await createProjectMutation.mutateAsync({
         project_name,
         project_description,
-        current_user_email,
+        project_owner_email: current_user_email,
         is_private,
-      )
+      })
       if (!result) {
         return false
       }

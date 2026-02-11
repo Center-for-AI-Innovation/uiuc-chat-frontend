@@ -5,7 +5,7 @@ import { Card, Title } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import router from 'next/router'
-import { createProject } from '~/utils/apiUtils'
+import { useCreateProjectMutation } from '~/hooks/queries/useCreateProject'
 import Navbar from './navbars/Navbar'
 
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -31,6 +31,7 @@ const Dashboard = ({
   const [isCourseAvailable, setIsCourseAvailable] = useState<
     boolean | undefined
   >(undefined)
+  const createProjectMutation = useCreateProjectMutation()
   const [isLoading, setIsLoading] = useState(false)
 
   const checkIfNewCoursePage = () => {
@@ -62,11 +63,11 @@ const Dashboard = ({
   ) => {
     setIsLoading(true)
     try {
-      const result = await createProject(
+      const result = await createProjectMutation.mutateAsync({
         project_name,
         project_description,
-        current_user_email,
-      )
+        project_owner_email: current_user_email,
+      })
       console.log('Project created successfully:', result)
       if (is_new_course) {
         await router.push(`/${projectName}/dashboard`)
