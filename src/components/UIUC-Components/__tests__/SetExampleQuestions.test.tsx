@@ -11,22 +11,7 @@ vi.mock('~/utils/apiUtils', () => ({
 }))
 
 describe('SetExampleQuestions', () => {
-  it('adds a new empty input when clicking Add new question button', async () => {
-    renderWithProviders(
-      <SetExampleQuestions
-        course_name="CS101"
-        course_metadata={{ example_questions: [''] } as any}
-      />,
-    )
-
-    const inputs = screen.getAllByRole('textbox')
-    expect(inputs).toHaveLength(1)
-
-    fireEvent.click(screen.getByRole('button', { name: /Add new question/i }))
-    await waitFor(() => expect(screen.getAllByRole('textbox')).toHaveLength(2))
-  })
-
-  it('renders prefilled questions from metadata', async () => {
+  it('renders prefilled questions from metadata with an empty placeholder', async () => {
     renderWithProviders(
       <SetExampleQuestions
         course_name="CS101"
@@ -35,9 +20,11 @@ describe('SetExampleQuestions', () => {
     )
 
     const inputs = screen.getAllByRole('textbox')
-    expect(inputs).toHaveLength(2)
+    // 2 saved questions + 1 empty placeholder
+    expect(inputs).toHaveLength(3)
     expect(inputs[0]).toHaveValue('Q1')
     expect(inputs[1]).toHaveValue('Q2')
+    expect(inputs[2]).toHaveValue('')
   })
 
   it('submits filtered questions via callSetCourseMetadata on blur', async () => {
@@ -47,7 +34,7 @@ describe('SetExampleQuestions', () => {
     renderWithProviders(
       <SetExampleQuestions
         course_name="CS101"
-        course_metadata={{ example_questions: [''] } as any}
+        course_metadata={{ example_questions: [] } as any}
       />,
     )
 
@@ -71,7 +58,7 @@ describe('SetExampleQuestions', () => {
     renderWithProviders(
       <SetExampleQuestions
         course_name="CS101"
-        course_metadata={{ example_questions: [''] } as any}
+        course_metadata={{ example_questions: [] } as any}
       />,
     )
 
@@ -88,7 +75,7 @@ describe('SetExampleQuestions', () => {
     renderWithProviders(
       <SetExampleQuestions
         course_name="CS101"
-        course_metadata={{ example_questions: [''] } as any}
+        course_metadata={{ example_questions: [] } as any}
       />,
     )
 
@@ -113,7 +100,7 @@ describe('SetExampleQuestions', () => {
     renderWithProviders(
       <SetExampleQuestions
         course_name="CS101"
-        course_metadata={{ example_questions: [''] } as any}
+        course_metadata={{ example_questions: [] } as any}
       />,
     )
 
@@ -134,7 +121,7 @@ describe('SetExampleQuestions', () => {
     renderWithProviders(
       <SetExampleQuestions
         course_name="CS101"
-        course_metadata={{ example_questions: [''] } as any}
+        course_metadata={{ example_questions: [] } as any}
       />,
     )
 
@@ -164,7 +151,8 @@ describe('SetExampleQuestions', () => {
       />,
     )
 
-    expect(screen.getAllByRole('textbox')).toHaveLength(3)
+    // 3 saved questions + 1 empty placeholder
+    expect(screen.getAllByRole('textbox')).toHaveLength(4)
 
     // Click into the second input and press Enter
     const secondInput = screen.getAllByRole('textbox')[1]!
