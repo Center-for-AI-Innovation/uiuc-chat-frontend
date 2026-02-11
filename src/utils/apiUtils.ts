@@ -1,6 +1,6 @@
 // utils/apiUtils.ts
-import { CoreMessage } from 'ai'
-import { Conversation, Message } from '~/types/chat'
+import type { CoreMessage } from 'ai'
+import type { Conversation, Message } from '~/types/chat'
 // Configuration for runtime environment
 
 export const getBaseUrl = () => {
@@ -133,6 +133,3 @@ export function convertConversationToCoreMessagesWithoutSystem(
       }
     })
 }
-
-// Export all functions as part of the API Utils module
-export default {}

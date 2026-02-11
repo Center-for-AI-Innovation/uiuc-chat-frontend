@@ -11,7 +11,7 @@ vi.mock('~/pages/api/authorization', () => ({
   withCourseAccessFromRequest: () => (h: any) => h,
 }))
 
-vi.mock('~/pages/util/fetchContexts', () => ({
+vi.mock('~/hooks/__internal__/fetchContextsFromBackend', () => ({
   default: hoisted.fetchContextsFromBackend,
 }))
 
