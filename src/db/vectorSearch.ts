@@ -1,0 +1,184 @@
+/**
+ * Frontend vector search using Drizzle + pgvector.
+ *
+ * Backend flow (ai-ta-backend) for reference:
+ * - POST /getTopContexts → service.getTopContexts() → fetches disabled_doc_groups + public_doc_groups in parallel with embedding the query.
+ * - service.vector_search() is called with (search_query, course_name, doc_groups, user_query_embedding, disabled_doc_groups, public_doc_groups, top_n, conversation_id).
+ * - If conversation_id is set: combined filter = (regular_filter OR conversation_filter) so results include both course docs (conversation_id empty) and conversation-specific chunks.
+ * - If no conversation_id: vdb.vector_search() uses _create_search_filter() which has:
+ *   - must: conversation_id is empty (only course chunks).
+ *   - should: (course_name = X and optionally doc_groups overlap) OR public_doc_groups.
+ *   - must_not: admin_disabled_doc_groups.
+ * - vdb.vector_search() calls pgvector_store.search(query_vector, query_filter, limit) and returns list of { payload, score }.
+ */
+
+import { and, eq, or, sql } from 'drizzle-orm'
+import { db } from './dbClient'
+import { embeddings } from './schema'
+import type { ContextWithMetadata } from '~/types/chat'
+
+export interface VectorSearchParams {
+  /** Query embedding from embedding API (e.g. backend or OpenAI). */
+  queryEmbedding: number[]
+  course_name: string
+  doc_groups: string[]
+  disabled_doc_groups: string[]
+  /** Same shape as backend: { course_name, name, enabled }[] */
+  public_doc_groups: { course_name: string; name: string; enabled: boolean }[]
+  conversation_id?: string
+  top_n?: number
+}
+
+/**
+ * Run vector search on the embeddings table using Drizzle.
+ * Filter logic mirrors backend _create_search_filter and conversation handling.
+ */
+export async function vectorSearchWithDrizzle(
+  params: VectorSearchParams,
+): Promise<ContextWithMetadata[]> {
+  const {
+    queryEmbedding,
+    course_name,
+    doc_groups,
+    disabled_doc_groups,
+    public_doc_groups,
+    conversation_id,
+    top_n = 100,
+  } = params
+
+  // Pass vector as single string to avoid Postgres "ROW expressions can have at most 1664 entries" (embedding has 4096 dims)
+  const vectorLiteral = '[' + queryEmbedding.join(',') + ']'
+  const scoreExpr = sql<number>`(1 - (${embeddings.embedding} <=> ${vectorLiteral}::vector))`
+  const orderByDistance = sql`${embeddings.embedding} <=> ${vectorLiteral}::vector`
+
+  if (conversation_id) {
+    // Chat: (regular course chunks OR conversation-specific chunks)
+    const regularCondition = and(
+      or(
+        sql`${embeddings.conversation_id} IS NULL`,
+        eq(embeddings.conversation_id, ''),
+      ),
+      buildShouldCondition(
+        embeddings,
+        course_name,
+        doc_groups,
+        public_doc_groups,
+      ),
+      buildMustNotCondition(embeddings, disabled_doc_groups),
+    )
+    const conversationCondition = eq(
+      embeddings.conversation_id,
+      conversation_id,
+    )
+    const whereClause = or(regularCondition!, conversationCondition)!
+    const rows = await db
+      .select({
+        id: embeddings.id,
+        page_content: embeddings.page_content,
+        readable_filename: embeddings.readable_filename,
+        course_name: embeddings.course_name,
+        s3_path: embeddings.s3_path,
+        pagenumber: embeddings.pagenumber,
+        url: embeddings.url,
+        base_url: embeddings.base_url,
+        score: scoreExpr,
+      })
+      .from(embeddings)
+      .where(whereClause)
+      .orderBy(orderByDistance)
+      .limit(top_n)
+    return rows.map((row) => rowToContext(row))
+  }
+
+  // No conversation: only course chunks (conversation_id empty)
+  const whereClause = and(
+    or(
+      sql`${embeddings.conversation_id} IS NULL`,
+      eq(embeddings.conversation_id, ''),
+    ),
+    buildShouldCondition(
+      embeddings,
+      course_name,
+      doc_groups,
+      public_doc_groups,
+    ),
+    buildMustNotCondition(embeddings, disabled_doc_groups),
+  )
+
+  const rows = await db
+    .select({
+      id: embeddings.id,
+      page_content: embeddings.page_content,
+      readable_filename: embeddings.readable_filename,
+      course_name: embeddings.course_name,
+      s3_path: embeddings.s3_path,
+      pagenumber: embeddings.pagenumber,
+      url: embeddings.url,
+      base_url: embeddings.base_url,
+      score: scoreExpr,
+    })
+    .from(embeddings)
+    .where(whereClause)
+    .orderBy(orderByDistance)
+    .limit(top_n)
+
+  return rows.map((row) => rowToContext(row))
+}
+
+function buildShouldCondition(
+  table: typeof embeddings,
+  course_name: string,
+  doc_groups: string[],
+  public_doc_groups: { course_name: string; name: string; enabled: boolean }[],
+) {
+  const ownCourse =
+    doc_groups.length > 0 && !doc_groups.includes('All Documents')
+      ? and(
+          eq(table.course_name, course_name),
+          sql`${table.doc_groups} && ${JSON.stringify(doc_groups)}::jsonb`,
+        )
+      : eq(table.course_name, course_name)
+
+  const publicConditions = public_doc_groups
+    .filter((p) => p.enabled)
+    .map((p) =>
+      and(
+        eq(table.course_name, p.course_name),
+        sql`${table.doc_groups} && ${JSON.stringify([p.name])}::jsonb`,
+      ),
+    )
+
+  if (publicConditions.length === 0) return ownCourse!
+  return or(ownCourse!, ...publicConditions)!
+}
+
+function buildMustNotCondition(
+  table: typeof embeddings,
+  disabled_doc_groups: string[],
+) {
+  if (disabled_doc_groups.length === 0) return undefined
+  return sql`NOT (${table.doc_groups} && ${JSON.stringify(disabled_doc_groups)}::jsonb)`
+}
+
+function rowToContext(row: {
+  id: number
+  page_content: string | null
+  readable_filename: string | null
+  course_name: string | null
+  s3_path: string | null
+  pagenumber: string | null
+  url: string | null
+  base_url: string | null
+}): ContextWithMetadata {
+  return {
+    id: row.id,
+    text: row.page_content ?? '',
+    readable_filename: row.readable_filename ?? '',
+    course_name: row.course_name ?? '',
+    'course_name ': row.course_name ?? '',
+    s3_path: row.s3_path ?? '',
+    pagenumber: row.pagenumber ?? '',
+    url: row.url ?? '',
+    base_url: row.base_url ?? '',
+  }
+}

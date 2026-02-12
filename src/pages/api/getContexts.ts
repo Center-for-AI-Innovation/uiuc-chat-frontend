@@ -1,7 +1,9 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
-import fetchContextsFromBackend from '~/pages/util/fetchContexts'
+import fetchContextsFromBackend, {
+  fetchContextsViaFrontendVectorSearch,
+} from '~/pages/util/fetchContexts'
 
 export default withCourseAccessFromRequest('any')(handler)
 
@@ -19,6 +21,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       token_limit = 4000,
       doc_groups = [],
       conversation_id,
+      top_n = 100,
     } = req.body
 
     if (!course_name || !search_query) {
@@ -27,13 +30,13 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       })
     }
 
-    // Use the common function
-    const data = await fetchContextsFromBackend(
+    const data = await fetchContextsViaFrontendVectorSearch(
       course_name,
       search_query,
       token_limit,
       doc_groups,
       conversation_id,
+      top_n,
     )
     return res.status(200).json(data)
   } catch (error) {
