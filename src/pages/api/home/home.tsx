@@ -12,7 +12,7 @@ import { cleanSelectedConversation } from '@/utils/app/clean'
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const'
 
 import { type Conversation } from '@/types/chat'
-import { type KeyValuePair } from '@/types/data'
+import { type KeyValuePair } from '@/types/plugin'
 
 import { Chat } from '@/components/Chat/Chat'
 import { Chatbar } from '@/components/Chatbar/Chatbar'

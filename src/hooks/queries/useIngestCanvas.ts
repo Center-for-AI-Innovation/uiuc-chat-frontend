@@ -1,5 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { type IngestCanvasRequest, type IngestCanvasResponse } from './types'
+
+export type IngestCanvasRequest = {
+  courseName: string
+  canvas_url: string
+  selectedCanvasOptions: string[]
+}
+
+export type IngestCanvasResponse = {
+  success?: boolean
+  message?: string
+  error?: string
+}
 
 async function ingestCanvas(
   body: IngestCanvasRequest,

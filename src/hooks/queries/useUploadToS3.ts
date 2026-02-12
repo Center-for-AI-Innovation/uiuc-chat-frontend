@@ -1,5 +1,19 @@
 import { useMutation } from '@tanstack/react-query'
-import { type UploadToS3Request, type PresignedPostResponse } from './types'
+
+export type UploadToS3Request = {
+  file: File
+  uniqueFileName: string
+  courseName: string
+  user_id?: string
+  uploadType?: 'chat' | 'document-group'
+}
+
+export interface PresignedPostResponse {
+  post: {
+    url: string
+    fields: { [key: string]: string }
+  }
+}
 
 async function uploadToS3({
   file,

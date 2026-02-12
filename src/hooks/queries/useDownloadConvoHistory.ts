@@ -1,8 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
-import {
-  type DownloadConvoHistoryRequest,
-  type DownloadConvoHistoryResult,
-} from './types'
+
+export type DownloadConvoHistoryRequest = {
+  projectName: string
+}
+
+export type DownloadConvoHistoryResult = {
+  message: string
+}
 
 async function downloadConvoHistory({
   projectName,

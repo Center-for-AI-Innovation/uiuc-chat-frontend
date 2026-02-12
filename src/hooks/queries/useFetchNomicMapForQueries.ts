@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { type NomicMapData } from './types'
+import { type NomicMapData } from '~/types/analytics'
 
 async function fetchNomicMapForQueries(
   courseName: string,

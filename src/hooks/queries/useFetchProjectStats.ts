@@ -1,5 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { type ProjectStatsResponse } from './types'
+
+export interface ProjectStatsResponse {
+  total_conversations: number
+  total_messages: number
+  unique_users: number
+  avg_conversations_per_user: number
+  avg_messages_per_user: number
+  avg_messages_per_conversation: number
+}
 
 async function fetchProjectStats(
   courseName: string,

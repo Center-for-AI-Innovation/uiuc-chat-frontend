@@ -319,7 +319,7 @@ export function ProjectFilesTable({
         (old = []) => {
           return old.map((doc_group) => {
             recordsToDelete.forEach((record) => {
-              if (doc_group.name in record.doc_groups) {
+              if (record.doc_groups && doc_group.name in record.doc_groups) {
                 doc_group.doc_count -= 1
               }
             })

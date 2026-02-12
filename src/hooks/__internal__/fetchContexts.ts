@@ -1,14 +1,6 @@
 import { type ContextWithMetadata } from '~/types/chat'
+import { type FetchContextsParams } from '../queries/useFetchContexts'
 import { getBaseUrl } from '~/utils/apiUtils'
-
-interface FetchContextsParams {
-  course_name: string
-  user_id: string
-  search_query: string
-  token_limit?: number
-  doc_groups?: string[]
-  conversation_id?: string
-}
 
 export async function fetchContexts({
   course_name,

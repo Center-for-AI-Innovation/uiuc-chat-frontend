@@ -1,11 +1,7 @@
 import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
-
-interface NomicMapData {
-  map_id: string
-  map_link: string
-}
+import { type NomicMapData } from '~/types/analytics'
 
 export default withAuth(handler)
 

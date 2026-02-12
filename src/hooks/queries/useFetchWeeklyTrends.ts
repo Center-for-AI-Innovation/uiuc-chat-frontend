@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { type WeeklyTrend } from './types'
+import { type WeeklyTrend } from '~/types/analytics'
 
 export type { WeeklyTrend }
 

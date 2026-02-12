@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { type AllCourseDataResponse } from './types'
+
+export interface AllCourseDataResponse {
+  distinct_files: any
+}
 
 async function fetchAllCourseData(
   courseName: string,

@@ -1,12 +1,7 @@
 import { withAuth } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
-
-interface ModelUsage {
-  model_name: string
-  count: number
-  percentage: number
-}
+import { type ModelUsage } from '~/types/analytics'
 
 export default withCourseOwnerOrAdminAccess()(handler)
 

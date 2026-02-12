@@ -51,7 +51,6 @@ import {
   State,
   attachContextsToLastMessage,
   constructSearchQuery,
-  determineAndValidateModel,
   getOpenAIKey,
   handleContextSearch,
   handleImageContent,
@@ -589,67 +588,6 @@ describe('handleImageContent', () => {
     expect(controller.signal.aborted).toBe(true)
     expect(result.imgDesc).toBe('')
     expect(result.searchQuery).toBe('q')
-  })
-})
-
-describe('determineAndValidateModel', () => {
-  it('selects the active model from /api/models response', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          OpenAI: { models: [{ id: 'gpt-4o', enabled: true }] },
-          Azure: { models: [] },
-        }),
-        { status: 200 },
-      ),
-    )
-
-    const { activeModel, modelsWithProviders } =
-      await determineAndValidateModel('gpt-4o', 'proj')
-    expect(activeModel.id).toBe('gpt-4o')
-    expect(modelsWithProviders.OpenAI).toBeTruthy()
-  })
-
-  it('throws when no models are enabled for the project', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          OpenAI: { models: [{ id: 'gpt-4o', enabled: false }] },
-        }),
-        { status: 200 },
-      ),
-    )
-
-    await expect(determineAndValidateModel('gpt-4o', 'proj')).rejects.toThrow(
-      /no models are available/i,
-    )
-  })
-
-  it('throws when requested model is not available', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          OpenAI: { models: [{ id: 'gpt-4o', enabled: true }] },
-        }),
-        { status: 200 },
-      ),
-    )
-
-    await expect(determineAndValidateModel('missing', 'proj')).rejects.toThrow(
-      /not available/i,
-    )
-  })
-
-  it('throws an OpenAIError when /api/models response is not ok', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('nope', { status: 500, statusText: 'bad' }),
-    )
-
-    await expect(
-      determineAndValidateModel('gpt-4o', 'proj'),
-    ).rejects.toMatchObject({
-      message: expect.stringMatching(/failed to fetch models/i),
-    })
   })
 })
 

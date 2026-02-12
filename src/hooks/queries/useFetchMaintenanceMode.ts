@@ -1,8 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  type UseFetchMaintenanceModeOptions,
-  type MaintenanceModeResponse,
-} from './types'
+
+export interface UseFetchMaintenanceModeOptions {
+  enabled?: boolean
+}
+
+export interface MaintenanceModeResponse {
+  isMaintenanceMode: boolean
+}
 
 async function fetchMaintenanceMode(): Promise<boolean> {
   const response = await fetch('/api/UIUC-api/getMaintenanceModeFast')

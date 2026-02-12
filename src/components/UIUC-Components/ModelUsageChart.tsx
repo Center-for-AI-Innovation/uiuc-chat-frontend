@@ -10,12 +10,7 @@ import {
 import { LoadingSpinner } from './LoadingSpinner'
 import { Text } from '@mantine/core'
 import { IconAlertCircle } from '@tabler/icons-react'
-
-interface ModelUsage {
-  model_name: string
-  count: number
-  percentage: number
-}
+import { type ModelUsage } from '~/types/analytics'
 
 interface ModelUsageChartProps {
   data: ModelUsage[] | null

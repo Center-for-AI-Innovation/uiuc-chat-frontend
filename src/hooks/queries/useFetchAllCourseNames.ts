@@ -1,8 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-  type UseFetchAllCourseNamesOptions,
-  type AllCourseNamesResponse,
-} from './types'
+
+export interface UseFetchAllCourseNamesOptions {
+  enabled?: boolean
+}
+
+export interface AllCourseNamesResponse {
+  all_course_names: string[]
+}
 
 async function fetchAllCourseNames(): Promise<string[]> {
   const response = await fetch('/api/UIUC-api/getAllCourseNames')
