@@ -1,15 +1,5 @@
 /**
  * Frontend vector search using Drizzle + pgvector.
- *
- * Backend flow (ai-ta-backend) for reference:
- * - POST /getTopContexts → service.getTopContexts() → fetches disabled_doc_groups + public_doc_groups in parallel with embedding the query.
- * - service.vector_search() is called with (search_query, course_name, doc_groups, user_query_embedding, disabled_doc_groups, public_doc_groups, top_n, conversation_id).
- * - If conversation_id is set: combined filter = (regular_filter OR conversation_filter) so results include both course docs (conversation_id empty) and conversation-specific chunks.
- * - If no conversation_id: vdb.vector_search() uses _create_search_filter() which has:
- *   - must: conversation_id is empty (only course chunks).
- *   - should: (course_name = X and optionally doc_groups overlap) OR public_doc_groups.
- *   - must_not: admin_disabled_doc_groups.
- * - vdb.vector_search() calls pgvector_store.search(query_vector, query_filter, limit) and returns list of { payload, score }.
  */
 
 import { and, eq, or, sql } from 'drizzle-orm'
@@ -23,7 +13,6 @@ export interface VectorSearchParams {
   course_name: string
   doc_groups: string[]
   disabled_doc_groups: string[]
-  /** Same shape as backend: { course_name, name, enabled }[] */
   public_doc_groups: { course_name: string; name: string; enabled: boolean }[]
   conversation_id?: string
   top_n?: number
