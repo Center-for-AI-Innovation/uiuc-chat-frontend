@@ -1,15 +1,16 @@
+import { useFetchNomicMapForQueries } from '~/hooks/queries/useFetchNomicMapForQueries'
+
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { Title, Text, Flex, Divider, ActionIcon } from '@mantine/core'
 import React, { useState } from 'react'
 import { IconInfoCircle } from '@tabler/icons-react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useFetchNomicMapForQueries } from '~/hooks/queries/useFetchNomicMapForQueries'
 
 function NomicDocumentMap({ course_name }: { course_name: string }) {
-  const [accordionOpened, setAccordionOpened] = useState(false)
-
   const { data: nomicMapData, isLoading: nomicIsLoading } =
     useFetchNomicMapForQueries(course_name)
+
+  const [accordionOpened, setAccordionOpened] = useState(false)
 
   return (
     <>

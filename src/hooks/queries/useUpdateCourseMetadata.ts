@@ -1,3 +1,4 @@
+// Mutation: Updates course metadata (settings, banner, description, etc.). Invalidates related course caches on success.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   type CourseMetadata,
@@ -20,6 +21,9 @@ export function useUpdateCourseMetadata(courseName: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['courseMetadata', courseName],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['allCourseMetadata'],
       })
     },
     onError: (error) => {

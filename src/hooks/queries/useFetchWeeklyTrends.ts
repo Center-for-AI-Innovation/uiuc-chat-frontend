@@ -1,3 +1,4 @@
+// Query: Fetches weekly conversation/usage trend data for a project's analytics dashboard.
 import { useQuery } from '@tanstack/react-query'
 import { type WeeklyTrend } from '~/types/analytics'
 

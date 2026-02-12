@@ -1,3 +1,8 @@
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchN8nApiKey } from '~/hooks/queries/useFetchN8nApiKey'
+import { useTestN8nAPI } from '~/hooks/queries/useTestN8nAPI'
+import { useUpdateN8nApiKey } from '~/hooks/queries/useUpdateN8nApiKey'
+
 import {
   Button,
   Card,
@@ -36,11 +41,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
-import { useFetchN8nApiKey } from '~/hooks/queries/useFetchN8nApiKey'
-import { useTestN8nAPI } from '~/hooks/queries/useTestN8nAPI'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
-import { useUpdateN8nApiKey } from '~/hooks/queries/useUpdateN8nApiKey'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 
 // Utility function for responsive card widths based on sidebar state
@@ -60,6 +61,14 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   const currentPageName = GetCurrentPageName()
   const auth = useAuth()
 
+  const { data: courseMetadata } = useFetchCourseMetadata({
+    courseName: currentPageName,
+    enabled: Boolean(currentPageName) && !auth.isLoading,
+  })
+  const testN8nAPI = useTestN8nAPI()
+  const { data: fetchedN8nApiKey } = useFetchN8nApiKey(currentPageName)
+  const updateN8nApiKey = useUpdateN8nApiKey()
+
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
@@ -78,11 +87,6 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   // Get responsive card width classes
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
-  const { data: courseMetadata } = useFetchCourseMetadata({
-    courseName: currentPageName,
-    enabled: Boolean(currentPageName) && !auth.isLoading,
-  })
-
   const {
     data: flows_table,
     isSuccess: isSuccess,
@@ -90,10 +94,6 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     isError: isErrorTools,
     refetch: refetchWorkflows,
   } = useFetchAllWorkflows(GetCurrentPageName())
-
-  const testN8nAPI = useTestN8nAPI()
-  const { data: fetchedN8nApiKey } = useFetchN8nApiKey(currentPageName)
-  const updateN8nApiKey = useUpdateN8nApiKey()
 
   const notificationStyles = (isError = false) => {
     return {

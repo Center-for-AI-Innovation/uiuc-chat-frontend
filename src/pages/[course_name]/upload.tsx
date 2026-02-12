@@ -1,3 +1,5 @@
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
@@ -13,7 +15,6 @@ import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()

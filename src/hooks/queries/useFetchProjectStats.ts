@@ -1,3 +1,4 @@
+// Query: Fetches project-level analytics (total conversations, messages, unique users, averages).
 import { useQuery } from '@tanstack/react-query'
 
 export interface ProjectStatsResponse {

@@ -1,3 +1,6 @@
+import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
+import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
+
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   Text,
@@ -37,8 +40,6 @@ import axios from 'axios'
 import { Montserrat } from 'next/font/google'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
-import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
-import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -54,6 +55,9 @@ export default function WebsiteIngestForm({
   queryClient: QueryClient
 }): JSX.Element {
   const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(project_name)
+  const { refetch: refetchDocsInProgress } =
+    useFetchDocsInProgress(project_name)
+
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -183,9 +187,6 @@ export default function WebsiteIngestForm({
       setIsUrlUpdated(false)
     }
   }, [url])
-
-  const { refetch: refetchDocsInProgress } =
-    useFetchDocsInProgress(project_name)
 
   useEffect(() => {
     const checkIngestStatus = async () => {

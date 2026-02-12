@@ -1,3 +1,4 @@
+// Mutation: Deletes a chat API key for a course and nullifies the cached key.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export function useDeleteChatApiKey(courseName: string) {

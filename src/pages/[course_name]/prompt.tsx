@@ -1,5 +1,8 @@
 // src/pages/[course_name]/prompt.tsx
 'use client'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
+
 import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
@@ -21,8 +24,6 @@ import SettingsLayout, {
 import PromptEditor from '~/components/UIUC-Components/PromptEditor'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
-import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -46,21 +47,15 @@ const CourseMain: NextPage = () => {
   const isLoaded = !auth.isLoading
   const isSignedIn = auth.isAuthenticated
   const user = auth.user
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    getInitialCollapsedState(),
-  )
-  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
-
-  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   const shouldFetch = router.isReady && !auth.isLoading && Boolean(courseName)
 
+  // React Query hooks
   const { data: courseExists, isLoading: isCheckingExists } =
     useFetchCourseExists({
       courseName: courseName || '',
       enabled: shouldFetch,
     })
-
   const {
     data: metadata,
     isLoading: isFetchingMetadata,
@@ -69,6 +64,13 @@ const CourseMain: NextPage = () => {
     courseName: courseName || '',
     enabled: shouldFetch,
   })
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
+
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   // Handle error states from the hook
   useEffect(() => {

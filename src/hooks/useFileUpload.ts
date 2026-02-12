@@ -1,13 +1,14 @@
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
+import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
+import { useFetchContexts } from '@/hooks/queries/useFetchContexts'
+import { useChatFileUpload } from '@/hooks/queries/useChatFileUpload'
+
 import { type Dispatch, useMemo, useRef, useState } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
 import { type ActionType } from '@/hooks/useCreateReducer'
 import { type Conversation, type ContextWithMetadata } from '~/types/chat'
 import { type HomeInitialState } from '~/pages/api/home/home.state'
-import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
-import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
-import { useFetchContexts } from '@/hooks/queries/useFetchContexts'
-import { useChatFileUpload } from '@/hooks/queries/useChatFileUpload'
 import {
   showToast,
   showErrorToast,
@@ -68,13 +69,14 @@ export function useFileUpload({
   selectedConversation,
   homeDispatch,
 }: UseFileUploadParams) {
-  const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
-  const fileUploadRef = useRef<HTMLInputElement | null>(null)
-
+  // React Query hooks
   const uploadToS3Mutation = useUploadToS3()
   const { mutateAsync: getPresignedUrl } = useDownloadPresignedUrl()
   const { mutateAsync: fetchContextsAsync } = useFetchContexts()
   const { mutateAsync: chatFileUploadAsync } = useChatFileUpload()
+
+  const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
+  const fileUploadRef = useRef<HTMLInputElement | null>(null)
 
   const hasProcessingFiles = useMemo(
     () =>

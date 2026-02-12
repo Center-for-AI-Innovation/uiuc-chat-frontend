@@ -1,3 +1,4 @@
+// Mutation: Routes a chat message to the appropriate LLM endpoint for response generation.
 import { useMutation } from '@tanstack/react-query'
 
 import { type ChatBody } from '~/types/chat'

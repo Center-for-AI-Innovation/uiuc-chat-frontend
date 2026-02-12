@@ -1,3 +1,4 @@
+// Query: Fetches conversation folders for a user. Auto-refetches every 20s.
 import { useQuery } from '@tanstack/react-query'
 import { fetchFolders } from '@/hooks/__internal__/folders'
 

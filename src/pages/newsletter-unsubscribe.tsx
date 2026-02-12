@@ -1,3 +1,5 @@
+import { useNewsletterUnsubscribe } from '~/hooks/queries/useNewsletterUnsubscribe'
+
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { Title, Text, Group, Badge } from '@mantine/core'
 
@@ -6,12 +8,12 @@ import { IconSunset2, IconX } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { useNewsletterUnsubscribe } from '~/hooks/queries/useNewsletterUnsubscribe'
 
 export default function Unsubscribe() {
-  const [email, setEmail] = useState('')
   const router = useRouter()
   const newsletterUnsubscribe = useNewsletterUnsubscribe()
+
+  const [email, setEmail] = useState('')
 
   useEffect(() => {
     if (router.isReady) {

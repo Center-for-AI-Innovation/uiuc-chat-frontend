@@ -1,10 +1,11 @@
+import { useExportConversationMutation } from '~/hooks/queries/useExportConversation'
+
 import { Button, Card, Modal, Text, Title, createStyles } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { IconFileExport } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
-import { useExportConversationMutation } from '~/hooks/queries/useExportConversation'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
@@ -58,10 +59,11 @@ function DocumentsCard({
   metadata: CourseMetadata
   sidebarCollapsed?: boolean
 }) {
+  const exportConversationMutation = useExportConversationMutation()
+
   const [tabValue, setTabValue] = useState<string | null>('success')
   const [failedCount, setFailedCount] = useState<number>(0)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
-  const exportConversationMutation = useExportConversationMutation()
   const [exportModalOpened, setExportModalOpened] = useState(false)
   const router = useRouter()
   const { classes, theme } = useStyles()

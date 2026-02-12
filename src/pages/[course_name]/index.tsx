@@ -1,4 +1,6 @@
 // src/pages/[course_name]/index.tsx
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import { type NextPage } from 'next'
 import { useAuth } from 'react-oidc-context'
 import { useRouter } from 'next/router'
@@ -7,7 +9,6 @@ import { useEffect, useState } from 'react'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 const AUTH_ROUTES = ['sign-in', 'sign-up']

@@ -1,6 +1,8 @@
-import { useMutation } from '@tanstack/react-query'
+// Mutation: Rotates (replaces) an existing chat API key for a course. Invalidates the cached key on success.
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export function useRotateApiKey() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ courseName }: { courseName: string }) => {
       const response = await fetch(
@@ -16,6 +18,9 @@ export function useRotateApiKey() {
         message: string
         newApiKey: string
       }>
+    },
+    onSuccess: (_data, { courseName }) => {
+      queryClient.invalidateQueries({ queryKey: ['chatApiKey', courseName] })
     },
   })
 }

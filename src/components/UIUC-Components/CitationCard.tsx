@@ -1,3 +1,5 @@
+import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
+
 import {
   Text,
   Paper,
@@ -14,7 +16,6 @@ import {
   IconMarkdown,
   IconFileDescription,
 } from '@tabler/icons-react'
-import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
 import { useState, useEffect } from 'react'
 
 interface CitationCardProps {
@@ -49,10 +50,11 @@ export const CitationCard = ({
   index,
   text,
 }: CitationCardProps) => {
+  const { mutateAsync: getPresignedUrl } = useDownloadPresignedUrl()
+
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
   const [faviconError, setFaviconError] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
-  const { mutateAsync: getPresignedUrl } = useDownloadPresignedUrl()
 
   // Add helper function to determine file type
   const getFileType = () => {

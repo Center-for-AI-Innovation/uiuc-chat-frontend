@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import { useActivateWorkflow } from '~/hooks/queries/useActivateWorkflow'
+
 import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 
@@ -14,7 +16,6 @@ import {
 import { DataTable } from 'mantine-datatable'
 import { Montserrat } from 'next/font/google'
 import { type UIUCTool } from '~/types/chat'
-import { useActivateWorkflow } from '~/hooks/queries/useActivateWorkflow'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { LoadingSpinner } from './LoadingSpinner'
 
@@ -80,6 +81,8 @@ export const N8nWorkflowsTable = ({
   isEmptyWorkflowTable,
   sidebarCollapsed = false,
 }: N8nWorkflowsTableProps) => {
+  const mutate_active_flows = useActivateWorkflow(n8nApiKey)
+
   const [page, setPage] = useState(1)
 
   // Get responsive width classes based on sidebar state
@@ -94,8 +97,6 @@ export const N8nWorkflowsTable = ({
     isError: isErrorTools,
     refetch: refetchWorkflows,
   } = useFetchAllWorkflows(course_name, n8nApiKey, 20, 'true', true)
-
-  const mutate_active_flows = useActivateWorkflow(n8nApiKey)
 
   useEffect(() => {
     // Refetch if API key changes

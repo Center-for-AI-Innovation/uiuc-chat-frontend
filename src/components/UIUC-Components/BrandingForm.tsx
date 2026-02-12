@@ -1,3 +1,6 @@
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
+
 import { useEffect, useState } from 'react'
 
 import { Button, FileInput, Textarea } from '@mantine/core'
@@ -12,8 +15,6 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
-import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 
 const BrandingForm = ({
   project_name,

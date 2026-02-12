@@ -1,3 +1,4 @@
+// Query: Fetches all data for a course including distinct uploaded files.
 import { useQuery } from '@tanstack/react-query'
 
 export interface AllCourseDataResponse {

@@ -1,5 +1,7 @@
 // This is uiuc.chat/chat - useful to everyone as a free alternative to ChatGPT.com and Claude.ai.
 
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import { montserrat_heading } from 'fonts'
 import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -10,7 +12,6 @@ import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackgro
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import Home from '~/pages/api/home/home'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 const ChatPage: NextPage = () => {

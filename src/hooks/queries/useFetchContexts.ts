@@ -1,3 +1,4 @@
+// Mutation: Fetches relevant document contexts for a search query (used in non-chat search). Also exports the raw function.
 import { useMutation } from '@tanstack/react-query'
 import { fetchContexts } from '../__internal__/fetchContexts'
 

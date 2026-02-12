@@ -1,3 +1,4 @@
+// Mutation: Activates or deactivates an n8n workflow by ID. Invalidates 'tools' cache on success.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export function useActivateWorkflow(n8nApiKey: string) {

@@ -1,3 +1,6 @@
+import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
+import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
+
 import React, { useEffect, useState } from 'react'
 import { Text, Card, Button, Input, createStyles } from '@mantine/core'
 import {
@@ -23,8 +26,6 @@ import { Montserrat } from 'next/font/google'
 import { type FileUpload } from './UploadNotification'
 import Link from 'next/link'
 import { type QueryClient } from '@tanstack/react-query'
-import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
-import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
 const montserrat_med = Montserrat({
   weight: '500',
   subsets: ['latin'],
@@ -118,6 +119,9 @@ export default function GitHubIngestForm({
     },
   }))
   const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(project_name)
+  const { refetch: refetchDocsInProgress } =
+    useFetchDocsInProgress(project_name)
+
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -190,9 +194,6 @@ export default function GitHubIngestForm({
       setIsUrlUpdated(false)
     }
   }, [url])
-
-  const { refetch: refetchDocsInProgress } =
-    useFetchDocsInProgress(project_name)
 
   useEffect(() => {
     const checkIngestStatus = async () => {

@@ -1,3 +1,5 @@
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import { type NextPage } from 'next'
 import MakeQueryAnalysisPage from '~/components/UIUC-Components/MakeQueryAnalysisPage'
 import React, { useEffect, useState } from 'react'
@@ -6,7 +8,6 @@ import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { useAuth } from 'react-oidc-context'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()

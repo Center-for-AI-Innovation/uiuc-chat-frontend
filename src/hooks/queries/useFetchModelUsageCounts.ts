@@ -1,3 +1,4 @@
+// Query: Fetches LLM model usage counts for a project's analytics dashboard.
 import { useQuery } from '@tanstack/react-query'
 import { type ModelUsage } from '~/types/analytics'
 

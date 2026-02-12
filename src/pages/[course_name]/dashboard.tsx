@@ -1,3 +1,5 @@
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import { type NextPage } from 'next'
 import MakeOldCoursePage from '~/components/UIUC-Components/MakeOldCoursePage'
 import React, { useEffect, useState } from 'react'
@@ -9,7 +11,6 @@ import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/Ma
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 const CourseMain: NextPage = () => {
   const router = useRouter()

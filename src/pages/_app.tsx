@@ -1,3 +1,5 @@
+import { useFetchMaintenanceMode } from '~/hooks/queries/useFetchMaintenanceMode'
+
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
 import { appWithTranslation } from 'next-i18next'
@@ -13,7 +15,6 @@ import { useRouter } from 'next/router'
 import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
 import { type ReactNode, useEffect } from 'react'
-import { useFetchMaintenanceMode } from '~/hooks/queries/useFetchMaintenanceMode'
 
 // import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'

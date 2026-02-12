@@ -1,4 +1,5 @@
-import { useMutation } from '@tanstack/react-query'
+// Mutation: Creates a new project/course. Invalidates course names and existence caches on success.
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createProject } from '@/hooks/__internal__/createProject'
 
 export interface CreateProjectParams {
@@ -11,6 +12,7 @@ export interface CreateProjectParams {
 export { createProject }
 
 export function useCreateProjectMutation() {
+  const queryClient = useQueryClient()
   return useMutation({
     mutationKey: ['createProject'],
     mutationFn: async ({
@@ -25,6 +27,10 @@ export function useCreateProjectMutation() {
         project_owner_email,
         is_private,
       )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allCourseNames'] })
+      queryClient.invalidateQueries({ queryKey: ['courseExists'] })
     },
   })
 }

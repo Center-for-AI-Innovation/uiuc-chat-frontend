@@ -1,3 +1,6 @@
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
+import { useFetchAllCourseData } from '~/hooks/queries/useFetchAllCourseData'
+
 import { type NextPage } from 'next'
 import React, { useEffect } from 'react'
 import { Montserrat } from 'next/font/google'
@@ -14,8 +17,6 @@ import { Title } from '@mantine/core'
 import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
-import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
-import { useFetchAllCourseData } from '~/hooks/queries/useFetchAllCourseData'
 
 const montserrat = Montserrat({
   weight: '700',

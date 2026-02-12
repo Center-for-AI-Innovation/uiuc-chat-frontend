@@ -1,3 +1,4 @@
+// Mutations: Fetches document contexts for chat — standard retrieval and multi-query rewrite (MQR) variants. Also exports raw functions.
 import { useMutation } from '@tanstack/react-query'
 import {
   fetchContexts,

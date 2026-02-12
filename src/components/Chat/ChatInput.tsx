@@ -1,3 +1,5 @@
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
+
 import {
   type Content,
   type Message,
@@ -53,7 +55,6 @@ import {
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
-import { useRouteChat } from '@/hooks/queries/useRouteChat'
 import { type ChatBody, ContextWithMetadata } from '~/types/chat'
 import { ALLOWED_FILE_EXTENSIONS, isImageFile } from '~/utils/fileUploadUtils'
 
@@ -98,6 +99,9 @@ export const ChatInput = ({
     dispatch: homeDispatch,
   } = useContext(HomeContext)
 
+  // React Query hooks
+  const { mutateAsync: routeChatAsync } = useRouteChat()
+
   const {
     fileUploads,
     fileUploadRef,
@@ -130,7 +134,6 @@ export const ChatInput = ({
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
-  const { mutateAsync: routeChatAsync } = useRouteChat()
   const { resetHeight } = useTextareaAutosize({ textareaRef, content })
   const { isFocused, handleFocus, handleBlur } = useChatInputFocus({
     textareaRef,

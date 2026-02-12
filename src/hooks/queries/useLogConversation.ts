@@ -1,3 +1,4 @@
+// Mutation: Logs a conversation to the server (used after chat interactions).
 import { useMutation } from '@tanstack/react-query'
 import {
   logConversationToServer,

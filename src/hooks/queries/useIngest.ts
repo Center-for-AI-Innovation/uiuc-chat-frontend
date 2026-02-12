@@ -1,3 +1,4 @@
+// Mutation: Submits a file for ingestion into the project's knowledge base. Also exports the raw function.
 import { useMutation } from '@tanstack/react-query'
 
 export type IngestRequest = {

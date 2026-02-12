@@ -1,4 +1,6 @@
 // src/pages/[course_name]/api.tsx
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import { Flex } from '@mantine/core'
 import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -11,7 +13,6 @@ import ApiKeyManagement from '~/components/UIUC-Components/ApiKeyManagament'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { initiateSignIn } from '~/utils/authHelpers'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 

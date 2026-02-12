@@ -1,3 +1,4 @@
+// Query: Fetches documents currently being ingested/processed for a course.
 import { useQuery } from '@tanstack/react-query'
 import { type DocInProgress } from '~/types/courseMaterials'
 

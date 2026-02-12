@@ -1,3 +1,4 @@
+// Query: Fetches the chat API key for a course. Returns null if no key exists.
 import { useQuery } from '@tanstack/react-query'
 
 async function fetchChatApiKey(courseName: string): Promise<string | null> {

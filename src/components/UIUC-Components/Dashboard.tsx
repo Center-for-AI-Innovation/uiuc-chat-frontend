@@ -1,3 +1,6 @@
+import { useCreateProjectMutation } from '~/hooks/queries/useCreateProject'
+import { useFetchAllCourseNames } from '~/hooks/queries/useFetchAllCourseNames'
+
 import Head from 'next/head'
 import { useEffect, useState } from 'react'
 
@@ -5,12 +8,10 @@ import { Card, Title } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import router from 'next/router'
-import { useCreateProjectMutation } from '~/hooks/queries/useCreateProject'
 import Navbar from './navbars/Navbar'
 
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import ProjectTable from '~/components/UIUC-Components/ProjectTable'
-import { useFetchAllCourseNames } from '~/hooks/queries/useFetchAllCourseNames'
 
 const Dashboard = ({
   project_name,
@@ -23,16 +24,7 @@ const Dashboard = ({
   is_new_course?: boolean
   project_description?: string
 }) => {
-  const isSmallScreen = useMediaQuery('(max-width: 960px)')
-  const [projectName, setProjectName] = useState(project_name || '')
-  const [projectDescription, setProjectDescription] = useState(
-    project_description || '',
-  )
-  const [isCourseAvailable, setIsCourseAvailable] = useState<
-    boolean | undefined
-  >(undefined)
   const createProjectMutation = useCreateProjectMutation()
-  const [isLoading, setIsLoading] = useState(false)
 
   const checkIfNewCoursePage = () => {
     // `/new` --> `new`
@@ -43,6 +35,16 @@ const Dashboard = ({
   const { data: allExistingCourseNames = [] } = useFetchAllCourseNames({
     enabled: checkIfNewCoursePage() === 'new',
   })
+
+  const isSmallScreen = useMediaQuery('(max-width: 960px)')
+  const [projectName, setProjectName] = useState(project_name || '')
+  const [projectDescription, setProjectDescription] = useState(
+    project_description || '',
+  )
+  const [isCourseAvailable, setIsCourseAvailable] = useState<
+    boolean | undefined
+  >(undefined)
+  const [isLoading, setIsLoading] = useState(false)
 
   const checkCourseAvailability = () => {
     const courseExists =

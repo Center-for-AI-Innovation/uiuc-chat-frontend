@@ -1,3 +1,4 @@
+// Query: Fetches metadata for all courses, returned as an object keyed by course name.
 import { useQuery } from '@tanstack/react-query'
 import { type CourseMetadata } from '~/types/courseMetadata'
 

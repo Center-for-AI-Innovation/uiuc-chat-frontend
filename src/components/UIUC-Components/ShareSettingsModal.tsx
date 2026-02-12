@@ -1,3 +1,5 @@
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+
 import React, { useState, useEffect, useMemo } from 'react'
 import {
   IconLock,
@@ -9,7 +11,6 @@ import {
 } from '@tabler/icons-react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import EmailListAccordion from './EmailListAccordion'
-import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { motion } from 'framer-motion'
 import { Accordion } from '@/components/shadcn/accordion'

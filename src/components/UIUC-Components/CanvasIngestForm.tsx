@@ -1,3 +1,5 @@
+import { useIngestCanvas } from '~/hooks/queries/useIngestCanvas'
+
 import React, { useEffect, useState } from 'react'
 import { Text, Card, Button, Input, Checkbox, Alert } from '@mantine/core'
 import { IconArrowRight, IconAlertTriangle } from '@tabler/icons-react'
@@ -15,7 +17,6 @@ import { useRouter } from 'next/router'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
-import { useIngestCanvas } from '~/hooks/queries/useIngestCanvas'
 
 export default function CanvasIngestForm({
   project_name,
@@ -26,6 +27,8 @@ export default function CanvasIngestForm({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
+  const ingestCanvasMutation = useIngestCanvas(project_name)
+
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [selectedOptions, setSelectedOptions] = useState<string[]>([
@@ -53,7 +56,6 @@ export default function CanvasIngestForm({
     return router.query.course_name as string
   }
   const courseName = getCurrentPageName() as string
-  const ingestCanvasMutation = useIngestCanvas(project_name)
 
   useEffect(() => {
     if (url && url.length > 0 && validateUrl(url)) {

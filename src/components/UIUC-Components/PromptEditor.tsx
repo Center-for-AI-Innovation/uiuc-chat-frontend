@@ -1,6 +1,10 @@
 // PromptEditor.tsx - Shared component for prompt editing
 // Used by both prompt.tsx page and StepPrompt wizard step
 'use client'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
+
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Button,
@@ -46,9 +50,6 @@ import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
-import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
-import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
 import {
   DEFAULT_SYSTEM_PROMPT,
   DOCUMENT_FOCUS_PROMPT,
@@ -244,16 +245,6 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const queryClient = useQueryClient()
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
 
-  // State
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
-  const [baseSystemPrompt, setBaseSystemPrompt] = useState('')
-  const [isRightSideVisible, setIsRightSideVisible] = useState(!isEmbedded)
-  const [selectedModel, setSelectedModel] = useState<string>('')
-  const [opened, { close, open }] = useDisclosure(false)
-  const [resetModalOpened, { close: closeResetModal, open: openResetModal }] =
-    useDisclosure(false)
   const { data: llmProviders = null, isLoading: isLoadingLLMProviders } =
     useFetchLLMProviders({
       projectName: project_name,
@@ -264,6 +255,23 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const { mutateAsync: routeChatAsync } = useRouteChat()
   const { mutateAsync: setCourseMetadataAsync } =
     useUpdateCourseMetadata(project_name)
+  // Fetch course metadata using hook
+  const { data: fetchedMetadata, isLoading: isLoadingMetadata } =
+    useFetchCourseMetadata({
+      courseName: project_name,
+      enabled: Boolean(project_name),
+    })
+
+  // State
+  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
+    null,
+  )
+  const [baseSystemPrompt, setBaseSystemPrompt] = useState('')
+  const [isRightSideVisible, setIsRightSideVisible] = useState(!isEmbedded)
+  const [selectedModel, setSelectedModel] = useState<string>('')
+  const [opened, { close, open }] = useDisclosure(false)
+  const [resetModalOpened, { close: closeResetModal, open: openResetModal }] =
+    useDisclosure(false)
   const [
     linkGeneratorOpened,
     { open: openLinkGenerator, close: closeLinkGenerator },
@@ -335,13 +343,6 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
             : [],
         )
     : []
-
-  // Fetch course metadata using hook
-  const { data: fetchedMetadata, isLoading: isLoadingMetadata } =
-    useFetchCourseMetadata({
-      courseName: project_name,
-      enabled: Boolean(project_name),
-    })
 
   // Update local state when metadata is fetched
   useEffect(() => {

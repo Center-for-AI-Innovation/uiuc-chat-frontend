@@ -1,3 +1,4 @@
+// Query: Fetches metadata for a specific course by name (banner, description, settings, etc.).
 import { useQuery } from '@tanstack/react-query'
 import { fetchCourseMetadata } from '../__internal__/fetchCourseMetadata'
 

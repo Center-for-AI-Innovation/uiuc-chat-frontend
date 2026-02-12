@@ -1,3 +1,4 @@
+// Query: Fetches conversation analytics (per-day, per-hour, per-weekday breakdowns and heatmap data).
 import { useQuery } from '@tanstack/react-query'
 
 export interface ConversationStatsResponse {

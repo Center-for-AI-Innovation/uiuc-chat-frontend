@@ -1,3 +1,4 @@
+// Query: Fetches available LLM providers and their models for a project.
 import { useQuery } from '@tanstack/react-query'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 

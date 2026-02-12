@@ -1,7 +1,8 @@
+import { useFetchMaintenanceDetails } from '~/hooks/queries/useFetchMaintenanceDetails'
+
 import React from 'react'
 import { Title, Text } from '@mantine/core'
 import Link from 'next/link'
-import { useFetchMaintenanceDetails } from '~/hooks/queries/useFetchMaintenanceDetails'
 
 const Maintenance = ({}: {
   // Prevent search engine indexing of Maintenance page (because it'll ruin our entire search results): https://github.com/vercel/next.js/discussions/12850#discussioncomment-3335807

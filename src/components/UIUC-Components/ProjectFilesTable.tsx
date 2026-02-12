@@ -1,5 +1,13 @@
 'use client'
 
+import { useAppendToDocGroup } from '@/hooks/queries/useAppendToDocGroup'
+import { useFetchFailedDocuments } from '~/hooks/queries/useFetchFailedDocuments'
+import { useFetchProjectMaterials } from '@/hooks/queries/useFetchProjectMaterials'
+import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
+import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
+import { useExportConversationMutation } from '~/hooks/queries/useExportConversation'
+import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
+
 import {
   ActionIcon,
   Box,
@@ -41,14 +49,6 @@ import {
   type CourseDocument,
   type DocumentGroup,
 } from 'src/types/courseMaterials'
-import { useAppendToDocGroup } from '@/hooks/queries/useAppendToDocGroup'
-import { useFetchFailedDocuments } from '~/hooks/queries/useFetchFailedDocuments'
-import { useFetchProjectMaterials } from '@/hooks/queries/useFetchProjectMaterials'
-import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
-import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
-
-import { useExportConversationMutation } from '~/hooks/queries/useExportConversation'
-import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
 import { LoadingSpinner } from './LoadingSpinner'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
 
@@ -86,27 +86,74 @@ export function ProjectFilesTable({
   failedCount?: number
 }) {
   const queryClient = useQueryClient()
-  const [selectedRecords, setSelectedRecords] = useState<CourseDocument[]>([])
   const [filterKey, setFilterKey] = useState<string>('')
   const [filterValue, setFilterValue] = useState<string>('')
-  const [modalOpened, setModalOpened] = useState(false)
-  const [recordsToDelete, setRecordsToDelete] = useState<CourseDocument[]>([])
   const [page, setPage] = useState(1)
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
     columnAccessor: 'created_at',
     direction: 'desc',
   })
+  const router = useRouter()
+
+  // ------------- React Query hooks -------------
+  const exportConversationMutation = useExportConversationMutation()
+  const { mutateAsync: getPresignedUrl } = useDownloadPresignedUrl()
+  const appendToDocGroup = useAppendToDocGroup(course_name, queryClient, page)
+  const removeFromDocGroup = useDeleteFromDocGroup(
+    course_name,
+    queryClient,
+    page,
+  )
+  const {
+    data: documents,
+    isLoading: isLoadingDocuments,
+    isError: isErrorDocuments,
+    error: documentsError,
+    refetch: refetchDocuments,
+  } = useFetchProjectMaterials({
+    courseName: course_name,
+    from: (page - 1) * PAGE_SIZE,
+    to: (page - 1) * PAGE_SIZE + PAGE_SIZE - 1,
+    filterKey,
+    filterValue,
+    sortColumn: sortStatus.columnAccessor,
+    sortDirection: sortStatus.direction,
+    refetchInterval: 12_000,
+  })
+  const {
+    data: failedDocuments,
+    isLoading: isLoadingFailedDocuments,
+    isError: isErrorFailedDocuments,
+    error: failedDocumentsError,
+  } = useFetchFailedDocuments({
+    courseName: course_name,
+    from: (page - 1) * PAGE_SIZE,
+    to: (page - 1) * PAGE_SIZE + PAGE_SIZE - 1,
+    filterKey,
+    filterValue,
+    sortColumn: sortStatus.columnAccessor,
+    sortDirection: sortStatus.direction,
+    refetchInterval: 20_000,
+  })
+  const {
+    data: documentGroups,
+    isLoading: isLoadingDocumentGroups,
+    isError: isErrorDocumentGroups,
+    refetch: refetchDocumentGroups,
+  } = useFetchDocumentGroups(course_name)
+
+  const [selectedRecords, setSelectedRecords] = useState<CourseDocument[]>([])
+  const [modalOpened, setModalOpened] = useState(false)
+  const [recordsToDelete, setRecordsToDelete] = useState<CourseDocument[]>([])
   const [errorModalOpened, setErrorModalOpened] = useState(false)
   const [currentError, setCurrentError] = useState('')
   const isSmallScreen = useMediaQuery('(max-width: 768px)')
   const isBetweenSmallAndMediumScreen = useMediaQuery('(max-width: 878px)')
   const [showMultiSelect, setShowMultiSelect] = useState(false)
   const [isDeletingDocuments, setIsDeletingDocuments] = useState(false)
-  const exportConversationMutation = useExportConversationMutation()
   const [exportModalOpened, setExportModalOpened] = useState(false)
   const [showDeleteButton, setShowDeleteButton] = useState(false)
   const [selectedCount, setSelectedCount] = useState(0)
-  const router = useRouter()
 
   const getCurrentPageName = () => {
     return router.asPath.slice(1).split('/')[0] as string
@@ -116,13 +163,6 @@ export function ProjectFilesTable({
     setCurrentError(error)
   }
 
-  const { mutateAsync: getPresignedUrl } = useDownloadPresignedUrl()
-  const appendToDocGroup = useAppendToDocGroup(course_name, queryClient, page)
-  const removeFromDocGroup = useDeleteFromDocGroup(
-    course_name,
-    queryClient,
-    page,
-  )
   const { theme } = useStyles()
 
   // State to track overflow status of error column in each row of failed documents
@@ -145,52 +185,11 @@ export function ProjectFilesTable({
   //   }
   // `;
 
-  // ------------- Queries -------------
-  const {
-    data: documents,
-    isLoading: isLoadingDocuments,
-    isError: isErrorDocuments,
-    error: documentsError,
-    refetch: refetchDocuments,
-  } = useFetchProjectMaterials({
-    courseName: course_name,
-    from: (page - 1) * PAGE_SIZE,
-    to: (page - 1) * PAGE_SIZE + PAGE_SIZE - 1,
-    filterKey,
-    filterValue,
-    sortColumn: sortStatus.columnAccessor,
-    sortDirection: sortStatus.direction,
-    refetchInterval: 12_000,
-  })
-
-  const {
-    data: failedDocuments,
-    isLoading: isLoadingFailedDocuments,
-    isError: isErrorFailedDocuments,
-    error: failedDocumentsError,
-  } = useFetchFailedDocuments({
-    courseName: course_name,
-    from: (page - 1) * PAGE_SIZE,
-    to: (page - 1) * PAGE_SIZE + PAGE_SIZE - 1,
-    filterKey,
-    filterValue,
-    sortColumn: sortStatus.columnAccessor,
-    sortDirection: sortStatus.direction,
-    refetchInterval: 20_000,
-  })
-
   useEffect(() => {
     if (failedDocuments?.recent_fail_count !== undefined) {
       setFailedCount(failedDocuments.recent_fail_count)
     }
   }, [failedDocuments?.recent_fail_count])
-
-  const {
-    data: documentGroups,
-    isLoading: isLoadingDocumentGroups,
-    isError: isErrorDocumentGroups,
-    refetch: refetchDocumentGroups,
-  } = useFetchDocumentGroups(course_name)
 
   useEffect(() => {
     if (tabValue === 'failed') {

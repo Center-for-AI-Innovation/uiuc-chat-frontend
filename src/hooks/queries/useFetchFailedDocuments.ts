@@ -1,3 +1,4 @@
+// Query: Fetches paginated failed documents with filtering/sorting. Includes recent failure count.
 import { useQuery } from '@tanstack/react-query'
 import { type FailedDocument } from '~/types/courseMaterials'
 

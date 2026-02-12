@@ -1,3 +1,4 @@
+// Query: Fetches the default post-prompt text. Cached indefinitely (infinite staleTime).
 import { useQuery } from '@tanstack/react-query'
 
 async function fetchDefaultPostPrompt(): Promise<string> {

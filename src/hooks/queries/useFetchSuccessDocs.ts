@@ -1,3 +1,4 @@
+// Query: Fetches successfully ingested documents for a course.
 import { useQuery } from '@tanstack/react-query'
 import { type SuccessDoc } from '~/types/courseMaterials'
 

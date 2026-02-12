@@ -1,3 +1,10 @@
+import { useDownloadConversationHistoryMutation } from '~/hooks/queries/useDownloadConversationHistory'
+import { useFetchConversationStats } from '~/hooks/queries/useFetchConversationStats'
+import { useFetchModelUsageCounts } from '~/hooks/queries/useFetchModelUsageCounts'
+import { useFetchProjectStats } from '~/hooks/queries/useFetchProjectStats'
+import { useFetchWeeklyTrends } from '~/hooks/queries/useFetchWeeklyTrends'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import Head from 'next/head'
 // import { DropzoneS3Upload } from '~/components/UIUC-Components/Upload_S3'
@@ -38,11 +45,6 @@ import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
 import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
-import { useDownloadConversationHistoryMutation } from '~/hooks/queries/useDownloadConversationHistory'
-import { useFetchConversationStats } from '~/hooks/queries/useFetchConversationStats'
-import { useFetchModelUsageCounts } from '~/hooks/queries/useFetchModelUsageCounts'
-import { useFetchProjectStats } from '~/hooks/queries/useFetchProjectStats'
-import { useFetchWeeklyTrends } from '~/hooks/queries/useFetchWeeklyTrends'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -86,7 +88,6 @@ const useStyles = createStyles((theme: MantineTheme) => ({
 }))
 
 import { useAuth } from 'react-oidc-context'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -110,18 +111,32 @@ const formatPercentageChange = (value: number | null | undefined) => {
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const { classes, theme } = useStyles()
   const auth = useAuth()
-  const [currentEmail, setCurrentEmail] = useState('')
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    getInitialCollapsedState(),
-  )
   const router = useRouter()
 
-  // Use React Query hook to fetch course metadata
+  // React Query hooks
   const { data: courseMetadata, isLoading: isCourseMetadataLoading } =
     useFetchCourseMetadata({
       courseName: course_name,
       enabled: Boolean(course_name),
     })
+  const downloadConversationHistoryMutation =
+    useDownloadConversationHistoryMutation()
+  const { data: projectStatsData } = useFetchProjectStats({
+    courseName: course_name,
+  })
+  const { data: weeklyTrends = [] } = useFetchWeeklyTrends({
+    courseName: course_name,
+  })
+  const {
+    data: modelUsageData = [],
+    isFetching: modelUsageLoading,
+    error: modelUsageErrorObj,
+  } = useFetchModelUsageCounts({ courseName: course_name })
+
+  const [currentEmail, setCurrentEmail] = useState('')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
 
   // Get responsive grid classes based on sidebar state
   const statsGridClasses = useResponsiveGrid(
@@ -135,13 +150,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const currentPageName = GetCurrentPageName()
 
-  const downloadConversationHistoryMutation =
-    useDownloadConversationHistoryMutation()
   const [isLoading, setIsLoading] = useState(false)
 
-  const { data: projectStatsData } = useFetchProjectStats({
-    courseName: course_name,
-  })
   const courseStats: CourseStats | null = projectStatsData
     ? {
         total_conversations: projectStatsData.total_conversations,
@@ -154,15 +164,6 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
       }
     : null
 
-  const { data: weeklyTrends = [] } = useFetchWeeklyTrends({
-    courseName: course_name,
-  })
-
-  const {
-    data: modelUsageData = [],
-    isFetching: modelUsageLoading,
-    error: modelUsageErrorObj,
-  } = useFetchModelUsageCounts({ courseName: course_name })
   const modelUsageError = modelUsageErrorObj
     ? 'Failed to load model usage data'
     : null

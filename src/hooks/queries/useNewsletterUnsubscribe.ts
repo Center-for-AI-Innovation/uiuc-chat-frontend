@@ -1,3 +1,4 @@
+// Mutation: Unsubscribes an email address from the newsletter.
 import { useMutation } from '@tanstack/react-query'
 
 export function useNewsletterUnsubscribe() {

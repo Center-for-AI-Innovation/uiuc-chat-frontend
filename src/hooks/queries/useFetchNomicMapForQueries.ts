@@ -1,3 +1,4 @@
+// Query: Fetches Nomic map data for visualizing conversation queries on a 2D embedding map.
 import { useQuery } from '@tanstack/react-query'
 import { type NomicMapData } from '~/types/analytics'
 

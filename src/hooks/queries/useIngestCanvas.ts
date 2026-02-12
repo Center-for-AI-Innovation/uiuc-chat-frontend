@@ -1,3 +1,4 @@
+// Mutation: Ingests Canvas LMS data (courses, files, pages) into the project. Invalidates documents cache on success.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export type IngestCanvasRequest = {

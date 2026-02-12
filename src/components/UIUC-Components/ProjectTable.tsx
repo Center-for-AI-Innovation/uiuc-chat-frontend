@@ -1,3 +1,5 @@
+import { useFetchAllCourseMetadata } from '~/hooks/queries/useFetchAllCourseMetadata'
+
 import { useAuth } from 'react-oidc-context'
 import { Table, Text } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
@@ -15,7 +17,6 @@ import {
   IconSelector,
   IconAlertCircle,
 } from '@tabler/icons-react'
-import { useFetchAllCourseMetadata } from '~/hooks/queries/useFetchAllCourseMetadata'
 
 const StyledRow = styled.tr`
   &:hover {
@@ -80,15 +81,17 @@ const EMPTY_COURSES: { [key: string]: CourseMetadata }[] = []
 const ListProjectTable: React.FC = () => {
   const auth = useAuth()
   const router = useRouter()
-  const [rows, setRows] = useState<JSX.Element[]>([])
-  const [sortColumn, setSortColumn] = useState<SortableColumn>('name')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
+  // React Query hooks
   const { data: rawData = EMPTY_COURSES, isFetched } =
     useFetchAllCourseMetadata({
       currUserEmail: auth.user?.profile.email || '',
       enabled: !auth.isLoading && auth.isAuthenticated === true,
     })
+
+  const [rows, setRows] = useState<JSX.Element[]>([])
+  const [sortColumn, setSortColumn] = useState<SortableColumn>('name')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {

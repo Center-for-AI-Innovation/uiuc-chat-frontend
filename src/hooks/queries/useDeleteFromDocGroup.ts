@@ -1,3 +1,4 @@
+// Mutation: Removes a document from a document group and updates cached doc counts.
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import {

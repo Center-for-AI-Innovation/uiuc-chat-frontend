@@ -1,3 +1,9 @@
+import { useDeleteChatApiKey } from '~/hooks/queries/useDeleteChatApiKey'
+import { useFetchChatApiKey } from '~/hooks/queries/useFetchChatApiKey'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useCreateApiKey } from '~/hooks/queries/useCreateApiKey'
+import { useRotateApiKey } from '~/hooks/queries/useRotateApiKey'
+
 import {
   Button,
   Card,
@@ -20,15 +26,9 @@ import {
   IconCopy,
   IconExternalLink,
 } from '@tabler/icons-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useEffect, useState } from 'react'
 import { type AuthContextProps } from 'react-oidc-context'
-import { useDeleteChatApiKey } from '~/hooks/queries/useDeleteChatApiKey'
-import { useFetchChatApiKey } from '~/hooks/queries/useFetchChatApiKey'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
-import { useCreateApiKey } from '~/hooks/queries/useCreateApiKey'
-import { useRotateApiKey } from '~/hooks/queries/useRotateApiKey'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -48,13 +48,19 @@ const ApiKeyManagement = ({
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
-  const queryClient = useQueryClient()
+
   const {
     data: apiKey = null,
     isLoading: loading,
     isError,
   } = useFetchChatApiKey(course_name, auth.isAuthenticated)
   const deleteChatApiKey = useDeleteChatApiKey(course_name)
+  const { data: metadata } = useFetchCourseMetadata({
+    courseName: course_name,
+    enabled: Boolean(course_name),
+  })
+  const createApiKey = useCreateApiKey()
+  const rotateApiKey = useRotateApiKey()
 
   useEffect(() => {
     if (isError) {
@@ -66,16 +72,9 @@ const ApiKeyManagement = ({
     }
   }, [isError])
   const baseUrl = process.env.VERCEL_URL || window.location.origin
-  const [insightsOpen, setInsightsOpen] = useState(false)
-
-  const { data: metadata } = useFetchCourseMetadata({
-    courseName: course_name,
-    enabled: Boolean(course_name),
-  })
-  const createApiKey = useCreateApiKey()
-  const rotateApiKey = useRotateApiKey()
   type Language = 'curl' | 'python' | 'node'
 
+  const [insightsOpen, setInsightsOpen] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('curl')
 
   const [copiedCodeSnippet, setCopiedCodeSnippet] = useState(false)
@@ -202,9 +201,6 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       await createApiKey.mutateAsync({
         courseName: course_name,
       })
-      await queryClient.invalidateQueries({
-        queryKey: ['chatApiKey', course_name],
-      })
       showNotification({
         title: 'Success',
         message: 'API key generated successfully.',
@@ -223,9 +219,6 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
       await rotateApiKey.mutateAsync({
         courseName: course_name,
       })
-      await queryClient.invalidateQueries({
-        queryKey: ['chatApiKey', course_name],
-      })
       showNotification({
         title: 'Success',
         message: 'API key rotated successfully.',
@@ -242,9 +235,6 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   const handleDelete = () => {
     deleteChatApiKey.mutate(undefined, {
       onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: ['chatApiKey', course_name],
-        })
         showNotification({
           title: 'Success',
           message: 'API key deleted successfully.',

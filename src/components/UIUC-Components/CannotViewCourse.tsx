@@ -1,3 +1,5 @@
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import Link from 'next/link'
 import { Text, Title, Flex } from '@mantine/core'
 import GlobalHeader from './navbars/GlobalHeader'
@@ -8,7 +10,6 @@ import { useAuth } from 'react-oidc-context'
 import { CannotEditCourse } from './CannotEditCourse'
 import GlobalFooter from './GlobalFooter'
 import { montserrat_heading } from 'fonts'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125

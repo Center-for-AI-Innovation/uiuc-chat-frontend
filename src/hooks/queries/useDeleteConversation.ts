@@ -1,3 +1,4 @@
+// Mutation: Deletes a single conversation with optimistic cache removal and rollback on error.
 import {
   type InfiniteData,
   type QueryClient,

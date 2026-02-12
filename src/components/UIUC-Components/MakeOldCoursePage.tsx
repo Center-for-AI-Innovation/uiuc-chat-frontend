@@ -1,3 +1,5 @@
+import { useDownloadPresignedUrlQuery } from '~/hooks/queries/useDownloadPresignedUrl'
+
 import { Flex } from '@mantine/core'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -6,7 +8,6 @@ import { useState } from 'react'
 import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
-import { useDownloadPresignedUrlQuery } from '~/hooks/queries/useDownloadPresignedUrl'
 import GlobalFooter from './GlobalFooter'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -24,16 +25,16 @@ const MakeOldCoursePage = ({
   metadata: CourseMetadata
   current_email: string
 }) => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    getInitialCollapsedState,
-  )
-  const router = useRouter()
-
   const bannerS3Path = metadata?.banner_image_s3 || undefined
   const { data: bannerUrl } = useDownloadPresignedUrlQuery(
     bannerS3Path,
     course_name,
   )
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState,
+  )
+  const router = useRouter()
 
   // TODO: update this check to consider Admins & participants.
   if (

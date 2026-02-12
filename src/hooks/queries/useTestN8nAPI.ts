@@ -1,3 +1,4 @@
+// Mutation: Tests the validity of an n8n API key by making a verification request.
 import { useMutation } from '@tanstack/react-query'
 
 export function useTestN8nAPI() {

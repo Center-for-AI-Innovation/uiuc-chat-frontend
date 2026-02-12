@@ -1,3 +1,4 @@
+// Query: Fetches the most recent conversation for a course and user.
 import { useQuery } from '@tanstack/react-query'
 import { type Conversation } from '~/types/chat'
 import { fetchLastConversation } from '@/hooks/__internal__/conversation'

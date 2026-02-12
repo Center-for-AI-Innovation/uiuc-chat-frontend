@@ -1,3 +1,9 @@
+import { useDeleteAllConversations } from '@/hooks/queries/useDeleteAllConversations'
+import { useDeleteConversation } from '@/hooks/queries/useDeleteConversation'
+import { useFetchConversationHistory } from '@/hooks/queries/useFetchConversationHistory'
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+import { useDownloadConvoHistory } from '@/hooks/queries/useDownloadConvoHistory'
+
 import { useState, useCallback, useContext, useEffect, Suspense } from 'react'
 import { useTranslation } from 'next-i18next'
 import { useCreateReducer } from '@/hooks/useCreateReducer'
@@ -14,11 +20,6 @@ import ChatbarContext from './Chatbar.context'
 import { type ChatbarInitialState, initialState } from './Chatbar.state'
 import { v4 as uuidv4 } from 'uuid'
 import { useQueryClient } from '@tanstack/react-query'
-import { useDeleteAllConversations } from '@/hooks/queries/useDeleteAllConversations'
-import { useDeleteConversation } from '@/hooks/queries/useDeleteConversation'
-import { useFetchConversationHistory } from '@/hooks/queries/useFetchConversationHistory'
-import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
-import { useDownloadConvoHistory } from '@/hooks/queries/useDownloadConvoHistory'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
@@ -41,7 +42,6 @@ export const Chatbar = ({
   const chatBarContextValue = useCreateReducer<ChatbarInitialState>({
     initialState,
   })
-  const [isExporting, setIsExporting] = useState<boolean>(false)
 
   const {
     state: { conversations, showChatbar, defaultModelId, folders },
@@ -62,27 +62,19 @@ export const Chatbar = ({
   )
 
   const queryClient = useQueryClient()
+
+  // React Query hooks
   const deleteConversationMutation = useDeleteConversation(
     current_email as string,
     queryClient,
     courseName as string,
     searchTerm,
   )
-
   const deleteAllConversationMutation = useDeleteAllConversations(
     queryClient,
     current_email as string,
     courseName as string,
   )
-
-  const handleApiKeyChange = useCallback(
-    (apiKey: string) => {
-      homeDispatch({ field: 'apiKey', value: apiKey })
-      localStorage.setItem('apiKey', apiKey)
-    },
-    [homeDispatch],
-  )
-
   const {
     data: conversationHistory,
     error: conversationHistoryError,
@@ -97,14 +89,22 @@ export const Chatbar = ({
     debouncedSearchTerm,
     courseName,
   )
-
   const updateConversationMutation = useUpdateConversation(
     current_email as string,
     queryClient,
     courseName as string,
   )
-
   const { mutateAsync: downloadConvoHistoryAsync } = useDownloadConvoHistory()
+
+  const [isExporting, setIsExporting] = useState<boolean>(false)
+
+  const handleApiKeyChange = useCallback(
+    (apiKey: string) => {
+      homeDispatch({ field: 'apiKey', value: apiKey })
+      localStorage.setItem('apiKey', apiKey)
+    },
+    [homeDispatch],
+  )
 
   const [convoMigrationLoading, setConvoMigrationLoading] =
     useState<boolean>(false)

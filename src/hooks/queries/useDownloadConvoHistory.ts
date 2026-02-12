@@ -1,3 +1,4 @@
+// Mutation: Downloads conversation history as a ZIP file (handles both JSON+S3 link and direct ZIP responses).
 import { useMutation } from '@tanstack/react-query'
 
 export type DownloadConvoHistoryRequest = {

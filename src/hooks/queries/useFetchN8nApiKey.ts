@@ -1,3 +1,4 @@
+// Query: Fetches the n8n API key for a course. Also exports the raw fetch function.
 import { useQuery } from '@tanstack/react-query'
 
 async function fetchN8nApiKey(courseName: string): Promise<string | undefined> {

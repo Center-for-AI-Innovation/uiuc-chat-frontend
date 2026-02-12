@@ -1,5 +1,7 @@
 'use client'
 
+import { useFetchFailedDocuments } from '~/hooks/queries/useFetchFailedDocuments'
+
 import React, { useState, useEffect } from 'react'
 import { Card, Text, Button, Tooltip } from '@mantine/core'
 import {
@@ -21,7 +23,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useFetchFailedDocuments } from '~/hooks/queries/useFetchFailedDocuments'
 
 export interface FileUpload {
   name: string
@@ -44,8 +45,6 @@ function UploadNotificationContent({
   onClose,
   projectName,
 }: UploadNotificationProps) {
-  const [isMinimized, setIsMinimized] = useState(false)
-  const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
   const { data: failedDocuments } = useFetchFailedDocuments({
     courseName: projectName,
     from: 0,
@@ -57,6 +56,9 @@ function UploadNotificationContent({
     staleTime: 10000,
     enabled: !!projectName,
   })
+
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
   useEffect(() => {
     if (files && Array.isArray(files)) {
       setCurrentFiles((prevFiles) => {

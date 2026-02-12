@@ -1,3 +1,4 @@
+// Mutation: Uploads a file within a chat conversation for inline reference. Returns fileUploadId and chunks created.
 import { useMutation } from '@tanstack/react-query'
 
 export type ChatFileUploadRequest = {

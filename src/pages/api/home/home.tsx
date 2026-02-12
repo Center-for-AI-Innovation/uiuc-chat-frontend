@@ -1,4 +1,12 @@
 // src/pages/home/home.tsx
+import { useFetchLastConversation } from '@/hooks/queries/useFetchLastConversation'
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+import { useDeleteFolder } from '@/hooks/queries/useDeleteFolder'
+import { useUpdateFolder } from '@/hooks/queries/useUpdateFolder'
+import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
+import { useCreateFolder } from '@/hooks/queries/useCreateFolder'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
+
 import { useEffect, useRef, useState } from 'react'
 
 import { useTranslation } from 'next-i18next'
@@ -27,15 +35,6 @@ import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 
-import { useFetchLastConversation } from '@/hooks/queries/useFetchLastConversation'
-import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
-
-import { useDeleteFolder } from '@/hooks/queries/useDeleteFolder'
-import { useUpdateFolder } from '@/hooks/queries/useUpdateFolder'
-import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
-import { useCreateFolder } from '@/hooks/queries/useCreateFolder'
-import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
-
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
@@ -63,22 +62,13 @@ const Home = ({
     systemPromptOnly: boolean
   }
 }) => {
-  // States
-  const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
-
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-
-  // Add these two new state setters
-  const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
-  const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
-
   // Hooks
   const { t } = useTranslation('chat')
   const { getModelsError } = useErrorService()
-
   const queryClient = useQueryClient()
   // const queryCache = queryClient.getQueryCache()
 
+  // React Query hooks
   const createFolderMutation = useCreateFolder(
     current_email as string,
     queryClient,
@@ -94,26 +84,36 @@ const Home = ({
     queryClient,
     course_name,
   )
-
   const {
     data: foldersData,
     isFetched: isFoldersFetched,
     isLoading: isLoadingFolders,
   } = useFetchFolders(current_email as string, course_name as string)
-
   // fetch last conversation to get the temperature
   const {
     data: lastConversation,
     isFetched: isLastConversationFetched,
     isLoading: isLastConversationLoading,
   } = useFetchLastConversation(course_name, current_email)
-
-  const stopConversationRef = useRef<boolean>(false)
   const { data: fetchedLLMProviders, error: llmProvidersError } =
     useFetchLLMProviders({
       projectName: course_name,
       enabled: !!course_metadata,
     })
+  const updateConversationMutation = useUpdateConversation(
+    current_email as string,
+    queryClient,
+    course_name,
+  )
+
+  // States
+  const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  // Add these two new state setters
+  const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
+  const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
+
+  const stopConversationRef = useRef<boolean>(false)
 
   const serverSidePluginKeysSet = true
 
@@ -134,12 +134,6 @@ const Home = ({
     },
     dispatch,
   } = contextValue
-
-  const updateConversationMutation = useUpdateConversation(
-    current_email as string,
-    queryClient,
-    course_name,
-  )
   // Use effects for setting up the course metadata and models depending on the course/project
   useEffect(() => {
     // Set model after we fetch available models

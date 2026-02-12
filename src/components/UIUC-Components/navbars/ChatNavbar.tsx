@@ -1,3 +1,5 @@
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import {
   Burger,
   Container,
@@ -19,7 +21,6 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { useAuth } from 'react-oidc-context'
 import HomeContext from '~/pages/api/home/home.context'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { UserSettings } from '../../Chat/UserSettings'
 import { ThemeToggle } from '../ThemeToggle'
 import { AuthMenu } from './AuthMenu'
@@ -162,10 +163,22 @@ interface ChatNavbarProps {
 
 const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const router = useRouter()
+  const auth = useAuth()
+
+  const getCurrentCourseName = () => {
+    return router.asPath.split('/')[1]
+  }
+  const courseName = getCurrentCourseName()
+
+  // Use React Query hook to fetch course metadata
+  const { data: courseMetadata } = useFetchCourseMetadata({
+    courseName: courseName || '',
+    enabled: auth.isAuthenticated && Boolean(courseName),
+  })
+
   const [opened, { toggle }] = useDisclosure(false)
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
-  const auth = useAuth()
 
   const { classes, theme } = useStyles({ isAdmin: isAdminOrOwner })
   const [windowWidth, setWindowWidth] = useState(
@@ -179,17 +192,6 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   } = useContext(HomeContext)
 
   const topBarRef = useRef<HTMLDivElement | null>(null)
-  const getCurrentCourseName = () => {
-    return router.asPath.split('/')[1]
-  }
-
-  const courseName = getCurrentCourseName()
-
-  // Use React Query hook to fetch course metadata
-  const { data: courseMetadata } = useFetchCourseMetadata({
-    courseName: courseName || '',
-    enabled: auth.isAuthenticated && Boolean(courseName),
-  })
 
   // PostHog identification and admin/owner check
   useEffect(() => {

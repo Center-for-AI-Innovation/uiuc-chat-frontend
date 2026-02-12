@@ -1,3 +1,4 @@
+// Query: Fetches paginated project materials (documents) with filtering and sorting for the materials table.
 import { useQuery } from '@tanstack/react-query'
 import { type CourseDocument } from '~/types/courseMaterials'
 

@@ -1,3 +1,5 @@
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+
 import { IconUser, IconUsers, IconAt, IconX } from '@tabler/icons-react'
 import React, {
   useState,
@@ -6,7 +8,6 @@ import React, {
   type KeyboardEvent,
 } from 'react'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import {
   Accordion,
   AccordionContent,

@@ -1,3 +1,6 @@
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
+
 import {
   Button,
   Card,
@@ -14,8 +17,6 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
-import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import SetExampleQuestions from './SetExampleQuestions'
 // import { Checkbox } from '@radix-ui/react-checkbox'
@@ -95,6 +96,11 @@ export const UploadCard = memo(function UploadCard({
   sidebarCollapsed?: boolean
 }) {
   const auth = useAuth()
+  const queryClient = useQueryClient()
+  const uploadToS3Mutation = useUploadToS3()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useUpdateCourseMetadata(projectName)
+
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
 
   // Get responsive card width classes based on sidebar state
@@ -102,10 +108,6 @@ export const UploadCard = memo(function UploadCard({
   const [projectDescription, setProjectDescription] = useState(
     initialMetadata?.project_description || '',
   )
-  const queryClient = useQueryClient()
-  const uploadToS3Mutation = useUploadToS3()
-  const { mutateAsync: setCourseMetadataAsync } =
-    useUpdateCourseMetadata(projectName)
   const [introMessage, setIntroMessage] = useState(
     initialMetadata?.course_intro_message || '',
   )

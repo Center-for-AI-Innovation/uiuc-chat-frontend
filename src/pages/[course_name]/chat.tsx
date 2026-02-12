@@ -1,5 +1,8 @@
 // export { default } from '~/pages/api/home'
 
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchProjectDocumentCount } from '~/hooks/queries/useFetchProjectDocumentCount'
+
 import { useAuth } from 'react-oidc-context'
 import { type NextPage } from 'next'
 import React, { useEffect, useState } from 'react'
@@ -11,8 +14,6 @@ import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { montserrat_heading } from 'fonts'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
-import { useFetchProjectDocumentCount } from '~/hooks/queries/useFetchProjectDocumentCount'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { generateAnonymousUserId } from '~/utils/cryptoRandom'
 
@@ -28,17 +29,10 @@ const ChatPage: NextPage = () => {
         : undefined
   }
   const courseName = getCurrentPageName() as string
-  const [currentEmail, setCurrentEmail] = useState('')
-  const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
-  const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
-  const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
+
+  // React Query hooks
   const { data: documentCount = null } =
     useFetchProjectDocumentCount(courseName)
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
-  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
-  const { course_name } = router.query
-
-  // Use React Query hook to fetch course metadata
   const {
     data: courseMetadata,
     isLoading: isCourseMetadataLoading,
@@ -47,6 +41,14 @@ const ChatPage: NextPage = () => {
     courseName,
     enabled: router.isReady && Boolean(courseName),
   })
+
+  const [currentEmail, setCurrentEmail] = useState('')
+  const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
+  const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
+  const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
+  const { course_name } = router.query
 
   // UseEffect to check URL parameters and handle redirects
   useEffect(() => {

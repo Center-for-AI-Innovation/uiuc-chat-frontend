@@ -1,4 +1,10 @@
 // LargeDropzone.tsx
+import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
+import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
+import { useIngest } from '~/hooks/queries/useIngest'
+
 import React, { useRef, useState, useEffect } from 'react'
 import {
   createStyles,
@@ -20,18 +26,13 @@ import {
   IconX,
 } from '@tabler/icons-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
-import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
 import { Dropzone } from '@mantine/dropzone'
 import { useRouter } from 'next/router'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import SupportedFileUploadTypes from './SupportedFileUploadTypes'
 import { useMediaQuery } from '@mantine/hooks'
-import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
 import { v4 as uuidv4 } from 'uuid'
 import { type FileUpload } from './UploadNotification'
-import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
-import { useIngest } from '~/hooks/queries/useIngest'
 import { type AuthContextProps } from 'react-oidc-context'
 
 const useStyles = createStyles((theme) => ({
@@ -81,6 +82,13 @@ export function LargeDropzone({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   auth: AuthContextProps
 }) {
+  const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(courseName)
+  const { refetch: refetchDocsInProgress } = useFetchDocsInProgress(courseName)
+  const uploadToS3Mutation = useUploadToS3()
+  const ingestMutation = useIngest()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useUpdateCourseMetadata(courseName)
+
   // upload-in-progress spinner control
   const [uploadInProgress, setUploadInProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
@@ -106,11 +114,6 @@ export function LargeDropzone({
     await new Promise((resolve) => setTimeout(resolve, 200))
     await router.reload()
   }
-  const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(courseName)
-  const uploadToS3Mutation = useUploadToS3()
-  const ingestMutation = useIngest()
-  const { mutateAsync: setCourseMetadataAsync } =
-    useUpdateCourseMetadata(courseName)
 
   const ingestFiles = async (files: File[] | null, is_new_course: boolean) => {
     if (!files) return
@@ -207,7 +210,6 @@ export function LargeDropzone({
       await refreshOrRedirect(redirect_to_gpt_4)
     }
   }
-  const { refetch: refetchDocsInProgress } = useFetchDocsInProgress(courseName)
 
   useEffect(() => {
     let pollInterval = 9000 // Start with a slower interval

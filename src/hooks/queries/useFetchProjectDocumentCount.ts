@@ -1,3 +1,4 @@
+// Query: Fetches the total document count for a project/course.
 import { useQuery } from '@tanstack/react-query'
 
 async function fetchProjectDocumentCount(courseName: string): Promise<number> {

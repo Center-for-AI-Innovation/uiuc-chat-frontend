@@ -1,3 +1,7 @@
+import { useCreateProjectMutation } from '~/hooks/queries/useCreateProject'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
+
 import Head from 'next/head'
 import React, { useMemo, useState } from 'react'
 
@@ -6,7 +10,6 @@ import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useCreateProjectMutation } from '~/hooks/queries/useCreateProject'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
 import UploadNotification, { type FileUpload } from './UploadNotification'
@@ -18,8 +21,6 @@ import StepPrompt from './MakeNewCoursePageSteps/StepPrompt'
 import StepBranding from './MakeNewCoursePageSteps/StepBranding'
 import StepSuccess from './MakeNewCoursePageSteps/StepSuccess'
 import { useAuth } from 'react-oidc-context'
-import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
-import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
 import GlobalFooter from './GlobalFooter'
 
 const MakeNewCoursePage = ({
@@ -41,30 +42,30 @@ const MakeNewCoursePage = ({
   const [projectDescription, setProjectDescription] = useState(
     project_description || '',
   )
-  const createProjectMutation = useCreateProjectMutation()
-  const [isLoading, setIsLoading] = useState(false)
-  const [hasCreatedProject, setHasCreatedProject] = useState(false)
-  const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
-  const [currentStep, setStep] = useState(0)
+  // Debounce project name input to avoid excessive API calls
+  const [debouncedProjectName] = useDebouncedValue(projectName, 500)
 
+  // React Query hooks
+  const createProjectMutation = useCreateProjectMutation()
   const { refetch: refetchCourseMetadata } = useFetchCourseMetadata({
     courseName: projectName,
     enabled: false,
   })
-
-  const useIllinoisChatConfig = useMemo(() => {
-    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
-  }, [])
-
-  // Debounce project name input to avoid excessive API calls
-  const [debouncedProjectName] = useDebouncedValue(projectName, 500)
-
   // Check project name availability using React Query
   const { data: courseExists, isFetching: isCheckingAvailability } =
     useFetchCourseExists({
       courseName: debouncedProjectName,
       enabled: debouncedProjectName.length > 0 && is_new_course,
     })
+
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasCreatedProject, setHasCreatedProject] = useState(false)
+  const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
+  const [currentStep, setStep] = useState(0)
+
+  const useIllinoisChatConfig = useMemo(() => {
+    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+  }, [])
 
   // Calculate availability: course exists = not available
   const isCourseAvailable =
@@ -201,6 +202,10 @@ const MakeNewCoursePage = ({
       const err = error as Error & { status?: number; error?: string }
       if (err.status === 409) {
         // Project name already exists - race condition caught by server
+        // Refresh availability check so UI shows the name as taken
+        queryClient.invalidateQueries({
+          queryKey: ['courseExists', project_name],
+        })
         notifications.show({
           title: 'Project name already taken',
           message:
@@ -208,11 +213,6 @@ const MakeNewCoursePage = ({
             `A project with the name "${project_name}" already exists. Please choose a different name.`,
           color: 'red',
           autoClose: 5000,
-        })
-        // Invalidate the query to refresh availability check
-        // This will trigger a re-check of the project name
-        queryClient.invalidateQueries({
-          queryKey: ['courseExists', project_name],
         })
       } else {
         // Other errors

@@ -1,3 +1,5 @@
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+
 import { useContext } from 'react'
 
 import {
@@ -11,7 +13,6 @@ import Folder from '@/components/Folder'
 
 import { ConversationComponent } from './Conversation'
 import { useQueryClient } from '@tanstack/react-query'
-import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
 
 interface Props {
   searchTerm: string
