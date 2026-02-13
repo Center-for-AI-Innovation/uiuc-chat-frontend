@@ -145,7 +145,9 @@ describe('qdrantUtils', () => {
     )
     expect(posthog.capture).toHaveBeenCalledWith(
       'add_doc_group',
-      expect.objectContaining({ doc_unique_identifier: 'https://example.com/doc' }),
+      expect.objectContaining({
+        doc_unique_identifier: 'https://example.com/doc',
+      }),
     )
   })
 })

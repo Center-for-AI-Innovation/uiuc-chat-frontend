@@ -3,24 +3,22 @@ import { describe, expect, it, vi } from 'vitest'
 import type { InfiniteData } from '@tanstack/react-query'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
-import {
-  useDeleteAllConversations,
-  useDeleteConversation,
-  useFetchConversationHistory,
-  useFetchLastConversation,
-  useUpdateConversation,
-} from '../conversationQueries'
-import { fetchConversationHistory } from '~/utils/app/conversation'
+import { useDeleteAllConversations } from '../queries/useDeleteAllConversations'
+import { useDeleteConversation } from '../queries/useDeleteConversation'
+import { useFetchConversationHistory } from '../queries/useFetchConversationHistory'
+import { useFetchLastConversation } from '../queries/useFetchLastConversation'
+import { useUpdateConversation } from '../queries/useUpdateConversation'
 import type { Conversation, ConversationPage } from '~/types/chat'
 import type { FolderWithConversation } from '~/types/folder'
 import {
   deleteAllConversationsFromServer,
   deleteConversationFromServer,
+  fetchConversationHistory,
   fetchLastConversation,
   saveConversationToServer,
-} from '~/utils/app/conversation'
+} from '@/hooks/__internal__/conversation'
 
-vi.mock('~/utils/app/conversation', () => ({
+vi.mock('@/hooks/__internal__/conversation', () => ({
   fetchConversationHistory: vi.fn(),
   fetchLastConversation: vi.fn(),
   saveConversationToServer: vi.fn(),
@@ -55,10 +53,15 @@ function makeInfiniteConversationHistory(
 describe('useFetchConversationHistory', () => {
   it('does not run when courseName is invalid', async () => {
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
-    ;(fetchConversationHistory as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(
+      fetchConversationHistory as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
       conversations: [],
       nextCursor: null,
     })
@@ -74,10 +77,15 @@ describe('useFetchConversationHistory', () => {
 
   it('calls fetchConversationHistory with normalized search term and pageParam', async () => {
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
-    ;(fetchConversationHistory as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(
+      fetchConversationHistory as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValue({
       conversations: [],
       nextCursor: null,
     })
@@ -100,7 +108,10 @@ describe('useFetchConversationHistory', () => {
 describe('useFetchLastConversation', () => {
   it('does not run until courseName is truthy', async () => {
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -111,12 +122,15 @@ describe('useFetchLastConversation', () => {
 
   it('fetches last conversation when enabled', async () => {
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
-    ;(fetchLastConversation as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
-      { id: 'c1' } as any,
-    )
+    ;(
+      fetchLastConversation as unknown as ReturnType<typeof vi.fn>
+    ).mockResolvedValueOnce({ id: 'c1' } as any)
 
     const { result } = renderHook(
       () => useFetchLastConversation('CS101', 'u@example.com'),
@@ -132,17 +146,24 @@ describe('useFetchLastConversation', () => {
 describe('useUpdateConversation', () => {
   it('optimistically updates conversation in conversation history and folders', async () => {
     const deferred = createDeferred()
-    ;(saveConversationToServer as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-      deferred.promise as any,
-    )
+    ;(
+      saveConversationToServer as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValueOnce(deferred.promise as any)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
     const courseName = 'CS101'
-    const conversationHistoryKey = ['conversationHistory', courseName, ''] as const
+    const conversationHistoryKey = [
+      'conversationHistory',
+      courseName,
+      '',
+    ] as const
     const foldersKey = ['folders', courseName] as const
 
     const originalConversation: Conversation = {
@@ -155,14 +176,22 @@ describe('useUpdateConversation', () => {
       folderId: 'f1',
       userEmail: 'u@example.com',
     }
-    const updatedConversation: Conversation = { ...originalConversation, name: 'New' }
+    const updatedConversation: Conversation = {
+      ...originalConversation,
+      name: 'New',
+    }
 
     queryClient.setQueryData(
       conversationHistoryKey,
       makeInfiniteConversationHistory([originalConversation]),
     )
     const folders: FolderWithConversation[] = [
-      { id: 'f1', name: 'Folder', type: 'chat', conversations: [originalConversation] } as any,
+      {
+        id: 'f1',
+        name: 'Folder',
+        type: 'chat',
+        conversations: [originalConversation],
+      } as any,
     ]
     queryClient.setQueryData(foldersKey, folders)
 
@@ -193,17 +222,24 @@ describe('useUpdateConversation', () => {
 
   it('rolls back optimistic update when save fails', async () => {
     const deferred = createDeferred()
-    ;(saveConversationToServer as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-      deferred.promise as any,
-    )
+    ;(
+      saveConversationToServer as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValueOnce(deferred.promise as any)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
     const courseName = 'CS101'
-    const conversationHistoryKey = ['conversationHistory', courseName, ''] as const
+    const conversationHistoryKey = [
+      'conversationHistory',
+      courseName,
+      '',
+    ] as const
 
     const originalConversation: Conversation = {
       id: 'c1',
@@ -215,8 +251,13 @@ describe('useUpdateConversation', () => {
       folderId: null,
       userEmail: 'u@example.com',
     }
-    const updatedConversation: Conversation = { ...originalConversation, name: 'New' }
-    const originalHistory = makeInfiniteConversationHistory([originalConversation])
+    const updatedConversation: Conversation = {
+      ...originalConversation,
+      name: 'New',
+    }
+    const originalHistory = makeInfiniteConversationHistory([
+      originalConversation,
+    ])
     queryClient.setQueryData(conversationHistoryKey, originalHistory)
 
     const { result } = renderHook(
@@ -251,12 +292,15 @@ describe('useUpdateConversation', () => {
 describe('useDeleteConversation', () => {
   it('optimistically removes a conversation and rolls back on error', async () => {
     const deferred = createDeferred()
-    ;(deleteConversationFromServer as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-      deferred.promise as any,
-    )
+    ;(
+      deleteConversationFromServer as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValueOnce(deferred.promise as any)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const Wrapper = createWrapper(queryClient)
 
@@ -283,7 +327,13 @@ describe('useDeleteConversation', () => {
     queryClient.setQueryData(conversationHistoryKey, originalHistory)
 
     const { result } = renderHook(
-      () => useDeleteConversation('u@example.com', queryClient, courseName, searchTerm),
+      () =>
+        useDeleteConversation(
+          'u@example.com',
+          queryClient,
+          courseName,
+          searchTerm,
+        ),
       { wrapper: Wrapper },
     )
 
@@ -311,18 +361,25 @@ describe('useDeleteConversation', () => {
 describe('useDeleteAllConversations', () => {
   it('optimistically clears conversation history and invalidates after settle', async () => {
     const deferred = createDeferred()
-    ;(deleteAllConversationsFromServer as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-      deferred.promise as any,
-    )
+    ;(
+      deleteAllConversationsFromServer as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValueOnce(deferred.promise as any)
 
     const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
     })
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
     const Wrapper = createWrapper(queryClient)
 
     const courseName = 'CS101'
-    const conversationHistoryKey = ['conversationHistory', courseName, ''] as const
+    const conversationHistoryKey = [
+      'conversationHistory',
+      courseName,
+      '',
+    ] as const
 
     const originalHistory = makeInfiniteConversationHistory([
       {

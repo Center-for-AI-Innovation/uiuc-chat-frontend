@@ -192,7 +192,9 @@ describe('app/api/chat/openaiFunctionCall POST', () => {
           choices: [
             {
               message: {
-                tool_calls: [{ id: 'call1', function: { name: 't', arguments: '{}' } }],
+                tool_calls: [
+                  { id: 'call1', function: { name: 't', arguments: '{}' } },
+                ],
               },
             },
           ],

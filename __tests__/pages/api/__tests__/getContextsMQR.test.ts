@@ -41,7 +41,11 @@ describe('getContextsMQR API', () => {
     await handler(
       createMockReq({
         method: 'GET',
-        query: { course_name: 'CS101', search_query: 'q', conversation_id: 'c1' },
+        query: {
+          course_name: 'CS101',
+          search_query: 'q',
+          conversation_id: 'c1',
+        },
       }) as any,
       res as any,
     )
@@ -58,7 +62,11 @@ describe('getContextsMQR API', () => {
     await handler(
       createMockReq({
         method: 'GET',
-        query: { course_name: 'CS101', search_query: 'q', conversation_id: 'c1' },
+        query: {
+          course_name: 'CS101',
+          search_query: 'q',
+          conversation_id: 'c1',
+        },
       }) as any,
       res as any,
     )
@@ -74,11 +82,14 @@ describe('getContextsMQR API', () => {
     await handler(
       createMockReq({
         method: 'GET',
-        query: { course_name: 'CS101', search_query: 'q', conversation_id: 'c1' },
+        query: {
+          course_name: 'CS101',
+          search_query: 'q',
+          conversation_id: 'c1',
+        },
       }) as any,
       res as any,
     )
     expect(res.status).toHaveBeenCalledWith(500)
   })
 })
-

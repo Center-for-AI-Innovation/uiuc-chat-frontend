@@ -5,7 +5,10 @@ import { render, screen } from '@testing-library/react'
 vi.mock('recharts', () => {
   const Stub = (name: string) => {
     const Component = (props: any) =>
-      React.createElement('div', { 'data-testid': `recharts-${name}`, ...props })
+      React.createElement('div', {
+        'data-testid': `recharts-${name}`,
+        ...props,
+      })
     Component.displayName = `Recharts.${name}`
     return Component
   }
@@ -44,7 +47,9 @@ describe('ConversationsPerHourChart', () => {
         data={{ '0': 1, '12': 3 }}
       />,
     )
-    expect(screen.getByTestId('recharts-ResponsiveContainer')).toBeInTheDocument()
+    expect(
+      screen.getByTestId('recharts-ResponsiveContainer'),
+    ).toBeInTheDocument()
     expect(screen.getByTestId('recharts-BarChart')).toBeInTheDocument()
   })
 })

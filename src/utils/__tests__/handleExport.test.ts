@@ -38,7 +38,9 @@ describe('handleExport', () => {
     const originalCreateElement = document.createElement.bind(document)
     const link = originalCreateElement('a')
     const clickSpy = vi.spyOn(link, 'click').mockImplementation(() => {})
-    const createElSpy = vi.spyOn(document, 'createElement').mockReturnValue(link)
+    const createElSpy = vi
+      .spyOn(document, 'createElement')
+      .mockReturnValue(link)
 
     await expect(handleExport('CS101')).resolves.toEqual({
       message: 'Downloading now, check your downloads.',

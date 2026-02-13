@@ -36,7 +36,9 @@ describe('UIUC-api/exportAllDocuments', () => {
   it('handles JSON and ZIP responses', async () => {
     hoisted.axiosGet.mockResolvedValueOnce({
       headers: { 'content-type': 'application/json' },
-      data: Buffer.from(JSON.stringify({ response: 'Download from S3', s3_path: 's3://x' })),
+      data: Buffer.from(
+        JSON.stringify({ response: 'Download from S3', s3_path: 's3://x' }),
+      ),
     })
     const res1 = createMockRes()
     await handler(
@@ -59,4 +61,3 @@ describe('UIUC-api/exportAllDocuments', () => {
     expect(res2.send).toHaveBeenCalled()
   })
 })
-

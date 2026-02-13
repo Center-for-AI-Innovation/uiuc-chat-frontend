@@ -35,7 +35,9 @@ vi.mock('drizzle-orm', () => ({
   eq: () => ({}),
 }))
 
-import handler, { getCourseDocuments } from '~/pages/api/UIUC-api/getDocsForMaterials'
+import handler, {
+  getCourseDocuments,
+} from '~/pages/api/UIUC-api/getDocsForMaterials'
 
 describe('UIUC-api/getDocsForMaterials', () => {
   it('getCourseDocuments returns null when course name missing or db returns none', async () => {
@@ -76,10 +78,12 @@ describe('UIUC-api/getDocsForMaterials', () => {
     ])
     const res = createMockRes()
     await handler(
-      createMockReq({ method: 'POST', body: { courseName: 'CS101', fileName: 'x' } }) as any,
+      createMockReq({
+        method: 'POST',
+        body: { courseName: 'CS101', fileName: 'x' },
+      }) as any,
       res as any,
     )
     expect(res.status).toHaveBeenCalledWith(200)
   })
 })
-

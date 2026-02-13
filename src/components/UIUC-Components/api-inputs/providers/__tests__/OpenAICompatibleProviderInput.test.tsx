@@ -64,7 +64,13 @@ describe('OpenAICompatibleProviderInput', () => {
     const { container } = render(
       <OpenAICompatibleProviderInput
         provider={{ enabled: false } as any}
-        form={{ Field: () => null, state: { values: {} }, handleSubmit: vi.fn() } as any}
+        form={
+          {
+            Field: () => null,
+            state: { values: {} },
+            handleSubmit: vi.fn(),
+          } as any
+        }
         isLoading
       />,
     )

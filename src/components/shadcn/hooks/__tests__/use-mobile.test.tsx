@@ -16,17 +16,22 @@ describe('useIsMobile', () => {
       removeListener: vi.fn(),
       dispatchEvent: vi.fn(),
     }))
-    Object.defineProperty(window, 'matchMedia', { value: matchMedia, writable: true })
+    Object.defineProperty(window, 'matchMedia', {
+      value: matchMedia,
+      writable: true,
+    })
 
     Object.defineProperty(window, 'innerWidth', { value: 500, writable: true })
     const { result } = renderHook(() => useIsMobile())
     expect(result.current).toBe(true)
 
     act(() => {
-      Object.defineProperty(window, 'innerWidth', { value: 1200, writable: true })
+      Object.defineProperty(window, 'innerWidth', {
+        value: 1200,
+        writable: true,
+      })
       for (const cb of listeners) cb()
     })
     expect(result.current).toBe(false)
   })
 })
-

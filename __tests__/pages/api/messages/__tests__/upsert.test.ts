@@ -41,7 +41,8 @@ vi.mock('@/pages/api/conversation', () => ({
     role: message.role,
     content_text: String(message.content ?? ''),
     conversation_id: conversationId,
-    created_at: message.created_at ?? new Date('2024-01-01T00:00:00Z').toISOString(),
+    created_at:
+      message.created_at ?? new Date('2024-01-01T00:00:00Z').toISOString(),
     updated_at: message.updated_at ?? undefined,
   }),
 }))
@@ -69,9 +70,11 @@ describe('messages/upsert API', () => {
       from: () => ({
         where: () => ({
           orderBy: () => ({
-            limit: vi.fn().mockResolvedValueOnce([
-              { created_at: new Date('2024-01-01T00:00:00Z') },
-            ]),
+            limit: vi
+              .fn()
+              .mockResolvedValueOnce([
+                { created_at: new Date('2024-01-01T00:00:00Z') },
+              ]),
           }),
         }),
       }),
@@ -106,9 +109,11 @@ describe('messages/upsert API', () => {
     hoisted.select.mockImplementationOnce(() => ({
       from: () => ({
         where: () => ({
-          limit: vi.fn().mockResolvedValueOnce([
-            { created_at: new Date('2024-01-01T00:00:00Z') },
-          ]),
+          limit: vi
+            .fn()
+            .mockResolvedValueOnce([
+              { created_at: new Date('2024-01-01T00:00:00Z') },
+            ]),
         }),
       }),
     }))
@@ -161,10 +166,16 @@ describe('messages/upsert API', () => {
 
   it('returns 500 when insert fails', async () => {
     hoisted.select.mockImplementationOnce(() => ({
-      from: () => ({ where: () => ({ limit: vi.fn().mockResolvedValueOnce([]) }) }),
+      from: () => ({
+        where: () => ({ limit: vi.fn().mockResolvedValueOnce([]) }),
+      }),
     }))
     hoisted.select.mockImplementationOnce(() => ({
-      from: () => ({ where: () => ({ orderBy: () => ({ limit: vi.fn().mockResolvedValueOnce([]) }) }) }),
+      from: () => ({
+        where: () => ({
+          orderBy: () => ({ limit: vi.fn().mockResolvedValueOnce([]) }),
+        }),
+      }),
     }))
 
     hoisted.insert.mockReturnValueOnce({
@@ -177,7 +188,10 @@ describe('messages/upsert API', () => {
     await handler(
       createMockReq({
         method: 'POST',
-        body: { message: { id: 'm1', role: 'user', content: 'hi' }, conversationId: 'c1' },
+        body: {
+          message: { id: 'm1', role: 'user', content: 'hi' },
+          conversationId: 'c1',
+        },
       }) as any,
       res as any,
     )
@@ -221,7 +235,11 @@ describe('messages/upsert API', () => {
       createMockReq({
         method: 'POST',
         body: {
-          message: { id: 'm1', role: 'user', content: 'edit without updated_at' },
+          message: {
+            id: 'm1',
+            role: 'user',
+            content: 'edit without updated_at',
+          },
           conversationId: 'c1',
         },
       }) as any,
@@ -237,9 +255,11 @@ describe('messages/upsert API', () => {
     hoisted.select.mockImplementationOnce(() => ({
       from: () => ({
         where: () => ({
-          limit: vi.fn().mockResolvedValueOnce([
-            { created_at: new Date('2024-01-01T00:00:00Z') },
-          ]),
+          limit: vi
+            .fn()
+            .mockResolvedValueOnce([
+              { created_at: new Date('2024-01-01T00:00:00Z') },
+            ]),
         }),
       }),
     }))
@@ -295,7 +315,10 @@ describe('messages/upsert API', () => {
     await handler(
       createMockReq({
         method: 'POST',
-        body: { message: { id: 'm1', role: 'user', content: 'hi' }, conversationId: 'c1' },
+        body: {
+          message: { id: 'm1', role: 'user', content: 'hi' },
+          conversationId: 'c1',
+        },
       }) as any,
       res as any,
     )

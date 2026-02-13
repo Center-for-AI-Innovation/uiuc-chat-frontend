@@ -26,4 +26,3 @@ describe('ConfigWebLLM', () => {
     expect(prebuiltAppConfig.model_list[0]).toHaveProperty('model_lib')
   })
 })
-

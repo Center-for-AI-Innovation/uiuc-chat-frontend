@@ -7,8 +7,7 @@ import {
   type ConversationMeta,
   type ContextWithMetadata,
 } from '@/types/chat'
-import posthog from 'posthog-js'
-import { cleanConversationHistory } from './clean'
+import { cleanConversationHistory } from '@/utils/app/clean'
 import { createHeaders } from '~/utils/httpHeaders'
 
 // Helper function to create headers with PostHog ID and user email
@@ -37,23 +36,45 @@ export async function fetchConversationHistory(
       throw new Error('Error fetching conversation history')
     }
 
-    const { conversations, nextCursor } = await response.json()
+    const { conversations, nextCursor } = (await response.json()) as {
+      conversations: unknown
+      nextCursor: unknown
+    }
 
-    // // Clean the conversations and ensure they're properly structured
-    const cleanedConversations = conversations.map((conversation: any) => {
-      // Ensure messages are properly ordered by creation time
-      if (conversation.messages) {
-        conversation.messages.sort((a: any, b: any) => {
-          return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          )
-        })
+    const getCreatedAtMs = (m: unknown) => {
+      if (!m || typeof m !== 'object') return 0
+      const createdAt = (m as Record<string, unknown>).created_at
+      if (typeof createdAt !== 'string') return 0
+      const ms = new Date(createdAt).getTime()
+      return Number.isFinite(ms) ? ms : 0
+    }
+
+    // Clean the conversations and ensure they're properly structured
+    const cleanedConversations = (
+      Array.isArray(conversations) ? conversations : []
+    ).map((conversation) => {
+      if (conversation && typeof conversation === 'object') {
+        const maybeMessages = (conversation as Record<string, unknown>).messages
+        if (Array.isArray(maybeMessages)) {
+          maybeMessages.sort((a, b) => getCreatedAtMs(a) - getCreatedAtMs(b))
+        }
       }
       return conversation
     })
 
     finalResponse = cleanConversationHistory(cleanedConversations)
-    finalResponse.nextCursor = nextCursor
+    const parsedNextCursor = (() => {
+      if (typeof nextCursor === 'number') {
+        return Number.isFinite(nextCursor) ? nextCursor : null
+      }
+      if (typeof nextCursor === 'string') {
+        const n = Number(nextCursor)
+        return Number.isFinite(n) ? n : null
+      }
+      return null
+    })()
+
+    finalResponse.nextCursor = parsedNextCursor
 
     // Sync with local storage
     const selectedConversation = localStorage.getItem('selectedConversation')
@@ -123,8 +144,10 @@ export const deleteConversationFromServer = async (
     if (!response.ok) {
       throw new Error('Error deleting conversation')
     }
+    return await response.json().catch(() => ({}))
   } catch (error) {
     console.error('Error deleting conversation:', error)
+    throw error
   }
 }
 
@@ -142,8 +165,10 @@ export const deleteAllConversationsFromServer = async (
     if (!response.ok) {
       throw new Error('Error deleting conversation')
     }
+    return await response.json().catch(() => ({}))
   } catch (error) {
     console.error('Error deleting conversation:', error)
+    throw error
   }
 }
 
@@ -394,9 +419,12 @@ export function createLogConversationPayload(
       const lastIndex = conversation.messages.length - 1
       const userMessage = conversation.messages[lastIndex - 1]
       const assistantMessage = conversation.messages[lastIndex]
-      
+
       // Only include both if we have a user->assistant pair
-      if (userMessage?.role === 'user' && assistantMessage?.role === 'assistant') {
+      if (
+        userMessage?.role === 'user' &&
+        assistantMessage?.role === 'assistant'
+      ) {
         messagesToInclude = [userMessage, assistantMessage]
       } else {
         // Fallback: just include the provided message
@@ -447,7 +475,6 @@ export function createLogConversationPayload(
 //   }
 // }
 
-
 export function reconstructConversation(
   conversation: Conversation | undefined | null,
   fallback?: Conversation,
@@ -486,4 +513,30 @@ export function reconstructConversation(
   })
 
   return cloned
+}
+
+export async function logConversationToServer(
+  conversation: Conversation,
+  course_name: string,
+) {
+  try {
+    const response = await fetch('/api/UIUC-api/logConversation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ course_name, conversation }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null)
+      const errorMessage = errorData?.error || response.statusText
+      throw new Error(`Error logging conversation: ${errorMessage}`)
+    }
+
+    return response.json().catch(() => null)
+  } catch (error) {
+    console.error('Error logging conversation to server:', error)
+    throw error
+  }
 }

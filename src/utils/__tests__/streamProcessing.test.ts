@@ -515,7 +515,9 @@ describe('handleImageContent', () => {
   it('adds image description text into message content and search query', async () => {
     ;(fetchImageDescription as any).mockResolvedValueOnce('a cat')
     const controller = new AbortController()
-    const message: any = { content: [{ type: 'image_url', image_url: { url: 'x' } }] }
+    const message: any = {
+      content: [{ type: 'image_url', image_url: { url: 'x' } }],
+    }
 
     const result = await handleImageContent(
       message,
@@ -530,7 +532,10 @@ describe('handleImageContent', () => {
     expect(result.imgDesc).toBe('a cat')
     expect(message.content).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ type: 'text', text: 'Image description: a cat' }),
+        expect.objectContaining({
+          type: 'text',
+          text: 'Image description: a cat',
+        }),
       ]),
     )
   })
@@ -556,16 +561,21 @@ describe('handleImageContent', () => {
 
     expect(result.searchQuery).toContain('Image description: a dog')
     const descTexts = (message.content as any[]).filter(
-      (c) => c.type === 'text' && String(c.text).startsWith('Image description:'),
+      (c) =>
+        c.type === 'text' && String(c.text).startsWith('Image description:'),
     )
-    expect(descTexts).toEqual([{ type: 'text', text: 'Image description: a dog' }])
+    expect(descTexts).toEqual([
+      { type: 'text', text: 'Image description: a dog' },
+    ])
   })
 
   it('aborts controller when fetchImageDescription fails', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     ;(fetchImageDescription as any).mockRejectedValueOnce(new Error('boom'))
     const controller = new AbortController()
-    const message: any = { content: [{ type: 'image_url', image_url: { url: 'x' } }] }
+    const message: any = {
+      content: [{ type: 'image_url', image_url: { url: 'x' } }],
+    }
 
     const result = await handleImageContent(
       message,
@@ -594,10 +604,8 @@ describe('determineAndValidateModel', () => {
       ),
     )
 
-    const { activeModel, modelsWithProviders } = await determineAndValidateModel(
-      'gpt-4o',
-      'proj',
-    )
+    const { activeModel, modelsWithProviders } =
+      await determineAndValidateModel('gpt-4o', 'proj')
     expect(activeModel.id).toBe('gpt-4o')
     expect(modelsWithProviders.OpenAI).toBeTruthy()
   })
@@ -637,9 +645,11 @@ describe('determineAndValidateModel', () => {
       new Response('nope', { status: 500, statusText: 'bad' }),
     )
 
-    await expect(determineAndValidateModel('gpt-4o', 'proj')).rejects.toMatchObject(
-      { message: expect.stringMatching(/failed to fetch models/i) },
-    )
+    await expect(
+      determineAndValidateModel('gpt-4o', 'proj'),
+    ).rejects.toMatchObject({
+      message: expect.stringMatching(/failed to fetch models/i),
+    })
   })
 })
 
@@ -669,10 +679,14 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
       id: 'c1',
       userEmail: 'u@example.com',
       model: { tokenLimit: 10 },
-      messages: [{ id: 'u1', role: 'user', content: 'hi', contexts: [{ id: 1 }] }],
+      messages: [
+        { id: 'u1', role: 'user', content: 'hi', contexts: [{ id: 1 }] },
+      ],
     }
 
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 200 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('', { status: 200 }),
+    )
 
     const res: any = {
       statusCode: 0,
@@ -691,7 +705,13 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
       { status: 200 },
     )
 
-    await handleNonStreamingResponse(apiResponse, conversation, { headers: {}, socket: {} } as any, res, 'CS101')
+    await handleNonStreamingResponse(
+      apiResponse,
+      conversation,
+      { headers: {}, socket: {} } as any,
+      res,
+      'CS101',
+    )
     expect(res.statusCode).toBe(200)
     expect(res.body).toEqual({ message: 'Hello', contexts: [{ id: 1 }] })
     expect((posthog as any).capture).toHaveBeenCalled()
@@ -699,7 +719,10 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
 
   it('handleNonStreamingResponse returns 500 when apiResponse body is null', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    const conversation: any = { id: 'c1', messages: [{ id: 'u1', role: 'user', content: 'hi' }] }
+    const conversation: any = {
+      id: 'c1',
+      messages: [{ id: 'u1', role: 'user', content: 'hi' }],
+    }
 
     const res: any = {
       statusCode: 0,
@@ -728,7 +751,10 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     ;(replaceCitationLinks as any).mockRejectedValueOnce(new Error('boom'))
 
-    const conversation: any = { id: 'c1', messages: [{ id: 'u1', role: 'user', content: 'hi' }] }
+    const conversation: any = {
+      id: 'c1',
+      messages: [{ id: 'u1', role: 'user', content: 'hi' }],
+    }
     const res: any = {
       statusCode: 0,
       status(code: number) {
@@ -746,7 +772,13 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
       { status: 200 },
     )
 
-    await handleNonStreamingResponse(apiResponse, conversation, { headers: {}, socket: {} } as any, res, 'CS101')
+    await handleNonStreamingResponse(
+      apiResponse,
+      conversation,
+      { headers: {}, socket: {} } as any,
+      res,
+      'CS101',
+    )
     expect(res.statusCode).toBe(500)
     expect(res.body).toEqual({ error: 'Failed to process response' })
   })
@@ -759,7 +791,9 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
       messages: [{ id: 'u1', role: 'user', content: 'hi' }],
     }
 
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 200 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('', { status: 200 }),
+    )
 
     const encoder = new TextEncoder()
     const body = new ReadableStream<Uint8Array>({
@@ -780,7 +814,10 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
       status: vi.fn(() => res),
       json: vi.fn(),
     }
-    const req: any = { headers: { 'x-forwarded-for': 'ip' }, socket: { remoteAddress: 'ra' } }
+    const req: any = {
+      headers: { 'x-forwarded-for': 'ip' },
+      socket: { remoteAddress: 'ra' },
+    }
 
     await handleStreamingResponse(apiResponse, conversation, req, res, 'CS101')
     expect(writes.join('')).toBe('Hello world')
@@ -809,9 +846,17 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
       write: vi.fn(),
     }
 
-    await handleStreamingResponse({ body: null } as any, conversation, { headers: {}, socket: {} } as any, res, 'CS101')
+    await handleStreamingResponse(
+      { body: null } as any,
+      conversation,
+      { headers: {}, socket: {} } as any,
+      res,
+      'CS101',
+    )
     expect(res.status).toHaveBeenCalledWith(500)
-    expect(res.json).toHaveBeenCalledWith({ error: 'API response body is null' })
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'API response body is null',
+    })
   })
 
   it('handleStreamingResponse executes the final-buffer flush path when trailing buffer remains', async () => {
@@ -822,7 +867,9 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
       messages: [{ id: 'u1', role: 'user', content: 'hi' }],
     }
 
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('', { status: 200 }))
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('', { status: 200 }),
+    )
 
     const encoder = new TextEncoder()
     const body = new ReadableStream<Uint8Array>({
@@ -842,7 +889,10 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
       status: vi.fn(() => res),
       json: vi.fn(),
     }
-    const req: any = { headers: { 'x-forwarded-for': 'ip' }, socket: { remoteAddress: 'ra' } }
+    const req: any = {
+      headers: { 'x-forwarded-for': 'ip' },
+      socket: { remoteAddress: 'ra' },
+    }
 
     await handleStreamingResponse(apiResponse, conversation, req, res, 'CS101')
     expect(writes.join('')).toBe('Hello ')
@@ -877,11 +927,16 @@ describe('handleNonStreamingResponse / handleStreamingResponse', () => {
       status: vi.fn(() => res),
       json: vi.fn(),
     }
-    const req: any = { headers: { 'x-forwarded-for': 'ip' }, socket: { remoteAddress: 'ra' } }
+    const req: any = {
+      headers: { 'x-forwarded-for': 'ip' },
+      socket: { remoteAddress: 'ra' },
+    }
 
     await handleStreamingResponse(apiResponse, conversation, req, res, 'CS101')
     expect(res.status).toHaveBeenCalledWith(500)
-    expect(res.json).toHaveBeenCalledWith({ error: 'Error processing streaming response' })
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Error processing streaming response',
+    })
     expect(res.end).toHaveBeenCalled()
   })
 })
@@ -905,7 +960,10 @@ describe('updateConversationInDatabase', () => {
 
     expect((posthog as any).capture).toHaveBeenCalledWith(
       'stream_api_conversation_updated',
-      expect.objectContaining({ conversation_id: 'c1', user_id: 'u@example.com' }),
+      expect.objectContaining({
+        conversation_id: 'c1',
+        user_id: 'u@example.com',
+      }),
     )
   })
 })
@@ -933,16 +991,30 @@ describe('routeModelRequest', () => {
       messages: [{ id: 'm1', role: 'user', content: 'hi' }],
     }
     await expect(
-      routeModelRequest({ conversation: conv, llmProviders: {}, stream: false } as any),
+      routeModelRequest({
+        conversation: conv,
+        llmProviders: {},
+        stream: false,
+      } as any),
     ).rejects.toThrow(/missing "id" property/i)
   })
 
   it('records anonymous PostHog ids when userEmail is missing', async () => {
-    const conv: any = { ...baseConversation(OpenAIModelID.GPT_4o), userEmail: undefined }
-    await routeModelRequest({ conversation: conv, llmProviders: {}, stream: false } as any)
+    const conv: any = {
+      ...baseConversation(OpenAIModelID.GPT_4o),
+      userEmail: undefined,
+    }
+    await routeModelRequest({
+      conversation: conv,
+      llmProviders: {},
+      stream: false,
+    } as any)
     expect((posthog as any).capture).toHaveBeenCalledWith(
       'LLM Invoked',
-      expect.objectContaining({ distinct_id: 'anonymous', user_id: 'anonymous' }),
+      expect.objectContaining({
+        distinct_id: 'anonymous',
+        user_id: 'anonymous',
+      }),
     )
   })
 
@@ -957,7 +1029,11 @@ describe('routeModelRequest', () => {
       },
     }
 
-    await routeModelRequest({ conversation: conv, llmProviders, stream: true } as any)
+    await routeModelRequest({
+      conversation: conv,
+      llmProviders,
+      stream: true,
+    } as any)
     expect(runOpenAICompatibleChat).toHaveBeenCalled()
   })
 
@@ -965,7 +1041,11 @@ describe('routeModelRequest', () => {
     const conv = baseConversation(NCSAHostedVLMModelID.MOLMO_7B_D_0924)
     const llmProviders: any = { NCSAHostedVLM: { enabled: true, models: [] } }
 
-    await routeModelRequest({ conversation: conv, llmProviders, stream: false } as any)
+    await routeModelRequest({
+      conversation: conv,
+      llmProviders,
+      stream: false,
+    } as any)
     expect(runVLLM).toHaveBeenCalled()
   })
 
@@ -973,7 +1053,11 @@ describe('routeModelRequest', () => {
     const conv = baseConversation('llama3.2:1b-instruct-fp16')
     const llmProviders: any = { Ollama: { enabled: true, models: [] } }
 
-    await routeModelRequest({ conversation: conv, llmProviders, stream: false } as any)
+    await routeModelRequest({
+      conversation: conv,
+      llmProviders,
+      stream: false,
+    } as any)
     expect(runOllamaChat).toHaveBeenCalled()
   })
 
@@ -981,13 +1065,21 @@ describe('routeModelRequest', () => {
     const conv = baseConversation(AnthropicModelID.Claude_3_7_Sonnet)
     const llmProviders: any = { Anthropic: { enabled: true, models: [] } }
 
-    await routeModelRequest({ conversation: conv, llmProviders, stream: true } as any)
+    await routeModelRequest({
+      conversation: conv,
+      llmProviders,
+      stream: true,
+    } as any)
     expect(runAnthropicChat).toHaveBeenCalled()
   })
 
   it('routes OpenAI/Azure model IDs to openAIAzureChat', async () => {
     const conv = baseConversation(OpenAIModelID.GPT_4o)
-    await routeModelRequest({ conversation: conv, llmProviders: {}, stream: true } as any)
+    await routeModelRequest({
+      conversation: conv,
+      llmProviders: {},
+      stream: true,
+    } as any)
     expect(openAIAzureChat).toHaveBeenCalled()
   })
 
@@ -995,7 +1087,11 @@ describe('routeModelRequest', () => {
     const conv = baseConversation(BedrockModelID.Claude_3_5_Sonnet_Latest)
     const llmProviders: any = { Bedrock: { enabled: true, models: [] } }
 
-    await routeModelRequest({ conversation: conv, llmProviders, stream: false } as any)
+    await routeModelRequest({
+      conversation: conv,
+      llmProviders,
+      stream: false,
+    } as any)
     expect(runBedrockChat).toHaveBeenCalled()
   })
 
@@ -1003,7 +1099,11 @@ describe('routeModelRequest', () => {
     const conv = baseConversation(GeminiModelID.Gemini_2_0_Flash)
     const llmProviders: any = { Gemini: { enabled: true, models: [] } }
 
-    await routeModelRequest({ conversation: conv, llmProviders, stream: false } as any)
+    await routeModelRequest({
+      conversation: conv,
+      llmProviders,
+      stream: false,
+    } as any)
     expect(runGeminiChat).toHaveBeenCalled()
   })
 
@@ -1011,14 +1111,22 @@ describe('routeModelRequest', () => {
     const conv = baseConversation(SambaNovaModelID.Meta_Llama_3_3_70B_Instruct)
     const llmProviders: any = { SambaNova: { enabled: true, models: [] } }
 
-    await routeModelRequest({ conversation: conv, llmProviders, stream: true } as any)
+    await routeModelRequest({
+      conversation: conv,
+      llmProviders,
+      stream: true,
+    } as any)
     expect(runSambaNovaChat).toHaveBeenCalled()
   })
 
   it('throws when model is unsupported', async () => {
     const conv = baseConversation('not-a-model')
-    await expect(routeModelRequest({ conversation: conv, llmProviders: {}, stream: false } as any)).rejects.toThrow(
-      /not supported/i,
-    )
+    await expect(
+      routeModelRequest({
+        conversation: conv,
+        llmProviders: {},
+        stream: false,
+      } as any),
+    ).rejects.toThrow(/not supported/i)
   })
 })
