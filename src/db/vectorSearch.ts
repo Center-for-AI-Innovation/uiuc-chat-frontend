@@ -114,6 +114,18 @@ export async function vectorSearchWithDrizzle(
   return rows.map((row) => rowToContext(row))
 }
 
+/** JSONB overlap (row has any of these doc group names). Use @> containment since && is not supported for jsonb in PostgreSQL. */
+function docGroupsOverlapCondition(table: typeof embeddings, names: string[]) {
+  if (names.length === 0) return undefined
+  if (names.length === 1)
+    return sql`(${table.doc_groups} @> ${JSON.stringify([names[0]])}::jsonb)`
+  return or(
+    ...names.map(
+      (n) => sql`(${table.doc_groups} @> ${JSON.stringify([n])}::jsonb)`,
+    ),
+  )!
+}
+
 function buildShouldCondition(
   table: typeof embeddings,
   course_name: string,
@@ -124,7 +136,7 @@ function buildShouldCondition(
     doc_groups.length > 0 && !doc_groups.includes('All Documents')
       ? and(
           eq(table.course_name, course_name),
-          sql`${table.doc_groups} && ${JSON.stringify(doc_groups)}::jsonb`,
+          docGroupsOverlapCondition(table, doc_groups),
         )
       : eq(table.course_name, course_name)
 
@@ -133,7 +145,7 @@ function buildShouldCondition(
     .map((p) =>
       and(
         eq(table.course_name, p.course_name),
-        sql`${table.doc_groups} && ${JSON.stringify([p.name])}::jsonb`,
+        docGroupsOverlapCondition(table, [p.name]),
       ),
     )
 
@@ -146,7 +158,9 @@ function buildMustNotCondition(
   disabled_doc_groups: string[],
 ) {
   if (disabled_doc_groups.length === 0) return undefined
-  return sql`NOT (${table.doc_groups} && ${JSON.stringify(disabled_doc_groups)}::jsonb)`
+  const overlap = docGroupsOverlapCondition(table, disabled_doc_groups)
+  if (!overlap) return undefined
+  return sql`NOT (${overlap})`
 }
 
 function rowToContext(row: {
