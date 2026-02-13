@@ -3,7 +3,7 @@ import { getBackendUrl } from '~/utils/apiUtils'
 import { vectorSearchWithDrizzle } from '~/db/vectorSearch'
 
 /** Fetch embedding + disabled/public doc groups from backend, then run vector search on frontend DB (Drizzle/pgvector). */
-export async function fetchContextsViaFrontendVectorSearch(
+export async function fetchContextsViaDrizzleVectorSearch(
   course_name: string,
   search_query: string,
   doc_groups: string[] = [],

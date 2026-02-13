@@ -1,7 +1,7 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
-import { fetchContextsViaFrontendVectorSearch } from '~/pages/util/fetchContexts'
+import { fetchContextsViaDrizzleVectorSearch } from '~/pages/util/fetchContexts'
 
 export default withCourseAccessFromRequest('any')(handler)
 
@@ -28,7 +28,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       })
     }
 
-    const data = await fetchContextsViaFrontendVectorSearch(
+    const data = await fetchContextsViaDrizzleVectorSearch(
       course_name,
       search_query,
       doc_groups,
