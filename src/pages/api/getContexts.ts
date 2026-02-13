@@ -1,9 +1,7 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
-import fetchContextsFromBackend, {
-  fetchContextsViaFrontendVectorSearch,
-} from '~/pages/util/fetchContexts'
+import { fetchContextsViaFrontendVectorSearch } from '~/pages/util/fetchContexts'
 
 export default withCourseAccessFromRequest('any')(handler)
 
@@ -33,7 +31,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const data = await fetchContextsViaFrontendVectorSearch(
       course_name,
       search_query,
-      token_limit,
       doc_groups,
       conversation_id,
       top_n,
