@@ -76,13 +76,13 @@ export default function WebsiteIngestForm({
 
       let errorMessage = ''
       if (!value) {
-        errorMessage = 'Please provide an input for Max URLs'
+        errorMessage = 'Please provide an input for Max Pages'
       } else if (!/^\d+$/.test(value)) {
-        errorMessage = 'Max URLs should be a valid number'
+        errorMessage = 'Max Pages should be a valid number'
       } else {
         const numValue = parseInt(value)
         if (numValue < 1 || numValue > 500) {
-          errorMessage = 'Max URLs should be between 1 and 500'
+          errorMessage = 'Max Pages should be between 1 and 500'
         }
       }
 
@@ -124,7 +124,7 @@ export default function WebsiteIngestForm({
     setOpen(false)
 
     if (maxUrlsHasError) {
-      alert('Invalid max URLs input (1 to 500)')
+      alert('Invalid Max Pages input (1 to 500)')
       return
     }
 
@@ -501,7 +501,7 @@ export default function WebsiteIngestForm({
                           style={{ fontSize: '16px' }}
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                         >
-                          Max URLs (1 to 500)
+                          Max Pages (1 to 500)
                         </Text>
 
                         <TextInput

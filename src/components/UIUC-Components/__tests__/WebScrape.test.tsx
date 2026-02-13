@@ -78,7 +78,7 @@ describe('WebScrape', () => {
     await user.click(screen.getByRole('button', { name: /Ingest/i }))
 
     expect(
-      await screen.findByText(/Max URLs should be a valid number/i),
+      await screen.findByText(/Max Pages should be a valid number/i),
     ).toBeInTheDocument()
   })
 

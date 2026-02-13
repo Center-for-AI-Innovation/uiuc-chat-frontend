@@ -194,18 +194,18 @@ export const WebScrape = ({
     if (!maxUrls) {
       errors.maxUrls = {
         error: true,
-        message: 'Please provide an input for Max URLs',
+        message: 'Please provide an input for Max Pages',
       }
     } else if (!/^\d+$/.test(maxUrls)) {
       // Using regex to ensure the entire string is a number
       errors.maxUrls = {
         error: true,
-        message: 'Max URLs should be a valid number',
+        message: 'Max Pages should be a valid number',
       }
     } else if (parseInt(maxUrls) < 1 || parseInt(maxUrls) > 500) {
       errors.maxUrls = {
         error: true,
-        message: 'Max URLs should be between 1 and 500',
+        message: 'Max Pages should be between 1 and 500',
       }
     }
 
@@ -587,7 +587,7 @@ export const WebScrape = ({
                     style={{ color: '#C1C2C5', fontSize: '16px' }}
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
-                    Max URLs (1 to 500)
+                    Max Pages (1 to 500)
                   </Text>
                   <TextInput
                     styles={{ input: { backgroundColor: '#1A1B1E' } }}
