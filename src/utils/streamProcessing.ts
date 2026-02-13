@@ -8,7 +8,10 @@ import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
 import { runOpenAICompatibleChat } from '~/app/utils/openaiCompatible'
-import { fetchContexts, fetchMQRContexts } from '~/utils/fetchContexts'
+import {
+  fetchContexts,
+  fetchMQRContexts,
+} from '~/hooks/__internal__/fetchContextsForChat'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
   type ChatApiBody,

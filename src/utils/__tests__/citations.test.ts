@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('../apiUtils', () => ({
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
   fetchPresignedUrl: vi.fn(),
 }))
 
 import { replaceCitationLinks } from '../citations'
 import { makeContextWithMetadata, makeMessage } from '~/test-utils/mocks/chat'
-import { fetchPresignedUrl } from '../apiUtils'
+import { fetchPresignedUrl } from '@/hooks/__internal__/downloadPresignedUrl'
 
 describe('replaceCitationLinks', () => {
   it('sanitizes content when no contexts are available', async () => {

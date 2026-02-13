@@ -13,7 +13,7 @@ vi.mock('~/app/utils/vllm', () => ({ runVLLM: vi.fn() }))
 vi.mock('~/app/utils/openaiCompatible', () => ({
   runOpenAICompatibleChat: vi.fn(),
 }))
-vi.mock('~/utils/fetchContexts', () => ({
+vi.mock('~/hooks/__internal__/fetchContextsForChat', () => ({
   fetchContexts: vi.fn(),
   fetchMQRContexts: vi.fn(),
 }))
@@ -36,7 +36,7 @@ import { runBedrockChat } from '~/app/utils/bedrock'
 import { runGeminiChat } from '~/utils/modelProviders/routes/gemini'
 import { runSambaNovaChat } from '~/app/utils/sambanova'
 import posthog from 'posthog-js'
-import { fetchContexts } from '~/utils/fetchContexts'
+import { fetchContexts } from '~/hooks/__internal__/fetchContextsForChat'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import { replaceCitationLinks } from '../citations'
 import { openAIAzureChat } from '../modelProviders/OpenAIAzureChat'

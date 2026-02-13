@@ -19,6 +19,7 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import { usePostHog } from 'posthog-js/react'
 import { useAuth } from 'react-oidc-context'
 import HomeContext from '~/pages/api/home/home.context'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { UserSettings } from '../../Chat/UserSettings'
 import { ThemeToggle } from '../ThemeToggle'
 import { AuthMenu } from './AuthMenu'
@@ -182,22 +183,24 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
     return router.asPath.split('/')[1]
   }
 
+  const courseName = getCurrentCourseName()
+
+  // Use React Query hook to fetch course metadata
+  const { data: courseMetadata } = useFetchCourseMetadata({
+    courseName: courseName || '',
+    enabled: auth.isAuthenticated && Boolean(courseName),
+  })
+
+  // PostHog identification and admin/owner check
   useEffect(() => {
-    const fetchCourses = async () => {
-      if (auth.isAuthenticated) {
-        const userEmail = auth.user?.profile.email
-        const currUserEmails = userEmail ? [userEmail] : []
-        posthog?.identify(auth.user?.profile.sub, {
-          email: currUserEmails[0] || 'no_email',
-        })
+    if (auth.isAuthenticated && auth.user?.profile.email) {
+      const userEmail = auth.user.profile.email
+      const currUserEmails = [userEmail]
+      posthog?.identify(auth.user.profile.sub, {
+        email: currUserEmails[0] || 'no_email',
+      })
 
-        const response = await fetch(
-          `/api/UIUC-api/getCourseMetadata?course_name=${getCurrentCourseName()}`,
-        )
-        const courseMetadata = await response.json().then((data) => {
-          return data['course_metadata']
-        })
-
+      if (courseMetadata) {
         if (
           currUserEmails.includes(courseMetadata.course_owner) ||
           currUserEmails.some((email) =>
@@ -210,8 +213,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
         }
       }
     }
-    fetchCourses()
-  }, [auth.isAuthenticated])
+  }, [auth.isAuthenticated, auth.user?.profile.email, courseMetadata, posthog])
 
   useEffect(() => {
     const handleResize = () => {

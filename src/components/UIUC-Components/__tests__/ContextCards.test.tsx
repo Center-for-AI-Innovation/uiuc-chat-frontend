@@ -1,36 +1,35 @@
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
+import { renderWithProviders } from '~/test-utils/renderWithProviders'
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchPresignedUrl: vi.fn(
-      async (path: string) => `http://localhost/presigned/${path}`,
-    ),
-  }
-})
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(
+    async (path: string) => `http://localhost/presigned/${path}`,
+  ),
+}))
 
 import { ContextCards } from '../ContextCards'
 
 describe('ContextCards', () => {
   it('returns null when contexts is not an array', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const { container } = render(<ContextCards contexts={null as any} />)
+    const { container } = renderWithProviders(
+      <ContextCards contexts={null as any} />,
+    )
     expect(container.firstChild).toBeNull()
     expect(errorSpy).toHaveBeenCalled()
   })
 
   it('renders nothing for empty contexts array', () => {
-    const { container } = render(<ContextCards contexts={[]} />)
+    const { container } = renderWithProviders(<ContextCards contexts={[]} />)
     expect(container.textContent).toBe('')
   })
 
   it('renders cards and resolves presigned URLs (pdf thumbnail + page anchor)', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    render(
+    renderWithProviders(
       <ContextCards
         contexts={
           [

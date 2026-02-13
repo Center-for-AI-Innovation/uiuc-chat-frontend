@@ -133,13 +133,9 @@ vi.mock('@/hooks/queries/useDeleteFromDocGroup', () => ({
   }),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchPresignedUrl: vi.fn(async () => 'http://localhost/presigned'),
-  }
-})
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(async () => 'http://localhost/presigned'),
+}))
 
 vi.mock('~/pages/util/handleExport', () => ({
   default: vi.fn(async () => ({ message: 'export started' })),

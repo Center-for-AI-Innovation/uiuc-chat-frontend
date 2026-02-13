@@ -6,7 +6,7 @@ import React, {
   type KeyboardEvent,
 } from 'react'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
 import {
   Accordion,
   AccordionContent,
@@ -119,6 +119,8 @@ function EmailListAccordion({
   is_for_admins: boolean
 }) {
   const queryClient = useQueryClient()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useSetCourseMetadata(course_name)
   const emailAddresses = metadata.approved_emails_list || []
   const courseAdmins = metadata.course_admins || []
   const [value, setValue] = useState<string>('')
@@ -164,7 +166,7 @@ function EmailListAccordion({
       }
 
       // Make API call
-      await callSetCourseMetadata(course_name, updatedMetadata)
+      await setCourseMetadataAsync(updatedMetadata)
     } finally {
       setIsUpdating(false)
     }
@@ -209,7 +211,7 @@ function EmailListAccordion({
         }
 
         // Make API call
-        await callSetCourseMetadata(course_name, updatedMetadata)
+        await setCourseMetadataAsync(updatedMetadata)
         setValue('')
       }
     }
@@ -238,11 +240,8 @@ function EmailListAccordion({
           course_admins: finalAdmins,
         }
 
-        const response = await callSetCourseMetadata(
-          course_name,
-          updatedMetadata,
-        )
-        if (response && onEmailAddressesChange) {
+        await setCourseMetadataAsync(updatedMetadata)
+        if (onEmailAddressesChange) {
           onEmailAddressesChange(updatedMetadata, course_name)
         }
       } else {
@@ -253,11 +252,8 @@ function EmailListAccordion({
           approved_emails_list: updatedEmailAddresses,
         }
 
-        const response = await callSetCourseMetadata(
-          course_name,
-          updatedMetadata,
-        )
-        if (response && onEmailAddressesChange) {
+        await setCourseMetadataAsync(updatedMetadata)
+        if (onEmailAddressesChange) {
           onEmailAddressesChange(updatedMetadata, course_name)
         }
       }

@@ -15,11 +15,11 @@ vi.mock('../GlobalFooter', () => ({
   default: () => <div data-testid="footer" />,
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
+vi.mock('~/hooks/__internal__/createProject', async (importOriginal) => {
   const actual: any = await importOriginal()
   return {
     ...actual,
-    createProject: vi.fn(async () => ({ ok: true })),
+    createProject: vi.fn(async () => true),
   }
 })
 
@@ -49,8 +49,10 @@ describe('MakeNewCoursePage', () => {
     const prev = process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG
     process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG = 'True'
 
-    const apiUtils = await import('~/utils/apiUtils')
-    ;(apiUtils as any).createProject.mockResolvedValueOnce({ ok: true })
+    const createProjectModule = await import(
+      '~/hooks/__internal__/createProject'
+    )
+    ;(createProjectModule as any).createProject.mockResolvedValueOnce(true)
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
       const url = String(input?.url ?? input)
@@ -86,7 +88,7 @@ describe('MakeNewCoursePage', () => {
 
       await user.click(continueBtn)
       await waitFor(() =>
-        expect((apiUtils as any).createProject).toHaveBeenCalledWith(
+        expect((createProjectModule as any).createProject).toHaveBeenCalledWith(
           'CS101',
           '',
           'owner@example.com',

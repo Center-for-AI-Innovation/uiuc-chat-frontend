@@ -20,12 +20,18 @@ import {
   IconCopy,
   IconExternalLink,
 } from '@tabler/icons-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useEffect, useState } from 'react'
 import { type AuthContextProps } from 'react-oidc-context'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useDeleteChatApiKey } from '~/hooks/queries/useDeleteChatApiKey'
+import { useFetchChatApiKey } from '~/hooks/queries/useFetchChatApiKey'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useGenerateApiKey } from '~/hooks/queries/useGenerateApiKey'
+import { useRotateApiKey } from '~/hooks/queries/useRotateApiKey'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import APIRequestBuilder from './APIRequestBuilder'
+import { type CourseMetadata } from '~/types/courseMetadata'
 
 const ApiKeyManagement = ({
   course_name,
@@ -42,24 +48,32 @@ const ApiKeyManagement = ({
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed || false)
-  const [apiKey, setApiKey] = useState<string | null>(null)
-  const baseUrl = process.env.VERCEL_URL || window.location.origin
-  const [loading, setLoading] = useState(true)
-  const [metadata, setMetadata] = useState<{ system_prompt?: string }>()
-  const [insightsOpen, setInsightsOpen] = useState(false)
+  const queryClient = useQueryClient()
+  const {
+    data: apiKey = null,
+    isLoading: loading,
+    isError,
+  } = useFetchChatApiKey(course_name, auth.isAuthenticated)
+  const deleteChatApiKey = useDeleteChatApiKey(course_name)
 
   useEffect(() => {
-    const getMetadata = async () => {
-      try {
-        const courseMetadata = await fetchCourseMetadata(course_name)
-        setMetadata(courseMetadata)
-      } catch (error) {
-        console.error('Error fetching course metadata:', error)
-      }
+    if (isError) {
+      showNotification({
+        title: 'Error',
+        message: 'Failed to fetch API key.',
+        color: 'red',
+      })
     }
+  }, [isError])
+  const baseUrl = process.env.VERCEL_URL || window.location.origin
+  const [insightsOpen, setInsightsOpen] = useState(false)
 
-    getMetadata()
-  }, [course_name])
+  const { data: metadata } = useFetchCourseMetadata({
+    courseName: course_name,
+    enabled: Boolean(course_name),
+  })
+  const generateApiKey = useGenerateApiKey()
+  const rotateApiKey = useRotateApiKey()
   type Language = 'curl' | 'python' | 'node'
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language>('curl')
@@ -183,51 +197,19 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 });`,
   }
 
-  useEffect(() => {
-    const fetchApiKey = async () => {
-      if (!auth.isAuthenticated) {
-        setLoading(false)
-        return
-      }
-      const response = await fetch(
-        `/api/chat-api/keys/fetch?course_name=${course_name}`,
-      )
-
-      if (response.ok) {
-        const data = await response.json()
-        setApiKey(data.apiKey)
-      } else {
-        showNotification({
-          title: 'Error',
-          message: 'Failed to fetch API key.',
-          color: 'red',
-        })
-      }
-      setLoading(false)
-    }
-
-    fetchApiKey()
-  }, [auth.isAuthenticated])
-
   const handleGenerate = async () => {
-    const response = await fetch(
-      `/api/chat-api/keys/generate?course_name=${course_name}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    )
-
-    if (response.ok) {
-      const data = await response.json()
-      setApiKey(data.apiKey)
+    try {
+      await generateApiKey.mutateAsync({
+        courseName: course_name,
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['chatApiKey', course_name],
+      })
       showNotification({
         title: 'Success',
         message: 'API key generated successfully.',
       })
-    } else {
+    } catch {
       showNotification({
         title: 'Error',
         message: 'Failed to generate API key.',
@@ -237,21 +219,18 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
   }
 
   const handleRotate = async () => {
-    const response = await fetch(
-      `/api/chat-api/keys/rotate?course_name=${course_name}`,
-      {
-        method: 'PUT',
-      },
-    )
-
-    if (response.ok) {
-      const data = await response.json()
-      setApiKey(data.newApiKey)
+    try {
+      await rotateApiKey.mutateAsync({
+        courseName: course_name,
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['chatApiKey', course_name],
+      })
       showNotification({
         title: 'Success',
         message: 'API key rotated successfully.',
       })
-    } else {
+    } catch {
       showNotification({
         title: 'Error',
         message: 'Failed to rotate API key.',
@@ -260,27 +239,25 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
     }
   }
 
-  const handleDelete = async () => {
-    const response = await fetch(
-      `/api/chat-api/keys/delete?course_name=${course_name}`,
-      {
-        method: 'DELETE',
+  const handleDelete = () => {
+    deleteChatApiKey.mutate(undefined, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['chatApiKey', course_name],
+        })
+        showNotification({
+          title: 'Success',
+          message: 'API key deleted successfully.',
+        })
       },
-    )
-
-    if (response.ok) {
-      setApiKey(null)
-      showNotification({
-        title: 'Success',
-        message: 'API key deleted successfully.',
-      })
-    } else {
-      showNotification({
-        title: 'Error',
-        message: 'Failed to delete API key.',
-        color: 'red',
-      })
-    }
+      onError: () => {
+        showNotification({
+          title: 'Error',
+          message: 'Failed to delete API key.',
+          color: 'red',
+        })
+      },
+    })
   }
 
   const styles = {

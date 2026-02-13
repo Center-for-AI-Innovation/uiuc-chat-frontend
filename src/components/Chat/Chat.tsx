@@ -29,7 +29,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import HomeContext from '~/pages/api/home/home.context'
 
-import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { useDownloadPresignedUrlQuery } from '~/hooks/queries/useDownloadPresignedUrl'
 import { ChatInput } from './ChatInput'
 import { ChatLoader } from './ChatLoader'
 import { ErrorMessageDiv } from './ErrorMessageDiv'
@@ -116,7 +116,11 @@ export const Chat = memo(
     const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
     const { mutateAsync: routeChatAsync } = useRouteChat()
     // const
-    const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+    const bannerS3Path = courseMetadata?.banner_image_s3 || undefined
+    const { data: bannerUrl } = useDownloadPresignedUrlQuery(
+      bannerS3Path,
+      courseName,
+    )
     const getCurrentPageName = () => {
       // /CS-125/dashboard --> CS-125
       return router.asPath.slice(1).split('/')[0] as string
@@ -147,19 +151,6 @@ export const Chat = memo(
     } = useFetchAllWorkflows(getCurrentPageName())
 
     const permission = get_user_permission(courseMetadata, auth)
-
-    useEffect(() => {
-      if (
-        courseMetadata?.banner_image_s3 &&
-        courseMetadata.banner_image_s3 !== ''
-      ) {
-        fetchPresignedUrl(courseMetadata.banner_image_s3, courseName).then(
-          (url) => {
-            setBannerUrl(url)
-          },
-        )
-      }
-    }, [courseMetadata])
 
     const {
       state: {
@@ -281,22 +272,14 @@ export const Chat = memo(
     ) => {
       // Log conversation to database
       try {
-        const response = await fetch(`/api/UIUC-api/logConversation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(
-            createLogConversationPayload(
-              getCurrentPageName(),
-              conversation,
-              message,
-              earliestEditedMessageId,
-            ),
+        await logConversationMutation.mutateAsync(
+          createLogConversationPayload(
+            getCurrentPageName(),
+            conversation,
+            message,
+            earliestEditedMessageId,
           ),
-        })
-        // const data = await response.json()
-        // return data.success
+        )
       } catch (error) {
         console.error('Error setting course data:', error)
       }
@@ -1937,19 +1920,13 @@ export const Chat = memo(
               updatedConversation.messages.length - 1
             ] ?? null
           if (latestAssistantMessage) {
-            await fetch('/api/UIUC-api/logConversation', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(
-                createLogConversationPayload(
-                  getCurrentPageName(),
-                  updatedConversation,
-                  latestAssistantMessage,
-                ),
+            await logConversationMutation.mutateAsync(
+              createLogConversationPayload(
+                getCurrentPageName(),
+                updatedConversation,
+                latestAssistantMessage,
               ),
-            })
+            )
           }
         } catch (error) {
           homeDispatch({

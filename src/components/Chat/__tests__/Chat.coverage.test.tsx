@@ -69,13 +69,9 @@ vi.mock('~/utils/functionCalling/handleFunctionCalling', () => ({
   handleToolCall: vi.fn(async () => undefined),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchPresignedUrl: vi.fn(async () => 'http://localhost/api/file'),
-  }
-})
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(async () => 'http://localhost/api/file'),
+}))
 
 vi.mock('~/utils/streamProcessing', async (importOriginal) => {
   const actual: any = await importOriginal()
@@ -263,7 +259,9 @@ describe('Chat (coverage)', () => {
 
     const { Chat } = await import('../Chat')
     const webllm = await import('~/utils/modelProviders/WebLLM')
-    const { fetchPresignedUrl } = await import('~/utils/apiUtils')
+    const { fetchPresignedUrl } = await import(
+      '@/hooks/__internal__/downloadPresignedUrl'
+    )
 
     renderWithProviders(
       <Chat

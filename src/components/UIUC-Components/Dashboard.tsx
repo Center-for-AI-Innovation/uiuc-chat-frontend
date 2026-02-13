@@ -5,11 +5,12 @@ import { Card, Title } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import router from 'next/router'
-import { createProject } from '~/utils/apiUtils'
+import { useCreateProjectMutation } from '~/hooks/queries/useCreateProject'
 import Navbar from './navbars/Navbar'
 
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import ProjectTable from '~/components/UIUC-Components/ProjectTable'
+import { useFetchAllCourseNames } from '~/hooks/queries/useFetchAllCourseNames'
 
 const Dashboard = ({
   project_name,
@@ -30,10 +31,19 @@ const Dashboard = ({
   const [isCourseAvailable, setIsCourseAvailable] = useState<
     boolean | undefined
   >(undefined)
+  const createProjectMutation = useCreateProjectMutation()
   const [isLoading, setIsLoading] = useState(false)
-  const [allExistingCourseNames, setAllExistingCourseNames] = useState<
-    string[]
-  >([])
+
+  const checkIfNewCoursePage = () => {
+    // `/new` --> `new`
+    // `/new?course_name=mycourse` --> `new`
+    return router.asPath.split('/')[1]?.split('?')[0] as string
+  }
+
+  const { data: allExistingCourseNames = [] } = useFetchAllCourseNames({
+    enabled: checkIfNewCoursePage() === 'new',
+  })
+
   const checkCourseAvailability = () => {
     const courseExists =
       projectName != '' &&
@@ -41,31 +51,6 @@ const Dashboard = ({
       allExistingCourseNames.includes(projectName)
     setIsCourseAvailable(!courseExists)
   }
-  const checkIfNewCoursePage = () => {
-    // `/new` --> `new`
-    // `/new?course_name=mycourse` --> `new`
-    return router.asPath.split('/')[1]?.split('?')[0] as string
-  }
-
-  useEffect(() => {
-    // only run when creating new courses.. otherwise VERY wasteful on DB.
-    if (checkIfNewCoursePage() == 'new') {
-      async function fetchGetAllCourseNames() {
-        const response = await fetch(`/api/UIUC-api/getAllCourseNames`)
-
-        if (response.ok) {
-          const data = await response.json()
-          setAllExistingCourseNames(data.all_course_names)
-        } else {
-          console.error(`Error fetching course metadata: ${response.status}`)
-        }
-      }
-
-      fetchGetAllCourseNames().catch((error) => {
-        console.error(error)
-      })
-    }
-  }, [])
 
   useEffect(() => {
     checkCourseAvailability()
@@ -78,11 +63,11 @@ const Dashboard = ({
   ) => {
     setIsLoading(true)
     try {
-      const result = await createProject(
+      const result = await createProjectMutation.mutateAsync({
         project_name,
         project_description,
-        current_user_email,
-      )
+        project_owner_email: current_user_email,
+      })
       console.log('Project created successfully:', result)
       if (is_new_course) {
         await router.push(`/${projectName}/dashboard`)

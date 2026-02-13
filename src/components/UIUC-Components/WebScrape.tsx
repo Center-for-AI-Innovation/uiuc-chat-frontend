@@ -25,10 +25,11 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useRouter } from 'next/router'
 import { useMediaQuery } from '@mantine/hooks'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { useSetCourseMetadata } from '@/hooks/queries/useSetCourseMetadata'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Montserrat } from 'next/font/google'
+import { useIngestCanvas } from '~/hooks/queries/useIngestCanvas'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -82,6 +83,9 @@ export const WebScrape = ({
     'assignments',
     'discussions',
   ])
+  const ingestCanvasMutation = useIngestCanvas(courseName)
+  const { mutateAsync: setCourseMetadataAsync } =
+    useSetCourseMetadata(courseName)
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -99,7 +103,7 @@ export const WebScrape = ({
 
       if (is_new_course) {
         // set course exists in new metadata endpoint
-        const response = await callSetCourseMetadata(courseName, {
+        await setCourseMetadataAsync({
           course_owner: current_user_email,
           // Don't set properties we don't know about. We'll just upsert and use the defaults.
           course_admins: [],
@@ -119,9 +123,6 @@ export const WebScrape = ({
           allow_logged_in_users: undefined,
           is_frozen: undefined,
         })
-        if (!response) {
-          throw new Error('Error while setting course metadata')
-        }
       }
 
       let data = null
@@ -136,24 +137,11 @@ export const WebScrape = ({
 
         showToast()
       } else if (url.includes('canvas.illinois.edu/courses/')) {
-        const response = await fetch('/api/UIUC-api/ingestCanvas', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            courseName: courseName,
-            canvas_url: url,
-            selectedCanvasOptions: selectedCanvasOptions,
-          }),
+        await ingestCanvasMutation.mutateAsync({
+          courseName: courseName,
+          canvas_url: url,
+          selectedCanvasOptions: selectedCanvasOptions,
         })
-        const data = await response.json()
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        if (data && data.error) {
-          throw new Error(data.error)
-        }
         await new Promise((resolve) => setTimeout(resolve, 8000)) // wait a moment before redirecting
         console.log('Canvas content ingestion was successful!')
       } else {

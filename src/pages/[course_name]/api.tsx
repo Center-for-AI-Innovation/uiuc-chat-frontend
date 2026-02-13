@@ -11,18 +11,13 @@ import ApiKeyManagement from '~/components/UIUC-Components/ApiKeyManagament'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 import { LoadingPlaceholderForAdminPages } from '~/components/UIUC-Components/MainPageBackground'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { initiateSignIn } from '~/utils/authHelpers'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 const ApiPage: NextPage = () => {
   const router = useRouter()
   const auth = useAuth()
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
-  const [isLoading, setIsLoading] = useState(true)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
@@ -38,33 +33,40 @@ const ApiPage: NextPage = () => {
   }
   const courseName = getCurrentPageName() as string
 
+  // Use React Query hook to fetch course metadata
+  const {
+    data: courseMetadata,
+    isLoading,
+    error: courseMetadataError,
+  } = useFetchCourseMetadata({
+    courseName: courseName || '',
+    enabled: router.isReady && !auth.isLoading && Boolean(courseName),
+  })
+
+  // Handle course metadata error states
   useEffect(() => {
-    if (!router.isReady || auth.isLoading) return
-
-    const fetchCourseData = async () => {
-      setIsLoading(true)
-      try {
-        // Check exists
-        const metadata: CourseMetadata = await fetchCourseMetadata(courseName)
-        if (metadata === null) {
-          setErrorType(404)
-          return
-        }
-        setCourseMetadata(metadata)
-      } catch (error) {
-        console.error(error)
-
-        const errorWithStatus = error as Error & { status?: number }
-        const status = errorWithStatus.status
-        if (status === 401 || status === 403 || status === 404) {
-          setErrorType(status as 401 | 403 | 404)
-        }
-      } finally {
-        setIsLoading(false)
+    if (courseMetadataError) {
+      console.error(courseMetadataError)
+      const errorWithStatus = courseMetadataError as Error & { status?: number }
+      const status = errorWithStatus.status
+      if (status === 401 || status === 403 || status === 404) {
+        setErrorType(status as 401 | 403 | 404)
       }
+    } else if (
+      !isLoading &&
+      !courseMetadata &&
+      router.isReady &&
+      !auth.isLoading
+    ) {
+      setErrorType(404)
     }
-    fetchCourseData()
-  }, [router.isReady, auth.isLoading, courseName])
+  }, [
+    courseMetadataError,
+    isLoading,
+    courseMetadata,
+    router.isReady,
+    auth.isLoading,
+  ])
 
   // Second useEffect to handle permissions and other dependent data
   useEffect(() => {

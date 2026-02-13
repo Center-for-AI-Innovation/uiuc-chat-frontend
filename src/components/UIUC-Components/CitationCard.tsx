@@ -14,7 +14,7 @@ import {
   IconMarkdown,
   IconFileDescription,
 } from '@tabler/icons-react'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
 import { useState, useEffect } from 'react'
 
 interface CitationCardProps {
@@ -52,6 +52,7 @@ export const CitationCard = ({
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
   const [faviconError, setFaviconError] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
+  const { mutateAsync: getPresignedUrl } = useDownloadPresignedUrl()
 
   // Add helper function to determine file type
   const getFileType = () => {
@@ -77,10 +78,10 @@ export const CitationCard = ({
         if (fileType === 'pdf' && course_name) {
           const thumbnailPath = s3_path!.replace('.pdf', '-pg1-thumb.png')
           try {
-            const presignedUrl = await fetchPresignedUrl(
-              thumbnailPath,
-              course_name,
-            )
+            const presignedUrl = await getPresignedUrl({
+              filePath: thumbnailPath,
+              courseName: course_name,
+            })
             if (isMounted) {
               setThumbnailUrl(presignedUrl as string)
               setRetryCount(0)
@@ -182,12 +183,11 @@ export const CitationCard = ({
         }
       }
 
-      const presignedUrl = await fetchPresignedUrl(
-        s3_path,
-        course_name,
-        undefined,
-        downloadFilename,
-      )
+      const presignedUrl = await getPresignedUrl({
+        filePath: s3_path,
+        courseName: course_name,
+        fileName: downloadFilename,
+      })
 
       // For PDFs, open in new tab for inline viewing with page number if available
       if (s3_path.toLowerCase().endsWith('.pdf')) {

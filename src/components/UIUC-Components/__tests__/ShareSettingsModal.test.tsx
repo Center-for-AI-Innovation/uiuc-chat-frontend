@@ -25,13 +25,9 @@ vi.mock('../EmailListAccordion', () => ({
     ),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    callSetCourseMetadata: vi.fn(async () => true),
-  }
-})
+vi.mock('@/hooks/__internal__/setCourseMetadata', () => ({
+  callSetCourseMetadata: vi.fn(async () => true),
+}))
 
 describe('ShareSettingsModal', () => {
   it('does not render when closed', async () => {
@@ -50,7 +46,9 @@ describe('ShareSettingsModal', () => {
 
   it('copies share link and changes access level', async () => {
     const user = userEvent.setup()
-    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+    const { callSetCourseMetadata } = await import(
+      '@/hooks/__internal__/setCourseMetadata'
+    )
     const writeSpy = vi
       .spyOn((navigator as any).clipboard, 'writeText')
       .mockResolvedValue(undefined)

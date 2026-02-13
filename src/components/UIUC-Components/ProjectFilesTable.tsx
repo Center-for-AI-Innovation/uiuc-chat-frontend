@@ -34,7 +34,7 @@ import { createRef, useEffect, useRef, useState } from 'react'
 import { createGlobalStyle } from 'styled-components'
 
 import { useMediaQuery } from '@mantine/hooks'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useRouter } from 'next/router'
 import {
@@ -42,11 +42,13 @@ import {
   type DocumentGroup,
 } from 'src/types/courseMaterials'
 import { useAppendToDocGroup } from '@/hooks/queries/useAppendToDocGroup'
+import { useFetchFailedDocuments } from '~/hooks/queries/useFetchFailedDocuments'
+import { useFetchProjectMaterials } from '@/hooks/queries/useFetchProjectMaterials'
 import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
 import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
 
 import handleExport from '~/pages/util/handleExport'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
+import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
 import { LoadingSpinner } from './LoadingSpinner'
 import { showToastOnUpdate } from './MakeQueryAnalysisPage'
 
@@ -113,6 +115,7 @@ export function ProjectFilesTable({
     setCurrentError(error)
   }
 
+  const { mutateAsync: getPresignedUrl } = useDownloadPresignedUrl()
   const appendToDocGroup = useAppendToDocGroup(course_name, queryClient, page)
   const removeFromDocGroup = useDeleteFromDocGroup(
     course_name,
@@ -148,32 +151,15 @@ export function ProjectFilesTable({
     isError: isErrorDocuments,
     error: documentsError,
     refetch: refetchDocuments,
-  } = useQuery({
+  } = useFetchProjectMaterials({
+    courseName: course_name,
+    from: (page - 1) * PAGE_SIZE,
+    to: (page - 1) * PAGE_SIZE + PAGE_SIZE - 1,
+    filterKey,
+    filterValue,
+    sortColumn: sortStatus.columnAccessor,
+    sortDirection: sortStatus.direction,
     refetchInterval: 12_000,
-    queryKey: [
-      'documents',
-      course_name,
-      page,
-      filterKey,
-      filterValue,
-      sortStatus.columnAccessor,
-      sortStatus.direction,
-    ],
-    // keepPreviousData: true,
-    queryFn: async () => {
-      const from = (page - 1) * PAGE_SIZE
-      const to = from + PAGE_SIZE - 1
-
-      const response = await fetch(
-        `/api/materialsTable/fetchProjectMaterials?from=${from}&to=${to}&course_name=${course_name}&filter_key=${filterKey}&filter_value=${filterValue}&sort_column=${sortStatus.columnAccessor}&sort_direction=${sortStatus.direction}`,
-      )
-      if (!response.ok) {
-        throw new Error('Failed to fetch document groups')
-      }
-
-      const data = await response.json()
-      return data
-    },
   })
 
   const {
@@ -181,31 +167,22 @@ export function ProjectFilesTable({
     isLoading: isLoadingFailedDocuments,
     isError: isErrorFailedDocuments,
     error: failedDocumentsError,
-  } = useQuery({
+  } = useFetchFailedDocuments({
+    courseName: course_name,
+    from: (page - 1) * PAGE_SIZE,
+    to: (page - 1) * PAGE_SIZE + PAGE_SIZE - 1,
+    filterKey,
+    filterValue,
+    sortColumn: sortStatus.columnAccessor,
+    sortDirection: sortStatus.direction,
     refetchInterval: 20_000,
-    queryKey: [
-      'failedDocuments',
-      course_name,
-      page,
-      filterKey,
-      filterValue,
-      sortStatus.columnAccessor,
-      sortStatus.direction,
-    ],
-    queryFn: async () => {
-      const from = (page - 1) * PAGE_SIZE
-      const to = from + PAGE_SIZE - 1
-      const response = await fetch(
-        `/api/materialsTable/fetchFailedDocuments?from=${from}&to=${to}&course_name=${course_name}&filter_key=${filterKey}&filter_value=${filterValue}&sort_column=${sortStatus.columnAccessor}&sort_direction=${sortStatus.direction}`,
-      )
-      if (!response.ok) {
-        throw new Error('Failed to fetch failed documents')
-      }
-      const failedDocumentsResponse = await response.json()
-      setFailedCount(failedDocumentsResponse.recent_fail_count)
-      return failedDocumentsResponse
-    },
   })
+
+  useEffect(() => {
+    if (failedDocuments?.recent_fail_count !== undefined) {
+      setFailedCount(failedDocuments.recent_fail_count)
+    }
+  }, [failedDocuments?.recent_fail_count])
 
   const {
     data: documentGroups,
@@ -1208,9 +1185,9 @@ export function ProjectFilesTable({
                       const openModal = async (action: string) => {
                         let urlToOpen = materials.url
                         if (!materials.url && materials.s3_path) {
-                          const presignedUrl = await fetchPresignedUrl(
-                            materials.s3_path,
-                          )
+                          const presignedUrl = await getPresignedUrl({
+                            filePath: materials.s3_path,
+                          })
                           urlToOpen = presignedUrl
                         }
                         if (action === 'view' && urlToOpen) {

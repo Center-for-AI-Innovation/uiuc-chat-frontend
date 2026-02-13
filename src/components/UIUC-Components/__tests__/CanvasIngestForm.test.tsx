@@ -171,6 +171,8 @@ describe('CanvasIngestForm', () => {
       const filesJson = screen.getByTestId('files').textContent ?? ''
       expect(filesJson).toContain('"status":"error"')
     })
-    expect(alertSpy).toHaveBeenCalled()
+    // The component no longer calls alert on ingest failure;
+    // it sets the upload status to "error" instead.
+    expect(alertSpy).not.toHaveBeenCalled()
   }, 20_000)
 })

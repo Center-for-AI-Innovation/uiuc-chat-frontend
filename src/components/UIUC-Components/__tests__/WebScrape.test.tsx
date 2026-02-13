@@ -21,13 +21,9 @@ vi.mock('axios', () => ({
   },
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    callSetCourseMetadata: vi.fn(async () => true),
-  }
-})
+vi.mock('@/hooks/__internal__/setCourseMetadata', () => ({
+  callSetCourseMetadata: vi.fn(async () => true),
+}))
 
 describe('WebScrape', () => {
   it('alerts on invalid URL when pressing Enter', async () => {
@@ -209,7 +205,7 @@ describe('WebScrape', () => {
       push: vi.fn(async () => true),
     }
 
-    const apiUtils = await import('~/utils/apiUtils')
+    const apiUtils = await import('@/hooks/__internal__/setCourseMetadata')
 
     const { WebScrape } = await import('../WebScrape')
     renderWithProviders(

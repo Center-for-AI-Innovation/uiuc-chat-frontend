@@ -4,9 +4,9 @@ import React, { useMemo, useState } from 'react'
 import { Button, Card, Flex, Title } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createProject } from '~/utils/apiUtils'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useQueryClient } from '@tanstack/react-query'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { useCreateProjectMutation } from '~/hooks/queries/useCreateProject'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
 import UploadNotification, { type FileUpload } from './UploadNotification'
@@ -18,7 +18,8 @@ import StepPrompt from './MakeNewCoursePageSteps/StepPrompt'
 import StepBranding from './MakeNewCoursePageSteps/StepBranding'
 import StepSuccess from './MakeNewCoursePageSteps/StepSuccess'
 import { useAuth } from 'react-oidc-context'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
 import GlobalFooter from './GlobalFooter'
 
 const MakeNewCoursePage = ({
@@ -40,10 +41,16 @@ const MakeNewCoursePage = ({
   const [projectDescription, setProjectDescription] = useState(
     project_description || '',
   )
+  const createProjectMutation = useCreateProjectMutation()
   const [isLoading, setIsLoading] = useState(false)
   const [hasCreatedProject, setHasCreatedProject] = useState(false)
   const [uploadFiles, setUploadFiles] = useState<FileUpload[]>([])
   const [currentStep, setStep] = useState(0)
+
+  const { refetch: refetchCourseMetadata } = useFetchCourseMetadata({
+    courseName: projectName,
+    enabled: false,
+  })
 
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
@@ -54,22 +61,9 @@ const MakeNewCoursePage = ({
 
   // Check project name availability using React Query
   const { data: courseExists, isFetching: isCheckingAvailability } =
-    useQuery<boolean>({
-      queryKey: ['projectNameAvailability', debouncedProjectName],
-      queryFn: async () => {
-        if (!debouncedProjectName || debouncedProjectName.length === 0) {
-          return false
-        }
-        const response = await fetch(
-          `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(debouncedProjectName)}`,
-        )
-        if (!response.ok) {
-          throw new Error('Failed to check project name availability')
-        }
-        return response.json() as Promise<boolean>
-      },
+    useFetchCourseExists({
+      courseName: debouncedProjectName,
       enabled: debouncedProjectName.length > 0 && is_new_course,
-      retry: 1,
     })
 
   // Calculate availability: course exists = not available
@@ -157,22 +151,19 @@ const MakeNewCoursePage = ({
   ): Promise<boolean> => {
     setIsLoading(true)
     try {
-      const result = await createProject(
+      const result = await createProjectMutation.mutateAsync({
         project_name,
         project_description,
-        current_user_email,
+        project_owner_email: current_user_email,
         is_private,
-      )
+      })
       if (!result) {
         return false
       }
 
       if (is_new_course) {
         try {
-          const metadata = (await fetchCourseMetadata(
-            project_name,
-          )) as CourseMetadata
-          queryClient.setQueryData(['courseMetadata', project_name], metadata)
+          await refetchCourseMetadata({ throwOnError: true })
         } catch (metadataError) {
           console.error(
             'Error fetching course metadata after creation:',
@@ -221,7 +212,7 @@ const MakeNewCoursePage = ({
         // Invalidate the query to refresh availability check
         // This will trigger a re-check of the project name
         queryClient.invalidateQueries({
-          queryKey: ['projectNameAvailability', project_name],
+          queryKey: ['courseExists', project_name],
         })
       } else {
         // Other errors

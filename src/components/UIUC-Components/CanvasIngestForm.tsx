@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Text, Card, Button, Input, Checkbox, Alert } from '@mantine/core'
 import { IconArrowRight, IconAlertTriangle } from '@tabler/icons-react'
 import { motion } from 'framer-motion'
@@ -15,6 +15,7 @@ import { useRouter } from 'next/router'
 import { type FileUpload } from './UploadNotification'
 import { type QueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
+import { useIngestCanvas } from '~/hooks/queries/useIngestCanvas'
 
 export default function CanvasIngestForm({
   project_name,
@@ -52,6 +53,7 @@ export default function CanvasIngestForm({
     return router.query.course_name as string
   }
   const courseName = getCurrentPageName() as string
+  const ingestCanvasMutation = useIngestCanvas(project_name)
 
   useEffect(() => {
     if (url && url.length > 0 && validateUrl(url)) {
@@ -83,48 +85,32 @@ export default function CanvasIngestForm({
         ),
       )
 
-      try {
-        const response = await fetch('/api/UIUC-api/ingestCanvas', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+      ingestCanvasMutation.mutate(
+        {
+          courseName: courseName,
+          canvas_url: url,
+          selectedCanvasOptions: selectedOptions,
+        },
+        {
+          onSuccess: async () => {
+            setUploadFiles((prevFiles) =>
+              prevFiles.map((file) =>
+                file.name === url ? { ...file, status: 'complete' } : file,
+              ),
+            )
+            await new Promise((resolve) => setTimeout(resolve, 8000)) // wait a moment before redirecting
+            console.log('Canvas content ingestion was successful!')
+            console.log('Ingesting:', url, 'with options:', selectedOptions)
           },
-          body: JSON.stringify({
-            courseName: courseName,
-            canvas_url: url,
-            selectedCanvasOptions: selectedOptions,
-          }),
-        })
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        if (data && data.error) {
-          throw new Error(data.error)
-        }
-
-        setUploadFiles((prevFiles) =>
-          prevFiles.map((file) =>
-            file.name === url ? { ...file, status: 'complete' } : file,
-          ),
-        )
-        queryClient.invalidateQueries({
-          queryKey: ['documents', project_name],
-        })
-
-        await new Promise((resolve) => setTimeout(resolve, 8000)) // wait a moment before redirecting
-        console.log('Canvas content ingestion was successful!')
-        console.log('Ingesting:', url, 'with options:', selectedOptions)
-      } catch (error) {
-        setUploadFiles((prevFiles) =>
-          prevFiles.map((file) =>
-            file.name === url ? { ...file, status: 'error' } : file,
-          ),
-        )
-        console.error('Error ingesting Canvas content:', error)
-        alert('Error ingesting Canvas content. Please try again.')
-      }
+          onError: () => {
+            setUploadFiles((prevFiles) =>
+              prevFiles.map((file) =>
+                file.name === url ? { ...file, status: 'error' } : file,
+              ),
+            )
+          },
+        },
+      )
     } else {
       alert('Invalid URL (please include https://)')
     }

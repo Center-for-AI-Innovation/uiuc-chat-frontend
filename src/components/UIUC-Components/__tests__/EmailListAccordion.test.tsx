@@ -5,15 +5,11 @@ import userEvent from '@testing-library/user-event'
 
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const original = await importOriginal<any>()
-  return {
-    ...original,
-    callSetCourseMetadata: vi.fn(async () => true),
-  }
-})
+vi.mock('@/hooks/__internal__/setCourseMetadata', () => ({
+  callSetCourseMetadata: vi.fn(async () => true),
+}))
 
-import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { callSetCourseMetadata } from '@/hooks/__internal__/setCourseMetadata'
 import EmailListAccordion from '../EmailListAccordion'
 
 describe('EmailListAccordion', () => {

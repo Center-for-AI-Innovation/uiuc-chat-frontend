@@ -51,17 +51,13 @@ vi.mock('~/utils/functionCalling/handleFunctionCalling', () => ({
     },
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchCourseMetadata: vi.fn(async () => ({
-      course_owner: 'owner@example.com',
-      course_admins: [],
-      is_private: false,
-    })),
-  }
-})
+vi.mock('@/hooks/__internal__/fetchCourseMetadata', () => ({
+  fetchCourseMetadata: vi.fn(async () => ({
+    course_owner: 'owner@example.com',
+    course_admins: [],
+    is_private: false,
+  })),
+}))
 
 describe('N8NPage', () => {
   it('renders and saves an API key', async () => {

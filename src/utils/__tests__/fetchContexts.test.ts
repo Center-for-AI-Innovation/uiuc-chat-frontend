@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fetchContexts, fetchMQRContexts } from '../fetchContexts'
+import {
+  fetchContexts,
+  fetchMQRContexts,
+} from '~/hooks/__internal__/fetchContextsForChat'
 
 describe('fetchContexts (browser/jsdom)', () => {
   it('uses /api/getContexts on the client and returns data when ok', async () => {
