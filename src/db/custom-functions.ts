@@ -1,11 +1,19 @@
-// This script will populate the db with custom functions in 0001_custom_functions.sql
+// Populate the db: pgvector/embeddings (init-vector.sql) and custom functions (0001_custom_functions.sql).
+// Run after db:push. Requires psql and POSTGRES_* env.
 import { spawn } from 'child_process'
+import path from 'path'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
-async function runPsqlFile() {
-  return new Promise<void>((resolve, reject) => {
+// Paths relative to project root (where npm run db:populate is run)
+const sqlFiles = [
+  path.join(process.cwd(), 'src/db/init-vector.sql'), // pgvector extension + embeddings table
+  path.join(process.cwd(), 'src/db/migrations/0001_custom_functions.sql'),
+]
+
+async function runPsqlFile(filePath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
     const psql = spawn(
       'psql',
       [
@@ -18,7 +26,7 @@ async function runPsqlFile() {
         '-p',
         process.env.POSTGRES_PORT as string,
         '-f',
-        './src/db/migrations/0001_custom_functions.sql',
+        filePath,
       ],
       {
         env: {
@@ -32,11 +40,18 @@ async function runPsqlFile() {
     psql.stderr.on('data', (data) => console.error(data.toString()))
     psql.on('close', (code) => {
       if (code === 0) resolve()
-      else reject(new Error(`psql exited with code ${code}`))
+      else reject(new Error(`psql -f ${filePath} exited with code ${code}`))
     })
   })
 }
 
-runPsqlFile()
-  .then(() => console.log('Done'))
-  .catch((err) => console.error(err))
+;(async () => {
+  for (const file of sqlFiles) {
+    console.log(`Running ${file}...`)
+    await runPsqlFile(file)
+  }
+  console.log('Done')
+})().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})
