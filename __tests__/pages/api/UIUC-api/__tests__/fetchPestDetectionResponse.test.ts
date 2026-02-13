@@ -21,4 +21,3 @@ describe('fetchPestDetectionResponse', () => {
     fetchSpy.mockRestore()
   })
 })
-

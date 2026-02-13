@@ -21,7 +21,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     messageIds: string[]
     course_name: string
   }
-  const user_identifier = getUserIdentifier(req)
+  const userIdentifier = getUserIdentifier(req)
   console.log('Deleting messages: ', messageIds)
 
   if (!messageIds || !Array.isArray(messageIds) || !messageIds.length) {
@@ -33,9 +33,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     return
   }
 
-  // user_identifier already resolved
+  // userIdentifier already resolved
 
-  if (!user_identifier) {
+  if (!userIdentifier) {
     res.status(400).json({ error: 'No valid user identifier provided' })
     return
   }
@@ -51,7 +51,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             select 1
             from ${conversationsTable} c
             where c.id = ${messages.conversation_id}
-              and c.user_email = ${user_identifier}
+              and c.user_email = ${userIdentifier}
           )`,
         ),
       )

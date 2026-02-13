@@ -61,7 +61,9 @@ describe('GitHubIngestForm', () => {
         if (delay === 3000) intervalCallback = cb
         return 42 as any
       }) as any)
-    vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => undefined as any)
+    vi.spyOn(globalThis, 'clearInterval').mockImplementation(
+      () => undefined as any,
+    )
 
     const axios = (await import('axios')).default as any
     axios.post.mockResolvedValueOnce({ data: { ok: true } })
@@ -132,7 +134,9 @@ describe('GitHubIngestForm', () => {
     await waitFor(() => expect(setIntervalSpy).toHaveBeenCalled())
 
     await user.click(screen.getByText(/^GitHub$/i))
-    expect(await screen.findByText(/Ingest GitHub Website/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Ingest GitHub Website/i),
+    ).toBeInTheDocument()
 
     const urlInput = screen.getByPlaceholderText(/Enter URL/i)
     fireEvent.change(urlInput, {
@@ -177,7 +181,9 @@ describe('GitHubIngestForm', () => {
       cb()
       return 1 as any
     }) as any)
-    vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => undefined as any)
+    vi.spyOn(globalThis, 'clearInterval').mockImplementation(
+      () => undefined as any,
+    )
     vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
       return new Response(JSON.stringify({ documents: [] }), {
         status: 200,
@@ -200,11 +206,15 @@ describe('GitHubIngestForm', () => {
     )
 
     await user.click(screen.getByText(/^GitHub$/i))
-    expect(await screen.findByText(/Ingest GitHub Website/i)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Ingest GitHub Website/i),
+    ).toBeInTheDocument()
     fireEvent.change(screen.getByPlaceholderText(/Enter URL/i), {
       target: { value: 'https://github.com/user/repo' },
     })
-    const ingestButton = screen.getByRole('button', { name: /Ingest the Website/i })
+    const ingestButton = screen.getByRole('button', {
+      name: /Ingest the Website/i,
+    })
     await waitFor(() => expect(ingestButton).toBeEnabled())
     await user.click(ingestButton)
 

@@ -8,8 +8,14 @@ const hoisted = vi.hoisted(() => {
   const where = vi.fn(() => ({ returning }))
   const del = vi.fn(() => ({ where }))
 
-  const messages = { id: { name: 'id' }, conversation_id: { name: 'conversation_id' } }
-  const conversations = { id: { name: 'id' }, user_email: { name: 'user_email' } }
+  const messages = {
+    id: { name: 'id' },
+    conversation_id: { name: 'conversation_id' },
+  }
+  const conversations = {
+    id: { name: 'id' },
+    user_email: { name: 'user_email' },
+  }
 
   return { db: { delete: del }, messages, conversations, returning, del, where }
 })
@@ -121,4 +127,3 @@ describe('deleteMessages API', () => {
     expect(res.status).toHaveBeenCalledWith(500)
   })
 })
-

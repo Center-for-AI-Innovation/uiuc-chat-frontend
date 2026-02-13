@@ -26,6 +26,8 @@ vi.mock('~/db/dbClient', () => ({
   documentsInProgress: {
     course_name: { name: 'course_name' },
     readable_filename: { name: 'readable_filename' },
+    base_url: { name: 'base_url' },
+    url: { name: 'url' },
   },
   documentsFailed: {
     id: { name: 'id' },
@@ -76,7 +78,10 @@ describe('materialsTable API handlers', () => {
 
   it('docsInProgress returns 405 for non-GET', async () => {
     const res = createMockRes()
-    await docsInProgressHandler(createMockReq({ method: 'POST' }) as any, res as any)
+    await docsInProgressHandler(
+      createMockReq({ method: 'POST' }) as any,
+      res as any,
+    )
     expect(res.status).toHaveBeenCalledWith(405)
   })
 
@@ -97,10 +102,12 @@ describe('materialsTable API handlers', () => {
 
     hoisted.select.mockImplementationOnce(() => ({
       from: () => ({
-        where: vi.fn().mockResolvedValueOnce([
-          { readable_filename: '' },
-          { readable_filename: 'Doc A' },
-        ]),
+        where: vi
+          .fn()
+          .mockResolvedValueOnce([
+            { readable_filename: '' },
+            { readable_filename: 'Doc A' },
+          ]),
       }),
     }))
 
@@ -111,13 +118,19 @@ describe('materialsTable API handlers', () => {
     )
     expect(res2.status).toHaveBeenCalledWith(200)
     expect(res2.json).toHaveBeenCalledWith({
-      documents: [{ readable_filename: 'Untitled Document' }, { readable_filename: 'Doc A' }],
+      documents: [
+        { readable_filename: 'Untitled Document', base_url: '', url: '' },
+        { readable_filename: 'Doc A', base_url: '', url: '' },
+      ],
     })
   })
 
   it('successDocs returns mapped documents (or empty) and 405 for non-GET', async () => {
     const res0 = createMockRes()
-    await successDocsHandler(createMockReq({ method: 'PUT' }) as any, res0 as any)
+    await successDocsHandler(
+      createMockReq({ method: 'PUT' }) as any,
+      res0 as any,
+    )
     expect(res0.status).toHaveBeenCalledWith(405)
 
     hoisted.select.mockImplementationOnce(() => ({
@@ -164,14 +177,17 @@ describe('materialsTable API handlers', () => {
       headers: { host: 'localhost' },
     })
     const res = createMockRes()
-    await expect(fetchFailedDocumentsHandler(req as any, res as any)).rejects.toThrow(
-      'Missing required query parameters: from and to',
-    )
+    await expect(
+      fetchFailedDocumentsHandler(req as any, res as any),
+    ).rejects.toThrow('Missing required query parameters: from and to')
   })
 
   it('fetchFailedDocuments returns 405 for non-GET', async () => {
     const res = createMockRes()
-    await fetchFailedDocumentsHandler(createMockReq({ method: 'POST' }) as any, res as any)
+    await fetchFailedDocumentsHandler(
+      createMockReq({ method: 'POST' }) as any,
+      res as any,
+    )
     expect(res.status).toHaveBeenCalledWith(405)
   })
 
@@ -359,11 +375,17 @@ describe('materialsTable API handlers', () => {
 
   it('fetchProjectMaterials returns 405 and 400 for invalid requests', async () => {
     const res0 = createMockRes()
-    await fetchProjectMaterialsHandler(createMockReq({ method: 'POST' }) as any, res0 as any)
+    await fetchProjectMaterialsHandler(
+      createMockReq({ method: 'POST' }) as any,
+      res0 as any,
+    )
     expect(res0.status).toHaveBeenCalledWith(405)
 
     const res1 = createMockRes()
-    await fetchProjectMaterialsHandler(createMockReq({ method: 'GET', query: {} }) as any, res1 as any)
+    await fetchProjectMaterialsHandler(
+      createMockReq({ method: 'GET', query: {} }) as any,
+      res1 as any,
+    )
     expect(res1.status).toHaveBeenCalledWith(400)
   })
 
@@ -430,7 +452,9 @@ describe('materialsTable API handlers', () => {
                 groupBy: () => ({
                   orderBy: () => ({
                     limit: () => ({
-                      offset: vi.fn().mockResolvedValueOnce([{ id: 1, doc_groups: [] }]),
+                      offset: vi
+                        .fn()
+                        .mockResolvedValueOnce([{ id: 1, doc_groups: [] }]),
                     }),
                   }),
                 }),

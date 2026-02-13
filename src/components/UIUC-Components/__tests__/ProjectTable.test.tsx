@@ -81,7 +81,9 @@ describe('ProjectTable', () => {
     // Click row navigates in same tab
     await user.click(screen.getByText('CS101'))
     await waitFor(() => {
-      expect(globalThis.__TEST_ROUTER__?.push).toHaveBeenCalledWith('/CS101/chat')
+      expect(globalThis.__TEST_ROUTER__?.push).toHaveBeenCalledWith(
+        '/CS101/chat',
+      )
     })
 
     // Cmd/Ctrl click opens new tab

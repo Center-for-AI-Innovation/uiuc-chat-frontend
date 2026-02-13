@@ -6,4 +6,3 @@ describe('pages/api/home/index', () => {
     expect(home).toBeTruthy()
   })
 })
-

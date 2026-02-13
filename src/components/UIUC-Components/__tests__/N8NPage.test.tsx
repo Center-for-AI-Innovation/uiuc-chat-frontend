@@ -32,7 +32,8 @@ vi.mock('../MainPageBackground', () => ({
 }))
 
 vi.mock('../N8nWorkflowsTable', () => ({
-  N8nWorkflowsTable: () => React.createElement('div', null, 'N8nWorkflowsTable'),
+  N8nWorkflowsTable: () =>
+    React.createElement('div', null, 'N8nWorkflowsTable'),
 }))
 
 declare global {
@@ -178,7 +179,9 @@ describe('N8NPage', () => {
     const MakeToolsPage = (await import('../N8NPage')).default
     renderWithProviders(<MakeToolsPage course_name="CS101" />)
 
-    const input = await screen.findByPlaceholderText(/Enter your n8n API Key here/i)
+    const input = await screen.findByPlaceholderText(
+      /Enter your n8n API Key here/i,
+    )
     await user.clear(input)
     await user.click(screen.getByRole('button', { name: /Save/i }))
 

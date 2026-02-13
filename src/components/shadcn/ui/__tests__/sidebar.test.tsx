@@ -105,7 +105,9 @@ describe('shadcn sidebar', () => {
 
     fireEvent.keyDown(window, { key: 'b', ctrlKey: true })
     await waitFor(() =>
-      expect(screen.getByTestId('sidebar-state')).toHaveTextContent('collapsed'),
+      expect(screen.getByTestId('sidebar-state')).toHaveTextContent(
+        'collapsed',
+      ),
     )
 
     fireEvent.click(screen.getByRole('button', { name: /probe-toggle/i }))

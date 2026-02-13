@@ -42,10 +42,7 @@ describe('chat-api/keys/fetch', () => {
 
   it('returns 400 when email missing', async () => {
     const res = createMockRes()
-    await handler(
-      createMockReq({ method: 'GET', user: {} }) as any,
-      res as any,
-    )
+    await handler(createMockReq({ method: 'GET', user: {} }) as any, res as any)
     expect(res.status).toHaveBeenCalledWith(400)
   })
 
@@ -71,4 +68,3 @@ describe('chat-api/keys/fetch', () => {
     expect(res2.json).toHaveBeenCalledWith({ apiKey: 'uc_key' })
   })
 })
-

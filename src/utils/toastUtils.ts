@@ -46,7 +46,7 @@ export const showToast = ({
   icon,
 }: ToastOptions) => {
   const config = getToastConfig(type)
-  
+
   notifications.show({
     title,
     message,

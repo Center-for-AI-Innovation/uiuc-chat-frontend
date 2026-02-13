@@ -40,7 +40,9 @@ describe('keycloakClient', () => {
   })
 
   it('getSigningKey passes through jwks-rsa errors', async () => {
-    const getSigningKeyMock = vi.fn((_kid: string, cb: any) => cb(new Error('jwks fail')))
+    const getSigningKeyMock = vi.fn((_kid: string, cb: any) =>
+      cb(new Error('jwks fail')),
+    )
     vi.doMock('jwks-rsa', () => ({
       default: () => ({ getSigningKey: getSigningKeyMock }),
     }))
@@ -76,16 +78,22 @@ describe('keycloakClient', () => {
     }))
 
     vi.resetModules()
-    const { fetchRealmPublicKey, getJwksUri } = await import('../keycloakClient')
+    const { fetchRealmPublicKey, getJwksUri } = await import(
+      '../keycloakClient'
+    )
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ keys: [{ x5c: ['CERTDATA'] }] }), { status: 200 }),
+      new Response(JSON.stringify({ keys: [{ x5c: ['CERTDATA'] }] }), {
+        status: 200,
+      }),
     )
 
     const cert = await fetchRealmPublicKey('https://kc/')
     expect(cert).toContain('BEGIN CERTIFICATE')
     expect(cert).toContain('CERTDATA')
-    expect(getJwksUri('https://kc/')).toContain('/protocol/openid-connect/certs')
+    expect(getJwksUri('https://kc/')).toContain(
+      '/protocol/openid-connect/certs',
+    )
   })
 
   it('fetchRealmPublicKey returns null when JWKS response is not ok', async () => {
@@ -151,7 +159,9 @@ describe('keycloakClient', () => {
       .mockImplementation((_t: any, _k: any, _o: any, cb: any) =>
         cb(null, { sub: 'u1' }),
       )
-    await expect(verifyTokenAsync('t', 'https://kc/')).resolves.toEqual({ sub: 'u1' })
+    await expect(verifyTokenAsync('t', 'https://kc/')).resolves.toEqual({
+      sub: 'u1',
+    })
 
     verifySpy.mockImplementation((_t: any, _k: any, _o: any, cb: any) =>
       cb(new Error('bad')),
@@ -190,7 +200,9 @@ describe('keycloakClient', () => {
     const { checkKeycloakHealth } = await import('../keycloakClient')
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ issuer: 'iss', jwks_uri: 'jwks' }), { status: 200 }),
+      new Response(JSON.stringify({ issuer: 'iss', jwks_uri: 'jwks' }), {
+        status: 200,
+      }),
     )
 
     await expect(checkKeycloakHealth('https://kc/')).resolves.toMatchObject({
@@ -219,15 +231,22 @@ describe('keycloakClient', () => {
     }))
 
     vi.resetModules()
-    const { getUserInfo, getUserRoles, getRealmInfo, userHasRole } = await import(
-      '../keycloakClient'
-    )
+    const { getUserInfo, getUserRoles, getRealmInfo, userHasRole } =
+      await import('../keycloakClient')
 
-    await expect(getUserInfo('https://kc/', 'u1')).resolves.toEqual({ id: 'u1' })
-    await expect(getUserRoles('https://kc/', 'u1')).resolves.toEqual([{ name: 'admin' }])
-    await expect(getRealmInfo('https://kc/')).resolves.toEqual({ realm: 'realm' })
+    await expect(getUserInfo('https://kc/', 'u1')).resolves.toEqual({
+      id: 'u1',
+    })
+    await expect(getUserRoles('https://kc/', 'u1')).resolves.toEqual([
+      { name: 'admin' },
+    ])
+    await expect(getRealmInfo('https://kc/')).resolves.toEqual({
+      realm: 'realm',
+    })
     await expect(userHasRole('https://kc/', 'u1', 'admin')).resolves.toBe(true)
-    await expect(userHasRole('https://kc/', 'u1', 'missing')).resolves.toBe(false)
+    await expect(userHasRole('https://kc/', 'u1', 'missing')).resolves.toBe(
+      false,
+    )
   })
 
   it('getUserInfo logs and rethrows on errors', async () => {

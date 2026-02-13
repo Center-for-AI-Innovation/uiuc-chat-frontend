@@ -23,9 +23,7 @@ vi.mock('vaul', () => ({
       </div>
     ),
     Title: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
-    Description: ({ children, ...props }: any) => (
-      <p {...props}>{children}</p>
-    ),
+    Description: ({ children, ...props }: any) => <p {...props}>{children}</p>,
   },
 }))
 

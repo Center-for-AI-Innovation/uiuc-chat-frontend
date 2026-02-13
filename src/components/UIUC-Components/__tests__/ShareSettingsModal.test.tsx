@@ -82,7 +82,10 @@ describe('ShareSettingsModal', () => {
     await waitFor(() =>
       expect(callSetCourseMetadata as any).toHaveBeenCalledWith(
         'CS101',
-        expect.objectContaining({ is_private: false, allow_logged_in_users: false }),
+        expect.objectContaining({
+          is_private: false,
+          allow_logged_in_users: false,
+        }),
       ),
     )
 
@@ -105,8 +108,12 @@ describe('ShareSettingsModal', () => {
       { homeContext: { dispatch: vi.fn() } },
     )
 
-    await user.click(screen.getByRole('button', { name: /Change access|Access/i }))
-    await user.click(await screen.findByText(/Private \(only invited members\)/i))
+    await user.click(
+      screen.getByRole('button', { name: /Change access|Access/i }),
+    )
+    await user.click(
+      await screen.findByText(/Private \(only invited members\)/i),
+    )
     await new Promise((r) => setTimeout(r, 350))
 
     expect(screen.getByText(/Members accordion/i)).toBeInTheDocument()

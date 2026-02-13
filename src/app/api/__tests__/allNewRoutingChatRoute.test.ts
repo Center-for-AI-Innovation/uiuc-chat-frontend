@@ -59,10 +59,12 @@ describe('app/api/allNewRoutingChat POST', () => {
     hoisted.buildPrompt.mockRejectedValueOnce(new Error('boom'))
     const req = new Request('http://localhost', {
       method: 'POST',
-      body: JSON.stringify({ course_name: 'CS101', conversation: { id: 'c1' } }),
+      body: JSON.stringify({
+        course_name: 'CS101',
+        conversation: { id: 'c1' },
+      }),
     })
     const res = await POST(req as any)
     expect(res.status).toBe(500)
   })
 })
-

@@ -47,10 +47,12 @@ describe('getNomicMapForQueries API', () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
     const res = createMockRes()
     await handler(
-      createMockReq({ method: 'GET', query: { course_name: 'CS101', map_type: 'all' } }) as any,
+      createMockReq({
+        method: 'GET',
+        query: { course_name: 'CS101', map_type: 'all' },
+      }) as any,
       res as any,
     )
     expect(res.status).toHaveBeenCalledWith(500)
   })
 })
-

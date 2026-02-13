@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_TEMPERATURE } from '~/utils/app/const'
-import { OpenAIModelID, OpenAIModels } from '~/utils/modelProviders/types/openai'
-import { ProviderNames, type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import {
+  OpenAIModelID,
+  OpenAIModels,
+} from '~/utils/modelProviders/types/openai'
+import {
+  ProviderNames,
+  type AllLLMProviders,
+} from '~/utils/modelProviders/LLMProvider'
 import { selectBestTemperature } from '../Temperature'
 import { makeConversation } from '~/test-utils/mocks/chat'
 
@@ -62,4 +68,3 @@ describe('selectBestTemperature', () => {
     ).toBe(DEFAULT_TEMPERATURE)
   })
 })
-

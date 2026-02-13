@@ -157,6 +157,7 @@ export const ModelItem = forwardRef<
           <div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Image
+                aria-hidden="true"
                 src={getModelLogo(modelType)}
                 alt={`${modelType} logo`}
                 width={20}
@@ -305,7 +306,9 @@ const ModelDropdown: React.FC<
       const provider = llmProviders[key as keyof typeof llmProviders]
       if (provider && provider.enabled) {
         const enabledModels =
-          provider.models?.filter((model: AnySupportedModel) => model.enabled) || []
+          provider.models?.filter(
+            (model: AnySupportedModel) => model.enabled,
+          ) || []
         if (enabledModels.length > 0) {
           // @ts-ignore -- Can't figure out why the types aren't perfect.
           acc.enabledProvidersAndModels[key as keyof typeof llmProviders] = {

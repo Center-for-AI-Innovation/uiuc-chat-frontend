@@ -31,7 +31,8 @@ describe('APIRequestBuilder', () => {
     expect(screen.getByText('Request Builder')).toBeInTheDocument()
 
     const snippet = await screen.findByDisplayValue(/curl -X POST/i)
-    expect(String((snippet as HTMLTextAreaElement).value)).toContain('/api/chat-api/chat')
+    expect(String((snippet as HTMLTextAreaElement).value)).toContain(
+      '/api/chat-api/chat',
+    )
   })
 })
-

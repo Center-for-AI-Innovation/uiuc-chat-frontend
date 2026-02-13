@@ -63,4 +63,3 @@ describe('shadcn menubar', () => {
     expect(await screen.findByText('Sub item')).toBeInTheDocument()
   })
 })
-

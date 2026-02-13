@@ -32,15 +32,15 @@ vi.mock('~/components/UIUC-Components/runAuthCheck', () => ({
   get_user_permission: () => 'edit',
 }))
 
-vi.mock('~/hooks/conversationQueries', () => ({
+vi.mock('@/hooks/queries/useUpdateConversation', () => ({
   useUpdateConversation: () => ({ mutateAsync: vi.fn(async () => ({})) }),
 }))
 
-vi.mock('~/hooks/messageQueries', () => ({
+vi.mock('@/hooks/queries/useDeleteMessages', () => ({
   useDeleteMessages: () => ({ mutate: vi.fn(async () => ({})) }),
 }))
 
-vi.mock('~/hooks/docGroupsQueries', () => ({
+vi.mock('@/hooks/queries/useFetchEnabledDocGroups', () => ({
   useFetchEnabledDocGroups: () => ({
     data: [{ id: 'DocGroup-all', name: 'All Documents', checked: true }],
     isSuccess: true,
@@ -89,9 +89,7 @@ vi.mock('../MemoizedChatMessage', () => ({
 }))
 
 describe('Chat', () => {
-  it(
-    'streams a response via /api/allNewRoutingChat and renders admin dashboard button',
-    async () => {
+  it('streams a response via /api/allNewRoutingChat and renders admin dashboard button', async () => {
     const user = userEvent.setup()
     vi.spyOn(console, 'debug').mockImplementation(() => {})
     vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -122,15 +120,30 @@ describe('Chat', () => {
 
     const conversation = makeConversation({
       id: 'conv-1',
-      messages: [makeMessage({ id: 'u1', role: 'user', content: 'Hi', contexts: [] })],
-      model: { id: 'gpt-4o-mini', name: 'GPT-4o mini', tokenLimit: 128000, enabled: true, provider: ProviderNames.OpenAI } as any,
+      messages: [
+        makeMessage({ id: 'u1', role: 'user', content: 'Hi', contexts: [] }),
+      ],
+      model: {
+        id: 'gpt-4o-mini',
+        name: 'GPT-4o mini',
+        tokenLimit: 128000,
+        enabled: true,
+        provider: ProviderNames.OpenAI,
+      } as any,
     })
 
     const llmProviders: any = {
       [ProviderNames.OpenAI]: {
         provider: ProviderNames.OpenAI,
         enabled: true,
-        models: [{ id: 'gpt-4o-mini', name: 'GPT-4o mini', tokenLimit: 128000, enabled: true }],
+        models: [
+          {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            tokenLimit: 128000,
+            enabled: true,
+          },
+        ],
       },
     }
 
@@ -163,7 +176,9 @@ describe('Chat', () => {
     // Permission is mocked as "edit" -> dashboard button exists and is clickable.
     const buttons = screen.getAllByRole('button')
     const dashboardButton = buttons.find(
-      (b) => (b.textContent ?? '') === '' && b !== screen.getByRole('button', { name: /send/i }),
+      (b) =>
+        (b.textContent ?? '') === '' &&
+        b !== screen.getByRole('button', { name: /send/i }),
     )
     expect(dashboardButton).toBeTruthy()
     await user.click(dashboardButton!)
@@ -173,7 +188,5 @@ describe('Chat', () => {
     await user.click(screen.getByRole('button', { name: /send/i }))
     expect(streamed).toBe(true)
     expect(true).toBe(true)
-    },
-    20_000,
-  )
+  }, 20_000)
 })

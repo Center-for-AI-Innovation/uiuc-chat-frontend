@@ -51,4 +51,3 @@ describe('healthcheck API', () => {
     process.env.REDIS_URL = old
   })
 })
-

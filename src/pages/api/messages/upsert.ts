@@ -73,10 +73,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         .where(
           and(
             eq(messages.conversation_id, conversationId),
-            gt(
-              messages.created_at,
-              existing.created_at ?? new Date(0),
-            ),
+            gt(messages.created_at, existing.created_at ?? new Date(0)),
           ),
         )
         .orderBy(asc(messages.created_at))

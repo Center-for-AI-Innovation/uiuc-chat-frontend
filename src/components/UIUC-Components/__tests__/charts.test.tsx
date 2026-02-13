@@ -4,8 +4,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 vi.mock('recharts', () => {
-  const Stub =
-    (name: string, callProps?: (props: any) => void) =>
+  const Stub = (name: string, callProps?: (props: any) => void) =>
     (() => {
       const Component = (props: any) => {
         try {
@@ -13,7 +12,11 @@ vi.mock('recharts', () => {
         } catch {
           // ignore
         }
-        return React.createElement('div', { 'data-recharts': name }, props.children)
+        return React.createElement(
+          'div',
+          { 'data-recharts': name },
+          props.children,
+        )
       }
       Component.displayName = `Recharts.${name}`
       return Component
@@ -89,16 +92,30 @@ describe('UIUC charts', () => {
     render(<ConversationsPerDayChart isLoading data={undefined} error={null} />)
     expect(screen.getByText(/Loading chart/i)).toBeInTheDocument()
 
-    render(<ConversationsPerHourChart isLoading={false} data={undefined} error="boom" />)
+    render(
+      <ConversationsPerHourChart
+        isLoading={false}
+        data={undefined}
+        error="boom"
+      />,
+    )
     expect(screen.getByText(/boom/i)).toBeInTheDocument()
 
     render(
-      <ConversationsPerDayOfWeekChart isLoading={false} data={undefined} error={null} />,
+      <ConversationsPerDayOfWeekChart
+        isLoading={false}
+        data={undefined}
+        error={null}
+      />,
     )
     expect(screen.getByText(/No data available/i)).toBeInTheDocument()
 
     render(
-      <ConversationsHeatmapByHourChart isLoading={false} data={undefined} error={null} />,
+      <ConversationsHeatmapByHourChart
+        isLoading={false}
+        data={undefined}
+        error={null}
+      />,
     )
     expect(screen.getAllByText(/No data available/i).length).toBeGreaterThan(0)
 
@@ -106,7 +123,9 @@ describe('UIUC charts', () => {
     expect(screen.getByText(/Loading model usage data/i)).toBeInTheDocument()
 
     render(<ModelUsageChart isLoading={false} error="err" data={[]} />)
-    expect(screen.getByText(/Error loading model usage data/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Error loading model usage data/i),
+    ).toBeInTheDocument()
   })
 
   it('covers data rendering + interactions', async () => {
@@ -120,7 +139,9 @@ describe('UIUC charts', () => {
         data={{ '2024-01-01': 1, '2024-01-02': 10 }}
       />,
     )
-    expect(screen.getByRole('region', { name: /Conversations per day/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('region', { name: /Conversations per day/i }),
+    ).toBeInTheDocument()
     await user.click(
       screen.getByRole('switch', {
         name: /Toggle between linear and logarithmic scale/i,
@@ -134,7 +155,9 @@ describe('UIUC charts', () => {
         data={{ '0': 1, '1': 2, '2': 3 }}
       />,
     )
-    expect(document.querySelectorAll('[data-recharts]').length).toBeGreaterThan(0)
+    expect(document.querySelectorAll('[data-recharts]').length).toBeGreaterThan(
+      0,
+    )
 
     render(
       <ConversationsPerDayOfWeekChart
@@ -143,7 +166,9 @@ describe('UIUC charts', () => {
         data={{ Monday: 2, Tuesday: 1 }}
       />,
     )
-    expect(document.querySelectorAll('[data-recharts]').length).toBeGreaterThan(0)
+    expect(document.querySelectorAll('[data-recharts]').length).toBeGreaterThan(
+      0,
+    )
 
     render(
       <ConversationsHeatmapByHourChart

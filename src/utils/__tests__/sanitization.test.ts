@@ -31,4 +31,3 @@ describe('sanitizeForLogging', () => {
     expect(sanitizeForLogging(true)).toBe(true)
   })
 })
-

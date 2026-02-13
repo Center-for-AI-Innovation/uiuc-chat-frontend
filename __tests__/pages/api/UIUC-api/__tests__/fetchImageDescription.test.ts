@@ -16,7 +16,10 @@ describe('fetchImageDescription', () => {
     await expect(
       fetchImageDescription(
         'CS101',
-        { model: { id: 'gpt-4o' }, messages: [{ role: 'user', content: 'hi' }] } as any,
+        {
+          model: { id: 'gpt-4o' },
+          messages: [{ role: 'user', content: 'hi' }],
+        } as any,
         { OpenAI: { models: [] } } as any,
         controller,
       ),
@@ -31,7 +34,10 @@ describe('fetchImageDescription', () => {
     await expect(
       fetchImageDescription(
         'CS101',
-        { model: { id: 'gpt-4o' }, messages: [{ role: 'user', content: [] }] } as any,
+        {
+          model: { id: 'gpt-4o' },
+          messages: [{ role: 'user', content: [] }],
+        } as any,
         { OpenAI: { models: [] } } as any,
         controller,
       ),
@@ -41,4 +47,3 @@ describe('fetchImageDescription', () => {
     fetchSpy.mockRestore()
   })
 })
-

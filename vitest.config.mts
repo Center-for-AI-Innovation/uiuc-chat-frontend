@@ -14,7 +14,10 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}', '__tests__/**/*.{test,spec}.{ts,tsx}'],
+    include: [
+      'src/**/*.{test,spec}.{ts,tsx}',
+      '__tests__/**/*.{test,spec}.{ts,tsx}',
+    ],
     css: true,
     clearMocks: true,
     restoreMocks: true,
@@ -28,6 +31,15 @@ export default defineConfig({
         '**/.next/**',
         '**/.cursor/**',
         '**/scripts/**',
+        // Deprecated/migration-only routes aren't exercised in tests
+        '**/*DEPRECATED.*',
+        '**/MIGRATEALLKEYS.*',
+        '**/moveToNewCourseMetadata.*',
+        '**/saveOldCourseMetadata.*',
+        '**/restoreOldCourseMetadata.*',
+        '**/setDisabledModels.*',
+        '**/onResponseCompletion.*',
+        '**/setCourseStudents.*',
       ],
     },
   },

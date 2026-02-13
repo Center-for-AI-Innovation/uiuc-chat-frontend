@@ -23,7 +23,10 @@ describe('useFetchAllWorkflows', () => {
               nodes: [
                 {
                   type: 'n8n-nodes-base.formTrigger',
-                  parameters: { formDescription: 'd', formFields: { values: [] } },
+                  parameters: {
+                    formDescription: 'd',
+                    formFields: { values: [] },
+                  },
                 },
               ],
             },

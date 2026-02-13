@@ -57,7 +57,10 @@ describe('UIUC-api/getAllCourseMetadata', () => {
 
   it('handler returns 400 without email and 200 with data', async () => {
     const res1 = createMockRes()
-    await handler(createMockReq({ method: 'GET', user: {} }) as any, res1 as any)
+    await handler(
+      createMockReq({ method: 'GET', user: {} }) as any,
+      res1 as any,
+    )
     expect(res1.status).toHaveBeenCalledWith(400)
 
     hoisted.ensureRedisConnected.mockResolvedValueOnce({
@@ -70,10 +73,12 @@ describe('UIUC-api/getAllCourseMetadata', () => {
     })
     const res2 = createMockRes()
     await handler(
-      createMockReq({ method: 'GET', user: { email: 'owner@example.com' } }) as any,
+      createMockReq({
+        method: 'GET',
+        user: { email: 'owner@example.com' },
+      }) as any,
       res2 as any,
     )
     expect(res2.status).toHaveBeenCalledWith(200)
   })
 })
-

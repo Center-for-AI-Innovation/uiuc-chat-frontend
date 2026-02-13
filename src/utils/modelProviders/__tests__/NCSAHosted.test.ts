@@ -7,7 +7,10 @@ import { OllamaModelIDs } from '../ollama'
 
 describe('getNCSAHostedModels', () => {
   it('returns empty models when provider is disabled', async () => {
-    const provider: any = { enabled: false, models: [{ id: OllamaModelIDs.GPT_OSS_20B }] }
+    const provider: any = {
+      enabled: false,
+      models: [{ id: OllamaModelIDs.GPT_OSS_20B }],
+    }
     const result = await getNCSAHostedModels(provider)
     expect(result.models).toEqual([])
   })
@@ -44,7 +47,9 @@ describe('getNCSAHostedModels', () => {
 
     const provider: any = {
       enabled: true,
-      models: [{ id: OllamaModelIDs.GPT_OSS_20B, enabled: false, default: true }],
+      models: [
+        { id: OllamaModelIDs.GPT_OSS_20B, enabled: false, default: true },
+      ],
     }
     const result = await getNCSAHostedModels(provider)
     const models = result.models ?? []
@@ -73,7 +78,10 @@ describe('getNCSAHostedModels', () => {
     vi.stubEnv('OLLAMA_SERVER_URL', 'https://ollama.example')
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
 
-    const provider: any = { enabled: true, models: [{ id: OllamaModelIDs.GPT_OSS_20B }] }
+    const provider: any = {
+      enabled: true,
+      models: [{ id: OllamaModelIDs.GPT_OSS_20B }],
+    }
     const result = await getNCSAHostedModels(provider)
     expect(result.models).toEqual([])
     expect(result.error).toMatch(/boom/i)

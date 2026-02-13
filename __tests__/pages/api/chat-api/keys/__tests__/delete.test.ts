@@ -63,4 +63,3 @@ describe('chat-api/keys/delete', () => {
     expect(res2.status).toHaveBeenCalledWith(200)
   })
 })
-

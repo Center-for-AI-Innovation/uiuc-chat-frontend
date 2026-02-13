@@ -31,10 +31,21 @@ const mocks = vi.hoisted(() => ({
   saveConversationToServer: vi.fn(async () => ({})),
 }))
 
-vi.mock('~/hooks/conversationQueries', () => ({
+vi.mock('@/hooks/queries/useDeleteConversation', () => ({
   useDeleteConversation: () => ({ mutate: mocks.deleteConversationMutate }),
-  useDeleteAllConversations: () => ({ mutate: mocks.deleteAllConversationsMutate }),
+}))
+
+vi.mock('@/hooks/queries/useDeleteAllConversations', () => ({
+  useDeleteAllConversations: () => ({
+    mutate: mocks.deleteAllConversationsMutate,
+  }),
+}))
+
+vi.mock('@/hooks/queries/useUpdateConversation', () => ({
   useUpdateConversation: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
+}))
+
+vi.mock('@/hooks/queries/useFetchConversationHistory', () => ({
   useFetchConversationHistory: () => ({
     data: { pages: [[]] },
     error: null,
@@ -47,14 +58,18 @@ vi.mock('~/hooks/conversationQueries', () => ({
   }),
 }))
 
-vi.mock('~/utils/app/conversation', () => ({
+vi.mock('@/hooks/__internal__/conversation', () => ({
   saveConversationToServer: mocks.saveConversationToServer,
 }))
 
 describe('Chatbar', () => {
   it('renders a loading shell when missing email or courseName', () => {
     renderWithProviders(
-      <Chatbar current_email={undefined} courseName="CS101" courseMetadata={null} />,
+      <Chatbar
+        current_email={undefined}
+        courseName="CS101"
+        courseMetadata={null}
+      />,
       { homeContext: { dispatch: vi.fn() } as any },
     )
     expect(screen.getByText(/Loading/i)).toBeInTheDocument()
@@ -72,14 +87,25 @@ describe('Chatbar', () => {
     localStorage.setItem('conversationHistory', JSON.stringify([conversation]))
 
     renderWithProviders(
-      <Chatbar current_email="owner@example.com" courseName="CS101" courseMetadata={null} />,
+      <Chatbar
+        current_email="owner@example.com"
+        courseName="CS101"
+        courseMetadata={null}
+      />,
       {
-        homeContext: { dispatch: vi.fn(), handleCreateFolder: vi.fn(), handleNewConversation: vi.fn(), handleUpdateConversation: vi.fn() } as any,
+        homeContext: {
+          dispatch: vi.fn(),
+          handleCreateFolder: vi.fn(),
+          handleNewConversation: vi.fn(),
+          handleUpdateConversation: vi.fn(),
+        } as any,
         homeState: { showChatbar: true, conversations: [], folders: [] } as any,
       },
     )
 
-    await waitFor(() => expect(mocks.saveConversationToServer).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(mocks.saveConversationToServer).toHaveBeenCalled(),
+    )
     expect(localStorage.getItem('convoMigrationComplete')).toBe('true')
   })
 
@@ -95,9 +121,18 @@ describe('Chatbar', () => {
     } as any) as any
 
     const { container } = renderWithProviders(
-      <Chatbar current_email="owner@example.com" courseName="CS101" courseMetadata={null} />,
+      <Chatbar
+        current_email="owner@example.com"
+        courseName="CS101"
+        courseMetadata={null}
+      />,
       {
-        homeContext: { dispatch, handleNewConversation, handleCreateFolder: vi.fn(), handleUpdateConversation: vi.fn() } as any,
+        homeContext: {
+          dispatch,
+          handleNewConversation,
+          handleCreateFolder: vi.fn(),
+          handleUpdateConversation: vi.fn(),
+        } as any,
         homeState: { showChatbar: true, conversations: [conversation] } as any,
       },
     )
@@ -135,8 +170,20 @@ describe('Chatbar', () => {
     })
 
     renderWithProviders(
-      <Chatbar current_email="owner@example.com" courseName="CS101" courseMetadata={null} />,
-      { homeContext: { dispatch: vi.fn(), handleNewConversation: vi.fn(), handleCreateFolder: vi.fn(), handleUpdateConversation: vi.fn() } as any, homeState: { showChatbar: true } as any },
+      <Chatbar
+        current_email="owner@example.com"
+        courseName="CS101"
+        courseMetadata={null}
+      />,
+      {
+        homeContext: {
+          dispatch: vi.fn(),
+          handleNewConversation: vi.fn(),
+          handleCreateFolder: vi.fn(),
+          handleUpdateConversation: vi.fn(),
+        } as any,
+        homeState: { showChatbar: true } as any,
+      },
     )
 
     await user.click(screen.getByText(/Export history/i))
@@ -253,7 +300,11 @@ describe('Chatbar', () => {
     const dispatch = vi.fn()
 
     renderWithProviders(
-      <Chatbar current_email="owner@example.com" courseName="CS101" courseMetadata={null} />,
+      <Chatbar
+        current_email="owner@example.com"
+        courseName="CS101"
+        courseMetadata={null}
+      />,
       {
         homeContext: {
           dispatch,
@@ -271,11 +322,16 @@ describe('Chatbar', () => {
       },
     )
 
-    await user.click(await screen.findByRole('button', { name: /OpenAI API Key/i }))
+    await user.click(
+      await screen.findByRole('button', { name: /OpenAI API Key/i }),
+    )
     const input = screen.getByPlaceholderText(/API Key/i)
     await user.type(input, ' test-key {Enter}')
 
-    expect(dispatch).toHaveBeenCalledWith({ field: 'apiKey', value: 'test-key' })
+    expect(dispatch).toHaveBeenCalledWith({
+      field: 'apiKey',
+      value: 'test-key',
+    })
     expect(localStorage.getItem('apiKey')).toBe('test-key')
   })
 
@@ -286,7 +342,11 @@ describe('Chatbar', () => {
     mocks.fetchNextPageConversationHistory.mockClear()
 
     const { container } = renderWithProviders(
-      <Chatbar current_email="owner@example.com" courseName="CS101" courseMetadata={null} />,
+      <Chatbar
+        current_email="owner@example.com"
+        courseName="CS101"
+        courseMetadata={null}
+      />,
       {
         homeContext: {
           dispatch,
@@ -298,15 +358,28 @@ describe('Chatbar', () => {
       },
     )
 
-    const scrollEl = container.querySelector('.flex-grow.overflow-auto') as HTMLElement
+    const scrollEl = container.querySelector(
+      '.flex-grow.overflow-auto',
+    ) as HTMLElement
     expect(scrollEl).toBeTruthy()
 
-    Object.defineProperty(scrollEl, 'scrollHeight', { value: 1000, configurable: true })
-    Object.defineProperty(scrollEl, 'clientHeight', { value: 200, configurable: true })
-    Object.defineProperty(scrollEl, 'scrollTop', { value: 850, configurable: true })
+    Object.defineProperty(scrollEl, 'scrollHeight', {
+      value: 1000,
+      configurable: true,
+    })
+    Object.defineProperty(scrollEl, 'clientHeight', {
+      value: 200,
+      configurable: true,
+    })
+    Object.defineProperty(scrollEl, 'scrollTop', {
+      value: 850,
+      configurable: true,
+    })
 
     scrollEl.dispatchEvent(new Event('scroll', { bubbles: true }))
-    await waitFor(() => expect(mocks.fetchNextPageConversationHistory).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(mocks.fetchNextPageConversationHistory).toHaveBeenCalled(),
+    )
 
     mocks.hasNextPageConversationHistory = false
   })

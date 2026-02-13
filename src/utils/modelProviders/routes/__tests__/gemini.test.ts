@@ -31,7 +31,11 @@ describe('getGeminiModels', () => {
   })
 
   it('returns empty models when disabled even if a key is present', async () => {
-    const provider: any = { enabled: false, apiKey: 'k', models: [{ id: GeminiModelID.Gemini_2_0_Flash, enabled: false }] }
+    const provider: any = {
+      enabled: false,
+      apiKey: 'k',
+      models: [{ id: GeminiModelID.Gemini_2_0_Flash, enabled: false }],
+    }
     const result = await getGeminiModels(provider)
     expect(result.models).toEqual([])
   })
@@ -40,12 +44,16 @@ describe('getGeminiModels', () => {
     const provider: any = {
       enabled: true,
       apiKey: 'k',
-      models: [{ id: GeminiModelID.Gemini_2_0_Flash, enabled: false, default: true }],
+      models: [
+        { id: GeminiModelID.Gemini_2_0_Flash, enabled: false, default: true },
+      ],
     }
 
     const result = await getGeminiModels(provider)
     const models = result.models ?? []
-    const preserved = models.find((m: any) => m.id === GeminiModelID.Gemini_2_0_Flash)
+    const preserved = models.find(
+      (m: any) => m.id === GeminiModelID.Gemini_2_0_Flash,
+    )
     expect(preserved).toMatchObject({ enabled: false, default: true })
     expect(models.length).toBeGreaterThan(0)
   })
@@ -53,18 +61,28 @@ describe('getGeminiModels', () => {
 
 describe('runGeminiChat', () => {
   it('validates required inputs', async () => {
-    await expect(runGeminiChat(null as any, { apiKey: 'k' } as any)).rejects.toThrow(/conversation is missing/i)
-    await expect(runGeminiChat({ messages: [] } as any, { apiKey: '' } as any)).rejects.toThrow(/api key is missing/i)
-    await expect(runGeminiChat({ messages: [] } as any, { apiKey: 'k' } as any)).rejects.toThrow(/messages array is empty/i)
+    await expect(
+      runGeminiChat(null as any, { apiKey: 'k' } as any),
+    ).rejects.toThrow(/conversation is missing/i)
+    await expect(
+      runGeminiChat({ messages: [] } as any, { apiKey: '' } as any),
+    ).rejects.toThrow(/api key is missing/i)
+    await expect(
+      runGeminiChat({ messages: [] } as any, { apiKey: 'k' } as any),
+    ).rejects.toThrow(/messages array is empty/i)
   })
 
   it('throws on invalid model id', async () => {
     const conversation: any = {
       model: { id: 'not-a-gemini', tokenLimit: 10 },
       temperature: 0.2,
-      messages: [{ id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' }],
+      messages: [
+        { id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' },
+      ],
     }
-    await expect(runGeminiChat(conversation, { apiKey: 'k' } as any)).rejects.toThrow(/invalid gemini model id/i)
+    await expect(
+      runGeminiChat(conversation, { apiKey: 'k' } as any),
+    ).rejects.toThrow(/invalid gemini model id/i)
   })
 
   it('streams via streamText when stream=true', async () => {
@@ -75,7 +93,9 @@ describe('runGeminiChat', () => {
     const conversation: any = {
       model: { id: GeminiModelID.Gemini_2_0_Flash, tokenLimit: 10 },
       temperature: 0.2,
-      messages: [{ id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' }],
+      messages: [
+        { id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' },
+      ],
     }
 
     const res = await runGeminiChat(conversation, { apiKey: 'k' } as any, true)
@@ -96,7 +116,10 @@ describe('runGeminiChat', () => {
         {
           id: 'u1',
           role: 'user',
-          content: [{ type: 'text', text: 'hello' }, { type: 'image_url', image_url: { url: 'x' } }],
+          content: [
+            { type: 'text', text: 'hello' },
+            { type: 'image_url', image_url: { url: 'x' } },
+          ],
         },
         { id: 'a1', role: 'assistant', content: 'ok' },
         {
@@ -124,7 +147,9 @@ describe('runGeminiChat', () => {
     const conversation: any = {
       model: { id: GeminiModelID.Gemini_2_0_Flash, tokenLimit: 10 },
       temperature: 0.2,
-      messages: [{ id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' }],
+      messages: [
+        { id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' },
+      ],
     }
 
     const res = await runGeminiChat(conversation, { apiKey: 'k' } as any, false)
@@ -142,12 +167,14 @@ describe('runGeminiChat', () => {
     const conversation: any = {
       model: { id: GeminiModelID.Gemini_2_0_Flash, tokenLimit: 10 },
       temperature: 0.2,
-      messages: [{ id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' }],
+      messages: [
+        { id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' },
+      ],
     }
 
-    await expect(runGeminiChat(conversation, { apiKey: 'k' } as any, true)).rejects.toThrow(
-      /does not have access/i,
-    )
+    await expect(
+      runGeminiChat(conversation, { apiKey: 'k' } as any, true),
+    ).rejects.toThrow(/does not have access/i)
   })
 
   it('rethrows other errors from the AI SDK', async () => {
@@ -156,9 +183,13 @@ describe('runGeminiChat', () => {
     const conversation: any = {
       model: { id: GeminiModelID.Gemini_2_0_Flash, tokenLimit: 10 },
       temperature: 0.2,
-      messages: [{ id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' }],
+      messages: [
+        { id: 'u1', role: 'user', content: 'hi', latestSystemMessage: 'sys' },
+      ],
     }
 
-    await expect(runGeminiChat(conversation, { apiKey: 'k' } as any, true)).rejects.toThrow(/boom/i)
+    await expect(
+      runGeminiChat(conversation, { apiKey: 'k' } as any, true),
+    ).rejects.toThrow(/boom/i)
   })
 })

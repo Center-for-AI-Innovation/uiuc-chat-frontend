@@ -58,14 +58,21 @@ describe('SetExampleQuestions', () => {
     )
 
     // Type a second question (the component appends an empty input when typing in the last).
-    const firstInput = screen.getAllByLabelText(/Example question/i)[0]!
+    const inputs = screen.getAllByLabelText(/Example question/i)
+    const firstInput = inputs[0]
+    if (!firstInput) throw new Error('Expected an example question input')
     await user.type(firstInput, 'Q1')
     await waitFor(() =>
       expect(screen.getAllByLabelText(/Example question/i)).toHaveLength(2),
     )
-    await user.type(screen.getAllByLabelText(/Example question/i)[1]!, 'Q2')
+    const secondInput = screen.getAllByLabelText(/Example question/i)[1]
+    if (!secondInput)
+      throw new Error('Expected a second example question input')
+    await user.type(secondInput, 'Q2')
 
-    fireEvent.click(screen.getByRole('button', { name: /Submit/i }))
+    const saveButton = screen.getAllByRole('button', { name: /Save/i })[0]
+    if (!saveButton) throw new Error('Expected a Save button')
+    fireEvent.click(saveButton)
 
     await waitFor(() =>
       expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith('CS101', {
@@ -86,7 +93,7 @@ describe('SetExampleQuestions', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /Submit/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Save/i }))
 
     expect(alertSpy).toHaveBeenCalledWith('Course name is required')
     expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
