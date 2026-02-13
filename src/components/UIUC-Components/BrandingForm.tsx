@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { Button, FileInput, Textarea } from '@mantine/core'
+import { Button } from '@/components/shadcn/ui/button'
+import { Spinner } from '@/components/shadcn/ui/spinner'
+import { Check, AlertCircle } from 'lucide-react'
 import { IconFileUpload } from '@tabler/icons-react'
 
-//import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { FormInput } from '@/components/shadcn/ui/form-input'
 
 import SetExampleQuestions from './SetExampleQuestions'
 
@@ -22,11 +24,32 @@ const BrandingForm = ({
   user_id: string
 }) => {
   const queryClient = useQueryClient()
-  const [introMessage, setIntroMessage] = useState('')
-  const [isIntroMessageUpdated, setIsIntroMessageUpdated] = useState(false)
-  const [metadata, setMetadata] = useState<CourseMetadata | null>(null)
 
-  // Update local state when query data changes
+  // Read initial cached data synchronously so child components mount with it
+  const cachedMetadata = queryClient.getQueryData([
+    'courseMetadata',
+    project_name,
+  ]) as CourseMetadata | undefined
+
+  const [introMessage, setIntroMessage] = useState(
+    cachedMetadata?.course_intro_message || '',
+  )
+  const [isIntroMessageUpdated, setIsIntroMessageUpdated] = useState(false)
+  const [greetingSaved, setGreetingSaved] = useState(
+    !!cachedMetadata?.course_intro_message,
+  )
+  const [metadata, setMetadata] = useState<CourseMetadata | null>(
+    cachedMetadata ?? null,
+  )
+  const [logoFileName, setLogoFileName] = useState<string | null>(
+    cachedMetadata?.banner_image_s3 ? 'Logo uploaded' : null,
+  )
+  const [logoStatus, setLogoStatus] = useState<
+    'idle' | 'uploading' | 'success' | 'error'
+  >(cachedMetadata?.banner_image_s3 ? 'success' : 'idle')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Subscribe to future query cache changes
   useEffect(() => {
     const unsubscribe = queryClient.getQueryCache().subscribe(() => {
       const latestData = queryClient.getQueryData([
@@ -45,29 +68,29 @@ const BrandingForm = ({
   }, [project_name, queryClient])
 
   const onUploadLogo = async (logo: File | null) => {
-    /*
-      lastModified: 1755022505000
-      name: "logo.png"
-      size: 9399
-      type: "image/png"
-      webkitRelativePath: ""
-      File Prototype
-    */
+    if (!logo) return
 
-    // Assuming the file is converted to a URL somewhere else
-    if (logo) {
-      console.log('Uploading to s3')
+    setLogoFileName(logo.name)
+    setLogoStatus('uploading')
 
-      const banner_s3_image = await uploadToS3(
-        logo ?? null,
-        user_id,
-        project_name,
-      )
+    const banner_s3_image = await uploadToS3(logo, user_id, project_name)
 
-      if (banner_s3_image && metadata) {
-        metadata.banner_image_s3 = banner_s3_image
-        await callSetCourseMetadata(project_name, metadata)
+    if (banner_s3_image && metadata) {
+      const updatedMetadata = {
+        ...metadata,
+        banner_image_s3: banner_s3_image,
       }
+      // Only update local state and cache — the S3 key will be
+      // persisted to the server on the next metadata save
+      // (greeting update, question save, etc.)
+      setMetadata(updatedMetadata)
+      queryClient.setQueryData(
+        ['courseMetadata', project_name],
+        updatedMetadata,
+      )
+      setLogoStatus('success')
+    } else {
+      setLogoStatus('error')
     }
   }
 
@@ -75,83 +98,56 @@ const BrandingForm = ({
     <>
       <div className="branding_form">
         <div className="set_greeting form-control relative">
-          <div className="mt-4 font-semibold">Greeting</div>
+          <div className="mb-3 font-semibold">Greeting</div>
 
-          <div className="-mx-3 mt-1 flex items-start gap-2">
-            <Textarea
-              autosize
+          <div className="flex flex-col gap-2">
+            <FormInput
+              as="textarea"
               minRows={2}
               maxRows={5}
               placeholder="Enter a greeting to help users get started with your bot, shown before they start chatting."
               className="w-full"
-              styles={{
-                input: {
-                  color: 'var(--foreground)',
-                  backgroundColor: 'var(--background)',
-                  borderColor: 'var(--dashboard-border)',
-                  padding: 'calc(var(--padding) * .75)',
-                  paddingRight: '7rem', //make room for the button
-
-                  '&:focus': {
-                    borderColor: 'var(--background-darker)',
-                  },
-                },
-              }}
               value={introMessage}
+              rightSlot={
+                greetingSaved && !isIntroMessageUpdated ? (
+                  <Check className="size-4 text-[--illinois-prairie]" />
+                ) : null
+              }
               onChange={(e) => {
                 setIntroMessage(e.target.value)
                 setIsIntroMessageUpdated(true)
+                setGreetingSaved(false)
               }}
             />
 
-            <Button
-              type="submit"
-              size={'xs'}
-              disabled={!isIntroMessageUpdated}
-              className="bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--foreground-faded] disabled:opacity-50"
-              onClick={async () => {
-                setIsIntroMessageUpdated(false)
-
-                if (metadata) {
-                  metadata.course_intro_message = introMessage
-                  // Update the courseMetadata object
-
-                  const resp = await callSetCourseMetadata(
-                    project_name,
-                    metadata,
-                  )
-
-                  if (!resp) {
-                    console.log(
-                      'Error upserting course metadata for course: ',
-                      project_name,
-                    )
-                  }
-                }
-              }}
-            >
-              Update
-            </Button>
-          </div>
-
-          {isIntroMessageUpdated && (
-            <>
+            <div>
               <Button
                 type="submit"
-                className="relative m-1 hidden w-[30%] self-end bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
+                variant="dashboard"
+                size="sm"
+                disabled={!isIntroMessageUpdated}
                 onClick={async () => {
                   setIsIntroMessageUpdated(false)
 
                   if (metadata) {
-                    metadata.course_intro_message = introMessage
-                    // Update the courseMetadata object
+                    const updatedMetadata = {
+                      ...metadata,
+                      course_intro_message: introMessage,
+                    }
 
                     const resp = await callSetCourseMetadata(
                       project_name,
-                      metadata,
+                      updatedMetadata,
                     )
 
-                    if (!resp) {
+                    if (resp) {
+                      setMetadata(updatedMetadata)
+                      queryClient.setQueryData(
+                        ['courseMetadata', project_name],
+                        updatedMetadata,
+                      )
+                      setGreetingSaved(true)
+                    } else {
                       console.log(
                         'Error upserting course metadata for course: ',
                         project_name,
@@ -162,48 +158,83 @@ const BrandingForm = ({
               >
                 Update
               </Button>
-            </>
-          )}
+            </div>
+          </div>
         </div>
 
         <div className="set_example_questions">
-          <div className="mt-4 font-semibold">Example questions</div>
+          <div className="mb-3 mt-6 font-semibold">Example questions</div>
 
-          <div className="-mx-3 mt-1">
-            <SetExampleQuestions
-              course_name={project_name}
-              course_metadata={metadata as CourseMetadataOptionalForUpsert}
-            />
+          <div>
+            {metadata && (
+              <SetExampleQuestions
+                course_name={project_name}
+                course_metadata={metadata as CourseMetadataOptionalForUpsert}
+              />
+            )}
           </div>
         </div>
 
         <div className="upload_logo form-control">
-          <div className="mt-4 font-semibold">Add a logo</div>
-
-          <div className="-mx-3 mt-1">
-            {/* TODO: maybe change this to a button to trigger the upload like the other inputs? */}
-            {/* TODO: show current logo and ability to remove logo */}
-            <FileInput
-              fileInputProps={{
-                accept: 'image/png,image/jpg,image/gif',
-                placeholder: 'Select the logo to upload (.png, .jpg, or .gif)',
-              }}
-              classNames={{
-                input:
-                  'text-[--foreground] border-[--dashboard-border] bg-[--background] focus:text-[#f00] hover:border-[--background-darker]',
-              }}
-              rightSection={
-                <IconFileUpload
-                  stroke={1}
-                  className="text-[--foreground-faded]"
-                />
-              }
-              onChange={onUploadLogo}
-            />
+          <div className="mt-6 font-semibold">Add a logo</div>
+          <div className="mb-3 text-sm text-[--foreground-faded]">
+            This logo will appear in the header of the chat window.
           </div>
 
-          <div className="text-sm text-[--foreground-faded]">
-            This logo will appear in the header of the chat window.
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpg,image/gif"
+              className="hidden"
+              aria-label="Upload logo"
+              onChange={(e) => {
+                onUploadLogo(e.target.files?.[0] ?? null)
+                e.target.value = ''
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={logoStatus === 'uploading'}
+              className={`flex w-full items-center rounded-md border bg-[--background] px-3 py-2 text-sm transition-colors disabled:pointer-events-none disabled:opacity-50 ${
+                logoStatus === 'error'
+                  ? 'border-[--error]'
+                  : 'border-[--dashboard-border] hover:border-[--foreground-faded]'
+              }`}
+            >
+              <span
+                className={
+                  logoStatus === 'error'
+                    ? 'text-[--error]'
+                    : logoFileName
+                      ? logoStatus === 'success'
+                        ? 'text-[--illinois-prairie]'
+                        : 'text-[--foreground]'
+                      : 'text-[--foreground-faded]'
+                }
+              >
+                {logoStatus === 'error'
+                  ? 'Upload failed — click to retry'
+                  : logoFileName ||
+                    'Select the logo to upload (.png, .jpg, or .gif)'}
+              </span>
+              <div className="ml-auto flex shrink-0 items-center pl-3">
+                {logoStatus === 'uploading' ? (
+                  <Spinner className="size-4 text-[--foreground-faded]" />
+                ) : logoStatus === 'success' ? (
+                  <Check className="size-4 text-[--illinois-prairie]" />
+                ) : logoStatus === 'error' ? (
+                  <AlertCircle className="size-4 text-[--error]" />
+                ) : (
+                  <IconFileUpload
+                    size={20}
+                    stroke={1}
+                    className="text-[--foreground-faded]"
+                  />
+                )}
+              </div>
+            </button>
           </div>
         </div>
       </div>

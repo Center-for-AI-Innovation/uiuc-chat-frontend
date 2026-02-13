@@ -44,6 +44,7 @@ import {
   type WebLLMProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
+import { Skeleton } from '@/components/shadcn/ui/skeleton'
 import { GetCurrentPageName } from '../CanViewOnlyCourse'
 import GlobalFooter from '../GlobalFooter'
 import AnthropicProviderInput from './providers/AnthropicProviderInput'
@@ -94,7 +95,10 @@ export const APIKeyInput = ({
         id="API-key-input"
         label={placeholder}
         styles={{
-          label: { color: 'var(--dashboard-foreground-faded)' },
+          label: {
+            color: 'var(--dashboard-foreground-faded)',
+            marginBottom: '4px',
+          },
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -139,12 +143,12 @@ export const APIKeyInput = ({
         </div>
       </Input.Wrapper>
       <FieldInfo field={field} />
-      <div className="pt-1" />
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          marginTop: '8px',
         }}
       >
         {error && (
@@ -217,7 +221,7 @@ const NewModelDropdown: React.FC<{
   return (
     <>
       <Select
-        className="menu z-[50] w-full"
+        className="menu z-[30] w-full"
         size="md"
         placeholder="Select a model"
         // searchable
@@ -611,26 +615,87 @@ export default function APIKeyInputForm({
           form.handleSubmit()
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-          }}
-        >
-          <Title
-            className={`${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
-            order={4}
+        <div>
+          {/* Default Model Section */}
+          <div className="rounded-lg border border-[--dashboard-border] bg-[--dashboard-sidebar-background] p-4">
+            <h4 className="text-lg font-bold text-[--foreground]">
+              Default Model
+            </h4>
+            <p className="mb-3 text-sm text-[--foreground-faded]">
+              Choose the default model for your chatbot. Users can still
+              override this default.
+            </p>
+            <div className="flex justify-center">
+              {isLoadingLLMProviders ? (
+                <Skeleton className="h-10 w-full rounded-md bg-[--dashboard-background-faded]" />
+              ) : llmProviders ? (
+                <NewModelDropdown
+                  value={findDefaultModel(llmProviders) as AnySupportedModel}
+                  onChange={(newDefaultModel) => {
+                    const modelWithProvider = {
+                      ...newDefaultModel,
+                      provider:
+                        (newDefaultModel as any).provider ||
+                        findDefaultModel(llmProviders)?.provider,
+                    }
+                    setDefaultModelAndUpdateProviders(
+                      modelWithProvider as AnySupportedModel & {
+                        provider: ProviderNames
+                      },
+                    )
+                    return form.handleSubmit()
+                  }}
+                  llmProviders={llmProviders}
+                  isSmallScreen={isSmallScreen}
+                />
+              ) : null}
+            </div>
+          </div>
+
+          {/* Open source LLMs */}
+          <h4 className="mt-6 text-lg font-bold text-[--foreground]">
+            Open source LLMs
+          </h4>
+          <p className="mb-3 text-sm text-[--foreground-faded]">
+            Your weights, your rules.
+          </p>
+          <Flex
+            direction={{ base: 'column', '75rem': 'row' }}
+            wrap="wrap"
+            justify="flex-start"
+            align="flex-start"
+            className="gap-4"
+            w={'100%'}
           >
+            <NCSAHostedLLmsProviderInput
+              provider={llmProviders?.NCSAHosted as NCSAHostedProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <NCSAHostedVLMProviderInput
+              provider={llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <OllamaProviderInput
+              provider={llmProviders?.Ollama as OllamaProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+            <WebLLMProviderInput
+              provider={llmProviders?.WebLLM as WebLLMProvider}
+              form={form}
+              isLoading={isLoadingLLMProviders}
+            />
+          </Flex>
+
+          <h4 className="mt-6 text-lg font-bold text-[--foreground]">
             Closed source LLMs
-          </Title>
-          <Text
-            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-            size="sm"
-          >
+          </h4>
+          <p className="mb-3 text-sm text-[--foreground-faded]">
             The best performers, but you gotta pay their prices and follow their
             rules.
-          </Text>
+          </p>
           <Flex
             direction={{ base: 'column', '75rem': 'row' }}
             wrap="wrap"
@@ -670,87 +735,6 @@ export default function APIKeyInputForm({
               isLoading={isLoadingLLMProviders}
             />
           </Flex>
-          <Title
-            className={`-mb-3 ${montserrat_heading.variable} mt-4 font-montserratHeading text-[--foreground]`}
-            order={4}
-          >
-            Open source LLMs
-          </Title>
-          <Text
-            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-            size="sm"
-          >
-            Your weights, your rules.
-          </Text>
-          <Flex
-            direction={{ base: 'column', '75rem': 'row' }}
-            wrap="wrap"
-            justify="flex-start"
-            align="flex-start"
-            className="gap-4"
-            w={'100%'}
-          >
-            <NCSAHostedLLmsProviderInput
-              provider={llmProviders?.NCSAHosted as NCSAHostedProvider}
-              form={form}
-              isLoading={isLoadingLLMProviders}
-            />
-            <NCSAHostedVLMProviderInput
-              provider={llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider}
-              form={form}
-              isLoading={isLoadingLLMProviders}
-            />
-            <OllamaProviderInput
-              provider={llmProviders?.Ollama as OllamaProvider}
-              form={form}
-              isLoading={isLoadingLLMProviders}
-            />
-            <WebLLMProviderInput
-              provider={llmProviders?.WebLLM as WebLLMProvider}
-              form={form}
-              isLoading={isLoadingLLMProviders}
-            />
-          </Flex>
-
-          {/* Default Model Section */}
-          <div className="mt-6 rounded-lg border border-[--dashboard-border] bg-[--dashboard-sidebar-background] p-4">
-            <Title
-              className={`${montserrat_heading.variable} mb-2 font-montserratHeading text-[--foreground]`}
-              order={4}
-            >
-              Default Model
-            </Title>
-            <Text
-              className={`${montserrat_paragraph.variable} mb-4 font-montserratParagraph`}
-              size="sm"
-            >
-              Choose the default model for your chatbot. Users can still
-              override this default.
-            </Text>
-            <div className="flex justify-center">
-              {llmProviders && (
-                <NewModelDropdown
-                  value={findDefaultModel(llmProviders) as AnySupportedModel}
-                  onChange={(newDefaultModel) => {
-                    const modelWithProvider = {
-                      ...newDefaultModel,
-                      provider:
-                        (newDefaultModel as any).provider ||
-                        findDefaultModel(llmProviders)?.provider,
-                    }
-                    setDefaultModelAndUpdateProviders(
-                      modelWithProvider as AnySupportedModel & {
-                        provider: ProviderNames
-                      },
-                    )
-                    return form.handleSubmit()
-                  }}
-                  llmProviders={llmProviders}
-                  isSmallScreen={isSmallScreen}
-                />
-              )}
-            </div>
-          </div>
         </div>
       </form>
     </div>
@@ -857,7 +841,7 @@ export default function APIKeyInputForm({
                               prices and follow their rules.
                             </Text>
                             <Flex
-                              direction={{ base: 'column', '75rem': 'row' }}
+                              direction="row"
                               wrap="wrap"
                               justify="flex-start"
                               align="flex-start"
@@ -926,7 +910,7 @@ export default function APIKeyInputForm({
                               Your weights, your rules.
                             </Text>
                             <Flex
-                              direction={{ base: 'column', '75rem': 'row' }}
+                              direction="row"
                               wrap="wrap"
                               justify="flex-start"
                               align="flex-start"
@@ -1001,7 +985,9 @@ export default function APIKeyInputForm({
                         </Text>
                         <br />
                         <div className="flex justify-center">
-                          {llmProviders && (
+                          {isLoadingLLMProviders ? (
+                            <Skeleton className="h-10 w-full rounded-md bg-[--dashboard-background-faded]" />
+                          ) : llmProviders ? (
                             <NewModelDropdown
                               value={
                                 findDefaultModel(
@@ -1025,7 +1011,7 @@ export default function APIKeyInputForm({
                               llmProviders={llmProviders}
                               isSmallScreen={isSmallScreen}
                             />
-                          )}
+                          ) : null}
                         </div>
                         <div className="pt-6"></div>
                         {/* <div>

@@ -7,28 +7,11 @@ import SetExampleQuestions from '../SetExampleQuestions'
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
 
 vi.mock('~/utils/apiUtils', () => ({
-  callSetCourseMetadata: vi.fn(async () => undefined),
+  callSetCourseMetadata: vi.fn(async () => true),
 }))
 
 describe('SetExampleQuestions', () => {
-  it('adds a new empty input when typing into the last input', async () => {
-    renderWithProviders(
-      <SetExampleQuestions
-        course_name="CS101"
-        course_metadata={{ example_questions: [''] } as any}
-      />,
-    )
-
-    const inputs = screen.getAllByLabelText(/Example question/i)
-    expect(inputs).toHaveLength(1)
-
-    fireEvent.change(inputs[0]!, { target: { value: 'What is a monad?' } })
-    await waitFor(() =>
-      expect(screen.getAllByLabelText(/Example question/i)).toHaveLength(2),
-    )
-  })
-
-  it('adds an input on focus when all current questions are filled', async () => {
+  it('renders prefilled questions from metadata with an empty placeholder', async () => {
     renderWithProviders(
       <SetExampleQuestions
         course_name="CS101"
@@ -36,66 +19,150 @@ describe('SetExampleQuestions', () => {
       />,
     )
 
-    const inputs = screen.getAllByLabelText(/Example question/i)
-    expect(inputs).toHaveLength(2)
-
-    fireEvent.focus(inputs[1]!)
-    await waitFor(() =>
-      expect(screen.getAllByLabelText(/Example question/i)).toHaveLength(3),
-    )
+    const inputs = screen.getAllByRole('textbox')
+    // 2 saved questions + 1 empty placeholder
+    expect(inputs).toHaveLength(3)
+    expect(inputs[0]).toHaveValue('Q1')
+    expect(inputs[1]).toHaveValue('Q2')
+    expect(inputs[2]).toHaveValue('')
   })
 
-  it('submits filtered questions via callSetCourseMetadata', async () => {
+  it('submits filtered questions via callSetCourseMetadata on blur', async () => {
     const user = userEvent.setup()
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
     const { callSetCourseMetadata } = await import('~/utils/apiUtils')
 
     renderWithProviders(
       <SetExampleQuestions
         course_name="CS101"
-        course_metadata={{ example_questions: [''] } as any}
+        course_metadata={{ example_questions: [] } as any}
       />,
     )
 
-    // Type a second question (the component appends an empty input when typing in the last).
-    const inputs = screen.getAllByLabelText(/Example question/i)
-    const firstInput = inputs[0]
-    if (!firstInput) throw new Error('Expected an example question input')
+    const firstInput = screen.getAllByRole('textbox')[0]!
     await user.type(firstInput, 'Q1')
-    await waitFor(() =>
-      expect(screen.getAllByLabelText(/Example question/i)).toHaveLength(2),
-    )
-    const secondInput = screen.getAllByLabelText(/Example question/i)[1]
-    if (!secondInput)
-      throw new Error('Expected a second example question input')
-    await user.type(secondInput, 'Q2')
 
-    const saveButton = screen.getAllByRole('button', { name: /Save/i })[0]
-    if (!saveButton) throw new Error('Expected a Save button')
-    fireEvent.click(saveButton)
+    // Blur triggers auto-save
+    fireEvent.blur(firstInput)
 
     await waitFor(() =>
       expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith('CS101', {
-        example_questions: ['Q1', 'Q2'],
+        example_questions: ['Q1'],
       }),
     )
-    expect(alertSpy).not.toHaveBeenCalled()
   })
 
-  it('alerts and does not submit when course_name is empty', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
+  it('does not save empty questions on blur', async () => {
     const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+    vi.mocked(callSetCourseMetadata).mockClear()
 
     renderWithProviders(
       <SetExampleQuestions
-        course_name=""
-        course_metadata={{ example_questions: ['Q1'] } as any}
+        course_name="CS101"
+        course_metadata={{ example_questions: [] } as any}
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /Save/i }))
+    const firstInput = screen.getAllByRole('textbox')[0]!
+    fireEvent.blur(firstInput)
 
-    expect(alertSpy).toHaveBeenCalledWith('Course name is required')
+    // Should not call API for empty input
     expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+  })
+
+  it('appends an empty input when user starts typing in the last input', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <SetExampleQuestions
+        course_name="CS101"
+        course_metadata={{ example_questions: [] } as any}
+      />,
+    )
+
+    // Starts with one empty input
+    expect(screen.getAllByRole('textbox')).toHaveLength(1)
+
+    // Type into the first (and only) input
+    const firstInput = screen.getAllByRole('textbox')[0]!
+    await user.type(firstInput, 'H')
+
+    // A new empty input should have been appended
+    await waitFor(() => expect(screen.getAllByRole('textbox')).toHaveLength(2))
+
+    // The new input should be empty
+    const inputs = screen.getAllByRole('textbox')
+    expect(inputs[1]).toHaveValue('')
+  })
+
+  it('does not append a duplicate empty input if one already exists below', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <SetExampleQuestions
+        course_name="CS101"
+        course_metadata={{ example_questions: [] } as any}
+      />,
+    )
+
+    const firstInput = screen.getAllByRole('textbox')[0]!
+    await user.type(firstInput, 'Hello')
+
+    // Should have exactly 2 inputs (original + auto-appended)
+    await waitFor(() => expect(screen.getAllByRole('textbox')).toHaveLength(2))
+
+    // Continue typing — should still be 2, not 3
+    await user.type(firstInput, ' world')
+    expect(screen.getAllByRole('textbox')).toHaveLength(2)
+  })
+
+  it('focuses the next input when Enter is pressed', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <SetExampleQuestions
+        course_name="CS101"
+        course_metadata={{ example_questions: [] } as any}
+      />,
+    )
+
+    const firstInput = screen.getAllByRole('textbox')[0]!
+    await user.type(firstInput, 'Question 1')
+
+    // A second input should have appeared
+    await waitFor(() => expect(screen.getAllByRole('textbox')).toHaveLength(2))
+
+    // Press Enter on the first input
+    await user.keyboard('{Enter}')
+
+    // The second input should now be focused
+    await waitFor(() => {
+      const inputs = screen.getAllByRole('textbox')
+      expect(inputs[1]).toHaveFocus()
+    })
+  })
+
+  it('focuses the next input when Enter is pressed on a middle input', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(
+      <SetExampleQuestions
+        course_name="CS101"
+        course_metadata={{ example_questions: ['Q1', 'Q2', 'Q3'] } as any}
+      />,
+    )
+
+    // 3 saved questions + 1 empty placeholder
+    expect(screen.getAllByRole('textbox')).toHaveLength(4)
+
+    // Click into the second input and press Enter
+    const secondInput = screen.getAllByRole('textbox')[1]!
+    await user.click(secondInput)
+    await user.keyboard('{Enter}')
+
+    // The third input should now be focused
+    await waitFor(() => {
+      const inputs = screen.getAllByRole('textbox')
+      expect(inputs[2]).toHaveFocus()
+    })
   })
 })

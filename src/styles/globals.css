@@ -224,7 +224,7 @@
   --dashboard-background-faded: color-mix(
     in srgb,
     var(--dashboard-background),
-    black 5%
+    black 3%
   );
   --dashboard-background-dark: #ddd; /* color-mix(in srgb, var(--illinois-background-dark), white 5%); */
   --dashboard-background-darker: color-mix(
@@ -242,7 +242,7 @@
   ); /* var(--dashboard-background-faded); */
 
   --dashboard-button-foreground: var(--illinois-white);
-  --dashboard-button: var(--illinois-orange);
+  --dashboard-button: var(--illinois-blue);
   --dashboard-button-hover: color-mix(
     in srgb,
     var(--dashboard-button),
@@ -355,6 +355,19 @@
     in srgb,
     var(--dashboard-background-dark),
     black 20%
+  );
+
+  --dashboard-button-foreground: var(--illinois-blue);
+  --dashboard-button: var(--illinois-white);
+  --dashboard-button-hover: color-mix(
+    in srgb,
+    var(--dashboard-button),
+    var(--illinois-blue) 20%
+  );
+  --dashboard-table-selected: color-mix(
+    in srgb,
+    var(--dashboard-button),
+    white 20%
   );
 
   --dashboard-border: color-mix(
