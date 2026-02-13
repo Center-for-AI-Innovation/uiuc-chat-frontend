@@ -31,7 +31,9 @@ import getAllCourseMetadataHandler, {
   getCoursesByOwnerOrAdmin,
 } from '~/pages/api/UIUC-api/getAllCourseMetadata'
 import getAllCourseNamesHandler from '~/pages/api/UIUC-api/getAllCourseNames'
-import getCourseExistsHandler, { checkCourseExists } from '~/pages/api/UIUC-api/getCourseExists'
+import getCourseExistsHandler, {
+  checkCourseExists,
+} from '~/pages/api/UIUC-api/getCourseExists'
 import getCourseMetadataHandler, {
   getCourseMetadata,
 } from '~/pages/api/UIUC-api/getCourseMetadata'
@@ -77,12 +79,17 @@ describe('UIUC-api course metadata routes', () => {
       res as any,
     )
     expect(res.status).toHaveBeenCalledWith(200)
-    expect(res.json).toHaveBeenCalledWith({ course_metadata: { is_private: true } })
+    expect(res.json).toHaveBeenCalledWith({
+      course_metadata: { is_private: true },
+    })
   })
 
   it('getCoursesByOwnerOrAdmin filters metadata based on owner/admin', async () => {
     hoisted.hGetAll.mockResolvedValueOnce({
-      CS101: JSON.stringify({ course_owner: 'me@example.com', course_admins: [] }),
+      CS101: JSON.stringify({
+        course_owner: 'me@example.com',
+        course_admins: [],
+      }),
       CS102: JSON.stringify({
         course_owner: 'someone@example.com',
         course_admins: ['me@example.com'],
@@ -103,18 +110,27 @@ describe('UIUC-api course metadata routes', () => {
     })
 
     const all = await getAllCourseMetadata()
-    expect(all).toEqual([{ CS101: { is_private: false } }, { CS102: { is_private: true } }])
+    expect(all).toEqual([
+      { CS101: { is_private: false } },
+      { CS102: { is_private: true } },
+    ])
   })
 
   it('getAllCourseMetadata handler returns 400 when user email is missing', async () => {
     const res = createMockRes()
-    await getAllCourseMetadataHandler(createMockReq({ user: null }) as any, res as any)
+    await getAllCourseMetadataHandler(
+      createMockReq({ user: null }) as any,
+      res as any,
+    )
     expect(res.status).toHaveBeenCalledWith(400)
   })
 
   it('getAllCourseMetadata handler returns 200 for user-owned/admin courses', async () => {
     hoisted.hGetAll.mockResolvedValueOnce({
-      CS101: JSON.stringify({ course_owner: 'me@example.com', course_admins: [] }),
+      CS101: JSON.stringify({
+        course_owner: 'me@example.com',
+        course_admins: [],
+      }),
     })
 
     const res = createMockRes()
@@ -123,16 +139,24 @@ describe('UIUC-api course metadata routes', () => {
       res as any,
     )
     expect(res.status).toHaveBeenCalledWith(200)
-    expect(res.json).toHaveBeenCalledWith([{ CS101: { course_owner: 'me@example.com', course_admins: [] } }])
+    expect(res.json).toHaveBeenCalledWith([
+      { CS101: { course_owner: 'me@example.com', course_admins: [] } },
+    ])
   })
 
   it('getAllCourseNames returns 400 when email is missing and 200 with course names', async () => {
     const res1 = createMockRes()
-    await getAllCourseNamesHandler(createMockReq({ user: null }) as any, res1 as any)
+    await getAllCourseNamesHandler(
+      createMockReq({ user: null }) as any,
+      res1 as any,
+    )
     expect(res1.status).toHaveBeenCalledWith(400)
 
     hoisted.hGetAll.mockResolvedValueOnce({
-      CS101: JSON.stringify({ course_owner: 'me@example.com', course_admins: [] }),
+      CS101: JSON.stringify({
+        course_owner: 'me@example.com',
+        course_admins: [],
+      }),
     })
     const res2 = createMockRes()
     await getAllCourseNamesHandler(
@@ -169,4 +193,3 @@ describe('UIUC-api course metadata routes', () => {
     expect(res2.json).toHaveBeenCalledWith(false)
   })
 })
-

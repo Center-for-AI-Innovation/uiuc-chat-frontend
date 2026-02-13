@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import {
-  ProviderNames,
-} from '~/utils/modelProviders/LLMProvider'
+import { ProviderNames } from '~/utils/modelProviders/LLMProvider'
 import {
   SambaNovaModels,
   type SambaNovaModel,

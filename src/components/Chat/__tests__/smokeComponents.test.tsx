@@ -33,7 +33,11 @@ describe('Chat components (smoke)', () => {
   it('ImagePreview opens a modal on click', async () => {
     const user = userEvent.setup()
     renderWithProviders(
-      <ImagePreview src="https://example.com/img.png" alt="My Image" className="c" />,
+      <ImagePreview
+        src="https://example.com/img.png"
+        alt="My Image"
+        className="c"
+      />,
     )
 
     const img = screen.getByAltText('My Image')
@@ -44,4 +48,3 @@ describe('Chat components (smoke)', () => {
     expect(screen.getByLabelText('Close image preview')).toBeInTheDocument()
   })
 })
-

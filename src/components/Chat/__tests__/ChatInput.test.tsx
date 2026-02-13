@@ -57,9 +57,7 @@ describe('ChatInput', () => {
         provider: 'OpenAI',
         enabled: true,
         apiKey: 'sk-test',
-        models: [
-          { id: 'm1', name: 'Model 1', enabled: true, default: true },
-        ],
+        models: [{ id: 'm1', name: 'Model 1', enabled: true, default: true }],
       },
     }
 
@@ -122,7 +120,7 @@ describe('ChatInput', () => {
     )
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Message Illinois Chat'),
       '123456',
     )
     expect(alertSpy).toHaveBeenCalled()
@@ -160,11 +158,16 @@ describe('ChatInput', () => {
       },
     )
 
-    const fileInput = container.querySelector('input[type=\"file\"]') as HTMLInputElement
-    await user.upload(fileInput, new File(['hello'], 'notes.txt', { type: 'text/plain' }))
+    const fileInput = container.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement
+    await user.upload(
+      fileInput,
+      new File(['hello'], 'notes.txt', { type: 'text/plain' }),
+    )
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Message Illinois Chat'),
       'Question',
     )
     await user.click(screen.getByRole('button', { name: /Send message/i }))
@@ -232,9 +235,7 @@ describe('ChatInput', () => {
   it('shows prompt list and selects a prompt via keyboard', async () => {
     const user = userEvent.setup()
 
-    const prompts = [
-      { id: 'p1', name: 'TestPrompt', content: 'Hello world' },
-    ]
+    const prompts = [{ id: 'p1', name: 'TestPrompt', content: 'Hello world' }]
     renderWithProviders(
       <ChatInput
         onSend={vi.fn()}
@@ -253,7 +254,7 @@ describe('ChatInput', () => {
       },
     )
 
-    const input = screen.getByPlaceholderText('Message Illinois.chat')
+    const input = screen.getByPlaceholderText('Message Illinois Chat')
     await user.type(input, '/t')
     expect(screen.getByText(/TestPrompt/i)).toBeInTheDocument()
 
@@ -272,9 +273,7 @@ describe('ChatInput', () => {
       }),
     )
 
-    const prompts = [
-      { id: 'p1', name: 'VarPrompt', content: 'Hello {{name}}' },
-    ]
+    const prompts = [{ id: 'p1', name: 'VarPrompt', content: 'Hello {{name}}' }]
 
     renderWithProviders(
       <ChatInput
@@ -294,7 +293,12 @@ describe('ChatInput', () => {
             id: 'c1',
             name: 'Test',
             messages: [],
-            model: { id: 'gpt-4o-mini', name: 'GPT-4o mini', tokenLimit: 128000, enabled: true },
+            model: {
+              id: 'gpt-4o-mini',
+              name: 'GPT-4o mini',
+              tokenLimit: 128000,
+              enabled: true,
+            },
             prompt: 'p',
             temperature: 0.3,
             folderId: null,
@@ -306,12 +310,14 @@ describe('ChatInput', () => {
       },
     )
 
-    const input = screen.getByPlaceholderText('Message Illinois.chat')
+    const input = screen.getByPlaceholderText('Message Illinois Chat')
     await user.type(input, '/v')
     await user.keyboard('{Enter}')
 
     await user.click(screen.getByRole('button', { name: /variable-submit/i }))
-    await waitFor(() => expect(showErrorToast).toHaveBeenCalledWith('Bad request'))
+    await waitFor(() =>
+      expect(showErrorToast).toHaveBeenCalledWith('Bad request'),
+    )
   })
 
   it('uploads an image and sends a structured message', async () => {
@@ -319,51 +325,51 @@ describe('ChatInput', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
     const onSend = vi.fn()
-      const { container } = renderWithProviders(
-        <ChatInput
-          onSend={onSend as any}
-          onScrollDownClick={vi.fn()}
-          stopConversationRef={{ current: false }}
-          textareaRef={{ current: null }}
-          showScrollDownButton={false}
-          inputContent=""
-          setInputContent={vi.fn()}
-          user_id="u1"
-          courseName="CS101"
-          chat_ui={{ isModelLoading: () => false } as any}
-        />,
-        {
-          homeState: {
-            selectedConversation: undefined,
-            messageIsStreaming: false,
-            prompts: [],
-          } as any,
-          homeContext: { dispatch: vi.fn() },
-        },
-      )
+    const { container } = renderWithProviders(
+      <ChatInput
+        onSend={onSend as any}
+        onScrollDownClick={vi.fn()}
+        stopConversationRef={{ current: false }}
+        textareaRef={{ current: null }}
+        showScrollDownButton={false}
+        inputContent=""
+        setInputContent={vi.fn()}
+        user_id="u1"
+        courseName="CS101"
+        chat_ui={{ isModelLoading: () => false } as any}
+      />,
+      {
+        homeState: {
+          selectedConversation: undefined,
+          messageIsStreaming: false,
+          prompts: [],
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
 
-      const fileInput = container.querySelector(
-        'input[type="file"]',
-      ) as HTMLInputElement
-      expect(fileInput).toBeTruthy()
+    const fileInput = container.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement
+    expect(fileInput).toBeTruthy()
 
-      const image = new File(['img'], 'pic.png', { type: 'image/png' })
+    const image = new File(['img'], 'pic.png', { type: 'image/png' })
 
     await user.upload(fileInput, image)
     expect(await screen.findByText(/Ready for chat/i)).toBeInTheDocument()
 
-      await user.type(
-        screen.getByPlaceholderText('Message Illinois.chat'),
-        'Hello with files',
-      )
-      await user.click(screen.getByRole('button', { name: /Send message/i }))
+    await user.type(
+      screen.getByPlaceholderText('Message Illinois Chat'),
+      'Hello with files',
+    )
+    await user.click(screen.getByRole('button', { name: /Send message/i }))
 
-      expect(onSend).toHaveBeenCalledTimes(1)
-      const message = onSend.mock.calls[0]?.[0]
-      expect(Array.isArray(message.content)).toBe(true)
-      const types = (message.content as any[]).map((c) => c.type)
-      expect(types).toContain('text')
-      expect(types).toContain('image_url')
+    expect(onSend).toHaveBeenCalledTimes(1)
+    const message = onSend.mock.calls[0]?.[0]
+    expect(Array.isArray(message.content)).toBe(true)
+    const types = (message.content as any[]).map((c) => c.type)
+    expect(types).toContain('text')
+    expect(types).toContain('image_url')
   }, 20000)
 
   it('uploads a non-image file, attaches contexts, and sends a file message', async () => {
@@ -420,7 +426,7 @@ describe('ChatInput', () => {
     expect(screen.getByText(/Ready for chat/i)).toBeInTheDocument()
 
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Message Illinois Chat'),
       'Question about my file',
     )
     await user.click(screen.getByRole('button', { name: /Send message/i }))
@@ -517,7 +523,9 @@ describe('ChatInput', () => {
     ) as HTMLInputElement
     fireEvent.change(fileInput, {
       target: {
-        files: [new File(['x'], 'malware.exe', { type: 'application/octet-stream' })],
+        files: [
+          new File(['x'], 'malware.exe', { type: 'application/octet-stream' }),
+        ],
       },
     })
 
@@ -581,7 +589,10 @@ describe('ChatInput', () => {
     const fileInput = container.querySelector(
       'input[type="file"]',
     ) as HTMLInputElement
-    await user.upload(fileInput, new File(['img'], 'pic.png', { type: 'image/png' }))
+    await user.upload(
+      fileInput,
+      new File(['img'], 'pic.png', { type: 'image/png' }),
+    )
 
     expect(await screen.findByText(/Ready for chat/i)).toBeInTheDocument()
   }, 20000)
@@ -610,7 +621,10 @@ describe('ChatInput', () => {
     const fileInput = container.querySelector(
       'input[type="file"]',
     ) as HTMLInputElement
-    await user.upload(fileInput, new File(['img'], 'pic.png', { type: 'image/png' }))
+    await user.upload(
+      fileInput,
+      new File(['img'], 'pic.png', { type: 'image/png' }),
+    )
 
     expect(await screen.findByText(/Upload failed/i)).toBeInTheDocument()
   }, 20000)
@@ -631,10 +645,13 @@ describe('ChatInput', () => {
         user_id="u1"
         courseName="CS101"
       />,
-      { homeState: { messageIsStreaming: false, prompts } as any, homeContext: { dispatch: vi.fn() } },
+      {
+        homeState: { messageIsStreaming: false, prompts } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
     )
 
-    const input = screen.getByPlaceholderText('Message Illinois.chat')
+    const input = screen.getByPlaceholderText('Message Illinois Chat')
     await user.type(input, '/t')
     expect(screen.getByText(/TestPrompt/i)).toBeInTheDocument()
 
@@ -689,7 +706,7 @@ describe('ChatInput', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 2100))
     await user.type(
-      screen.getByPlaceholderText('Message Illinois.chat'),
+      screen.getByPlaceholderText('Message Illinois Chat'),
       'Question about my file',
     )
     await user.click(screen.getByRole('button', { name: /Send message/i }))
@@ -725,10 +742,13 @@ describe('ChatInput', () => {
           user_id="u1"
           courseName="CS101"
         />,
-        { homeState: { messageIsStreaming: false, prompts: [] } as any, homeContext: { dispatch: vi.fn() } },
+        {
+          homeState: { messageIsStreaming: false, prompts: [] } as any,
+          homeContext: { dispatch: vi.fn() },
+        },
       )
 
-      const textarea = screen.getByPlaceholderText('Message Illinois.chat')
+      const textarea = screen.getByPlaceholderText('Message Illinois Chat')
       await user.type(textarea, 'Hello{Enter}')
       expect(onSend).not.toHaveBeenCalled()
     } finally {
@@ -755,10 +775,13 @@ describe('ChatInput', () => {
         user_id="u1"
         courseName="CS101"
       />,
-      { homeState: { messageIsStreaming: false, prompts } as any, homeContext: { dispatch: vi.fn() } },
+      {
+        homeState: { messageIsStreaming: false, prompts } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
     )
 
-    const textarea = screen.getByPlaceholderText('Message Illinois.chat')
+    const textarea = screen.getByPlaceholderText('Message Illinois Chat')
     await user.type(textarea, '/')
     expect(screen.getByText(/One/i)).toBeInTheDocument()
 
@@ -768,7 +791,9 @@ describe('ChatInput', () => {
     fireEvent.keyDown(textarea, { key: 'x' })
     fireEvent.keyDown(textarea, { key: 'Escape' })
 
-    await waitFor(() => expect(screen.queryByText(/One/i)).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByText(/One/i)).not.toBeInTheDocument(),
+    )
   })
 
   it('toggles and closes the plugin select via keyboard', async () => {
@@ -784,16 +809,21 @@ describe('ChatInput', () => {
         user_id="u1"
         courseName="CS101"
       />,
-      { homeState: { messageIsStreaming: false, prompts: [] } as any, homeContext: { dispatch: vi.fn() } },
+      {
+        homeState: { messageIsStreaming: false, prompts: [] } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
     )
 
-    const textarea = screen.getByPlaceholderText('Message Illinois.chat')
+    const textarea = screen.getByPlaceholderText('Message Illinois Chat')
     fireEvent.keyDown(textarea, { key: '/', metaKey: true })
 
     const combo = await screen.findByRole('combobox')
     fireEvent.keyDown(combo, { key: 'Escape' })
 
-    await waitFor(() => expect(screen.queryByRole('combobox')).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByRole('combobox')).not.toBeInTheDocument(),
+    )
   })
 
   it('shows a regenerate button when the last message is a user message', async () => {
@@ -815,7 +845,10 @@ describe('ChatInput', () => {
       />,
       {
         homeState: {
-          selectedConversation: { id: 'c1', messages: [{ id: 'u1', role: 'user', content: 'Q' }] } as any,
+          selectedConversation: {
+            id: 'c1',
+            messages: [{ id: 'u1', role: 'user', content: 'Q' }],
+          } as any,
           messageIsStreaming: false,
           prompts: [],
         } as any,
@@ -823,7 +856,9 @@ describe('ChatInput', () => {
       },
     )
 
-    await user.click(await screen.findByRole('button', { name: /Regenerate Response/i }))
+    await user.click(
+      await screen.findByRole('button', { name: /Regenerate Response/i }),
+    )
     expect(onRegenerate).toHaveBeenCalled()
   })
 
@@ -843,17 +878,15 @@ describe('ChatInput', () => {
         user_id="u1"
         courseName="CS101"
       />,
-      { homeState: { messageIsStreaming: false, prompts: [] } as any, homeContext: { dispatch: vi.fn() } },
+      {
+        homeState: { messageIsStreaming: false, prompts: [] } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
     )
 
-    const buttons = screen.getAllByRole('button')
-    const scrollButton = buttons.find(
-      (btn) =>
-        !btn.getAttribute('aria-label') &&
-        btn.className.includes('h-7') &&
-        btn.className.includes('w-7'),
-    ) as HTMLElement
-    expect(scrollButton).toBeTruthy()
+    const scrollButton = await screen.findByRole('button', {
+      name: /Scroll Down/i,
+    })
     await user.click(scrollButton)
     expect(onScrollDownClick).toHaveBeenCalled()
   })

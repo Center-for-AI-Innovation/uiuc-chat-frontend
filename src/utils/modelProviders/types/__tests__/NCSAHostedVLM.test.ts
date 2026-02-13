@@ -2,14 +2,14 @@
 
 import { describe, expect, it, vi } from 'vitest'
 
-import {
-  getNCSAHostedVLMModels,
-  NCSAHostedVLMModelID,
-} from '../NCSAHostedVLM'
+import { getNCSAHostedVLMModels, NCSAHostedVLMModelID } from '../NCSAHostedVLM'
 
 describe('getNCSAHostedVLMModels', () => {
   it('returns empty models when disabled', async () => {
-    const provider: any = { enabled: false, models: [{ id: NCSAHostedVLMModelID.MOLMO_7B_D_0924 }] }
+    const provider: any = {
+      enabled: false,
+      models: [{ id: NCSAHostedVLMModelID.MOLMO_7B_D_0924 }],
+    }
     const result = await getNCSAHostedVLMModels(provider)
     expect(result.models).toEqual([])
   })
@@ -56,15 +56,27 @@ describe('getNCSAHostedVLMModels', () => {
 
     const provider: any = {
       enabled: true,
-      models: [{ id: NCSAHostedVLMModelID.MOLMO_7B_D_0924, enabled: false, default: true }],
+      models: [
+        {
+          id: NCSAHostedVLMModelID.MOLMO_7B_D_0924,
+          enabled: false,
+          default: true,
+        },
+      ],
     }
 
     const result = await getNCSAHostedVLMModels(provider)
     expect(result.baseUrl).toBe('https://vlm.example')
     const models = result.models ?? []
     expect(models).toHaveLength(2)
-    const known = models.find((m: any) => m.id === NCSAHostedVLMModelID.MOLMO_7B_D_0924)
-    expect(known).toMatchObject({ enabled: false, default: true, tokenLimit: 123 })
+    const known = models.find(
+      (m: any) => m.id === NCSAHostedVLMModelID.MOLMO_7B_D_0924,
+    )
+    expect(known).toMatchObject({
+      enabled: false,
+      default: true,
+      tokenLimit: 123,
+    })
     const unknown = models.find((m: any) => m.id === 'unknown/model')
     expect(unknown).toBeTruthy()
     expect(unknown!.name).toMatch(/^Experimental:/)

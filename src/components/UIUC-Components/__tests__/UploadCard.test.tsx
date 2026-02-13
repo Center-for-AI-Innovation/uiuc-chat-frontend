@@ -9,12 +9,30 @@ vi.mock('../LargeDropzone', () => ({
   __esModule: true,
   default: () => <div data-testid="dropzone" />,
 }))
-vi.mock('../CanvasIngestForm', () => ({ __esModule: true, default: () => <div /> }))
-vi.mock('../WebsiteIngestForm', () => ({ __esModule: true, default: () => <div /> }))
-vi.mock('../GitHubIngestForm', () => ({ __esModule: true, default: () => <div /> }))
-vi.mock('../MITIngestForm', () => ({ __esModule: true, default: () => <div /> }))
-vi.mock('../CourseraIngestForm', () => ({ __esModule: true, default: () => <div /> }))
-vi.mock('../SetExampleQuestions', () => ({ __esModule: true, default: () => <div /> }))
+vi.mock('../CanvasIngestForm', () => ({
+  __esModule: true,
+  default: () => <div />,
+}))
+vi.mock('../WebsiteIngestForm', () => ({
+  __esModule: true,
+  default: () => <div />,
+}))
+vi.mock('../GitHubIngestForm', () => ({
+  __esModule: true,
+  default: () => <div />,
+}))
+vi.mock('../MITIngestForm', () => ({
+  __esModule: true,
+  default: () => <div />,
+}))
+vi.mock('../CourseraIngestForm', () => ({
+  __esModule: true,
+  default: () => <div />,
+}))
+vi.mock('../SetExampleQuestions', () => ({
+  __esModule: true,
+  default: () => <div />,
+}))
 vi.mock('../UploadNotification', () => ({
   __esModule: true,
   default: () => <div data-testid="upload-notification" />,
@@ -54,22 +72,30 @@ describe('UploadCard', () => {
       <UploadCard
         projectName="CS101"
         current_user_email="owner@example.com"
-        metadata={{
-          course_owner: 'owner@example.com',
-          course_admins: [],
-          approved_emails_list: [],
-          is_private: false,
-          project_description: '',
-          course_intro_message: '',
-          banner_image_s3: undefined,
-        } as any}
+        metadata={
+          {
+            course_owner: 'owner@example.com',
+            course_admins: [],
+            approved_emails_list: [],
+            is_private: false,
+            project_description: '',
+            course_intro_message: '',
+            banner_image_s3: undefined,
+          } as any
+        }
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: /Share Chatbot|Share/i }))
-    expect(screen.getByRole('dialog', { name: 'Share modal' })).toBeInTheDocument()
+    await user.click(
+      screen.getByRole('button', { name: /Share Chatbot|Share/i }),
+    )
+    expect(
+      screen.getByRole('dialog', { name: 'Share modal' }),
+    ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /Close/i }))
-    expect(screen.queryByRole('dialog', { name: 'Share modal' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('dialog', { name: 'Share modal' }),
+    ).not.toBeInTheDocument()
 
     await user.type(
       screen.getByPlaceholderText(/Describe your project/i),
@@ -89,12 +115,15 @@ describe('UploadCard', () => {
       expect((apiUtils as any).callSetCourseMetadata).toHaveBeenCalled(),
     )
 
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement
     expect(fileInput).toBeTruthy()
-    await user.upload(fileInput, new File(['x'], 'logo.png', { type: 'image/png' }))
-    await waitFor(() =>
-      expect((apiUtils as any).uploadToS3).toHaveBeenCalled(),
+    await user.upload(
+      fileInput,
+      new File(['x'], 'logo.png', { type: 'image/png' }),
     )
+    await waitFor(() => expect((apiUtils as any).uploadToS3).toHaveBeenCalled())
   })
 
   it('handles failed metadata upserts gracefully', async () => {
@@ -110,14 +139,16 @@ describe('UploadCard', () => {
       <UploadCard
         projectName="CS101"
         current_user_email="owner@example.com"
-        metadata={{
-          course_owner: 'owner@example.com',
-          course_admins: [],
-          approved_emails_list: [],
-          is_private: false,
-          project_description: '',
-          course_intro_message: '',
-        } as any}
+        metadata={
+          {
+            course_owner: 'owner@example.com',
+            course_admins: [],
+            approved_emails_list: [],
+            is_private: false,
+            project_description: '',
+            course_intro_message: '',
+          } as any
+        }
       />,
     )
 

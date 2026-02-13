@@ -20,7 +20,9 @@ vi.mock('@mantine/dropzone', () => {
         <button
           type="button"
           onClick={() =>
-            onDrop?.([new File(['hello'], 'My File.pdf', { type: 'application/pdf' })])
+            onDrop?.([
+              new File(['hello'], 'My File.pdf', { type: 'application/pdf' }),
+            ])
           }
         >
           trigger-drop
@@ -95,53 +97,57 @@ describe('LargeDropzone', () => {
       intervalCallback = cb
       return 123 as any
     }) as any)
-    vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => undefined as any)
+    vi.spyOn(globalThis, 'clearInterval').mockImplementation(
+      () => undefined as any,
+    )
 
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any, init?: any) => {
-      const url = String(input?.url ?? input)
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      async (input: any, init?: any) => {
+        const url = String(input?.url ?? input)
 
-      if (url.includes('/api/UIUC-api/uploadToS3')) {
-        return new Response(
-          JSON.stringify({
-            post: {
-              url: 'http://localhost/upload',
-              fields: { key: 'k', policy: 'p', 'x-amz-signature': 'sig' },
-            },
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        )
-      }
-      if (url === 'http://localhost/upload') {
-        return new Response('', { status: 200 })
-      }
-      if (url.includes('/api/UIUC-api/ingest')) {
-        return new Response(JSON.stringify({ ok: true }), {
+        if (url.includes('/api/UIUC-api/uploadToS3')) {
+          return new Response(
+            JSON.stringify({
+              post: {
+                url: 'http://localhost/upload',
+                fields: { key: 'k', policy: 'p', 'x-amz-signature': 'sig' },
+              },
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          )
+        }
+        if (url === 'http://localhost/upload') {
+          return new Response('', { status: 200 })
+        }
+        if (url.includes('/api/UIUC-api/ingest')) {
+          return new Response(JSON.stringify({ ok: true }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          })
+        }
+        if (url.includes('/api/materialsTable/docsInProgress')) {
+          return new Response(
+            JSON.stringify({
+              documents: uploads.map((u) => ({ readable_filename: u.name })),
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          )
+        }
+        if (url.includes('/api/materialsTable/successDocs')) {
+          return new Response(
+            JSON.stringify({
+              documents: uploads.map((u) => ({ readable_filename: u.name })),
+            }),
+            { status: 200, headers: { 'content-type': 'application/json' } },
+          )
+        }
+
+        return new Response(JSON.stringify({}), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         })
-      }
-      if (url.includes('/api/materialsTable/docsInProgress')) {
-        return new Response(
-          JSON.stringify({
-            documents: uploads.map((u) => ({ readable_filename: u.name })),
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        )
-      }
-      if (url.includes('/api/materialsTable/successDocs')) {
-        return new Response(
-          JSON.stringify({
-            documents: uploads.map((u) => ({ readable_filename: u.name })),
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        )
-      }
-
-      return new Response(JSON.stringify({}), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      })
-    })
+      },
+    )
 
     render(
       <LargeDropzone

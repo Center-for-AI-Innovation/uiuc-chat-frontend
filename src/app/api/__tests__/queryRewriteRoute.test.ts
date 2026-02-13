@@ -38,4 +38,3 @@ describe('app/api/queryRewrite POST', () => {
     expect(res.status).toBe(500)
   })
 })
-

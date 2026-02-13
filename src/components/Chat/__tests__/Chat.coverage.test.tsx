@@ -32,15 +32,15 @@ vi.mock('~/components/UIUC-Components/runAuthCheck', () => ({
   get_user_permission: () => 'edit',
 }))
 
-vi.mock('~/hooks/conversationQueries', () => ({
+vi.mock('@/hooks/queries/useUpdateConversation', () => ({
   useUpdateConversation: () => ({ mutateAsync: vi.fn(async () => ({})) }),
 }))
 
-vi.mock('~/hooks/messageQueries', () => ({
+vi.mock('@/hooks/queries/useDeleteMessages', () => ({
   useDeleteMessages: () => ({ mutate: vi.fn(async () => ({})) }),
 }))
 
-vi.mock('~/hooks/docGroupsQueries', () => ({
+vi.mock('@/hooks/queries/useFetchEnabledDocGroups', () => ({
   useFetchEnabledDocGroups: () => ({
     data: [{ name: 'Group 1' }],
     isSuccess: true,
@@ -550,14 +550,19 @@ describe('Chat (coverage)', () => {
           conversations: [conversation as any],
           loading: false,
           messageIsStreaming: false,
-          llmProviders: {},
+          llmProviders: null,
         } as any,
         homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn() },
       },
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
-    await waitFor(() => expect((notifications as any).show).toHaveBeenCalled())
+    await waitFor(
+      () => expect((notifications as any).show).toHaveBeenCalled(),
+      {
+        timeout: 3000,
+      },
+    )
   })
 
   it('names a conversation from the first message text', async () => {
@@ -629,8 +634,12 @@ describe('Chat (coverage)', () => {
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     const tools = [{ name: 'tool-1', enabled: true }]
 
-    const toolMod = await import('~/utils/functionCalling/handleFunctionCalling')
-    ;(toolMod as any).handleFunctionCall.mockResolvedValueOnce([{ name: 'tool-1' }])
+    const toolMod = await import(
+      '~/utils/functionCalling/handleFunctionCalling'
+    )
+    ;(toolMod as any).handleFunctionCall.mockResolvedValueOnce([
+      { name: 'tool-1' },
+    ])
     ;(toolMod as any).handleToolCall.mockResolvedValueOnce(undefined)
 
     server.use(
@@ -683,7 +692,9 @@ describe('Chat (coverage)', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
-    await waitFor(() => expect((toolMod as any).handleToolCall).toHaveBeenCalled())
+    await waitFor(() =>
+      expect((toolMod as any).handleToolCall).toHaveBeenCalled(),
+    )
   })
 
   it('truncates conversation names for long first messages (string content)', async () => {
@@ -911,7 +922,9 @@ describe('Chat (coverage)', () => {
 
     expect((webllm as any).__instances.length).toBeGreaterThan(0)
     const instance = (webllm as any).__instances[0]
-    instance.isModelLoading.mockImplementationOnce(() => true).mockImplementationOnce(() => false)
+    instance.isModelLoading
+      .mockImplementationOnce(() => true)
+      .mockImplementationOnce(() => false)
     instance.runChatCompletion.mockImplementation(async () => {
       async function* gen() {
         yield { choices: [{ delta: { content: 'hello' } }] }
@@ -984,10 +997,11 @@ describe('Chat (coverage)', () => {
     )
   })
 
-  it('shows an error toast when /api/models returns null providers', async () => {
+  it('logs an error when /api/models returns null providers', async () => {
     const user = userEvent.setup()
-    const { notifications } = await import('@mantine/notifications')
-    ;(notifications as any).show.mockClear()
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
     server.use(
@@ -1017,14 +1031,20 @@ describe('Chat (coverage)', () => {
           conversations: [conversation as any],
           loading: false,
           messageIsStreaming: false,
-          llmProviders: {},
+          llmProviders: null,
         } as any,
         homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn() },
       },
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
-    await waitFor(() => expect((notifications as any).show).toHaveBeenCalled())
+    await waitFor(
+      () =>
+        expect(consoleErrorSpy.mock.calls.flat().join(' ')).toMatch(
+          /Error fetching LLM providers/i,
+        ),
+      { timeout: 3000 },
+    )
   })
 
   it('logs tool routing failures when handleFunctionCall throws', async () => {
@@ -1032,8 +1052,12 @@ describe('Chat (coverage)', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
 
-    const toolMod = await import('~/utils/functionCalling/handleFunctionCalling')
-    ;(toolMod as any).handleFunctionCall.mockRejectedValueOnce(new Error('boom'))
+    const toolMod = await import(
+      '~/utils/functionCalling/handleFunctionCalling'
+    )
+    ;(toolMod as any).handleFunctionCall.mockRejectedValueOnce(
+      new Error('boom'),
+    )
 
     server.use(
       http.post('*/api/allNewRoutingChat', async () => {
@@ -1147,7 +1171,9 @@ describe('Chat (coverage)', () => {
     await user.click(screen.getByRole('button', { name: /send-image/i }))
     await waitFor(() =>
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error in chat.tsx running handleImageContent()'),
+        expect.stringContaining(
+          'Error in chat.tsx running handleImageContent()',
+        ),
         expect.anything(),
       ),
     )

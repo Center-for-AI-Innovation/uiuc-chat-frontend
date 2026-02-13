@@ -44,13 +44,10 @@ describe('MakeNewCoursePage', () => {
     }
   })
 
-  it('creates a new project and routes to its dashboard when available', async () => {
+  it('creates a new project and advances to the next step when available', async () => {
     const user = userEvent.setup()
     const prev = process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG
     process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG = 'True'
-
-    const router = await import('next/router')
-    ;(router.default.push as any).mockClear?.()
 
     const apiUtils = await import('~/utils/apiUtils')
     ;(apiUtils as any).createProject.mockResolvedValueOnce({ ok: true })
@@ -79,13 +76,24 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      // Availability check should enable Create.
-      const createBtn = await screen.findByRole('button', { name: /^Create$/i })
-      await waitFor(() => expect(createBtn).not.toBeDisabled())
+      // Availability check should enable Continue.
+      const continueBtn = await screen.findByRole('button', {
+        name: /^Continue$/i,
+      })
+      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
+        timeout: 3000,
+      })
 
-      await user.click(createBtn)
-      await waitFor(() => expect((apiUtils as any).createProject).toHaveBeenCalled())
-      await waitFor(() => expect((router.default.push as any)).toHaveBeenCalled())
+      await user.click(continueBtn)
+      await waitFor(() =>
+        expect((apiUtils as any).createProject).toHaveBeenCalledWith(
+          'CS101',
+          '',
+          'owner@example.com',
+          true,
+        ),
+      )
+      expect(await screen.findByText('Add Content')).toBeInTheDocument()
     } finally {
       process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG = prev
     }

@@ -70,10 +70,12 @@ describe('Sidebar', () => {
         handleDrop={handleDrop}
         onScroll={onScroll}
         courseName="CS101"
-        courseMetadata={{
-          project_description: 'desc',
-          banner_image_s3: null,
-        } as any}
+        courseMetadata={
+          {
+            project_description: 'desc',
+            banner_image_s3: null,
+          } as any
+        }
       />,
     )
 
@@ -97,13 +99,20 @@ describe('Sidebar', () => {
     expect(handleDrop).toHaveBeenCalled()
 
     // Dashboard navigation is enabled for edit permission.
-    fireEvent.click(screen.getByRole('button', { name: /CS101/i }))
-    expect(globalThis.__TEST_ROUTER__?.push).toHaveBeenCalledWith('/CS101/dashboard')
+    fireEvent.click(
+      screen.getByRole('button', { name: /Open Admin Dashboard/i }),
+    )
+    expect(globalThis.__TEST_ROUTER__?.push).toHaveBeenCalledWith(
+      '/CS101/dashboard',
+    )
 
     // Also works via keyboard activation.
-    fireEvent.keyDown(screen.getByRole('button', { name: /CS101/i }), {
-      key: 'Enter',
-    })
+    fireEvent.keyDown(
+      screen.getByRole('button', { name: /Open Admin Dashboard/i }),
+      {
+        key: 'Enter',
+      },
+    )
     expect(globalThis.__TEST_ROUTER__?.push).toHaveBeenCalled()
   })
 })

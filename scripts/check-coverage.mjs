@@ -67,7 +67,9 @@ const buckets = [
   { name: 'src/app/api', prefix: 'src/app/api/', minLinesPct: 90 },
 ]
 
-const optional = [{ name: 'src/components', prefix: 'src/components/', targetLinesPct: 90 }]
+const optional = [
+  { name: 'src/components', prefix: 'src/components/', targetLinesPct: 90 },
+]
 
 let failed = false
 for (const b of buckets) {

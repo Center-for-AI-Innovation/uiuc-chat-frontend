@@ -6,7 +6,9 @@ import { createMockReq, createMockRes } from '~/test-utils/nextApi'
 
 const hoisted = vi.hoisted(() => {
   const insertOnConflictDoUpdate = vi.fn().mockResolvedValue(undefined)
-  const insertValues = vi.fn(() => ({ onConflictDoUpdate: insertOnConflictDoUpdate }))
+  const insertValues = vi.fn(() => ({
+    onConflictDoUpdate: insertOnConflictDoUpdate,
+  }))
   const insert = vi.fn(() => ({ values: insertValues }))
 
   const selectWhere = vi.fn()
@@ -97,8 +99,18 @@ describe('conversation API', () => {
           { type: 'image_url', image_url: { url: 'http://img' } },
         ],
         contexts: [
-          { readable_filename: 'f', pagenumber: '1', s3_path: 's3://x', text: 't' },
-          { readable_filename: 'u', pagenumber: '2', url: 'http://x', text: 't2' },
+          {
+            readable_filename: 'f',
+            pagenumber: '1',
+            s3_path: 's3://x',
+            text: 't',
+          },
+          {
+            readable_filename: 'u',
+            pagenumber: '2',
+            url: 'http://x',
+            text: 't2',
+          },
           { readable_filename: 'n', pagenumber: '3', text: 't3' },
         ],
         tools: [{ id: 't1' }],
@@ -126,7 +138,12 @@ describe('conversation API', () => {
         id: uuidv4(),
         role: 'user',
         content: 'hi',
-        contexts: { readable_filename: 'f', pagenumber: '1', s3_path: 's3://x', text: 't' },
+        contexts: {
+          readable_filename: 'f',
+          pagenumber: '1',
+          s3_path: 's3://x',
+          text: 't',
+        },
       } as any,
       'conv-1',
     )
@@ -183,7 +200,9 @@ describe('conversation API', () => {
           content_text: 'later',
           image_description: 'a cat',
           content_image_url: ['http://img'],
-          contexts: [{ id: 1, pagenumber: null, pagenumber_or_timestamp: null } as any],
+          contexts: [
+            { id: 1, pagenumber: null, pagenumber_or_timestamp: null } as any,
+          ],
           tools: null,
           latest_system_message: 'sys',
           final_prompt_engineered_message: 'final',
@@ -209,7 +228,11 @@ describe('conversation API', () => {
 
     expect(conv.messages[0]?.role).toBe('user')
     const assistant = conv.messages[1] as any
-    expect(assistant.feedback).toMatchObject({ isPositive: true, category: 'c', details: 'd' })
+    expect(assistant.feedback).toMatchObject({
+      isPositive: true,
+      category: 'c',
+      details: 'd',
+    })
     expect(assistant.content).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ type: 'text' }),
@@ -220,7 +243,9 @@ describe('conversation API', () => {
   })
 
   it('convertDBToChatConversation warns when first message is missing metadata', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const warnSpy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => undefined)
 
     convertDBToChatConversation(
       {
@@ -315,7 +340,13 @@ describe('conversation API', () => {
         method: 'POST',
         body: {
           delta: {
-            conversation: { id: 'c1', name: 'Conversation', modelId: 'gpt-4o', prompt: '', temperature: 0.1 },
+            conversation: {
+              id: 'c1',
+              name: 'Conversation',
+              modelId: 'gpt-4o',
+              prompt: '',
+              temperature: 0.1,
+            },
             messagesDelta: [{ id: uuidv4(), role: 'user', content: 'hi' }],
           },
         },

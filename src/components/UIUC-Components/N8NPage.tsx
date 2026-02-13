@@ -714,8 +714,9 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
             />
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }

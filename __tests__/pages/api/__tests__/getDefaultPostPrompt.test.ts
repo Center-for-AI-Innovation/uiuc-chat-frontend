@@ -30,4 +30,3 @@ describe('getDefaultPostPrompt API', () => {
     expect(res.status).toHaveBeenCalledWith(405)
   })
 })
-

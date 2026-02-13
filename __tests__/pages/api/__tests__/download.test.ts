@@ -57,7 +57,9 @@ describe('download API', () => {
   })
 
   it('returns 404 when getSignedUrl throws NoSuchKey', async () => {
-    hoisted.getSignedUrl.mockRejectedValueOnce(Object.assign(new Error('missing'), { name: 'NoSuchKey' }))
+    hoisted.getSignedUrl.mockRejectedValueOnce(
+      Object.assign(new Error('missing'), { name: 'NoSuchKey' }),
+    )
 
     const res = createMockRes()
     await handler(
@@ -71,4 +73,3 @@ describe('download API', () => {
     expect(res.status).toHaveBeenCalledWith(404)
   })
 })
-

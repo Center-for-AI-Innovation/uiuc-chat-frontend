@@ -27,9 +27,9 @@ import { openAIAzureChat } from '../OpenAIAzureChat'
 
 describe('openAIAzureChat', () => {
   it('wraps unexpected errors as OpenAIError', async () => {
-    await expect(openAIAzureChat({ conversation: undefined } as any, true)).rejects.toBeInstanceOf(
-      hoisted.OpenAIError,
-    )
+    await expect(
+      openAIAzureChat({ conversation: undefined } as any, true),
+    ).rejects.toBeInstanceOf(hoisted.OpenAIError)
   })
 
   it('throws when latestSystemMessage is missing', async () => {
@@ -37,12 +37,16 @@ describe('openAIAzureChat', () => {
       conversation: {
         model: { id: 'gpt-4o' },
         temperature: 0.1,
-        messages: [{ id: 'u1', role: 'user', content: [{ type: 'text', text: 'hi' }] }],
+        messages: [
+          { id: 'u1', role: 'user', content: [{ type: 'text', text: 'hi' }] },
+        ],
       },
       llmProviders: {},
     }
 
-    await expect(openAIAzureChat(chatBody, true)).rejects.toBeInstanceOf(hoisted.OpenAIError)
+    await expect(openAIAzureChat(chatBody, true)).rejects.toBeInstanceOf(
+      hoisted.OpenAIError,
+    )
   })
 
   it('converts messages and returns an event-stream Response when stream=true', async () => {
@@ -60,13 +64,22 @@ describe('openAIAzureChat', () => {
         model: { id: 'gpt-4o' },
         temperature: 0.1,
         messages: [
-          { id: 's1', role: 'system', content: [{ type: 'text', text: 'sys' }] },
+          {
+            id: 's1',
+            role: 'system',
+            content: [{ type: 'text', text: 'sys' }],
+          },
           {
             id: 'u1',
             role: 'user',
             content: [
               { type: 'text', text: 'before' },
-              { type: 'file', fileName: 'a.pdf', fileType: 'application/pdf', fileSize: 1024 },
+              {
+                type: 'file',
+                fileName: 'a.pdf',
+                fileType: 'application/pdf',
+                fileSize: 1024,
+              },
             ],
           },
           {
@@ -98,7 +111,9 @@ describe('openAIAzureChat', () => {
     const last = messagesToSend.at(-1)
     expect(last.content[0].text).toBe('ENGINEERED')
     // file converted to text
-    const fileConverted = messagesToSend[1].content.find((c: any) => c.type === 'text' && String(c.text).includes('[File:'))
+    const fileConverted = messagesToSend[1].content.find(
+      (c: any) => c.type === 'text' && String(c.text).includes('[File:'),
+    )
     expect(fileConverted).toBeTruthy()
     // tool_image_url converted to image_url
     expect(messagesToSend[2].content[0].type).toBe('image_url')
@@ -176,7 +191,9 @@ describe('openAIAzureChat', () => {
       },
     }
 
-    await expect(openAIAzureChat(chatBody, true)).rejects.toBeInstanceOf(hoisted.OpenAIError)
+    await expect(openAIAzureChat(chatBody, true)).rejects.toBeInstanceOf(
+      hoisted.OpenAIError,
+    )
   })
 
   it('wraps non-Error throws using a generic OpenAIError message', async () => {

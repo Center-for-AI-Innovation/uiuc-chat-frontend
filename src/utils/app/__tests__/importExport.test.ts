@@ -38,7 +38,9 @@ describe('exportData', () => {
     const createObjectURL = vi
       .spyOn(URL, 'createObjectURL')
       .mockReturnValue('blob:mock')
-    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const revokeObjectURL = vi
+      .spyOn(URL, 'revokeObjectURL')
+      .mockImplementation(() => {})
 
     const originalCreateElement = document.createElement.bind(document)
     const link = originalCreateElement('a')
