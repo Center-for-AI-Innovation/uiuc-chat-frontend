@@ -34,14 +34,22 @@ export async function generatePresignedUrl(
       )
     }
 
-    // Extract bucket name from the first part of the path
-    const pathParts = filePath.split('/')
-    const bucketName = pathParts[0]
-    const actualKey = pathParts.slice(1).join('/')
+    // NOTE(vyriad/pubmed): citations intentionally pass `bucket/key` because this chatbot can span multiple
+    // MinIO collections (buckets). Chat uploads (notably images) often pass `key` only (e.g. `users/...`),
+    // so we default those to `S3_BUCKET_NAME`.
+    const p = filePath.replace(/^\/+/, '')
+    const keyOnly = p.startsWith('users/') || p.startsWith('courses/')
+    const parts = p.split('/')
+    const bucketName =
+      keyOnly && process.env.S3_BUCKET_NAME
+        ? process.env.S3_BUCKET_NAME
+        : parts[0]!
+    const key =
+      keyOnly && process.env.S3_BUCKET_NAME ? p : parts.slice(1).join('/')
 
     const command = new GetObjectCommand({
       Bucket: bucketName,
-      Key: actualKey,
+      Key: key,
       ResponseContentDisposition: fileName
         ? `attachment; filename="${fileName}"`
         : 'inline',
@@ -83,7 +91,11 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       fileName?: string
     }
 
-    const presignedUrl = await generatePresignedUrl(filePath, courseName, fileName)
+    const presignedUrl = await generatePresignedUrl(
+      filePath,
+      courseName,
+      fileName,
+    )
 
     res.status(200).json({
       message: 'Presigned URL generated successfully',
