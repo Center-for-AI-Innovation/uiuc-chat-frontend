@@ -74,7 +74,9 @@ export async function persistMessageServer({
   userIdentifier,
 }: PersistMessageServerArgs) {
   if (!userIdentifier || userIdentifier.trim() === '') {
-    throw new Error('User identifier is required to persist conversation messages')
+    throw new Error(
+      'User identifier is required to persist conversation messages',
+    )
   }
 
   const conversationData: NewConversations = {
@@ -85,7 +87,9 @@ export async function persistMessageServer({
     temperature: conversation.temperature,
     user_email: userIdentifier,
     project_name: conversation.projectName || courseName,
-    folder_id: isUUID(conversation.folderId ?? '') ? conversation.folderId : null,
+    folder_id: isUUID(conversation.folderId ?? '')
+      ? conversation.folderId
+      : null,
     created_at: conversation.createdAt
       ? new Date(conversation.createdAt)
       : new Date(),

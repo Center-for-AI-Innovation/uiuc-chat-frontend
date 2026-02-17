@@ -71,10 +71,16 @@ export async function replaceCitationLinks(
   citationLinkCache: Map<number, string>,
   courseName: string,
   /** Optional server-side presigned URL generator (bypasses API auth) */
-  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
+  serverPresignedUrlFn?: (
+    filePath: string,
+    courseName: string,
+  ) => Promise<string | null>,
 ): Promise<string> {
   if (!lastMessage.contexts) {
-    console.log('[Citations] No contexts on message, returning sanitized content:', content.substring(0, 100))
+    console.log(
+      '[Citations] No contexts on message, returning sanitized content:',
+      content.substring(0, 100),
+    )
     return safeText(content)
   }
 
@@ -86,7 +92,12 @@ export async function replaceCitationLinks(
 
   // Fast path - if no citations, skip the replacement
   if (!citationPattern.test(content)) {
-    console.log('[Citations] Pattern did not match. Content:', content, 'Contexts count:', lastMessage.contexts?.length)
+    console.log(
+      '[Citations] Pattern did not match. Content:',
+      content,
+      'Contexts count:',
+      lastMessage.contexts?.length,
+    )
     return safeText(content)
   }
 
@@ -305,13 +316,20 @@ const getCitationLink = async (
   citationLinkCache: Map<number, string>,
   citationIndex: number,
   courseName: string,
-  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
+  serverPresignedUrlFn?: (
+    filePath: string,
+    courseName: string,
+  ) => Promise<string | null>,
 ): Promise<string> => {
   const cachedLink = citationLinkCache.get(citationIndex)
   if (cachedLink) {
     return safeUrl(cachedLink) // Validate cached URLs too
   } else {
-    const link = (await generateCitationLink(context, courseName, serverPresignedUrlFn)) as string
+    const link = (await generateCitationLink(
+      context,
+      courseName,
+      serverPresignedUrlFn,
+    )) as string
     const safeLink = safeUrl(link)
     if (safeLink) {
       citationLinkCache.set(citationIndex, safeLink)
@@ -330,7 +348,10 @@ const getCitationLink = async (
 const generateCitationLink = async (
   context: ContextWithMetadata,
   courseName: string,
-  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
+  serverPresignedUrlFn?: (
+    filePath: string,
+    courseName: string,
+  ) => Promise<string | null>,
 ): Promise<string> => {
   if (context.url) {
     return safeUrl(context.url)

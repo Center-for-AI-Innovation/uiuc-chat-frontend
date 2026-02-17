@@ -78,7 +78,10 @@ export async function processChunkWithStateMachine(
   citationLinkCache: Map<number, string>,
   courseName: string,
   /** Optional server-side presigned URL generator (bypasses API auth) */
-  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
+  serverPresignedUrlFn?: (
+    filePath: string,
+    courseName: string,
+  ) => Promise<string | null>,
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''

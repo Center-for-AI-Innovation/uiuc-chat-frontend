@@ -75,7 +75,10 @@ const conversationToMessages = (
           role: message.role as 'user' | 'assistant' | 'system',
           content: contentParts,
         } as ChatCompletionMessageParam)
-      } else if (contentParts.length === 1 && contentParts[0]?.type === 'text') {
+      } else if (
+        contentParts.length === 1 &&
+        contentParts[0]?.type === 'text'
+      ) {
         const firstPart = contentParts[0]
         if (firstPart) {
           transformedData.push({
@@ -182,7 +185,10 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
         } else if (Array.isArray(lastMessage.content)) {
           const lastTextPart = [...lastMessage.content]
             .reverse()
-            .find((p): p is ChatCompletionContentPart & { type: 'text' } => p.type === 'text')
+            .find(
+              (p): p is ChatCompletionContentPart & { type: 'text' } =>
+                p.type === 'text',
+            )
           if (lastTextPart) {
             lastTextPart.text += `\n\n${imageInfo}`
           } else {
@@ -215,14 +221,19 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     try {
       const parsedUrl = new URL(providerBaseUrl!)
       const hostname = parsedUrl.hostname.toLowerCase()
-      isOpenRouter = hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
-    } catch { /* invalid URL */ }
+      isOpenRouter =
+        hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
+    } catch {
+      /* invalid URL */
+    }
   } else {
     apiUrl = 'https://api.openai.com/v1/chat/completions'
   }
   // OpenRouter requires lowercase model IDs
-  const model = isOpenAICompatible 
-    ? (isOpenRouter ? modelId!.toLowerCase() : modelId) 
+  const model = isOpenAICompatible
+    ? isOpenRouter
+      ? modelId!.toLowerCase()
+      : modelId
     : 'gpt-4.1'
 
   try {
@@ -255,7 +266,12 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
       const apiName = isOpenAICompatible
         ? 'OpenAI-compatible API'
         : 'OpenAI API'
-      console.error(`${apiName} error:`, response.status, response.statusText, errorBody)
+      console.error(
+        `${apiName} error:`,
+        response.status,
+        response.statusText,
+        errorBody,
+      )
       return NextResponse.json(
         { error: `${apiName} error: ${response.status}` },
         { status: response.status },

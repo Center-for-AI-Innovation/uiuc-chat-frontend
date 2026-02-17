@@ -64,7 +64,10 @@ const groupEventsByStep = (events: AgentEvent[]): GroupedEvent[] => {
         stepNumber: event.stepNumber,
         type: 'tool',
         status: event.status,
-        title: event.metadata?.readableToolName ?? event.metadata?.toolName ?? 'Tool',
+        title:
+          event.metadata?.readableToolName ??
+          event.metadata?.toolName ??
+          'Tool',
         detail: event.metadata?.outputText || event.metadata?.info,
         errorMessage: event.metadata?.errorMessage,
         createdAt: event.createdAt,
@@ -85,7 +88,10 @@ const groupEventsByStep = (events: AgentEvent[]): GroupedEvent[] => {
     // Skip action_selection - redundant
   }
 
-  if (initializingEvent && (initializingEvent.status === 'running' || !hasRealEvents)) {
+  if (
+    initializingEvent &&
+    (initializingEvent.status === 'running' || !hasRealEvents)
+  ) {
     grouped.unshift({
       id: initializingEvent.id,
       stepNumber: initializingEvent.stepNumber,
@@ -99,18 +105,27 @@ const groupEventsByStep = (events: AgentEvent[]): GroupedEvent[] => {
 
   // Convert retrieval groups
   for (const [stepNumber, retrievals] of retrievalsByStep) {
-    const allDone = retrievals.every(r => r.status === 'done')
-    const anyError = retrievals.some(r => r.status === 'error')
-    const anyRunning = retrievals.some(r => r.status === 'running')
+    const allDone = retrievals.every((r) => r.status === 'done')
+    const anyError = retrievals.some((r) => r.status === 'error')
+    const anyRunning = retrievals.some((r) => r.status === 'running')
 
     grouped.push({
       id: `retrieval-group-step-${stepNumber}`,
       stepNumber,
       type: 'retrieval_group',
-      status: anyError ? 'error' : anyRunning ? 'running' : allDone ? 'done' : 'pending',
-      retrievals: retrievals.map(r => ({
+      status: anyError
+        ? 'error'
+        : anyRunning
+          ? 'running'
+          : allDone
+            ? 'done'
+            : 'pending',
+      retrievals: retrievals.map((r) => ({
         query: r.metadata?.contextQuery || 'documents',
-        count: typeof r.metadata?.contextsRetrieved === 'number' ? r.metadata.contextsRetrieved : undefined,
+        count:
+          typeof r.metadata?.contextsRetrieved === 'number'
+            ? r.metadata.contextsRetrieved
+            : undefined,
         status: r.status,
       })),
       createdAt: retrievals[0]?.createdAt || new Date().toISOString(),
@@ -123,7 +138,9 @@ const groupEventsByStep = (events: AgentEvent[]): GroupedEvent[] => {
 }
 
 // Get all queries from grouped events for scrolling preview
-const getAllQueries = (events: GroupedEvent[]): Array<{ query: string; status: string; count?: number }> => {
+const getAllQueries = (
+  events: GroupedEvent[],
+): Array<{ query: string; status: string; count?: number }> => {
   const queries: Array<{ query: string; status: string; count?: number }> = []
   for (const event of events) {
     if (event.type === 'retrieval_group' && event.retrievals) {
@@ -152,7 +169,10 @@ export const AgentExecutionTimeline = ({
   }, [events])
 
   // Get all queries for scrolling preview
-  const allQueries = useMemo(() => getAllQueries(groupedEvents), [groupedEvents])
+  const allQueries = useMemo(
+    () => getAllQueries(groupedEvents),
+    [groupedEvents],
+  )
 
   // Calculate total chunks
   const totalChunks = useMemo(() => {
@@ -167,11 +187,11 @@ export const AgentExecutionTimeline = ({
   // Agent is "active" until final_response is done (not just when something is running)
   const streaming = useMemo(() => {
     if (groupedEvents.length === 0) return false
-    
+
     // Check if final_response exists and is done
-    const finalResponse = groupedEvents.find(e => e.type === 'final_response')
+    const finalResponse = groupedEvents.find((e) => e.type === 'final_response')
     if (finalResponse?.status === 'done') return false
-    
+
     // If no final response yet, or it's still running, we're active
     return true
   }, [groupedEvents])
@@ -184,14 +204,18 @@ export const AgentExecutionTimeline = ({
     if (events && events.length > 0 && !startTimeRef.current) {
       // Set start time from first event
       const firstEvent = events[0]
-      startTimeRef.current = new Date(firstEvent?.createdAt || Date.now()).getTime()
+      startTimeRef.current = new Date(
+        firstEvent?.createdAt || Date.now(),
+      ).getTime()
     }
 
     if (!streaming) {
       // Calculate final elapsed time
       if (startTimeRef.current && events && events.length > 0) {
         const lastEvent = events[events.length - 1]
-        const endTime = new Date(lastEvent?.updatedAt || lastEvent?.createdAt || Date.now()).getTime()
+        const endTime = new Date(
+          lastEvent?.updatedAt || lastEvent?.createdAt || Date.now(),
+        ).getTime()
         setElapsedSeconds(Math.round((endTime - startTimeRef.current) / 1000))
       }
       return
@@ -200,7 +224,9 @@ export const AgentExecutionTimeline = ({
     // Update every second while streaming
     const interval = setInterval(() => {
       if (startTimeRef.current) {
-        setElapsedSeconds(Math.round((Date.now() - startTimeRef.current) / 1000))
+        setElapsedSeconds(
+          Math.round((Date.now() - startTimeRef.current) / 1000),
+        )
       }
     }, 1000)
 
@@ -210,7 +236,7 @@ export const AgentExecutionTimeline = ({
   const [isOpen, setIsOpen] = useState(false)
   const [showPreview, setShowPreview] = useState(true)
   const previewRef = useRef<HTMLDivElement | null>(null)
-  
+
   // Delay showing collapsed preview when closing to avoid overlap with collapse animation
   useEffect(() => {
     if (isOpen) {
@@ -234,7 +260,9 @@ export const AgentExecutionTimeline = ({
     return null
   }
 
-  const getStatus = (event: GroupedEvent): 'complete' | 'active' | 'pending' => {
+  const getStatus = (
+    event: GroupedEvent,
+  ): 'complete' | 'active' | 'pending' => {
     if (event.status === 'error') return 'complete'
     if (event.status === 'running') return 'active'
     if (event.status === 'pending') return 'pending'
@@ -249,10 +277,14 @@ export const AgentExecutionTimeline = ({
   }
 
   return (
-    <div className="rounded-lg overflow-hidden bg-[--background] shadow-md w-[95%]">
-      <ChainOfThought open={isOpen} onOpenChange={setIsOpen} className="w-full max-w-none [&_.bg-border]:bg-[--foreground-faded]">
+    <div className="w-[95%] overflow-hidden rounded-lg bg-[--background] shadow-md">
+      <ChainOfThought
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="w-full max-w-none [&_.bg-border]:bg-[--foreground-faded]"
+      >
         <ChainOfThoughtHeader className="p-3 pb-0">
-          <div className="flex items-center justify-between w-full">
+          <div className="flex w-full items-center justify-between">
             <span>Agent reasoning</span>
             <div className="flex items-center gap-3">
               {/* Elapsed time */}
@@ -262,7 +294,7 @@ export const AgentExecutionTimeline = ({
               </span>
               {streaming && (
                 <span className="flex items-center gap-1.5 text-xs text-[--foreground-faded]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[--primary] animate-pulse" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[--primary]" />
                   Active
                 </span>
               )}
@@ -278,46 +310,54 @@ export const AgentExecutionTimeline = ({
               ref={previewRef}
               className="max-h-36 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,rgba(0,0,0,0.1),rgba(0,0,0,0.5),rgba(0,0,0,1))]"
             >
-                <div className="space-y-1">
-                  {allQueries.map((q, idx) => {
-                    const isRunning = q.status === 'running'
-                    const isDone = q.status === 'done'
-                    return (
-                      <div
-                        key={`query-${idx}`}
-                        className="flex items-start gap-2 text-xs"
-                      >
-                        <Search className={cn(
+              <div className="space-y-1">
+                {allQueries.map((q, idx) => {
+                  const isRunning = q.status === 'running'
+                  const isDone = q.status === 'done'
+                  return (
+                    <div
+                      key={`query-${idx}`}
+                      className="flex items-start gap-2 text-xs"
+                    >
+                      <Search
+                        className={cn(
                           'mt-0.5 h-3 w-3 shrink-0',
-                          isRunning ? 'text-[--primary] animate-pulse' : 'text-[--foreground-faded]'
-                        )} />
-                        <span className={cn(
-                          'truncate flex-1',
-                          isRunning ? 'text-[--foreground]' : 'text-[--foreground-faded]'
-                        )}>
-                          {q.query}
-                        </span>
-                        {isDone && q.count !== undefined && (
-                          <span className="text-[--foreground-faded]/60 shrink-0">
-                            {q.count}
-                          </span>
+                          isRunning
+                            ? 'animate-pulse text-[--primary]'
+                            : 'text-[--foreground-faded]',
                         )}
-                      </div>
-                    )
-                  })}
-                </div>
+                      />
+                      <span
+                        className={cn(
+                          'flex-1 truncate',
+                          isRunning
+                            ? 'text-[--foreground]'
+                            : 'text-[--foreground-faded]',
+                        )}
+                      >
+                        {q.query}
+                      </span>
+                      {isDone && q.count !== undefined && (
+                        <span className="text-[--foreground-faded]/60 shrink-0">
+                          {q.count}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
+            </div>
             {/* Summary line - always visible when collapsed (not part of delayed animation) */}
             {totalChunks > 0 && (
-              <div className="flex items-center gap-1.5 text-xs text-[--foreground-faded] mt-3 pt-2 border-t border-[--foreground-faded]/10">
+              <div className="border-[--foreground-faded]/10 mt-3 flex items-center gap-1.5 border-t pt-2 text-xs text-[--foreground-faded]">
                 {streaming ? (
                   <>
-                    <span className="h-3 w-3 rounded-full bg-[--primary] animate-pulse shrink-0" />
+                    <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-[--primary]" />
                     <span>{totalChunks} chunks so far</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+                    <CheckCircle2 className="h-3 w-3 shrink-0 text-green-500" />
                     <span>{totalChunks} chunks retrieved</span>
                   </>
                 )}
@@ -334,7 +374,10 @@ export const AgentExecutionTimeline = ({
 
             // Render retrieval group with sub-queries
             if (event.type === 'retrieval_group' && event.retrievals) {
-              const totalChunksInGroup = event.retrievals.reduce((sum, r) => sum + (r.count || 0), 0)
+              const totalChunksInGroup = event.retrievals.reduce(
+                (sum, r) => sum + (r.count || 0),
+                0,
+              )
               const queryCount = event.retrievals.length
 
               return (
@@ -344,23 +387,34 @@ export const AgentExecutionTimeline = ({
                   icon={icon}
                   label={
                     <div className="space-y-2">
-                      <div className="text-[--foreground] font-medium">
-                        {queryCount > 1 ? `Searching ${queryCount} queries` : 'Searching documents'}
+                      <div className="font-medium text-[--foreground]">
+                        {queryCount > 1
+                          ? `Searching ${queryCount} queries`
+                          : 'Searching documents'}
                         {status === 'complete' && totalChunksInGroup > 0 && (
                           <span className="font-normal text-[--foreground-faded]">
-                            {' '}· {totalChunksInGroup} chunks
+                            {' '}
+                            · {totalChunksInGroup} chunks
                           </span>
                         )}
                       </div>
                       {/* Sub-queries */}
-                      <div className="pl-4 md:pl-5 space-y-1 md:space-y-1.5">
+                      <div className="space-y-1 pl-4 md:space-y-1.5 md:pl-5">
                         {event.retrievals.map((r, idx) => (
-                          <div key={idx} className="text-xs md:text-sm text-[--foreground-faded] flex items-center gap-2">
-                            <span className={cn(
-                              'h-1 w-1 md:h-1.5 md:w-1.5 rounded-full shrink-0',
-                              r.status === 'running' ? 'bg-[--primary] animate-pulse' :
-                              r.status === 'error' ? 'bg-red-500' : 'bg-green-500'
-                            )} />
+                          <div
+                            key={idx}
+                            className="flex items-center gap-2 text-xs text-[--foreground-faded] md:text-sm"
+                          >
+                            <span
+                              className={cn(
+                                'h-1 w-1 shrink-0 rounded-full md:h-1.5 md:w-1.5',
+                                r.status === 'running'
+                                  ? 'animate-pulse bg-[--primary]'
+                                  : r.status === 'error'
+                                    ? 'bg-red-500'
+                                    : 'bg-green-500',
+                              )}
+                            />
                             <span className="flex-1" title={r.query}>
                               {`"${r.query}"`}
                             </span>
@@ -382,11 +436,11 @@ export const AgentExecutionTimeline = ({
               return (
                 <div
                   key={event.id}
-                  className="flex gap-2 text-sm text-foreground fade-in-0 slide-in-from-top-2 animate-in"
+                  className="flex gap-2 text-sm text-foreground animate-in fade-in-0 slide-in-from-top-2"
                 >
                   <div className="relative mt-0.5">
                     <LoadingSpinner size="xs" />
-                    <div className="-mx-px absolute top-7 bottom-0 left-1/2 w-px bg-border" />
+                    <div className="absolute bottom-0 left-1/2 top-7 -mx-px w-px bg-border" />
                   </div>
                   <div className="flex-1">
                     <div className="text-[--foreground]">{event.title}</div>
@@ -421,15 +475,15 @@ export const AgentExecutionTimeline = ({
           })}
           {/* Total chunks indicator at bottom of expanded view */}
           {totalChunks > 0 && (
-            <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-[--foreground-faded] mt-3 pt-2 border-t border-[--foreground-faded]/10">
+            <div className="border-[--foreground-faded]/10 mt-3 flex items-center gap-1.5 border-t pt-2 text-xs text-[--foreground-faded] md:gap-2 md:text-sm">
               {streaming ? (
                 <>
-                  <span className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-[--primary] animate-pulse shrink-0" />
+                  <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-[--primary] md:h-4 md:w-4" />
                   <span>{totalChunks} chunks retrieved so far</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="h-3 w-3 md:h-4 md:w-4 text-green-500 shrink-0" />
+                  <CheckCircle2 className="h-3 w-3 shrink-0 text-green-500 md:h-4 md:w-4" />
                   <span>{totalChunks} chunks retrieved</span>
                 </>
               )}
