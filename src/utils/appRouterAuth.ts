@@ -43,7 +43,6 @@ export function withAppRouterAuth(
         req.headers.get('x-forwarded-host') ?? req.headers.get('host')
       const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost
 
-      console.log('Host value:', hostValue)
 
       // Fallback to 'localhost' if undefined
       const hostname = (hostValue ?? 'localhost').split(':')[0]
