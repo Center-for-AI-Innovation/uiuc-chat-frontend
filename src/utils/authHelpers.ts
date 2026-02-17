@@ -40,6 +40,11 @@ export const getKeycloakBaseUrl = () => {
 
 // backend
 export function getKeycloakBaseFromHost(hostname: string | undefined): string {
+  // Server-side: prefer KEYCLOAK_URL for container-to-container communication
+  if (typeof window === 'undefined' && process.env.KEYCLOAK_URL) {
+    return process.env.KEYCLOAK_URL
+  }
+
   if (
     process.env.NEXT_PUBLIC_KEYCLOAK_URL &&
     process.env.NEXT_PUBLIC_KEYCLOAK_URL.trim() !== ''
