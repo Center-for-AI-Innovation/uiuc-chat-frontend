@@ -3,7 +3,10 @@
 
 import { NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
-import { type AuthenticatedRequest, getUserIdentifier } from '~/utils/appRouterAuth'
+import {
+  type AuthenticatedRequest,
+  getUserIdentifier,
+} from '~/utils/appRouterAuth'
 import {
   withCourseAccessFromRequest,
   getCourseMetadata,
@@ -195,8 +198,16 @@ async function handler(req: AuthenticatedRequest) {
       )
     }
 
+    const assistantMessageId = uuidv4()
+
     const encoder = new TextEncoder()
     let controllerClosed = false
+    const abortController = new AbortController()
+
+    const abort = () => abortController.abort()
+
+    req.signal.addEventListener('abort', abort, { once: true })
+    if (req.signal.aborted) abort()
 
     const stream = new ReadableStream({
       async start(controller) {
@@ -210,6 +221,7 @@ async function handler(req: AuthenticatedRequest) {
           } catch (error) {
             if ((error as any).code === 'ERR_INVALID_STATE') {
               controllerClosed = true
+              abort()
               return
             }
             console.error('Error emitting event:', error)
@@ -220,6 +232,7 @@ async function handler(req: AuthenticatedRequest) {
           type: 'initializing',
           messageId: userMessage.id,
           conversationId: conversationId,
+          assistantMessageId,
         })
 
         try {
@@ -246,6 +259,16 @@ async function handler(req: AuthenticatedRequest) {
             emit({
               type: 'error',
               message: 'Could not fetch course metadata',
+              recoverable: false,
+            })
+            return
+          }
+
+          if (courseMetadata.agent_mode_enabled !== true) {
+            emit({
+              type: 'error',
+              message:
+                'Agent Mode is not enabled for this project. Ask a project admin to enable it in the Prompt settings.',
               recoverable: false,
             })
             return
@@ -329,6 +352,8 @@ async function handler(req: AuthenticatedRequest) {
             openaiKey,
             userIdentifier,
             emit,
+            assistantMessageId,
+            signal: abortController.signal,
           })
         } catch (error) {
           console.error('Error in agent conversation:', error)
@@ -340,9 +365,14 @@ async function handler(req: AuthenticatedRequest) {
         } finally {
           if (!controllerClosed) {
             controllerClosed = true
+            abort()
             controller.close()
           }
         }
+      },
+      cancel() {
+        controllerClosed = true
+        abort()
       },
     })
 

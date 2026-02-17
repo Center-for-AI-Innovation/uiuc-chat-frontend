@@ -1,7 +1,6 @@
 // src/server/agent/runAgentConversation.ts
 // Server-side agent loop runner - orchestrates tool selection, execution, and response generation
 
-import { v4 as uuidv4 } from 'uuid'
 import {
   type Conversation,
   type Message,
@@ -44,6 +43,7 @@ export interface RunAgentParams {
   llmProviders: AllLLMProviders
   openaiKey: string
   userIdentifier: string
+  assistantMessageId: string
   // Callback to emit events to the client
   emit: (event: AgentStreamEvent) => void
   // Abort signal for cancellation
@@ -74,14 +74,31 @@ export async function runAgentConversation(
     llmProviders,
     openaiKey,
     userIdentifier,
+    assistantMessageId,
     emit,
     signal,
   } = params
+
+  const isAborted = () => Boolean(signal?.aborted)
+  const abortIfNeeded = () => {
+    if (!isAborted()) return false
+    emit({
+      type: 'error',
+      message: 'Agent run was cancelled',
+      recoverable: false,
+    })
+    return true
+  }
 
   // Clone conversation to avoid mutation issues
   const workingConversation: Conversation = JSON.parse(
     JSON.stringify(conversation),
   )
+  const cancelledResult: RunAgentResult = {
+    success: false,
+    conversation: workingConversation,
+    error: 'Cancelled',
+  }
 
   // Ensure user message is in the conversation
   const existingMessageIndex = workingConversation.messages.findIndex(
@@ -126,7 +143,10 @@ export async function runAgentConversation(
 
   let availableTools: UIUCTool[] = []
   try {
-    availableTools = await fetchToolsServer(courseName)
+    if (abortIfNeeded()) {
+      return cancelledResult
+    }
+    availableTools = await fetchToolsServer(courseName, undefined, 20, signal)
   } catch (error) {
     console.error(
       `[Agent] Error fetching tools for course ${courseName}:`,
@@ -211,18 +231,8 @@ export async function runAgentConversation(
   try {
     // Agent loop - up to MAX_AGENT_STEPS iterations
     for (let step = 0; step < MAX_AGENT_STEPS; step++) {
-      // Check for cancellation
-      if (signal?.aborted) {
-        emit({
-          type: 'error',
-          message: 'Agent run was cancelled',
-          recoverable: false,
-        })
-        return {
-          success: false,
-          conversation: workingConversation,
-          error: 'Cancelled',
-        }
+      if (abortIfNeeded()) {
+        return cancelledResult
       }
 
       const stepNumber = step + 1
@@ -245,12 +255,16 @@ export async function runAgentConversation(
         status: 'running',
       })
 
+      if (abortIfNeeded()) {
+        return cancelledResult
+      }
       const { selectedTools, error: selectionError } = await selectToolsServer({
         conversation: workingConversation,
         availableTools: toolsForAgent,
         openaiKey,
         imageUrls: message.imageUrls,
         imageDescription: message.imageDescription,
+        signal,
       })
 
       if (selectionError) {
@@ -358,6 +372,7 @@ export async function runAgentConversation(
       // Execute all retrievals in parallel, but emit updates as each one resolves
       const retrievalPromises = retrievalTools.map(
         async (retrievalTool, idx) => {
+          if (isAborted()) return
           const searchQuery =
             retrievalTool.aiGeneratedArgumentValues?.query || ''
           const retrievalEventId = `agent-step-${stepNumber}-retrieval-${idx}`
@@ -368,6 +383,7 @@ export async function runAgentConversation(
               searchQuery,
               tokenLimit: workingConversation.model.tokenLimit || 4000,
               docGroups: documentGroups,
+              signal,
             })
 
             const contextsFound = contexts.length
@@ -473,6 +489,9 @@ export async function runAgentConversation(
 
       // Execute N8N tools
       if (n8nTools.length > 0) {
+        if (abortIfNeeded()) {
+          return cancelledResult
+        }
         // Emit running events for each tool
         const toolEventIds: Record<string, string> = {}
         for (const [idx, tool] of n8nTools.entries()) {
@@ -505,7 +524,12 @@ export async function runAgentConversation(
         }
 
         // Execute tools in parallel
-        const executedTools = await executeToolsServer(n8nTools, courseName)
+        const executedTools = await executeToolsServer(
+          n8nTools,
+          courseName,
+          undefined,
+          signal,
+        )
 
         // Update message tools and emit completion events
         for (const [idx, executedTool] of executedTools.entries()) {
@@ -678,6 +702,19 @@ export async function runAgentConversation(
 
       try {
         while (true) {
+          if (isAborted()) {
+            try {
+              await reader.cancel()
+            } catch {
+              // ignore
+            }
+            emit({
+              type: 'error',
+              message: 'Agent run was cancelled',
+              recoverable: false,
+            })
+            return cancelledResult
+          }
           const { done, value } = await reader.read()
           if (done) break
 
@@ -719,7 +756,6 @@ export async function runAgentConversation(
       })
 
       // Create assistant message
-      const assistantMessageId = uuidv4()
       const assistantMessage: Message = {
         id: assistantMessageId,
         role: 'assistant',

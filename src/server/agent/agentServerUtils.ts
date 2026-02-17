@@ -85,6 +85,7 @@ export interface SelectToolsServerParams {
   openaiKey: string
   imageUrls?: string[]
   imageDescription?: string
+  signal?: AbortSignal
 }
 
 export interface SelectToolsServerResult {
@@ -105,6 +106,7 @@ export async function selectToolsServer(
     openaiKey,
     imageUrls = [],
     imageDescription = '',
+    signal,
   } = params
 
   const lastMessage = conversation.messages[conversation.messages.length - 1]
@@ -171,6 +173,7 @@ export async function selectToolsServer(
         Authorization: `Bearer ${decryptedKey}`,
       },
       body: JSON.stringify(requestBody),
+      signal,
     })
 
     if (!response.ok) {
@@ -239,6 +242,7 @@ export interface ExecuteToolServerParams {
   tool: UIUCTool
   projectName: string
   n8nApiKey?: string
+  signal?: AbortSignal
 }
 
 /**
@@ -248,7 +252,7 @@ export interface ExecuteToolServerParams {
 export async function executeToolServer(
   params: ExecuteToolServerParams,
 ): Promise<UIUCTool> {
-  const { tool, projectName, n8nApiKey } = params
+  const { tool, projectName, n8nApiKey, signal } = params
   const toolCopy = { ...tool }
 
   // Get N8N API key if not provided
@@ -269,6 +273,7 @@ export async function executeToolServer(
       apiKey,
       tool.readableName,
       tool.aiGeneratedArgumentValues,
+      signal,
     )
 
     const timeEnd = Date.now()
@@ -337,9 +342,12 @@ export async function executeToolsServer(
   tools: UIUCTool[],
   projectName: string,
   n8nApiKey?: string,
+  signal?: AbortSignal,
 ): Promise<UIUCTool[]> {
   const results = await Promise.all(
-    tools.map((tool) => executeToolServer({ tool, projectName, n8nApiKey })),
+    tools.map((tool) =>
+      executeToolServer({ tool, projectName, n8nApiKey, signal }),
+    ),
   )
   return results
 }
@@ -350,6 +358,7 @@ export interface FetchContextsServerParams {
   tokenLimit?: number
   docGroups?: string[]
   conversationId?: string
+  signal?: AbortSignal
 }
 
 /**
@@ -365,6 +374,7 @@ export async function fetchContextsServer(
     tokenLimit = 4000,
     docGroups = [],
     conversationId,
+    signal,
   } = params
 
   const sleep = (ms: number) =>
@@ -381,6 +391,7 @@ export async function fetchContextsServer(
         tokenLimit,
         docGroups,
         conversationId,
+        signal,
       )
 
       if (!Array.isArray(contexts)) {
@@ -451,6 +462,7 @@ export async function fetchToolsServer(
   courseName: string,
   n8nApiKey?: string,
   limit = 20,
+  signal?: AbortSignal,
 ): Promise<UIUCTool[]> {
   // Get N8N API key if not provided
   let apiKey = n8nApiKey
@@ -473,6 +485,7 @@ export async function fetchToolsServer(
 
     const response = await fetch(
       `${backendUrl}/getworkflows?api_key=${apiKey}&limit=${limit}&pagination=false`,
+      { signal },
     )
 
     if (!response.ok) {
