@@ -37,6 +37,7 @@ export enum AzureModelID {
   GPT_5_mini = 'gpt-5-mini',
   GPT_5_nano = 'gpt-5-nano',
   GPT_5_thinking = 'gpt-5-thinking',
+  GPT_5_2_chat = 'gpt-5.2-chat',
 }
 
 export enum AzureDeploymentModelName {
@@ -55,6 +56,7 @@ export enum AzureDeploymentModelName {
   GPT_5_mini = 'gpt-5-mini',
   GPT_5_nano = 'gpt-5-nano',
   GPT_5_thinking = 'gpt-5-thinking',
+  GPT_5_2_chat = 'gpt-5.2-chat',
 }
 
 export const AzureModels: Record<AzureModelID, AzureModel> = {
@@ -156,6 +158,13 @@ export const AzureModels: Record<AzureModelID, AzureModel> = {
     tokenLimit: 400000,
     enabled: true,
   },
+  [AzureModelID.GPT_5_2_chat]: {
+    id: AzureModelID.GPT_5_2_chat,
+    name: 'GPT-5.2 Chat',
+    azureDeploymentModelName: AzureDeploymentModelName.GPT_5_2_chat,
+    tokenLimit: 400000,
+    enabled: true,
+  },
 }
 
 export const getAzureModels = async (
@@ -181,10 +190,11 @@ export const getAzureModels = async (
 
     // console.log('Fetching Azure models from:', url)
 
+    const apiKey = await decryptKeyIfNeeded(azureProvider.apiKey as string)
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'api-key': await decryptKeyIfNeeded(azureProvider.apiKey!),
+        'api-key': apiKey,
       },
     })
 
@@ -196,8 +206,6 @@ export const getAzureModels = async (
 
     const responseJson = await response.json()
 
-    // gpt-5-thinking will not be explictly listed in the response, it will just be gpt-5
-    // so we need to add it manually if gpt-5 is in the response
     const gpt5ThinkingModel = responseJson.data.find(
       (model: any) => model.model === 'gpt-5',
     )
@@ -212,10 +220,10 @@ export const getAzureModels = async (
 
     const azureModels: AzureModel[] = responseJson.data.reduce(
       (acc: AzureModel[], model: any) => {
+        const modelName = (model.model ?? '').toLowerCase()
         const predefinedModel = Object.values(AzureModels).find(
           (azureModel) =>
-            azureModel.azureDeploymentModelName.toLowerCase() ===
-            model.model.toLowerCase(),
+            azureModel.azureDeploymentModelName.toLowerCase() === modelName,
         )
         if (predefinedModel) {
           acc.push({

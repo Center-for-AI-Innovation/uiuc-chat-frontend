@@ -1345,7 +1345,7 @@ export const ChatInput = ({
                     ? 'bg-[--primary] text-[--background]'
                     : 'bg-[--background-faded] text-[--foreground]'
                 }`}
-                disabled={messageIsStreaming || (tools?.length ?? 0) === 0}
+                disabled={messageIsStreaming}
                 onClick={() => {
                   const next = !agentModeEnabled
                   posthog.capture('agent_mode_toggled', {

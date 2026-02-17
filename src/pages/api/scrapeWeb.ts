@@ -61,7 +61,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       maxPagesToCrawl: maxUrls,
       scrapeStrategy: scrapeStrategy,
       match: formatUrlAndMatchRegex(fullUrl).matchRegex,
-      maxTokens: 2000000,
+      maxOutputTokens: 2000000,
     }
 
     const crawleeApiUrl = process.env.CRAWLEE_API_URL

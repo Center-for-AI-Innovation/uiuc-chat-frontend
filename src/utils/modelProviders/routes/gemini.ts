@@ -4,7 +4,7 @@ import {
   GeminiModels,
   preferredGeminiModelIds,
 } from '../types/gemini'
-import { type CoreMessage, generateText, streamText } from 'ai'
+import { type ModelMessage, generateText, streamText } from 'ai'
 import { type Conversation } from '~/types/chat'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
@@ -103,12 +103,12 @@ export async function runGeminiChat(
     model: model as any,
     messages: convertConversationToVercelAISDKv3(conversation),
     temperature: conversation.temperature || 0.1,
-    maxTokens: conversation.model.tokenLimit || 4096,
+    maxOutputTokens: conversation.model.tokenLimit || 4096,
   }
 
   try {
     if (stream) {
-      const result = await streamText(commonParams)
+      const result = streamText(commonParams)
       return result.toTextStreamResponse()
     } else {
       const result = await generateText(commonParams)
@@ -131,8 +131,8 @@ export async function runGeminiChat(
 
 function convertConversationToVercelAISDKv3(
   conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
+): ModelMessage[] {
+  const coreMessages: ModelMessage[] = []
 
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,

@@ -1,5 +1,5 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
-import { generateText, smoothStream, streamText, type CoreMessage } from 'ai'
+import { generateText, smoothStream, streamText, type ModelMessage } from 'ai'
 import { type ChatBody, type Conversation } from '~/types/chat'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
@@ -74,7 +74,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
       getAnthropicRequestConfig(conversation)
 
     if (chatBody.stream) {
-      const result = await streamText({
+      const result = streamText({
         model: anthropic(modelId),
         temperature: conversation.temperature,
         messages: convertConversationToVercelAISDKv3(conversation),
@@ -86,9 +86,9 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
 
       if (isThinking) {
         console.log('Using Claude with reasoning enabled')
-        const response = result.toDataStreamResponse({
+        const response = result.toUIMessageStreamResponse({
           sendReasoning: true,
-          getErrorMessage: () => {
+          onError: () => {
             return `An error occurred while streaming the response.`
           },
         })
@@ -149,8 +149,8 @@ export const POST = withCourseAccessFromRequest('any')(handler)
 
 function convertConversationToVercelAISDKv3(
   conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
+): ModelMessage[] {
+  const coreMessages: ModelMessage[] = []
 
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,

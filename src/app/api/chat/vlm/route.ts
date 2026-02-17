@@ -19,7 +19,6 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     const openai = createOpenAI({
       baseURL: process.env.NCSA_HOSTED_VLM_BASE_URL,
       apiKey: 'non-empty',
-      compatibility: 'compatible', // strict/compatible - enable 'strict' when using the OpenAI API
     })
 
     const messages =
@@ -27,9 +26,10 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
     // const messages = convertToCoreMessages(conversation)
     console.log('⭐️ messages', JSON.stringify(messages, null, 2))
 
+    // Use .chat() to use Chat Completions API instead of Responses API
     if (stream) {
-      const result = await streamText({
-        model: openai(conversation.model.id) as any,
+      const result = streamText({
+        model: openai.chat(conversation.model.id) as any,
         temperature: conversation.temperature,
         messages,
       })
@@ -40,7 +40,7 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
       })
     } else {
       const result = await generateText({
-        model: openai(conversation.model.id) as any,
+        model: openai.chat(conversation.model.id) as any,
         temperature: conversation.temperature,
         messages,
       })

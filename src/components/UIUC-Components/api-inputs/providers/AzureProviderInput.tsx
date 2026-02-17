@@ -136,7 +136,7 @@ export default function AzureProviderInput({
                     {(field: any) => (
                       <TextInput
                         label="Azure Endpoint"
-                        placeholder="https://your-resource-name.openai.azure.com/"
+                        placeholder="https://<resource>.cognitiveservices.azure.com/ OR https://<resource>.openai.azure.com/"
                         styles={{
                           label: { color: 'var(--dashboard-foreground-faded)' },
                           input: {
@@ -151,20 +151,6 @@ export default function AzureProviderInput({
                       />
                     )}
                   </form.Field>
-                  {/* <form.Field
-                    name={`providers.${ProviderNames.Azure}.AzureDeployment`}
-                  >
-                    {(field: any) => (
-                      <TextInput
-                        label="Azure Deployment"
-                        placeholder="your-deployment-name"
-                        value={field.state.value}
-                        onChange={(event) =>
-                          field.handleChange(event.currentTarget.value)
-                        }
-                      />
-                    )}
-                  </form.Field> */}
                   <ModelToggles form={form} provider={provider} />
                 </motion.div>
               )}
