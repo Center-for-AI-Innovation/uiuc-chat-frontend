@@ -126,14 +126,15 @@ export async function getOpenIdConfig(keycloakBaseUrl: string): Promise<any> {
 /**
  * Verify token using JWKS (recommended approach)
  */
-export function createTokenVerifier(keycloakBaseUrl?: string) {
+export function createTokenVerifier(keycloakBaseUrl?: string, issuerBaseUrl?: string) {
   if (!keycloakBaseUrl) throw new Error('keycloakBaseUrl is required')
 
   return {
-    // Bind baseUrl so signature becomes (header, callback)
+    // Bind baseUrl so signature becomes (header, callback) - uses internal URL for network access
     getKey: getSigningKey.bind(null, keycloakBaseUrl),
     options: {
-      issuer: `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}`,
+      // issuerBaseUrl matches Keycloak's --hostname (public URL), keycloakBaseUrl is for network access
+      issuer: `${issuerBaseUrl || keycloakBaseUrl}realms/${KEYCLOAK_REALM}`,
       algorithms: ['RS256'] as jwt.Algorithm[],
     },
   }
@@ -145,9 +146,10 @@ export function createTokenVerifier(keycloakBaseUrl?: string) {
 export function verifyTokenAsync(
   token: string,
   keycloakBaseUrl: string,
+  issuerBaseUrl?: string,
 ): Promise<any> {
   return new Promise((resolve, reject) => {
-    const verifier = createTokenVerifier(keycloakBaseUrl)
+    const verifier = createTokenVerifier(keycloakBaseUrl, issuerBaseUrl)
     jwt.verify(
       token,
       verifier.getKey,
