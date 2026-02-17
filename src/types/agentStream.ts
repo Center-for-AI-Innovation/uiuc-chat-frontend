@@ -99,6 +99,7 @@ export interface AgentInitializingEvent {
   type: 'initializing'
   messageId: string
   conversationId?: string
+  assistantMessageId: string
 }
 
 /**
@@ -159,7 +160,7 @@ export interface ClientUIUCTool {
     text?: string
     imageUrls?: string[]
     // Note: `data` field is stripped for client - too large
-    hasData?: boolean  // Indicates if there was data (without sending it)
+    hasData?: boolean // Indicates if there was data (without sending it)
   }
   error?: string
 }
@@ -183,11 +184,13 @@ export type AgentStreamEvent =
  * Request body for the agent streaming endpoint.
  */
 export interface AgentRunRequest {
-  conversationId?: string  // Optional - new conversation if not provided
+  conversationId?: string // Optional - new conversation if not provided
   courseName: string
   userMessage: {
     id: string
-    content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>
+    content:
+      | string
+      | Array<{ type: string; text?: string; image_url?: { url: string } }>
     imageUrls?: string[]
   }
   documentGroups: string[]
@@ -217,20 +220,20 @@ export function serializeAgentStreamEvent(event: AgentStreamEvent): string {
 /**
  * Helper to parse an agent stream event from SSE data line.
  */
-export function parseAgentStreamEvent(dataLine: string): AgentStreamEvent | null {
+export function parseAgentStreamEvent(
+  dataLine: string,
+): AgentStreamEvent | null {
   try {
     // Remove "data: " prefix if present
-    const jsonStr = dataLine.startsWith('data: ') 
-      ? dataLine.slice(6) 
-      : dataLine
-    
+    const jsonStr = dataLine.startsWith('data: ') ? dataLine.slice(6) : dataLine
+
     const parsed = JSON.parse(jsonStr)
-    
+
     // Validate that it has a type field
     if (parsed && typeof parsed.type === 'string') {
       return parsed as AgentStreamEvent
     }
-    
+
     return null
   } catch {
     return null
@@ -248,12 +251,13 @@ export function toClientUIUCTool(tool: UIUCTool): ClientUIUCTool {
     readableName: tool.readableName,
     description: tool.description,
     aiGeneratedArgumentValues: tool.aiGeneratedArgumentValues,
-    output: tool.output ? {
-      text: tool.output.text,
-      imageUrls: tool.output.imageUrls,
-      hasData: !!tool.output.data,
-    } : undefined,
+    output: tool.output
+      ? {
+          text: tool.output.text,
+          imageUrls: tool.output.imageUrls,
+          hasData: !!tool.output.data,
+        }
+      : undefined,
     error: tool.error,
   }
 }
-

@@ -10,27 +10,59 @@ import {
   type ContextMetadata,
   parseAgentStreamEvent,
 } from '~/types/agentStream'
-import {
-  type AgentEvent,
-} from '~/types/chat'
+import { type AgentEvent } from '~/types/chat'
 
 export interface UseAgentStreamCallbacks {
-  onInitializing?: (messageId: string, conversationId?: string) => void
+  onInitializing?: (
+    messageId: string,
+    conversationId: string | undefined,
+    assistantMessageId: string,
+  ) => void
   onSelectionStart?: (stepNumber: number) => void
   onSelectionDone?: (stepNumber: number, event: AgentSelectionEvent) => void
   onRetrievalStart?: (stepNumber: number, query: string) => void
-  onRetrievalDone?: (stepNumber: number, query: string, contextsRetrieved: number) => void
-  onToolStart?: (stepNumber: number, toolName: string, readableToolName: string) => void
-  onToolDone?: (stepNumber: number, toolName: string, output?: { text?: string; imageUrls?: string[] }, error?: string) => void
+  onRetrievalDone?: (
+    stepNumber: number,
+    query: string,
+    contextsRetrieved: number,
+  ) => void
+  onToolStart?: (
+    stepNumber: number,
+    toolName: string,
+    readableToolName: string,
+  ) => void
+  onToolDone?: (
+    stepNumber: number,
+    toolName: string,
+    output?: { text?: string; imageUrls?: string[] },
+    error?: string,
+  ) => void
   onAgentEventsUpdate?: (agentEvents: AgentEvent[], messageId: string) => void
   onToolsUpdate?: (tools: ClientUIUCTool[], messageId: string) => void
-  onContextsMetadata?: (messageId: string, contextsMetadata: ContextMetadata[], totalContexts: number) => void
+  onContextsMetadata?: (
+    messageId: string,
+    contextsMetadata: ContextMetadata[],
+    totalContexts: number,
+  ) => void
   onFinalTokens?: (delta: string, done: boolean) => void
-  onDone?: (conversationId: string, finalMessageId: string, summary: {
-    totalContextsRetrieved: number
-    toolsExecuted: Array<{ name: string; readableName: string; hasOutput: boolean; hasError: boolean }>
-  }) => void
-  onError?: (message: string, stepNumber?: number, recoverable?: boolean) => void
+  onDone?: (
+    conversationId: string,
+    finalMessageId: string,
+    summary: {
+      totalContextsRetrieved: number
+      toolsExecuted: Array<{
+        name: string
+        readableName: string
+        hasOutput: boolean
+        hasError: boolean
+      }>
+    },
+  ) => void
+  onError?: (
+    message: string,
+    stepNumber?: number,
+    recoverable?: boolean,
+  ) => void
 }
 
 export interface UseAgentStreamReturn {
@@ -39,7 +71,9 @@ export interface UseAgentStreamReturn {
   isRunning: boolean
 }
 
-export function useAgentStream(callbacks: UseAgentStreamCallbacks): UseAgentStreamReturn {
+export function useAgentStream(
+  callbacks: UseAgentStreamCallbacks,
+): UseAgentStreamReturn {
   const abortControllerRef = useRef<AbortController | null>(null)
   const isRunningRef = useRef(false)
 
@@ -51,162 +85,193 @@ export function useAgentStream(callbacks: UseAgentStreamCallbacks): UseAgentStre
     isRunningRef.current = false
   }, [])
 
-  const runAgent = useCallback(async (request: AgentRunRequest) => {
-    // Abort any existing request
-    abort()
+  const runAgent = useCallback(
+    async (request: AgentRunRequest) => {
+      // Abort any existing request
+      abort()
 
-    const controller = new AbortController()
-    abortControllerRef.current = controller
-    isRunningRef.current = true
-
-    try {
-      const response = await fetch('/api/agent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-        signal: controller.signal,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        callbacks.onError?.(errorData.error || `HTTP ${response.status}`, undefined, false)
-        isRunningRef.current = false
-        return
-      }
-
-      if (!response.body) {
-        callbacks.onError?.('No response body', undefined, false)
-        isRunningRef.current = false
-        return
-      }
-
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
+      const controller = new AbortController()
+      abortControllerRef.current = controller
+      isRunningRef.current = true
 
       try {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
+        const response = await fetch('/api/agent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(request),
+          signal: controller.signal,
+        })
 
-          buffer += decoder.decode(value, { stream: true })
+        if (!response.ok) {
+          const errorData = await response
+            .json()
+            .catch(() => ({ error: 'Unknown error' }))
+          callbacks.onError?.(
+            errorData.error || `HTTP ${response.status}`,
+            undefined,
+            false,
+          )
+          isRunningRef.current = false
+          return
+        }
 
-          // Process complete events (split by double newline for SSE)
-          const lines = buffer.split('\n\n')
-          buffer = lines.pop() || '' // Keep incomplete event in buffer
+        if (!response.body) {
+          callbacks.onError?.('No response body', undefined, false)
+          isRunningRef.current = false
+          return
+        }
 
-          for (const line of lines) {
-            if (!line.trim()) continue
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
 
-            // Each SSE event is prefixed with "data: "
-            const dataLines = line.split('\n').filter(l => l.startsWith('data: '))
-            
-            for (const dataLine of dataLines) {
-              const event = parseAgentStreamEvent(dataLine)
-              if (!event) continue
+        try {
+          while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
 
-              await new Promise(resolve => setTimeout(resolve, 0))
+            buffer += decoder.decode(value, { stream: true })
 
-              // Dispatch to appropriate callback based on event type
-              switch (event.type) {
-                case 'initializing':
-                  callbacks.onInitializing?.(event.messageId, event.conversationId)
-                  break
+            // Process complete events (split by double newline for SSE)
+            const lines = buffer.split('\n\n')
+            buffer = lines.pop() || '' // Keep incomplete event in buffer
 
-                case 'selection':
-                  if (event.status === 'running') {
-                    callbacks.onSelectionStart?.(event.stepNumber)
-                  } else {
-                    callbacks.onSelectionDone?.(event.stepNumber, event as any)
-                  }
-                  break
+            for (const line of lines) {
+              if (!line.trim()) continue
 
-                case 'retrieval':
-                  if (event.status === 'running') {
-                    callbacks.onRetrievalStart?.(event.stepNumber, event.query)
-                  } else {
-                    callbacks.onRetrievalDone?.(
-                      event.stepNumber,
-                      event.query,
-                      event.contextsRetrieved || 0
+              // Each SSE event is prefixed with "data: "
+              const dataLines = line
+                .split('\n')
+                .filter((l) => l.startsWith('data: '))
+
+              for (const dataLine of dataLines) {
+                const event = parseAgentStreamEvent(dataLine)
+                if (!event) continue
+
+                await new Promise((resolve) => setTimeout(resolve, 0))
+
+                // Dispatch to appropriate callback based on event type
+                switch (event.type) {
+                  case 'initializing':
+                    callbacks.onInitializing?.(
+                      event.messageId,
+                      event.conversationId,
+                      event.assistantMessageId,
                     )
-                  }
-                  break
+                    break
 
-                case 'tool':
-                  if (event.status === 'running') {
-                    callbacks.onToolStart?.(
-                      event.stepNumber,
-                      event.toolName,
-                      event.readableToolName
+                  case 'selection':
+                    if (event.status === 'running') {
+                      callbacks.onSelectionStart?.(event.stepNumber)
+                    } else {
+                      callbacks.onSelectionDone?.(
+                        event.stepNumber,
+                        event as any,
+                      )
+                    }
+                    break
+
+                  case 'retrieval':
+                    if (event.status === 'running') {
+                      callbacks.onRetrievalStart?.(
+                        event.stepNumber,
+                        event.query,
+                      )
+                    } else {
+                      callbacks.onRetrievalDone?.(
+                        event.stepNumber,
+                        event.query,
+                        event.contextsRetrieved || 0,
+                      )
+                    }
+                    break
+
+                  case 'tool':
+                    if (event.status === 'running') {
+                      callbacks.onToolStart?.(
+                        event.stepNumber,
+                        event.toolName,
+                        event.readableToolName,
+                      )
+                    } else {
+                      callbacks.onToolDone?.(
+                        event.stepNumber,
+                        event.toolName,
+                        event.outputText || event.outputImageUrls
+                          ? {
+                              text: event.outputText,
+                              imageUrls: event.outputImageUrls,
+                            }
+                          : undefined,
+                        event.errorMessage,
+                      )
+                    }
+                    break
+
+                  case 'agent_events_update':
+                    callbacks.onAgentEventsUpdate?.(
+                      event.agentEvents,
+                      event.messageId,
                     )
-                  } else {
-                    callbacks.onToolDone?.(
-                      event.stepNumber,
-                      event.toolName,
-                      event.outputText || event.outputImageUrls
-                        ? { text: event.outputText, imageUrls: event.outputImageUrls }
-                        : undefined,
-                      event.errorMessage
+                    break
+
+                  case 'tools_update':
+                    callbacks.onToolsUpdate?.(event.tools, event.messageId)
+                    break
+
+                  case 'contexts_metadata':
+                    callbacks.onContextsMetadata?.(
+                      event.messageId,
+                      event.contextsMetadata,
+                      event.totalContexts,
                     )
-                  }
-                  break
+                    break
 
-                case 'agent_events_update':
-                  callbacks.onAgentEventsUpdate?.(event.agentEvents, event.messageId)
-                  break
+                  case 'final_tokens':
+                    callbacks.onFinalTokens?.(event.delta, event.done)
+                    break
 
-                case 'tools_update':
-                  callbacks.onToolsUpdate?.(event.tools, event.messageId)
-                  break
+                  case 'done':
+                    callbacks.onDone?.(
+                      event.conversationId,
+                      event.finalMessageId,
+                      event.summary,
+                    )
+                    break
 
-                case 'contexts_metadata':
-                  callbacks.onContextsMetadata?.(
-                    event.messageId,
-                    event.contextsMetadata,
-                    event.totalContexts
-                  )
-                  break
-
-                case 'final_tokens':
-                  callbacks.onFinalTokens?.(event.delta, event.done)
-                  break
-
-                case 'done':
-                  callbacks.onDone?.(
-                    event.conversationId,
-                    event.finalMessageId,
-                    event.summary
-                  )
-                  break
-
-                case 'error':
-                  callbacks.onError?.(event.message, event.stepNumber, event.recoverable)
-                  break
+                  case 'error':
+                    callbacks.onError?.(
+                      event.message,
+                      event.stepNumber,
+                      event.recoverable,
+                    )
+                    break
+                }
               }
             }
           }
+        } finally {
+          reader.releaseLock()
         }
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          // Request was aborted, don't treat as error
+          return
+        }
+        callbacks.onError?.(
+          error instanceof Error ? error.message : 'Unknown error',
+          undefined,
+          false,
+        )
       } finally {
-        reader.releaseLock()
+        isRunningRef.current = false
+        abortControllerRef.current = null
       }
-    } catch (error) {
-      if ((error as Error).name === 'AbortError') {
-        // Request was aborted, don't treat as error
-        return
-      }
-      callbacks.onError?.(
-        error instanceof Error ? error.message : 'Unknown error',
-        undefined,
-        false
-      )
-    } finally {
-      isRunningRef.current = false
-      abortControllerRef.current = null
-    }
-  }, [callbacks, abort])
+    },
+    [callbacks, abort],
+  )
 
   return {
     runAgent,
@@ -235,8 +300,14 @@ export async function runAgentStream(
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-      callbacks.onError?.(errorData.error || `HTTP ${response.status}`, undefined, false)
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: 'Unknown error' }))
+      callbacks.onError?.(
+        errorData.error || `HTTP ${response.status}`,
+        undefined,
+        false,
+      )
       return
     }
 
@@ -263,17 +334,23 @@ export async function runAgentStream(
         for (const line of lines) {
           if (!line.trim()) continue
 
-          const dataLines = line.split('\n').filter(l => l.startsWith('data: '))
-          
+          const dataLines = line
+            .split('\n')
+            .filter((l) => l.startsWith('data: '))
+
           for (const dataLine of dataLines) {
             const event = parseAgentStreamEvent(dataLine)
             if (!event) continue
 
-            await new Promise(resolve => setTimeout(resolve, 0))
+            await new Promise((resolve) => setTimeout(resolve, 0))
 
             switch (event.type) {
               case 'initializing':
-                callbacks.onInitializing?.(event.messageId, event.conversationId)
+                callbacks.onInitializing?.(
+                  event.messageId,
+                  event.conversationId,
+                  event.assistantMessageId,
+                )
                 break
 
               case 'selection':
@@ -291,7 +368,7 @@ export async function runAgentStream(
                   callbacks.onRetrievalDone?.(
                     event.stepNumber,
                     event.query,
-                    event.contextsRetrieved || 0
+                    event.contextsRetrieved || 0,
                   )
                 }
                 break
@@ -301,22 +378,28 @@ export async function runAgentStream(
                   callbacks.onToolStart?.(
                     event.stepNumber,
                     event.toolName,
-                    event.readableToolName
+                    event.readableToolName,
                   )
                 } else {
                   callbacks.onToolDone?.(
                     event.stepNumber,
                     event.toolName,
                     event.outputText || event.outputImageUrls
-                      ? { text: event.outputText, imageUrls: event.outputImageUrls }
+                      ? {
+                          text: event.outputText,
+                          imageUrls: event.outputImageUrls,
+                        }
                       : undefined,
-                    event.errorMessage
+                    event.errorMessage,
                   )
                 }
                 break
 
               case 'agent_events_update':
-                callbacks.onAgentEventsUpdate?.(event.agentEvents, event.messageId)
+                callbacks.onAgentEventsUpdate?.(
+                  event.agentEvents,
+                  event.messageId,
+                )
                 break
 
               case 'tools_update':
@@ -327,7 +410,7 @@ export async function runAgentStream(
                 callbacks.onContextsMetadata?.(
                   event.messageId,
                   event.contextsMetadata,
-                  event.totalContexts
+                  event.totalContexts,
                 )
                 break
 
@@ -339,12 +422,16 @@ export async function runAgentStream(
                 callbacks.onDone?.(
                   event.conversationId,
                   event.finalMessageId,
-                  event.summary
+                  event.summary,
                 )
                 break
 
               case 'error':
-                callbacks.onError?.(event.message, event.stepNumber, event.recoverable)
+                callbacks.onError?.(
+                  event.message,
+                  event.stepNumber,
+                  event.recoverable,
+                )
                 break
             }
           }
@@ -360,8 +447,7 @@ export async function runAgentStream(
     callbacks.onError?.(
       error instanceof Error ? error.message : 'Unknown error',
       undefined,
-      false
+      false,
     )
   }
 }
-
