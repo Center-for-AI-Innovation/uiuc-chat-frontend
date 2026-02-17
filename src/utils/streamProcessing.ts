@@ -9,6 +9,11 @@ import { runAnthropicChat } from '~/app/utils/anthropic'
 import { runOllamaChat } from '~/app/utils/ollama'
 import { runVLLM } from '~/app/utils/vllm'
 import { runOpenAICompatibleChat } from '~/app/utils/openaiCompatible'
+import {
+  runOpenAIChat,
+  runOpenAIResponsesChat,
+} from '~/app/utils/openaiResponses'
+import { runAzureChat, runAzureResponsesChat } from '~/app/utils/azureResponses'
 import { fetchContexts, fetchMQRContexts } from '~/utils/fetchContexts'
 import { fetchImageDescription } from '~/pages/api/UIUC-api/fetchImageDescription'
 import {
@@ -39,7 +44,6 @@ import {
 import { replaceCitationLinks } from './citations'
 import { AzureModelID } from './modelProviders/azure'
 import { OllamaModelIDs } from './modelProviders/ollama'
-import { openAIAzureChat } from './modelProviders/OpenAIAzureChat'
 import { AnthropicModelID } from './modelProviders/types/anthropic'
 import { BedrockModelID } from './modelProviders/types/bedrock'
 import { GeminiModelID } from './modelProviders/types/gemini'
@@ -833,6 +837,7 @@ export const routeModelRequest = async (
     conversation_id: selectedConversation.id,
     model_id: selectedConversation.model.id,
   })
+  const modelId = selectedConversation.model.id as any
 
   if (
     chatBody?.llmProviders?.OpenAICompatible?.enabled &&
@@ -858,61 +863,151 @@ export const routeModelRequest = async (
       chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
       chatBody.stream,
     )
-  } else if (
-    Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
-  ) {
+  }
+
+  if (Object.values(OllamaModelIDs).includes(modelId)) {
     // Ollama
     return await runOllamaChat(
       selectedConversation,
       chatBody!.llmProviders!.Ollama as OllamaProvider,
       chatBody.stream,
     )
-  } else if (
-    Object.values(AnthropicModelID).includes(
-      selectedConversation.model.id as any,
-    )
-  ) {
+  }
+
+  if (Object.values(AnthropicModelID).includes(modelId)) {
     return await runAnthropicChat(
       selectedConversation,
       chatBody.llmProviders?.Anthropic as AnthropicProvider,
       chatBody.stream,
     )
-  } else if (
-    Object.values(OpenAIModelID).includes(
-      selectedConversation.model.id as any,
-    ) ||
-    Object.values(AzureModelID).includes(selectedConversation.model.id as any)
+  }
+
+  const llmProviders = chatBody.llmProviders
+  const azureProvider = llmProviders?.Azure
+  const openAIProvider = llmProviders?.OpenAI
+  const useResponsesApi = chatBody.conversation?.agentModeEnabled === true
+
+  const hasAzureDeploymentMetadata =
+    typeof selectedConversation.model === 'object' &&
+    selectedConversation.model !== null &&
+    ('azureDeploymentID' in (selectedConversation.model as any) ||
+      'azureDeploymentModelName' in (selectedConversation.model as any))
+
+  const azureHasModelEnabled =
+    !!azureProvider?.enabled &&
+    (azureProvider.models || []).some((m: any) => m.enabled && m.id === modelId)
+
+  const openAIHasModelEnabled =
+    !!openAIProvider?.enabled &&
+    (openAIProvider.models || []).some(
+      (m: any) => m.enabled && m.id === modelId,
+    )
+
+  const runAzure = useResponsesApi ? runAzureResponsesChat : runAzureChat
+  const runOpenAI = useResponsesApi ? runOpenAIResponsesChat : runOpenAIChat
+
+  if (
+    hasAzureDeploymentMetadata &&
+    azureProvider?.enabled &&
+    !openAIHasModelEnabled
   ) {
-    return await openAIAzureChat(chatBody, chatBody.stream)
-  } else if (
-    Object.values(BedrockModelID).includes(selectedConversation.model.id as any)
+    return await runAzure(
+      selectedConversation,
+      azureProvider as any,
+      chatBody.stream,
+    )
+  }
+
+  if (azureHasModelEnabled && !openAIHasModelEnabled) {
+    if (!azureProvider) {
+      throw new Error('No Azure provider configured for Azure request')
+    }
+
+    return await runAzure(
+      selectedConversation,
+      azureProvider as any,
+      chatBody.stream,
+    )
+  }
+
+  if (openAIHasModelEnabled && !azureHasModelEnabled) {
+    if (!llmProviders) {
+      throw new Error('No LLM providers configured for OpenAI request')
+    }
+
+    const openAIKey = getOpenAIKey(
+      llmProviders,
+      chatBody.courseMetadata as any,
+      chatBody.key,
+    )
+    return await runOpenAI(selectedConversation, openAIKey, chatBody.stream)
+  }
+
+  if (azureHasModelEnabled && openAIHasModelEnabled) {
+    if (hasAzureDeploymentMetadata) {
+      return await runAzure(
+        selectedConversation,
+        azureProvider as any,
+        chatBody.stream,
+      )
+    }
+
+    const openAIKey = getOpenAIKey(
+      llmProviders as any,
+      chatBody.courseMetadata as any,
+      chatBody.key,
+    )
+    return await runOpenAI(selectedConversation, openAIKey, chatBody.stream)
+  }
+
+  if (Object.values(AzureModelID).includes(modelId) && azureProvider?.enabled) {
+    return await runAzure(
+      selectedConversation,
+      azureProvider as any,
+      chatBody.stream,
+    )
+  }
+
+  if (
+    Object.values(OpenAIModelID).includes(modelId) &&
+    openAIProvider?.enabled
   ) {
+    if (!llmProviders) {
+      throw new Error('No LLM providers configured for OpenAI request')
+    }
+    const openAIKey = getOpenAIKey(
+      llmProviders,
+      chatBody.courseMetadata as any,
+      chatBody.key,
+    )
+    return await runOpenAI(selectedConversation, openAIKey, chatBody.stream)
+  }
+
+  if (Object.values(BedrockModelID).includes(modelId)) {
     return await runBedrockChat(
       selectedConversation,
       chatBody.llmProviders?.Bedrock as BedrockProvider,
       chatBody.stream,
     )
-  } else if (
-    Object.values(GeminiModelID).includes(selectedConversation.model.id as any)
-  ) {
+  }
+
+  if (Object.values(GeminiModelID).includes(modelId)) {
     return await runGeminiChat(
       selectedConversation,
       chatBody.llmProviders?.Gemini as GeminiProvider,
       chatBody.stream,
     )
-  } else if (
-    Object.values(SambaNovaModelID).includes(
-      selectedConversation.model.id as any,
-    )
-  ) {
+  }
+
+  if (Object.values(SambaNovaModelID).includes(modelId)) {
     return await runSambaNovaChat(
       selectedConversation,
       chatBody.llmProviders?.SambaNova as SambaNovaProvider,
       chatBody.stream,
     )
-  } else {
-    throw new Error(
-      `Model '${selectedConversation.model.name}' is not supported.`,
-    )
   }
+
+  throw new Error(
+    `Model '${selectedConversation.model.name}' is not supported.`,
+  )
 }
