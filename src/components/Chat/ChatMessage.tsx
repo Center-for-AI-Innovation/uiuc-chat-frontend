@@ -41,9 +41,7 @@ import {
 import { useTranslation } from 'next-i18next'
 import HomeContext from '~/pages/api/home/home.context'
 import { fetchPresignedUrl } from '~/utils/apiUtils'
-import { CodeBlock } from '../Markdown/CodeBlock'
-import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
-import { generateSecureKey } from '~/utils/cryptoRandom'
+import { StreamdownMarkdown } from '../Markdown/StreamdownMarkdown'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
 import { ImagePreview } from './ImagePreview'
@@ -57,9 +55,6 @@ import {
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import rehypeMathjax from 'rehype-mathjax'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
 import { IntermediateStateAccordion } from '../UIUC-Components/IntermediateStateAccordion'
 import { AgentExecutionTimeline } from './AgentExecutionTimeline'
 import { FeedbackModal } from './FeedbackModal'
@@ -1265,190 +1260,195 @@ export const ChatMessage = memo(
             />
           )}
           {contentToRender && (
-            <MemoizedReactMarkdown
-              className="linkMarkDown supMarkDown codeBlock prose mb-2 flex-1 flex-col items-start space-y-2 overflow-visible"
-              remarkPlugins={[remarkGfm, remarkMath]}
-              rehypePlugins={[rehypeMathjax]}
-              components={{
-                code({ node, inline, className, children, ...props }) {
-                  const text = String(children)
-
-                  // Simple regex to see if there's a [title](url) pattern
-                  const linkRegex = /\[[^\]]+\]\([^)]+\)/
-
-                  // If it looks like a link, parse it again as normal Markdown
-                  if (linkRegex.test(text)) {
-                    return (
-                      <MemoizedReactMarkdown
-                        remarkPlugins={[remarkGfm, remarkMath]}
-                        rehypePlugins={[rehypeMathjax]}
-                      >
-                        {text}
-                      </MemoizedReactMarkdown>
-                    )
-                  }
-
-                  // Handle cursor placeholder
-                  if (children.length) {
-                    if (children[0] == '▍') {
-                      return (
-                        <span className="mt-1 animate-pulse cursor-default">
-                          ▍
-                        </span>
-                      )
-                    }
-
-                    children[0] = (children[0] as string).replace('`▍`', '▍')
-                  }
-
-                  const match = /language-(\w+)/.exec(className || '')
-
-                  return !inline ? (
-                    <CodeBlock
-                      key={generateSecureKey()}
-                      language={(match && match[1]) || ''}
-                      value={String(children).replace(/\n$/, '')}
-                      style={{
-                        maxWidth: '100%',
-                        overflowX: 'auto',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-all',
-                        overflowWrap: 'anywhere',
-                      }}
-                      {...props}
-                    />
-                  ) : (
-                    <code
-                      className={'codeBlock'}
-                      {...props}
-                      style={{
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-all',
-                        overflowWrap: 'anywhere',
-                      }}
-                    >
-                      {children}
-                    </code>
-                  )
+            <StreamdownMarkdown
+              className="linkMarkDown supMarkDown prose max-w-none mb-2 overflow-visible"
+              mode={
+                messageIsStreaming &&
+                messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+                  ? 'streaming'
+                  : 'static'
+              }
+              isAnimating={
+                messageIsStreaming &&
+                messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+              }
+              parseIncompleteMarkdown={
+                messageIsStreaming &&
+                messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+              }
+              controls={{
+                code: true,
+                mermaid: {
+                  fullscreen: true,
+                  download: true,
+                  copy: true,
+                  panZoom: true,
                 },
-                p({ node, children }) {
+              }}
+              components={{
+                p({ children, className, ...props }) {
                   return (
                     <p
-                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph`}
+                      {...props}
+                      className={`self-start text-base font-normal ${montserrat_paragraph.variable} pb-2 font-montserratParagraph${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </p>
                   )
                 },
-                ul({ children }) {
+                ul({ children, className, ...props }) {
                   return (
                     <ul
-                      className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph`}
+                      {...props}
+                      className={`text-base font-normal ${montserrat_paragraph.variable} font-montserratParagraph${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </ul>
                   )
                 },
-                ol({ children }) {
+                ol({ children, className, ...props }) {
                   return (
                     <ol
-                      className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6`}
+                      {...props}
+                      className={`text-base font-normal ${montserrat_paragraph.variable} ml-4 font-montserratParagraph lg:ml-6${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </ol>
                   )
                 },
-                li({ children }) {
+                li({ children, className, ...props }) {
                   return (
                     <li
-                      className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph`}
+                      {...props}
+                      className={`text-base font-normal ${montserrat_paragraph.variable} break-words font-montserratParagraph${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </li>
                   )
                 },
-                table({ children }) {
+                table({ children, className, ...props }) {
                   return (
-                    <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                    <table
+                      {...props}
+                      className={`border-collapse border border-black px-3 py-1 dark:border-white${
+                        className ? ` ${className}` : ''
+                      }`}
+                    >
                       {children}
                     </table>
                   )
                 },
-                th({ children }) {
+                th({ children, className, ...props }) {
                   return (
-                    <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
+                    <th
+                      {...props}
+                      className={`break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white${
+                        className ? ` ${className}` : ''
+                      }`}
+                    >
                       {children}
                     </th>
                   )
                 },
-                td({ children }) {
+                td({ children, className, ...props }) {
                   return (
-                    <td className="break-words border border-black px-3 py-1 dark:border-white">
+                    <td
+                      {...props}
+                      className={`break-words border border-black px-3 py-1 dark:border-white${
+                        className ? ` ${className}` : ''
+                      }`}
+                    >
                       {children}
                     </td>
                   )
                 },
-                h1({ node, children }) {
+                h1({ children, className, ...props }) {
                   return (
                     <h1
-                      className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                      {...props}
+                      className={`text-4xl font-bold ${montserrat_heading.variable} font-montserratHeading${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </h1>
                   )
                 },
-                h2({ node, children }) {
+                h2({ children, className, ...props }) {
                   return (
                     <h2
-                      className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                      {...props}
+                      className={`text-3xl font-bold ${montserrat_heading.variable} font-montserratHeading${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </h2>
                   )
                 },
-                h3({ node, children }) {
+                h3({ children, className, ...props }) {
                   return (
                     <h3
-                      className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                      {...props}
+                      className={`text-2xl font-bold ${montserrat_heading.variable} font-montserratHeading${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </h3>
                   )
                 },
-                h4({ node, children }) {
+                h4({ children, className, ...props }) {
                   return (
                     <h4
-                      className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                      {...props}
+                      className={`text-lg font-bold ${montserrat_heading.variable} font-montserratHeading${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </h4>
                   )
                 },
-                h5({ node, children }) {
+                h5({ children, className, ...props }) {
                   return (
                     <h5
-                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                      {...props}
+                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </h5>
                   )
                 },
-                h6({ node, children }) {
+                h6({ children, className, ...props }) {
                   return (
                     <h6
-                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading`}
+                      {...props}
+                      className={`text-base font-bold ${montserrat_heading.variable} font-montserratHeading${
+                        className ? ` ${className}` : ''
+                      }`}
                     >
                       {children}
                     </h6>
                   )
                 },
-                a({ node, className, children, ...props }) {
+                a({ children, ...props }) {
                   return <MarkdownLink {...props}>{children}</MarkdownLink>
                 },
               }}
             >
               {contentToRender}
-            </MemoizedReactMarkdown>
+            </StreamdownMarkdown>
           )}
         </>
       )
@@ -1460,8 +1460,13 @@ export const ChatMessage = memo(
       title?: string
       children: React.ReactNode
     }> = ({ href, title, children }) => {
-      const firstChild =
-        children && Array.isArray(children) ? children[0] : null
+      const linkText = React.Children.toArray(children)
+        .map((child) => {
+          if (typeof child === 'string') return child
+          if (typeof child === 'number') return `${child}`
+          return ''
+        })
+        .join('')
 
       // Check if this is a citation link by looking for:
       // 1. Title attribute containing "Citation" or "Citations"
@@ -1471,16 +1476,16 @@ export const ChatMessage = memo(
         title &&
         (title.startsWith('Citation ') || title.startsWith('Citations '))
       const isCitationByContent =
-        typeof firstChild === 'string' &&
+        linkText.length > 0 &&
         (Array.isArray(message.contexts)
           ? message.contexts.some(
               (ctx) =>
                 ctx.readable_filename &&
-                firstChild.includes(ctx.readable_filename),
+                linkText.includes(ctx.readable_filename),
             )
           : false)
       const isOldFormatCitation =
-        typeof firstChild === 'string' && firstChild.includes(' | ')
+        linkText.length > 0 && linkText.includes(' | ')
 
       const isValidCitation =
         isCitationByTitle || isCitationByContent || isOldFormatCitation
