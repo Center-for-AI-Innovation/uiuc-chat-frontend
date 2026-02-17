@@ -1685,7 +1685,6 @@ export const ChatMessage = memo(
     const shouldShowSources =
       condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
 
-
     return (
       <>
         <div
@@ -1897,7 +1896,8 @@ export const ChatMessage = memo(
                               {/* Query rewrite loading state - only show for current message */}
                               {isQueryRewriting &&
                                 messageIndex ===
-                                  (selectedConversation?.messages?.length ?? 0) -
+                                  (selectedConversation?.messages?.length ??
+                                    0) -
                                     1 && (
                                   <IntermediateStateAccordion
                                     accordionKey="query-rewrite"
@@ -1911,7 +1911,8 @@ export const ChatMessage = memo(
                               {/* Query rewrite result - show for any message that was optimized */}
                               {(!isQueryRewriting ||
                                 messageIndex <
-                                  (selectedConversation?.messages?.length ?? 0) -
+                                  (selectedConversation?.messages?.length ??
+                                    0) -
                                     1) &&
                                 message.wasQueryRewritten !== undefined &&
                                 message.wasQueryRewritten !== null && (
@@ -1950,7 +1951,8 @@ export const ChatMessage = memo(
                                   (selectedConversation?.messages.length ?? 0) -
                                     1 ||
                                   messageIndex ===
-                                    (selectedConversation?.messages.length ?? 0) -
+                                    (selectedConversation?.messages.length ??
+                                      0) -
                                       2) && (
                                   <IntermediateStateAccordion
                                     accordionKey="retrieval loading"
@@ -1967,11 +1969,14 @@ export const ChatMessage = memo(
                                   (selectedConversation?.messages.length ?? 0) -
                                     1 ||
                                   messageIndex ===
-                                    (selectedConversation?.messages.length ?? 0) -
+                                    (selectedConversation?.messages.length ??
+                                      0) -
                                       2) && (
                                   <IntermediateStateAccordion
                                     accordionKey={`routing tools`}
-                                    title={'Routing the request to relevant tools'}
+                                    title={
+                                      'Routing the request to relevant tools'
+                                    }
                                     isLoading={isRouting}
                                     error={false}
                                     content={<></>}
@@ -1985,7 +1990,8 @@ export const ChatMessage = memo(
                                   (selectedConversation?.messages.length ?? 0) -
                                     1 ||
                                   messageIndex ===
-                                    (selectedConversation?.messages.length ?? 0) -
+                                    (selectedConversation?.messages.length ??
+                                      0) -
                                       2) && (
                                   <>
                                     {message.tools.map((response, index) => (
@@ -2075,7 +2081,8 @@ export const ChatMessage = memo(
 
                               {/* Tool output states for last message */}
                               {(messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) - 1 ||
+                                (selectedConversation?.messages.length ?? 0) -
+                                  1 ||
                                 messageIndex ===
                                   (selectedConversation?.messages.length ?? 0) -
                                     2) && (
@@ -2176,7 +2183,8 @@ export const ChatMessage = memo(
                                   (selectedConversation?.messages.length ?? 0) -
                                     1 ||
                                   messageIndex ===
-                                    (selectedConversation?.messages.length ?? 0) -
+                                    (selectedConversation?.messages.length ??
+                                      0) -
                                       2) &&
                                 (!message.tools ||
                                   message.tools.every(
@@ -2184,7 +2192,7 @@ export const ChatMessage = memo(
                                       tool.output !== undefined ||
                                       tool.error !== undefined,
                                   )) && (
-                                  <div className="flex items-center gap-3 rounded-lg bg-[--background-faded] px-4 py-3">
+                                  <div className="flex items-center gap-3 rounded-lg px-4 py-3">
                                     <p
                                       className={`text-sm font-semibold ${montserrat_paragraph.variable} font-montserratParagraph`}
                                     >
@@ -2242,52 +2250,51 @@ export const ChatMessage = memo(
                   <div className="flex flex-col gap-2">
                     {/* Sources button */}
                     {shouldShowSources && (
-                        <div className="relative z-0 mb-1 flex justify-start">
-                          <button
-                            className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
-                            onClick={() => handleSourcesSidebarToggle(true)}
+                      <div className="relative z-0 mb-1 flex justify-start">
+                        <button
+                          className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
+                          onClick={() => handleSourcesSidebarToggle(true)}
+                        >
+                          <span
+                            className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
                           >
-                            <span
-                              className={`whitespace-nowrap ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
-                            >
-                              Sources
-                              <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
-                                {getContextsLength(displayContexts)}
-                              </span>
+                            Sources
+                            <span className="ml-0.5 rounded-full bg-[--background] px-1.5 py-0.5 text-xs text-[--foreground]">
+                              {getContextsLength(displayContexts)}
                             </span>
+                          </span>
 
-                            {sourceThumbnails.length > 0 && (
-                              <div className="flex items-center">
-                                <div className="ml-1 mr-1 h-4 border-l border-gray-300"></div>
-                                <div className="relative flex">
-                                  {sourceThumbnails.map((thumbnail, index) => (
-                                    <div
-                                      key={index}
-                                      className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
-                                      style={{
-                                        marginLeft:
-                                          index > 0 ? '-0.75rem' : '0',
-                                        zIndex: index,
-                                        transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                          {sourceThumbnails.length > 0 && (
+                            <div className="flex items-center">
+                              <div className="ml-1 mr-1 h-4 border-l border-gray-300"></div>
+                              <div className="relative flex">
+                                {sourceThumbnails.map((thumbnail, index) => (
+                                  <div
+                                    key={index}
+                                    className="relative h-7 w-7 overflow-hidden rounded-md border-2 border-gray-200 bg-[--dashboard-button-foreground] transition-transform duration-200"
+                                    style={{
+                                      marginLeft: index > 0 ? '-0.75rem' : '0',
+                                      zIndex: index,
+                                      transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                                    }}
+                                  >
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
+                                    <img
+                                      src={thumbnail}
+                                      alt={`Source ${index + 1}`}
+                                      className="h-full w-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none'
                                       }}
-                                    >
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
-                                      <img
-                                        src={thumbnail}
-                                        alt={`Source ${index + 1}`}
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                          e.currentTarget.style.display = 'none'
-                                        }}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
+                                    />
+                                  </div>
+                                ))}
                               </div>
-                            )}
-                          </button>
-                        </div>
-                      )}
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Other buttons in their container */}
                     {!(
