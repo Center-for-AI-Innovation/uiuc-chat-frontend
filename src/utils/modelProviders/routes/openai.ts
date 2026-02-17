@@ -38,6 +38,8 @@ export const getOpenAIModels = async (
 
     if (!response.data) {
       openAIProvider.error = `Error fetching models from OpenAI, unexpected response format. Response: ${response}`
+      openAIProvider.models = []
+      return openAIProvider
     }
 
     // gpt-5-thinking will not be explictly listed in the response, it will just be gpt-5

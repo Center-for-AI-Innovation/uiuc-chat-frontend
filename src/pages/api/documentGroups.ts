@@ -2,7 +2,7 @@
 import { type NextApiResponse } from 'next'
 import { AuthenticatedRequest } from '~/utils/authMiddleware'
 import posthog from 'posthog-js'
-import { type CourseDocument } from 'src/types/courseMaterials'
+import { type CourseDocument } from '~/types/courseMaterials'
 import {
   addDocumentsToDocGroup,
   fetchDocumentGroups,

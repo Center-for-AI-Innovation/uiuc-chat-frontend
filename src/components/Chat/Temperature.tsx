@@ -5,9 +5,7 @@ import HomeContext from '~/pages/api/home/home.context'
 import { Title, Slider } from '@mantine/core' // Import Slider from @mantine/core
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
-import {
-  type AllLLMProviders,
-} from '~/utils/modelProviders/LLMProvider'
+import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 import { type Conversation } from '~/types/chat'
 
 export const selectBestTemperature = (
@@ -15,14 +13,13 @@ export const selectBestTemperature = (
   selectedConversation: Conversation | undefined,
   llmProviders: AllLLMProviders,
 ): number => {
-
-   // First priority: current select model temperature
+  // First priority: current select model temperature
   if (selectedConversation?.temperature !== undefined) {
     return selectedConversation.temperature
   }
 
   // Second priority: Selected last conversation's temperature
-   if (lastConversation?.temperature !== undefined) {
+  if (lastConversation?.temperature !== undefined) {
     return lastConversation.temperature
   }
 
@@ -56,11 +53,7 @@ export const TemperatureSlider: FC<Props> = ({
   const lastConversation = conversations[conversations.length - 1]
 
   const [temperature, setTemperature] = useState(
-    selectBestTemperature(
-      lastConversation,
-      selectedConversation,
-      llmProviders,
-    ),
+    selectBestTemperature(lastConversation, selectedConversation, llmProviders),
   )
   const { t } = useTranslation('chat')
   const handleChange = (value: number) => {

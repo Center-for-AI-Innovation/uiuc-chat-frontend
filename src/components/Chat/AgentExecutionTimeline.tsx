@@ -127,14 +127,18 @@ export const AgentExecutionTimeline = ({
   }
 
   return (
-    <div className="rounded-lg overflow-hidden bg-[--background] shadow-md w-[95%]">
-      <ChainOfThought open={isOpen} onOpenChange={setIsOpen} className="w-full max-w-none [&_.bg-border]:bg-[--foreground-faded]">
+    <div className="w-[95%] overflow-hidden rounded-lg bg-[--background] shadow-md">
+      <ChainOfThought
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="w-full max-w-none [&_.bg-border]:bg-[--foreground-faded]"
+      >
         <ChainOfThoughtHeader className="p-3 pb-0">
-          <div className="flex items-center justify-between w-full">
+          <div className="flex w-full items-center justify-between">
             <span>Agent reasoning</span>
             {streaming && (
               <span className="flex items-center gap-1.5 text-xs text-[--foreground-faded]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[--primary] animate-pulse" />
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[--primary]" />
                 Active
               </span>
             )}
@@ -142,7 +146,7 @@ export const AgentExecutionTimeline = ({
         </ChainOfThoughtHeader>
 
         {!isOpen && (
-          <div className="p-3 pt-2 px-3">
+          <div className="p-3 px-3 pt-2">
             <div
               ref={previewRef}
               className="max-h-20 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,rgba(0,0,0,0.15),rgba(0,0,0,0.6),rgba(0,0,0,1))]"
@@ -160,7 +164,7 @@ export const AgentExecutionTimeline = ({
                         className={cn(
                           'mt-1.5 h-1 w-1 shrink-0 rounded-full',
                           isRunning
-                            ? 'bg-[--primary] animate-pulse'
+                            ? 'animate-pulse bg-[--primary]'
                             : 'bg-[--foreground-faded]',
                         )}
                       />
@@ -182,44 +186,42 @@ export const AgentExecutionTimeline = ({
         )}
 
         <ChainOfThoughtContent className="p-4">
-        {filteredEvents.map((event) => {
-          const { title, count, detail } = summariseEvent(event)
-          const status = getStatus(event)
-          const icon = event.type === 'retrieval' ? Search : undefined
+          {filteredEvents.map((event) => {
+            const { title, count, detail } = summariseEvent(event)
+            const status = getStatus(event)
+            const icon = event.type === 'retrieval' ? Search : undefined
 
-          return (
-            <ChainOfThoughtStep
-              key={event.id}
-              status={status}
-              icon={icon}
-              label={
-                <div className="space-y-1">
-                  <div className="text-[--foreground]">{title}</div>
-                  {count !== undefined && (
-                    <ChainOfThoughtSearchResults>
-                      <ChainOfThoughtSearchResult
-                        className="bg-[--primary] text-[--primary-foreground] border-0 hover:bg-[--primary]"
-                      >
-                        Found {count} document chunk{count === 1 ? '' : 's'}
-                      </ChainOfThoughtSearchResult>
-                    </ChainOfThoughtSearchResults>
-                  )}
-                  {detail && (
-                    <div className="text-sm text-[--foreground-faded]">
-                      {detail}
-                    </div>
-                  )}
-                  {event.metadata?.errorMessage && (
-                    <div className="text-sm text-red-500">
-                      {event.metadata.errorMessage}
-                    </div>
-                  )}
-                </div>
-              }
-            />
-          )
-        })}
-      </ChainOfThoughtContent>
+            return (
+              <ChainOfThoughtStep
+                key={event.id}
+                status={status}
+                icon={icon}
+                label={
+                  <div className="space-y-1">
+                    <div className="text-[--foreground]">{title}</div>
+                    {count !== undefined && (
+                      <ChainOfThoughtSearchResults>
+                        <ChainOfThoughtSearchResult className="border-0 bg-[--primary] text-[--primary-foreground] hover:bg-[--primary]">
+                          Found {count} document chunk{count === 1 ? '' : 's'}
+                        </ChainOfThoughtSearchResult>
+                      </ChainOfThoughtSearchResults>
+                    )}
+                    {detail && (
+                      <div className="text-sm text-[--foreground-faded]">
+                        {detail}
+                      </div>
+                    )}
+                    {event.metadata?.errorMessage && (
+                      <div className="text-sm text-red-500">
+                        {event.metadata.errorMessage}
+                      </div>
+                    )}
+                  </div>
+                }
+              />
+            )
+          })}
+        </ChainOfThoughtContent>
       </ChainOfThought>
     </div>
   )

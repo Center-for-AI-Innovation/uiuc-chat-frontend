@@ -3,11 +3,7 @@ import { type ChatCompletionMessageToolCall } from 'openai/resources/chat/comple
 import posthog from 'posthog-js'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
 import type { ToolOutput } from '~/types/chat'
-import {
-  type Conversation,
-  type Message,
-  type UIUCTool,
-} from '~/types/chat'
+import { type Conversation, type Message, type UIUCTool } from '~/types/chat'
 import {
   type N8NParameter,
   type N8nWorkflow,
@@ -68,11 +64,14 @@ export async function handleFunctionCall(
         try {
           const parsedUrl = new URL(baseUrl)
           const hostname = parsedUrl.hostname.toLowerCase()
-          const isOpenRouter = hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
+          const isOpenRouter =
+            hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
           if (isOpenRouter) {
             modelIdToSend = selectedConversation.model.id.toLowerCase()
           }
-        } catch { /* invalid URL, use original modelId */ }
+        } catch {
+          /* invalid URL, use original modelId */
+        }
       }
       body.modelId = modelIdToSend
     } else {
@@ -92,14 +91,18 @@ export async function handleFunctionCall(
       return []
     }
     const openaiFunctionCallResponse = await response.json()
-    const modelMessage = openaiFunctionCallResponse.choices?.[0]?.message?.content
+    const modelMessage =
+      openaiFunctionCallResponse.choices?.[0]?.message?.content
     const openaiResponse: ChatCompletionMessageToolCall[] =
       openaiFunctionCallResponse.choices?.[0]?.message?.tool_calls || []
-    
+
     if (openaiResponse.length === 0) {
       // Model responded without invoking tools - store for buildPrompt
       if (modelMessage && selectedConversation.messages.length > 0) {
-        const lastMsg = selectedConversation.messages[selectedConversation.messages.length - 1]
+        const lastMsg =
+          selectedConversation.messages[
+            selectedConversation.messages.length - 1
+          ]
         if (lastMsg && lastMsg.role === 'user') {
           ;(lastMsg as any)._toolRoutingResponse = modelMessage
         }
@@ -175,7 +178,9 @@ export async function handleFunctionCall(
 
     // Update the message object with the array of tool invocations
     // In agent mode (iterative), append to existing tools; otherwise replace
-    message.tools = message.tools ? [...message.tools, ...validUiucToolsToRun] : [...validUiucToolsToRun]
+    message.tools = message.tools
+      ? [...message.tools, ...validUiucToolsToRun]
+      : [...validUiucToolsToRun]
     selectedConversation.messages[selectedConversation.messages.length - 1] =
       message
     console.log(

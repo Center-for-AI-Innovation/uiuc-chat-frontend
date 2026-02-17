@@ -5,14 +5,17 @@ This directory contains GitHub Actions workflows for the UIUC Chat Frontend proj
 ## 📁 Available Workflows
 
 ### `deploy-to-ecs.yml` - ECS Deployment
+
 Automatically deploys the frontend application to AWS ECS Fargate on code changes.
 
 ### `e2e-prod-status-test.yml` - E2E Testing
+
 Runs end-to-end tests against the production environment.
 
 ## 🚀 ECS Deployment - How It Works
 
-The `deploy-to-ecs.yml` workflow triggers on pushes to `illinois-chat` branch when these files change:
+The `deploy-to-ecs.yml` workflow triggers on pushes to `illinois-chat` and `main` branches when these files change:
+
 - `src/**` - React/Next.js source code
 - `pages/**` - Next.js pages (if using pages router)
 - `components/**` - React components
@@ -47,13 +50,15 @@ env:
 Add these secrets in GitHub repository settings for ECS deployment:
 
 ### AWS Credentials:
+
 - `AWS_ACCESS_KEY_ID` - AWS access key with ECR and ECS permissions
 - `AWS_SECRET_ACCESS_KEY` - AWS secret access key
 
 ### Frontend Build Environment Variables:
+
 - `NEXT_PUBLIC_KEYCLOAK_REALM` - Keycloak realm name
 - `NEXT_PUBLIC_KEYCLOAK_CLIENT_ID` - Keycloak client ID
-- `NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG` - "True" to use Illinois Chat config which controls the appearance 
+- `NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG` - "True" to use Illinois Chat config which controls the appearance
 - `NEXT_PUBLIC_ILLINOIS_CHAT_BANNER_CONTENT` - Illinois Chat Banner content HTML
 - `NEXT_PUBLIC_POSTHOG_KEY` - PostHog analytics key
 - `NEXT_PUBLIC_POSTHOG_HOST` - PostHog host URL
@@ -68,6 +73,7 @@ Add these secrets in GitHub repository settings for ECS deployment:
 6. **Wait** - Ensures deployment completes successfully
 
 ## ⏱️ Typical Timing
+
 - **Total**: 8-15 minutes
 - **Build & Push**: 5-10 minutes (includes npm install & build)
 - **ECS Deployment**: 3-5 minutes
@@ -93,6 +99,7 @@ Trigger ECS deployment manually via GitHub Actions tab → "Run workflow" button
 ## 🚫 ECS Deployment - Skip Conditions
 
 Changes to these files won't trigger ECS deployment:
+
 - Documentation (`*.md`, `docs/**`)
 - Test files (`__tests__/**`, `*.test.*`, `*.spec.*`)
 - VS Code config (`.vscode/**`)
@@ -103,6 +110,7 @@ Changes to these files won't trigger ECS deployment:
 ## 🔍 ECS Deployment - Troubleshooting
 
 ### Common Issues:
+
 - **Missing secrets**: Add AWS credentials and Keycloak config to repository secrets
 - **Permission errors**: Ensure IAM user has ECR and ECS permissions
 - **Build failures**: Check Node.js dependencies and build scripts
@@ -110,12 +118,14 @@ Changes to these files won't trigger ECS deployment:
 - **Health check failures**: Check if Next.js app starts correctly on port 3000
 
 ### Next.js Specific Issues:
+
 - **Build errors**: Check `next.config.mjs` and TypeScript configuration
 - **Runtime errors**: Verify environment variables are properly injected
 - **Static asset issues**: Ensure `public/` files are copied correctly
 - **i18n issues**: Check `next-i18next.config.mjs` configuration
 
 ### Quick Commands:
+
 ```bash
 # Check ECS service status
 aws ecs describe-services --cluster uiuc-chat-dev --services frontend-service-358yl957
@@ -136,23 +146,27 @@ aws ecr describe-images --repository-name uiuc-chat-frontend --query 'imageDetai
 ## 🏗️ Frontend-Specific Notes
 
 ### Build Process:
+
 - **Multi-stage Docker build**: Separates build dependencies from runtime
 - **Environment injection**: Keycloak URLs injected during build via build args
 - **Production optimization**: Uses `npm run build:self-hosted` for optimized assets
 - **Static asset handling**: Public files and built assets properly copied
 
 ### Dependencies:
+
 - **Node.js 18**: Alpine-based images for smaller size
 - **Build tools**: Python3, pip, make, g++ for native dependencies
 - **Runtime**: Only production dependencies in final image
 
 ### Configuration:
+
 - **Next.js**: App router with internationalization support
 - **Tailwind CSS**: Utility-first styling framework
 - **TypeScript**: Type-safe development
 - **Keycloak**: Authentication integration
 
 ### Performance:
+
 - **Image optimization**: Multi-stage build reduces final image size
 - **Caching**: Leverages Docker layer caching for dependencies
 - **Static assets**: Properly handled for CDN delivery

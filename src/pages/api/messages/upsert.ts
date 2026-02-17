@@ -19,7 +19,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       .from(messages)
       .where(eq(messages.id, message.id))
       .limit(1)
-    const existingRecord = existingMessage[0]
+    const existing = existingMessage?.[0] ?? null
 
     // Get the latest message's timestamp for this conversation
     const latestMessage = await db
@@ -32,7 +32,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const dbMessage = convertChatToDBMessage(message, conversationId)
 
     // If this is a new message, ensure its timestamp is after the latest message
-    if (!existingRecord && latestMessage?.[0]?.created_at) {
+    if (!existing && latestMessage?.[0]?.created_at) {
       const latestTime = new Date(latestMessage[0].created_at).getTime()
       dbMessage.created_at = new Date(latestTime + 1000)
       dbMessage.updated_at = new Date(dbMessage.created_at)
@@ -58,17 +58,14 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     // If this was an edit of an existing message, we need to handle following messages
-    if (existingRecord) {
+    if (existing) {
       const followingMessages = await db
         .select({ id: messages.id })
         .from(messages)
         .where(
           and(
             eq(messages.conversation_id, conversationId),
-            gt(
-              messages.created_at,
-              existingRecord?.created_at ?? new Date(0),
-            ),
+            gt(messages.created_at, existing.created_at ?? new Date(0)),
           ),
         )
         .orderBy(asc(messages.created_at))

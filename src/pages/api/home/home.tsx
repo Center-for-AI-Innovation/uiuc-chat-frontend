@@ -26,17 +26,15 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import {
-  useFetchConversationHistory,
-  useFetchLastConversation,
-  useUpdateConversation,
-} from '~/hooks/conversationQueries'
-import {
-  useCreateFolder,
-  useDeleteFolder,
-  useFetchFolders,
-  useUpdateFolder,
-} from '~/hooks/folderQueries'
+
+import { useFetchLastConversation } from '@/hooks/queries/useFetchLastConversation'
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+
+import { useDeleteFolder } from '@/hooks/queries/useDeleteFolder'
+import { useUpdateFolder } from '@/hooks/queries/useUpdateFolder'
+import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
+import { useCreateFolder } from '@/hooks/queries/useCreateFolder'
+
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
@@ -236,6 +234,7 @@ const Home = ({
       try {
         if (!course_metadata) return
 
+        //TODO(BG): can be replaced with react query call
         const models = await getModels({
           projectName: course_name,
         })
@@ -404,7 +403,10 @@ const Home = ({
 
     // Only update selectedConversation, don't add to conversations list yet
     dispatch({ field: 'selectedConversation', value: newConversation })
-    dispatch({ field: 'agentModeEnabled', value: newConversation.agentModeEnabled ?? false })
+    dispatch({
+      field: 'agentModeEnabled',
+      value: newConversation.agentModeEnabled ?? false,
+    })
     dispatch({ field: 'loading', value: false })
 
     try {
@@ -419,6 +421,7 @@ const Home = ({
     }
   }
 
+  // save conversation to localStorage and send update to server
   const handleUpdateConversation = (
     conversation: Conversation,
     data: KeyValuePair,
@@ -581,8 +584,6 @@ const Home = ({
     )
     dispatch({ field: 'tools', value: tools })
   }
-  const [isDragging, setIsDragging] = useState<boolean>(false)
-  const [dragEnterCounter, setDragEnterCounter] = useState(0)
 
   const GradientIconPhoto = () => (
     <svg
@@ -610,62 +611,6 @@ const Home = ({
       <path d="M14 14l1 -1a3 5 0 0 1 3 0l2 2" />
     </svg>
   )
-
-  // EFFECTS for file drag and drop --------------------------------------------
-  useEffect(() => {
-    const handleDocumentDragOver = (e: DragEvent) => {
-      e.preventDefault()
-    }
-
-    const handleDocumentDragEnter = (e: DragEvent) => {
-      setDragEnterCounter((prev) => prev + 1)
-      setIsDragging(true)
-    }
-
-    const handleDocumentDragLeave = (e: DragEvent) => {
-      e.preventDefault()
-      setDragEnterCounter((prev) => prev - 1)
-      if (dragEnterCounter === 1 || e.relatedTarget === null) {
-        setIsDragging(false)
-      }
-    }
-
-    const handleDocumentDrop = (e: DragEvent) => {
-      e.preventDefault()
-      setIsDragging(false)
-      setDragEnterCounter(0)
-    }
-
-    const handleDocumentKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsDragging(false)
-        setDragEnterCounter(0)
-      }
-    }
-
-    const handleMouseOut = (e: MouseEvent) => {
-      if (!e.relatedTarget) {
-        setIsDragging(false)
-        setDragEnterCounter(0)
-      }
-    }
-
-    document.addEventListener('dragover', handleDocumentDragOver)
-    document.addEventListener('dragenter', handleDocumentDragEnter)
-    document.addEventListener('dragleave', handleDocumentDragLeave)
-    document.addEventListener('drop', handleDocumentDrop)
-    document.addEventListener('keydown', handleDocumentKeyDown)
-    window.addEventListener('mouseout', handleMouseOut)
-
-    return () => {
-      document.removeEventListener('dragover', handleDocumentDragOver)
-      document.removeEventListener('dragenter', handleDocumentDragEnter)
-      document.removeEventListener('dragleave', handleDocumentDragLeave)
-      document.removeEventListener('drop', handleDocumentDrop)
-      document.removeEventListener('keydown', handleDocumentKeyDown)
-      window.removeEventListener('mouseout', handleMouseOut)
-    }
-  }, [])
 
   useEffect(() => {
     if (window.innerWidth < 640) {
@@ -806,7 +751,7 @@ const Home = ({
             <Navbar isPlain={false} />
 
             <div className="flex h-full w-full overflow-y-auto sm:pt-0">
-              {isDragging &&
+              {/* {isDragging &&
                 VisionCapableModels.has(
                   selectedConversation?.model.id as any,
                 ) && (
@@ -816,7 +761,7 @@ const Home = ({
                       Drop your image here!
                     </span>
                   </div>
-                )}
+                )} */}
 
               <Chatbar
                 current_email={current_email}

@@ -175,8 +175,9 @@ export const CanViewOnlyCourse = ({
             </Title>
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </>
   )
 }

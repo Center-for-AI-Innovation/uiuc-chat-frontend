@@ -1,4 +1,4 @@
-import { type NCSAHostedVLMProvider, ProviderNames } from '../LLMProvider'
+import { type NCSAHostedVLMProvider } from '../LLMProvider'
 
 export interface NCSAHostedVLMModel {
   id: string
@@ -57,7 +57,9 @@ export const getNCSAHostedVLMModels = async (
   vlmProvider: NCSAHostedVLMProvider,
 ): Promise<NCSAHostedVLMProvider> => {
   delete vlmProvider.error // Clear any previous errors
-  vlmProvider.provider = ProviderNames.NCSAHostedVLM
+  // Avoid importing ProviderNames here to prevent a circular dependency with LLMProvider.
+  vlmProvider.provider =
+    'NCSAHostedVLM' as unknown as NCSAHostedVLMProvider['provider']
 
   if (!vlmProvider.enabled) {
     vlmProvider.models = []

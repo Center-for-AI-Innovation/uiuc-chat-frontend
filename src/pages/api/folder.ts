@@ -46,8 +46,8 @@ export function convertChatFolderToDBFolder(
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
-  const user_identifier = getUserIdentifier(req)
-  if (!user_identifier) {
+  const userIdentifier = getUserIdentifier(req)
+  if (!userIdentifier) {
     return res.status(400).json({
       error: 'No valid user identifier provided',
       message:
@@ -59,7 +59,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     case 'POST':
       const { folder }: { folder: FolderWithConversation } = req.body
       //   Convert folder to DB type
-      const dbFolder = convertChatFolderToDBFolder(folder, user_identifier)
+      const dbFolder = convertChatFolderToDBFolder(folder, userIdentifier)
 
       try {
         // Insert or update folder using DrizzleORM
@@ -89,7 +89,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       try {
         // Query folders and their related conversations and messages using DrizzleORM
         const fetchedFolders = await db.query.folders.findMany({
-          where: eq(folders.user_email, user_identifier),
+          where: eq(folders.user_email, userIdentifier),
           orderBy: desc(folders.created_at),
           with: {
             conversations: {
@@ -151,13 +151,13 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       }
       try {
         // Delete folder
-        if (deletedFolderId && user_identifier) {
+        if (deletedFolderId && userIdentifier) {
           const deleted = await db
             .delete(folders)
             .where(
               and(
                 eq(folders.id, deletedFolderId),
-                eq(folders.user_email, user_identifier),
+                eq(folders.user_email, userIdentifier),
               ),
             )
             .returning({ id: folders.id })
@@ -178,6 +178,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         res.status(500).json({ error: 'Error deleting folder' })
         console.error('Error deleting folder:', error)
       }
+      break
 
     default:
       res.setHeader('Allow', ['GET', 'POST'])
