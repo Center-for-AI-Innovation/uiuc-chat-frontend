@@ -66,6 +66,7 @@ import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { ContextWithMetadata } from '~/types/chat'
 import { modelSupportsTools } from '~/utils/modelProviders/capabilities'
 import posthog from 'posthog-js'
+import { deriveAgentModeEnabled } from '~/utils/app/agentMode'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -139,6 +140,7 @@ interface Props {
   courseName: string
   chat_ui?: ChatUI
   onRegenerate?: () => void
+  agentModeFeatureEnabled?: boolean
 }
 
 async function createNewConversation(
@@ -165,7 +167,6 @@ async function createNewConversation(
   }
 
   homeDispatch({ field: 'selectedConversation', value: newConversation })
-  homeDispatch({ field: 'agentModeEnabled', value: false })
   homeDispatch({
     field: 'conversations',
     value: (prev: Conversation[]) => [newConversation, ...prev],
@@ -231,6 +232,7 @@ export const ChatInput = ({
   courseName,
   chat_ui,
   onRegenerate,
+  agentModeFeatureEnabled = false,
 }: Props) => {
   const { t } = useTranslation('chat')
 
@@ -241,13 +243,14 @@ export const ChatInput = ({
       prompts,
       showModelSettings,
       llmProviders,
-      agentModeEnabled,
       tools,
     },
 
     dispatch: homeDispatch,
     handleUpdateConversation,
   } = useContext(HomeContext)
+
+  const agentModeEnabled = deriveAgentModeEnabled(selectedConversation)
 
   const [content, setContent] = useState<string>(() => inputContent)
   const [isTyping, setIsTyping] = useState<boolean>(false)
@@ -1336,7 +1339,8 @@ export const ChatInput = ({
               <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
             </Text>
             {/* Agent Mode pill */}
-            {selectedConversation?.model &&
+            {agentModeFeatureEnabled &&
+            selectedConversation?.model &&
             llmProviders &&
             modelSupportsTools(selectedConversation.model, llmProviders) ? (
               <button
@@ -1345,16 +1349,12 @@ export const ChatInput = ({
                     ? 'bg-[--primary] text-[--background]'
                     : 'bg-[--background-faded] text-[--foreground]'
                 }`}
-                disabled={messageIsStreaming || (tools?.length ?? 0) === 0}
+                disabled={messageIsStreaming}
                 onClick={() => {
                   const next = !agentModeEnabled
                   posthog.capture('agent_mode_toggled', {
                     enabled: next,
                     model_id: selectedConversation?.model?.id,
-                  })
-                  homeDispatch({
-                    field: 'agentModeEnabled',
-                    value: next,
                   })
                   if (selectedConversation) {
                     handleUpdateConversation(selectedConversation, {

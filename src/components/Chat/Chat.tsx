@@ -40,6 +40,10 @@ import { ErrorMessageDiv } from './ErrorMessageDiv'
 import { MemoizedChatMessage } from './MemoizedChatMessage'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
+import {
+  deriveAgentModeEnabled,
+  shouldShowChatLoader,
+} from '~/utils/app/agentMode'
 
 import { SourcesSidebarProvider } from './ChatMessage'
 
@@ -87,8 +91,16 @@ import {
 } from '~/utils/streamProcessing'
 import { createLogConversationPayload } from '@/utils/app/conversation'
 import { runAgentStream } from '~/hooks/useAgentStream'
-import { type AgentRunRequest, type ClientUIUCTool, type ContextMetadata } from '~/types/agentStream'
-import { type ClientMessage, toClientMessage, toClientConversation } from '~/types/clientConversation'
+import {
+  type AgentRunRequest,
+  type ClientUIUCTool,
+  type ContextMetadata,
+} from '~/types/agentStream'
+import {
+  type ClientMessage,
+  toClientMessage,
+  toClientConversation,
+} from '~/types/clientConversation'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -171,12 +183,13 @@ export const Chat = memo(
         tools,
         llmProviders,
         selectedModel,
-        agentModeEnabled,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
+
+    const agentModeEnabled = deriveAgentModeEnabled(selectedConversation)
 
     useEffect(() => {
       const loadModel = async () => {
@@ -888,7 +901,9 @@ export const Chat = memo(
 
               homeDispatch({ field: 'isRetrievalLoading', value: false })
             } else {
-              console.log('[Agent Mode] Skipping hard-coded retrieval, agent will decide')
+              console.log(
+                '[Agent Mode] Skipping hard-coded retrieval, agent will decide',
+              )
             }
           }
 
@@ -942,8 +957,21 @@ export const Chat = memo(
             // SERVER-SIDE AGENT MODE
             // ========================================
             if (agentModeEnabled) {
+              if (courseMetadata?.agent_mode_enabled !== true) {
+                handleUpdateConversation(updatedConversation, {
+                  key: 'agentModeEnabled',
+                  value: false,
+                })
+                errorToast({
+                  title: 'Agent Mode disabled',
+                  message:
+                    'Agent Mode is not enabled for this project. Ask a project admin to enable it in the Prompt settings.',
+                })
+                return
+              }
+
               console.log('[Agent Mode] Using SERVER-SIDE agent pipeline')
-              
+
               // Prepare the agent request
               const agentRequest: AgentRunRequest = {
                 conversationId: updatedConversation.id,
@@ -975,18 +1003,32 @@ export const Chat = memo(
               let assistantContent = ''
               let assistantMessageId: string | null = null
               let totalContextsRetrieved = 0
-              const toolsExecuted: Array<{ name: string; readableName: string; hasOutput: boolean; hasError: boolean }> = []
-              
+              const toolsExecuted: Array<{
+                name: string
+                readableName: string
+                hasOutput: boolean
+                hasError: boolean
+              }> = []
+
               // Helper to save conversation to localStorage (using lightweight ClientConversation)
               const saveToLocalStorage = () => {
                 try {
                   // Convert to ClientConversation to strip heavy context data
-                  const clientConversation = toClientConversation(updatedConversation)
-                  localStorage.setItem('selectedConversation', JSON.stringify(clientConversation))
+                  const clientConversation =
+                    toClientConversation(updatedConversation)
+                  localStorage.setItem(
+                    'selectedConversation',
+                    JSON.stringify(clientConversation),
+                  )
                 } catch (error) {
                   // Handle localStorage quota exceeded
-                  if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-                    console.warn('[Agent Mode] localStorage quota exceeded, saving minimal data')
+                  if (
+                    error instanceof DOMException &&
+                    error.name === 'QuotaExceededError'
+                  ) {
+                    console.warn(
+                      '[Agent Mode] localStorage quota exceeded, saving minimal data',
+                    )
                     // Save minimal version
                     const minimalConversation = {
                       id: updatedConversation.id,
@@ -994,43 +1036,56 @@ export const Chat = memo(
                       model: updatedConversation.model,
                       agentModeEnabled: true,
                     }
-                    localStorage.setItem('selectedConversation', JSON.stringify(minimalConversation))
+                    localStorage.setItem(
+                      'selectedConversation',
+                      JSON.stringify(minimalConversation),
+                    )
                   }
+                }
+              }
+
+              const ensureAssistantMessageExists = () => {
+                if (!assistantMessageId) return
+                const existingIdx = updatedConversation.messages.findIndex(
+                  (m) => m.id === assistantMessageId,
+                )
+                if (existingIdx >= 0) return
+
+                const newAssistantMessage: Message = {
+                  id: assistantMessageId,
+                  role: 'assistant',
+                  content: '',
+                  created_at: new Date().toISOString(),
+                }
+                updatedConversation = {
+                  ...updatedConversation,
+                  messages: [
+                    ...updatedConversation.messages,
+                    newAssistantMessage,
+                  ],
                 }
               }
 
               // Helper to update the assistant message in the conversation
               const updateAssistantMessage = (content: string) => {
-                if (!assistantMessageId) {
-                  // Create new assistant message
-                  assistantMessageId = uuidv4()
-                  const newAssistantMessage: Message = {
-                    id: assistantMessageId,
-                    role: 'assistant',
-                    content: content,
-                    created_at: new Date().toISOString(),
-                  }
-                  updatedConversation = {
-                    ...updatedConversation,
-                    messages: [...updatedConversation.messages, newAssistantMessage],
-                  }
-                } else {
-                  // Update existing assistant message
-                  const messageIndex = updatedConversation.messages.findIndex(
-                    m => m.id === assistantMessageId
-                  )
-                  if (messageIndex >= 0) {
-                    const updatedMessages = [...updatedConversation.messages]
-                    updatedMessages[messageIndex] = {
-                      ...updatedMessages[messageIndex]!,
-                      content: content,
-                    }
-                    updatedConversation = {
-                      ...updatedConversation,
-                      messages: updatedMessages,
-                    }
-                  }
+                if (!assistantMessageId) return
+                ensureAssistantMessageExists()
+
+                const messageIndex = updatedConversation.messages.findIndex(
+                  (m) => m.id === assistantMessageId,
+                )
+                if (messageIndex < 0) return
+
+                const updatedMessages = [...updatedConversation.messages]
+                updatedMessages[messageIndex] = {
+                  ...updatedMessages[messageIndex]!,
+                  content: content,
                 }
+                updatedConversation = {
+                  ...updatedConversation,
+                  messages: updatedMessages,
+                }
+
                 homeDispatch({
                   field: 'selectedConversation',
                   value: updatedConversation,
@@ -1042,183 +1097,242 @@ export const Chat = memo(
                 // This ensures the UI has something to render immediately
                 message.agentEvents = []
                 syncAgentMessage()
-                
+
                 posthog.capture('agent_mode_server_run', {
                   course_name: courseName,
                   model_id: selectedConversation.model.id,
                 })
 
-                await runAgentStream(agentRequest, {
-                  onInitializing: (messageId, conversationId) => {
-                    // Create initial "Initializing" event for immediate UI feedback
-                    const initEvent: AgentEvent = {
-                      id: 'agent-initializing',
-                      stepNumber: 0,
-                      type: 'initializing',
-                      status: 'running',
-                      title: 'Initializing agent...',
-                      createdAt: new Date().toISOString(),
-                    }
-                    message.agentEvents = [initEvent]
-                    syncAgentMessage()
-                  },
-                  
-                  onAgentEventsUpdate: (agentEvents, messageId) => {
-                    // Update the user message with agent events - this drives the agent timeline UI
-                    message.agentEvents = agentEvents
-                    syncAgentMessage()
-                    // Save to localStorage so timeline state persists across page refreshes
-                    saveToLocalStorage()
-                  },
-                  
-                  onToolsUpdate: (clientTools, messageId) => {
-                    // Update tools on the message (lightweight version without full contexts)
-                    message.tools = clientTools.map((ct): UIUCTool => ({
-                      id: ct.id,
-                      invocationId: ct.invocationId,
-                      name: ct.name,
-                      readableName: ct.readableName,
-                      description: ct.description,
-                      aiGeneratedArgumentValues: ct.aiGeneratedArgumentValues,
-                      output: ct.output ? {
-                        text: ct.output.text,
-                        imageUrls: ct.output.imageUrls,
-                      } : undefined,
-                      error: ct.error,
-                    }))
-                    syncAgentMessage()
-                  },
-                  
-                  onContextsMetadata: (messageId, contextsMetadata, totalContexts) => {
-                    // Create lightweight context objects for citation processing
-                    // These have the metadata needed for citations but not full text
-                    message.contexts = contextsMetadata.map((meta, idx) => ({
-                      id: idx,
-                      text: '', // Not needed for citation links, just metadata
-                      readable_filename: meta.readable_filename,
-                      course_name: courseName,
-                      'course_name ': courseName,
-                      s3_path: meta.s3_path,
-                      pagenumber: String(meta.pagenumber || ''),
-                      url: meta.url || '',
-                      base_url: meta.base_url || '',
-                    }))
-                    syncAgentMessage()
-                  },
-                  
-                  onSelectionStart: (stepNumber) => {
-                    // Agent timeline shows selection running via agentEvents
-                    // No need for isRouting flag for agent mode
-                  },
-                  
-                  onSelectionDone: (stepNumber, event) => {
-                    // Agent timeline shows selection done via agentEvents
-                  },
-                  
-                  onRetrievalStart: (stepNumber, query) => {
-                    homeDispatch({ field: 'isRetrievalLoading', value: true })
-                  },
-                  
-                  onRetrievalDone: (stepNumber, query, contextsRetrieved) => {
-                    homeDispatch({ field: 'isRetrievalLoading', value: false })
-                    totalContextsRetrieved += contextsRetrieved
-                  },
-                  
-                  onToolStart: (stepNumber, toolName, readableToolName) => {
-                    homeDispatch({ field: 'isRunningTool', value: true })
-                  },
-                  
-                  onToolDone: (stepNumber, toolName, output, error) => {
-                    homeDispatch({ field: 'isRunningTool', value: false })
-                    toolsExecuted.push({
-                      name: toolName,
-                      readableName: toolName,
-                      hasOutput: !!output,
-                      hasError: !!error,
-                    })
-                  },
-                  
-                  onFinalTokens: (delta, done) => {
-                    // Citations are already processed server-side
-                    if (done) {
-                      homeDispatch({ field: 'loading', value: false })
-                      homeDispatch({ field: 'messageIsStreaming', value: false })
-                    } else {
-                      homeDispatch({ field: 'loading', value: false })
-                      assistantContent += delta
-                      updateAssistantMessage(assistantContent)
-                    }
-                  },
-                  
-                  onDone: (conversationId, finalMessageId, summary) => {
-                    console.log('[Agent Mode] Server-side agent completed', {
+                await runAgentStream(
+                  agentRequest,
+                  {
+                    onInitializing: (
+                      messageId,
                       conversationId,
-                      finalMessageId,
-                      totalContextsRetrieved: summary.totalContextsRetrieved,
-                      toolsExecuted: summary.toolsExecuted.length,
-                    })
-                    
-                    homeDispatch({ field: 'loading', value: false })
-                    homeDispatch({ field: 'messageIsStreaming', value: false })
-                    homeDispatch({ field: 'isRouting', value: false })
-                    homeDispatch({ field: 'isRunningTool', value: false })
-                    homeDispatch({ field: 'isRetrievalLoading', value: false })
-                    
-                    // Save final conversation state to localStorage
-                    saveToLocalStorage()
-                    
-                    // Update conversation in query client cache
-                    queryClient.invalidateQueries({
-                      queryKey: ['conversations'],
-                    })
-                    
-                    // Log conversation to server
-                    fetch('/api/conversation', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(createLogConversationPayload(
-                        courseName,
-                        updatedConversation,
-                        null, // Full conversation update
-                      )),
-                    }).catch(err => console.error('Error logging conversation:', err))
+                      assistantId,
+                    ) => {
+                      assistantMessageId = assistantId
+
+                      // Create initial "Initializing" event for immediate UI feedback
+                      const initEvent: AgentEvent = {
+                        id: 'agent-initializing',
+                        stepNumber: 0,
+                        type: 'initializing',
+                        status: 'running',
+                        title: 'Initializing agent...',
+                        createdAt: new Date().toISOString(),
+                      }
+                      message.agentEvents = [initEvent]
+                      syncAgentMessage()
+                      homeDispatch({
+                        field: 'selectedConversation',
+                        value: updatedConversation,
+                      })
+                    },
+
+                    onAgentEventsUpdate: (agentEvents, messageId) => {
+                      // Update the user message with agent events - this drives the agent timeline UI
+                      message.agentEvents = agentEvents
+                      syncAgentMessage()
+                      // Save to localStorage so timeline state persists across page refreshes
+                      saveToLocalStorage()
+                    },
+
+                    onToolsUpdate: (clientTools, messageId) => {
+                      // Update tools on the message (lightweight version without full contexts)
+                      message.tools = clientTools.map(
+                        (ct): UIUCTool => ({
+                          id: ct.id,
+                          invocationId: ct.invocationId,
+                          name: ct.name,
+                          readableName: ct.readableName,
+                          description: ct.description,
+                          aiGeneratedArgumentValues:
+                            ct.aiGeneratedArgumentValues,
+                          output: ct.output
+                            ? {
+                                text: ct.output.text,
+                                imageUrls: ct.output.imageUrls,
+                              }
+                            : undefined,
+                          error: ct.error,
+                        }),
+                      )
+                      syncAgentMessage()
+                    },
+
+                    onContextsMetadata: (
+                      messageId,
+                      contextsMetadata,
+                      totalContexts,
+                    ) => {
+                      // Create lightweight context objects for citation processing
+                      // These have the metadata needed for citations but not full text
+                      message.contexts = contextsMetadata.map((meta, idx) => ({
+                        id: idx,
+                        text: '', // Not needed for citation links, just metadata
+                        readable_filename: meta.readable_filename,
+                        course_name: courseName,
+                        'course_name ': courseName,
+                        s3_path: meta.s3_path,
+                        pagenumber: String(meta.pagenumber || ''),
+                        url: meta.url || '',
+                        base_url: meta.base_url || '',
+                      }))
+                      syncAgentMessage()
+                    },
+
+                    onSelectionStart: (stepNumber) => {
+                      // Agent timeline shows selection running via agentEvents
+                      // No need for isRouting flag for agent mode
+                    },
+
+                    onSelectionDone: (stepNumber, event) => {
+                      // Agent timeline shows selection done via agentEvents
+                    },
+
+                    onRetrievalStart: (stepNumber, query) => {
+                      homeDispatch({ field: 'isRetrievalLoading', value: true })
+                    },
+
+                    onRetrievalDone: (stepNumber, query, contextsRetrieved) => {
+                      homeDispatch({
+                        field: 'isRetrievalLoading',
+                        value: false,
+                      })
+                      totalContextsRetrieved += contextsRetrieved
+                    },
+
+                    onToolStart: (stepNumber, toolName, readableToolName) => {
+                      homeDispatch({ field: 'isRunningTool', value: true })
+                    },
+
+                    onToolDone: (stepNumber, toolName, output, error) => {
+                      homeDispatch({ field: 'isRunningTool', value: false })
+                      toolsExecuted.push({
+                        name: toolName,
+                        readableName: toolName,
+                        hasOutput: !!output,
+                        hasError: !!error,
+                      })
+                    },
+
+                    onFinalTokens: (delta, done) => {
+                      // Citations are already processed server-side
+                      if (done) {
+                        homeDispatch({ field: 'loading', value: false })
+                        homeDispatch({
+                          field: 'messageIsStreaming',
+                          value: false,
+                        })
+                      } else {
+                        homeDispatch({ field: 'loading', value: false })
+                        assistantContent += delta
+                        updateAssistantMessage(assistantContent)
+                      }
+                    },
+
+                    onDone: (conversationId, finalMessageId, summary) => {
+                      if (
+                        assistantMessageId &&
+                        assistantMessageId !== finalMessageId
+                      ) {
+                        const idx = updatedConversation.messages.findIndex(
+                          (m) => m.id === assistantMessageId,
+                        )
+                        if (idx >= 0) {
+                          const updatedMessages = [
+                            ...updatedConversation.messages,
+                          ]
+                          updatedMessages[idx] = {
+                            ...updatedMessages[idx]!,
+                            id: finalMessageId,
+                          }
+                          updatedConversation = {
+                            ...updatedConversation,
+                            messages: updatedMessages,
+                          }
+                        }
+                        assistantMessageId = finalMessageId
+                      }
+
+                      console.log('[Agent Mode] Server-side agent completed', {
+                        conversationId,
+                        finalMessageId,
+                        totalContextsRetrieved: summary.totalContextsRetrieved,
+                        toolsExecuted: summary.toolsExecuted.length,
+                      })
+
+                      homeDispatch({ field: 'loading', value: false })
+                      homeDispatch({
+                        field: 'messageIsStreaming',
+                        value: false,
+                      })
+                      homeDispatch({ field: 'isRouting', value: false })
+                      homeDispatch({ field: 'isRunningTool', value: false })
+                      homeDispatch({
+                        field: 'isRetrievalLoading',
+                        value: false,
+                      })
+
+                      // Save final conversation state to localStorage
+                      saveToLocalStorage()
+
+                      // Update conversation in query client cache
+                      queryClient.invalidateQueries({
+                        queryKey: ['conversations'],
+                      })
+                    },
+
+                    onError: (errorMessage, stepNumber, recoverable) => {
+                      console.error(
+                        '[Agent Mode] Server-side agent error:',
+                        errorMessage,
+                      )
+
+                      homeDispatch({ field: 'loading', value: false })
+                      homeDispatch({
+                        field: 'messageIsStreaming',
+                        value: false,
+                      })
+                      homeDispatch({ field: 'isRouting', value: false })
+                      homeDispatch({ field: 'isRunningTool', value: false })
+                      homeDispatch({
+                        field: 'isRetrievalLoading',
+                        value: false,
+                      })
+
+                      errorToast({
+                        title: 'Agent Error',
+                        message: errorMessage,
+                      })
+                    },
                   },
-                  
-                  onError: (errorMessage, stepNumber, recoverable) => {
-                    console.error('[Agent Mode] Server-side agent error:', errorMessage)
-                    
-                    homeDispatch({ field: 'loading', value: false })
-                    homeDispatch({ field: 'messageIsStreaming', value: false })
-                    homeDispatch({ field: 'isRouting', value: false })
-                    homeDispatch({ field: 'isRunningTool', value: false })
-                    homeDispatch({ field: 'isRetrievalLoading', value: false })
-                    
-                    errorToast({
-                      title: 'Agent Error',
-                      message: errorMessage,
-                    })
-                  },
-                }, controller.signal)
-                
+                  controller.signal,
+                )
               } catch (error) {
-                console.error('[Agent Mode] Error running server-side agent:', error)
+                console.error(
+                  '[Agent Mode] Error running server-side agent:',
+                  error,
+                )
                 homeDispatch({ field: 'loading', value: false })
                 homeDispatch({ field: 'messageIsStreaming', value: false })
-                
+
                 errorToast({
                   title: 'Agent Error',
-                  message: error instanceof Error ? error.message : 'Unknown error',
+                  message:
+                    error instanceof Error ? error.message : 'Unknown error',
                 })
               } finally {
                 homeDispatch({ field: 'isRouting', value: false })
                 homeDispatch({ field: 'isRunningTool', value: false })
                 homeDispatch({ field: 'isRetrievalLoading', value: false })
               }
-              
+
               // Return early - server-side agent handles everything
               return
             }
-            
+
             // ========================================
             // CLIENT-SIDE NON-AGENT MODE (single-pass tool execution)
             // ========================================
@@ -2532,7 +2646,10 @@ export const Chat = memo(
                             />
                           ),
                         )}
-                        {loading && <ChatLoader />}
+                        {shouldShowChatLoader(
+                          loading,
+                          selectedConversation,
+                        ) && <ChatLoader />}
                         {/*                          className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,14,0.4)]"
 //safe to remove in the future- left here in case we want the gradient in dark mode (in light mode, it really sticks
  */}
@@ -2573,6 +2690,9 @@ export const Chat = memo(
                 })()}
                 courseName={courseName}
                 chat_ui={chat_ui}
+                agentModeFeatureEnabled={
+                  courseMetadata?.agent_mode_enabled === true
+                }
               />
             </div>
           </div>
