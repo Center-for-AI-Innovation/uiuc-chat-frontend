@@ -34,17 +34,3 @@ export function modelSupportsTools(
 
   return false
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

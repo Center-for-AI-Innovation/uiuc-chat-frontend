@@ -103,7 +103,9 @@ export function toClientMessage(message: Message): ClientMessage {
  * Convert a full Conversation to a lightweight ClientConversation.
  * Strips contexts from all messages to reduce localStorage bloat.
  */
-export function toClientConversation(conversation: Conversation): ClientConversation {
+export function toClientConversation(
+  conversation: Conversation,
+): ClientConversation {
   return {
     id: conversation.id,
     name: conversation.name,
@@ -126,44 +128,52 @@ export function toClientConversation(conversation: Conversation): ClientConversa
  * Contexts will be empty since they're not stored on client.
  * Used when we need to reconstruct a Conversation from client state.
  */
-export function fromClientConversation(clientConversation: ClientConversation): Conversation {
+export function fromClientConversation(
+  clientConversation: ClientConversation,
+): Conversation {
   return {
     id: clientConversation.id,
     name: clientConversation.name,
-    messages: clientConversation.messages.map((clientMessage): Message => ({
-      id: clientMessage.id,
-      role: clientMessage.role,
-      content: clientMessage.content,
-      // Contexts are not available on client - will be fetched from server if needed
-      contexts: undefined,
-      tools: clientMessage.tools?.map((clientTool): UIUCTool => ({
-        id: clientTool.id,
-        invocationId: clientTool.invocationId,
-        name: clientTool.name,
-        readableName: clientTool.readableName,
-        description: clientTool.description,
-        aiGeneratedArgumentValues: clientTool.aiGeneratedArgumentValues,
-        output: clientTool.output ? {
-          text: clientTool.output.text,
-          imageUrls: clientTool.output.imageUrls,
-          // Note: data is not available on client
-        } : undefined,
-        error: clientTool.error,
-      })),
-      latestSystemMessage: clientMessage.latestSystemMessage,
-      finalPromtEngineeredMessage: clientMessage.finalPromtEngineeredMessage,
-      responseTimeSec: clientMessage.responseTimeSec,
-      imageDescription: clientMessage.imageDescription,
-      imageUrls: clientMessage.imageUrls,
-      conversation_id: clientMessage.conversation_id,
-      created_at: clientMessage.created_at,
-      updated_at: clientMessage.updated_at,
-      feedback: clientMessage.feedback,
-      wasQueryRewritten: clientMessage.wasQueryRewritten,
-      queryRewriteText: clientMessage.queryRewriteText,
-      agentStepNumber: clientMessage.agentStepNumber,
-      agentEvents: clientMessage.agentEvents,
-    })),
+    messages: clientConversation.messages.map(
+      (clientMessage): Message => ({
+        id: clientMessage.id,
+        role: clientMessage.role,
+        content: clientMessage.content,
+        // Contexts are not available on client - will be fetched from server if needed
+        contexts: undefined,
+        tools: clientMessage.tools?.map(
+          (clientTool): UIUCTool => ({
+            id: clientTool.id,
+            invocationId: clientTool.invocationId,
+            name: clientTool.name,
+            readableName: clientTool.readableName,
+            description: clientTool.description,
+            aiGeneratedArgumentValues: clientTool.aiGeneratedArgumentValues,
+            output: clientTool.output
+              ? {
+                  text: clientTool.output.text,
+                  imageUrls: clientTool.output.imageUrls,
+                  // Note: data is not available on client
+                }
+              : undefined,
+            error: clientTool.error,
+          }),
+        ),
+        latestSystemMessage: clientMessage.latestSystemMessage,
+        finalPromtEngineeredMessage: clientMessage.finalPromtEngineeredMessage,
+        responseTimeSec: clientMessage.responseTimeSec,
+        imageDescription: clientMessage.imageDescription,
+        imageUrls: clientMessage.imageUrls,
+        conversation_id: clientMessage.conversation_id,
+        created_at: clientMessage.created_at,
+        updated_at: clientMessage.updated_at,
+        feedback: clientMessage.feedback,
+        wasQueryRewritten: clientMessage.wasQueryRewritten,
+        queryRewriteText: clientMessage.queryRewriteText,
+        agentStepNumber: clientMessage.agentStepNumber,
+        agentEvents: clientMessage.agentEvents,
+      }),
+    ),
     model: clientConversation.model,
     prompt: clientConversation.prompt,
     temperature: clientConversation.temperature,
@@ -181,7 +191,7 @@ export function fromClientConversation(clientConversation: ClientConversation): 
  * Check if a conversation object is a ClientConversation (has contextsCount instead of contexts).
  */
 export function isClientConversation(
-  conversation: Conversation | ClientConversation
+  conversation: Conversation | ClientConversation,
 ): conversation is ClientConversation {
   if (conversation.messages.length === 0) return false
   const firstMessage = conversation.messages[0]
@@ -189,4 +199,3 @@ export function isClientConversation(
   // ClientMessage has contextsCount, Message has contexts
   return 'contextsCount' in firstMessage && !('contexts' in firstMessage)
 }
-
