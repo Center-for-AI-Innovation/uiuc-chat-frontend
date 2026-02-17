@@ -49,6 +49,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const vector_search_rewrite_disabled = JSON.parse(
     (req.query.vector_search_rewrite_disabled as string) || 'false',
   )
+  const agent_mode_enabled = JSON.parse(
+    (req.query.agent_mode_enabled as string) || 'false',
+  )
   const allow_logged_in_users = JSON.parse(
     (req.query.allow_logged_in_users as string) || 'false',
   )
@@ -70,8 +73,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       guidedLearning,
       systemPromptOnly,
       vector_search_rewrite_disabled,
+      agent_mode_enabled,
       allow_logged_in_users,
-      is_frozen
+      is_frozen,
     }
     console.log('Right before setting course_metadata with: ', course_metadata)
     const redisClient = await ensureRedisConnected()

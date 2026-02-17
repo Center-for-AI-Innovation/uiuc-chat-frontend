@@ -172,21 +172,21 @@ export const buildPrompt = async ({
       // Extract system messages from conversation history
       const systemMessagesFromHistory = _extractSystemMessages(conversation)
 
-  if (systemMessagesFromHistory && conversation.messages.length > 0) {
-    const lastMessage =
-      conversation.messages[conversation.messages.length - 1]
-    if (lastMessage && lastMessage.role === 'user') {
-      lastMessage.latestSystemMessage = systemMessagesFromHistory
-      lastMessage.finalPromtEngineeredMessage =
-        typeof lastMessage.content === 'string' ? lastMessage.content : ''
-      await persistMessageServer({
-        conversation,
-        message: lastMessage,
-        courseName: projectName,
-        userIdentifier: conversation.userEmail ?? '',
-      })
-    }
-  }
+      if (systemMessagesFromHistory && conversation.messages.length > 0) {
+        const lastMessage =
+          conversation.messages[conversation.messages.length - 1]
+        if (lastMessage && lastMessage.role === 'user') {
+          lastMessage.latestSystemMessage = systemMessagesFromHistory
+          lastMessage.finalPromtEngineeredMessage =
+            typeof lastMessage.content === 'string' ? lastMessage.content : ''
+          await persistMessageServer({
+            conversation,
+            message: lastMessage,
+            courseName: projectName,
+            userIdentifier: conversation.userEmail ?? '',
+          })
+        }
+      }
       return conversation
     }
     const allPromises = []
@@ -298,7 +298,9 @@ export const buildPrompt = async ({
     // Add tool routing response if present (model asked follow-up instead of invoking tools)
     const toolRoutingResponse = (lastUserMessage as any)?._toolRoutingResponse
     if (toolRoutingResponse) {
-      userPromptSections.push(`<AssistantFollowUp>${toolRoutingResponse}</AssistantFollowUp>`)
+      userPromptSections.push(
+        `<AssistantFollowUp>${toolRoutingResponse}</AssistantFollowUp>`,
+      )
     }
 
     // Add the user's query to the prompt sections
@@ -554,9 +556,11 @@ const _getSystemPrompt = async ({
       systemPrompt += DOCUMENT_FOCUS_PROMPT
     }
 
-    const agentPrompt = conversation.agentModeEnabled
-      ? getAgentModeSystemPrompt()
-      : undefined
+    const agentPrompt =
+      conversation.agentModeEnabled &&
+      courseMetadata?.agent_mode_enabled === true
+        ? getAgentModeSystemPrompt()
+        : undefined
 
     return joinPromptSections([systemPrompt, agentPrompt])
   }
@@ -585,9 +589,10 @@ const _getSystemPrompt = async ({
     (conversation.messages[conversation.messages.length - 1]
       ?.contexts as ContextWithMetadata[]) || []
 
-  const agentPrompt = conversation.agentModeEnabled
-    ? getAgentModeSystemPrompt()
-    : undefined
+  const agentPrompt =
+    conversation.agentModeEnabled && courseMetadata?.agent_mode_enabled === true
+      ? getAgentModeSystemPrompt()
+      : undefined
 
   if (!contexts || contexts.length === 0) {
     // No documents retrieved, return only system prompt
@@ -672,7 +677,7 @@ export const getDefaultPostPrompt = (): string => {
     systemPromptOnly: false,
     vector_search_rewrite_disabled: false,
     allow_logged_in_users: false,
-    is_frozen: false
+    is_frozen: false,
   }
 
   // Call getSystemPostPrompt with default values

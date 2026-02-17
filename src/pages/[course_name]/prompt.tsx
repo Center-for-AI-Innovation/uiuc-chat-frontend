@@ -135,15 +135,15 @@ const isApiKeyRequired = (provider: ProviderNames): boolean => {
 const CourseMain: NextPage = () => {
   const theme = useMantineTheme()
   const router = useRouter()
-  
+
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
   const getCurrentPageName = () => {
     const raw = router.query.course_name
     return typeof raw === 'string'
-        ? raw
-        : Array.isArray(raw)
-          ? raw[0]
-          : undefined
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
   const courseName = getCurrentPageName() as string
 
@@ -177,7 +177,6 @@ const CourseMain: NextPage = () => {
     getInitialCollapsedState(),
   )
   const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
-
 
   // Get responsive card width classes based on sidebar state
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
@@ -478,6 +477,7 @@ CRITICAL: The optimized prompt must:
   const [documentsOnly, setDocumentsOnly] = useState(false)
   const [systemPromptOnly, setSystemPromptOnly] = useState(false)
   const [vectorSearchRewrite, setVectorSearchRewrite] = useState(false)
+  const [agentModeFeatureEnabled, setAgentModeFeatureEnabled] = useState(false)
   const [insightsOpen, setInsightsOpen] = useState(false)
 
   const courseMetadataRef = useRef<CourseMetadata | null>(null)
@@ -513,6 +513,7 @@ CRITICAL: The optimized prompt must:
         setDocumentsOnly(fetchedMetadata.documentsOnly || false)
         setSystemPromptOnly(fetchedMetadata.systemPromptOnly || false)
         setVectorSearchRewrite(!fetchedMetadata.vector_search_rewrite_disabled)
+        setAgentModeFeatureEnabled(fetchedMetadata.agent_mode_enabled ?? false)
       } catch (error) {
         console.error(error)
 
@@ -620,11 +621,13 @@ CRITICAL: The optimized prompt must:
     documentsOnly: boolean
     systemPromptOnly: boolean
     vectorSearchRewrite: boolean
+    agentModeFeatureEnabled: boolean
   }>({
     guidedLearning: false,
     documentsOnly: false,
     systemPromptOnly: false,
     vectorSearchRewrite: false,
+    agentModeFeatureEnabled: false,
   })
 
   useEffect(() => {
@@ -634,6 +637,7 @@ CRITICAL: The optimized prompt must:
         documentsOnly: courseMetadata.documentsOnly || false,
         systemPromptOnly: courseMetadata.systemPromptOnly || false,
         vectorSearchRewrite: !courseMetadata.vector_search_rewrite_disabled,
+        agentModeFeatureEnabled: courseMetadata.agent_mode_enabled ?? false,
       }
     }
   }, [courseMetadata])
@@ -646,6 +650,7 @@ CRITICAL: The optimized prompt must:
       documentsOnly,
       systemPromptOnly,
       vectorSearchRewrite,
+      agentModeFeatureEnabled,
     }
 
     const initialSwitchState = initialSwitchStateRef.current
@@ -664,6 +669,7 @@ CRITICAL: The optimized prompt must:
       documentsOnly,
       systemPromptOnly,
       vector_search_rewrite_disabled: !vectorSearchRewrite,
+      agent_mode_enabled: agentModeFeatureEnabled,
     } as CourseMetadata
 
     try {
@@ -707,6 +713,14 @@ CRITICAL: The optimized prompt must:
           `Bypass UIUC.chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
         )
       }
+      if (
+        initialSwitchState.agentModeFeatureEnabled !==
+        currentSwitchState.agentModeFeatureEnabled
+      ) {
+        changes.push(
+          `Agent Mode ${currentSwitchState.agentModeFeatureEnabled ? 'enabled' : 'disabled'}`,
+        )
+      }
 
       if (changes.length > 0) {
         showPromptToast(
@@ -729,6 +743,10 @@ CRITICAL: The optimized prompt must:
 
     if ('vector_search_rewrite_disabled' in updates) {
       setVectorSearchRewrite(!updates.vector_search_rewrite_disabled)
+    }
+
+    if ('agent_mode_enabled' in updates) {
+      setAgentModeFeatureEnabled(updates.agent_mode_enabled ?? false)
     }
 
     courseMetadataRef.current = {
@@ -841,8 +859,8 @@ CRITICAL: The optimized prompt must:
   if (
     courseName &&
     (courseName.toLowerCase() == 'gpt4' ||
-    courseName.toLowerCase() == 'global' ||
-    courseName.toLowerCase() == 'extreme')
+      courseName.toLowerCase() == 'global' ||
+      courseName.toLowerCase() == 'extreme')
   ) {
     return <CannotEditGPT4Page course_name={courseName as string} />
   }
@@ -1840,6 +1858,17 @@ CRITICAL: The optimized prompt must:
                                 onChange={(value: boolean) =>
                                   handleCheckboxChange({
                                     systemPromptOnly: value,
+                                  })
+                                }
+                              />
+
+                              <CustomSwitch
+                                label="Enable Agent Mode"
+                                tooltip="Enables the Agent Mode feature for this project. Agent Mode runs a multi-step server-side loop that can iteratively search documents and execute tools before generating the final answer. This can improve grounding and tool use on complex requests, but may increase latency and tool/LLM usage."
+                                checked={agentModeFeatureEnabled}
+                                onChange={(value: boolean) =>
+                                  handleSettingChange({
+                                    agent_mode_enabled: value,
                                   })
                                 }
                               />
