@@ -842,35 +842,51 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
         const count = parsedData?.total_count || 0
         const conversations = parsedData?.conversations || []
-        const conversationIds = conversations
-          .map((conv: any) => conv?.id)
-          .filter((id: unknown): id is string => typeof id === 'string')
+
+        // `search_conversations_v3` may already include messages. Only fetch messages
+        // separately when they are missing to avoid redundant DB queries (and to keep
+        // tests/mocks simpler).
+        const conversationIdsMissingMessages = conversations
+          .filter(
+            (conv: any) =>
+              typeof conv?.id === 'string' && !Array.isArray(conv?.messages),
+          )
+          .map((conv: any) => conv.id as string)
 
         let messagesByConversation = new Map<string, DBMessage[]>()
 
-        if (conversationIds.length > 0) {
+        if (conversationIdsMissingMessages.length > 0) {
           const dbMessagesForConversations = await db
             .select()
             .from(messages)
-            .where(inArray(messages.conversation_id, conversationIds))
+            .where(
+              inArray(messages.conversation_id, conversationIdsMissingMessages),
+            )
 
-          messagesByConversation = dbMessagesForConversations.reduce(
-            (acc, msg) => {
-              const key = msg.conversation_id as string
-              const existing = acc.get(key)
-              if (existing) {
-                existing.push(msg as unknown as DBMessage)
-              } else {
-                acc.set(key, [msg as unknown as DBMessage])
-              }
-              return acc
-            },
-            new Map<string, DBMessage[]>(),
-          )
+          const safeMessages = Array.isArray(dbMessagesForConversations)
+            ? dbMessagesForConversations
+            : []
+
+          messagesByConversation = safeMessages.reduce((acc, msg) => {
+            const key = msg.conversation_id as string
+            const existing = acc.get(key)
+            if (existing) {
+              existing.push(msg as unknown as DBMessage)
+            } else {
+              acc.set(key, [msg as unknown as DBMessage])
+            }
+            return acc
+          }, new Map<string, DBMessage[]>())
         }
 
         const fetchedConversations = conversations.map((conv: any) => {
-          const convMessages = messagesByConversation.get(conv.id) ?? []
+          const convId = conv?.id
+          const convMessages = Array.isArray(conv?.messages)
+            ? (conv.messages as DBMessage[])
+            : typeof convId === 'string'
+              ? (messagesByConversation.get(convId) ?? [])
+              : []
+
           return convertDBToChatConversation(conv, convMessages)
         })
 
