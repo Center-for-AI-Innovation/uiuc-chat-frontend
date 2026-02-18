@@ -161,13 +161,20 @@ export async function processChunkWithStateMachine(
               i += 6 // Skip all 7 characters (loop will increment i by 1)
               state = State.Normal
               // Process the citation without adding extra spaces
-              const processedCitation = await replaceCitationLinks(
-                buffer,
-                lastMessage,
-                citationLinkCache,
-                courseName,
-                serverPresignedUrlFn,
-              )
+              const processedCitation = serverPresignedUrlFn
+                ? await replaceCitationLinks(
+                    buffer,
+                    lastMessage,
+                    citationLinkCache,
+                    courseName,
+                    serverPresignedUrlFn,
+                  )
+                : await replaceCitationLinks(
+                    buffer,
+                    lastMessage,
+                    citationLinkCache,
+                    courseName,
+                  )
               processedChunk += processedCitation
               buffer = ''
               continue
@@ -227,13 +234,20 @@ export async function processChunkWithStateMachine(
 
       case State.InFilenameLink:
         if (char === ')') {
-          processedChunk += await replaceCitationLinks(
-            buffer + char,
-            lastMessage,
-            citationLinkCache,
-            courseName,
-            serverPresignedUrlFn,
-          )
+          processedChunk += serverPresignedUrlFn
+            ? await replaceCitationLinks(
+                buffer + char,
+                lastMessage,
+                citationLinkCache,
+                courseName,
+                serverPresignedUrlFn,
+              )
+            : await replaceCitationLinks(
+                buffer + char,
+                lastMessage,
+                citationLinkCache,
+                courseName,
+              )
           buffer = ''
           if (
             i < combinedChunk.length - 1 &&
