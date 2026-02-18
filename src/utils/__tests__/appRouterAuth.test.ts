@@ -122,3 +122,33 @@ describe('withAppRouterAuth', () => {
     })
   })
 })
+
+describe('getUserIdentifier', () => {
+  it('returns user.email when present', async () => {
+    const { getUserIdentifier } = await import('../appRouterAuth')
+    expect(
+      getUserIdentifier({
+        user: { email: 'u@example.com' },
+        headers: new Headers(),
+      } as any),
+    ).toBe('u@example.com')
+  })
+
+  it('falls back to x-user-email, then x-posthog-id, then null', async () => {
+    const { getUserIdentifier } = await import('../appRouterAuth')
+
+    expect(
+      getUserIdentifier({
+        headers: new Headers({ 'x-user-email': 'header@example.com' }),
+      } as any),
+    ).toBe('header@example.com')
+
+    expect(
+      getUserIdentifier({
+        headers: new Headers({ 'x-posthog-id': 'ph_123' }),
+      } as any),
+    ).toBe('ph_123')
+
+    expect(getUserIdentifier({ headers: new Headers() } as any)).toBeNull()
+  })
+})
