@@ -37,6 +37,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       dbMessage.created_at = new Date(latestTime + 1000)
       dbMessage.updated_at = new Date(dbMessage.created_at)
     }
+    if (typeof dbMessage.updated_at === 'undefined') {
+      dbMessage.updated_at = null as unknown as NewMessages['updated_at']
+    }
 
     // If message exists, update it. If not, insert it.
     try {
