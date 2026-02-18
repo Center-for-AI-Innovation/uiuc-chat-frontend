@@ -30,6 +30,11 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       .limit(1)
 
     const dbMessage = convertChatToDBMessage(message, conversationId)
+    // Normalize `undefined` to `null` so downstream DB logic and tests can rely on explicit nulls.
+    // (Some callers/mocks omit `updated_at` entirely.)
+    if (dbMessage.updated_at === undefined) {
+      dbMessage.updated_at = null
+    }
 
     // If this is a new message, ensure its timestamp is after the latest message
     if (!existingRecord && latestMessage?.[0]?.created_at) {
