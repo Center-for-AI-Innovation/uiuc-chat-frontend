@@ -1,6 +1,6 @@
 import { type AllLLMProviders, type AnySupportedModel } from './LLMProvider'
 import { OpenAIModelID } from './types/openai'
-import { AzureModelID } from './azure'
+import { AzureModelID } from './azureModels'
 import { AnthropicModelID } from './types/anthropic'
 import { GeminiModelID } from './types/gemini'
 import { BedrockModelID } from './types/bedrock'
