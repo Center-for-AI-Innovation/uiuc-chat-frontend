@@ -1529,7 +1529,10 @@ export const Chat = memo(
           }
 
           let data
-          if (response instanceof Response) {
+          // Only create a stream reader when we actually plan to consume the body as a stream.
+          // For plugin-style JSON responses we call `response.json()`, which would fail if the
+          // body is already locked by a reader.
+          if (!plugin && response instanceof Response) {
             data = response.body
             if (!data) {
               homeDispatch({ field: 'loading', value: false })
