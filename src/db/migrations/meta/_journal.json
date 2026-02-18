@@ -36,6 +36,13 @@
       "when": 1756157752322,
       "tag": "0004_flowery_enchantress",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1769713616944,
+      "tag": "0005_calm_valeria_richards",
+      "breakpoints": true
     }
   ]
 }

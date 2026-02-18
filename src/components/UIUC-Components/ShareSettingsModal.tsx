@@ -262,6 +262,7 @@ export default function ShareSettingsModal({
               </div>
               <button
                 onClick={handleCopy}
+                aria-label="Copy share link"
                 className="flex min-w-[42px] items-center justify-center rounded-lg bg-[--dashboard-button] p-2.5 text-[--dashboard-button-foreground] transition-all duration-300 hover:bg-[--dashboard-button-hover] active:scale-95"
               >
                 {isCopied ? <IconCheck size={16} /> : <IconCopy size={16} />}
@@ -319,7 +320,7 @@ export default function ShareSettingsModal({
                     align="end"
                     side="bottom"
                     sideOffset={8}
-                    className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 w-72 rounded-lg border-[--background-dark] bg-[--modal] p-1.5 text-[--foreground] sm:w-80"
+                    className="w-72 rounded-lg border-[--background-dark] bg-[--modal] p-1.5 text-[--foreground] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 sm:w-80"
                     style={{
                       animationDuration: '100ms',
                       willChange: 'transform, opacity',

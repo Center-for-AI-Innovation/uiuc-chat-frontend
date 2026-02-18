@@ -449,7 +449,7 @@ export function convertChatToDBMessage(
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const { method } = req
-  const user_identifier = getUserIdentifier(req)
+  const userIdentifier = getUserIdentifier(req)
 
   switch (method) {
     case 'POST':
@@ -457,7 +457,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       const { delta }: { delta?: SaveConversationDelta } = req.body
       try {
         // Validate user identifier is available
-        if (!user_identifier) {
+        if (!userIdentifier) {
           return res.status(400).json({
             error: 'No valid user identifier provided',
             message: 'Cannot save conversation without a valid user identifier',
@@ -474,7 +474,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             model: meta.modelId,
             prompt: meta.prompt,
             temperature: meta.temperature,
-            user_email: user_identifier || null,
+            user_email: userIdentifier || null,
             project_name: meta.projectName,
             folder_id: isUUID(meta.folderId ?? '') ? meta.folderId : null,
             created_at: new Date(),
@@ -625,7 +625,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           model: dbConversation.model,
           prompt: dbConversation.prompt,
           temperature: dbConversation.temperature,
-          user_email: user_identifier || null,
+          user_email: userIdentifier || null,
           project_name: dbConversation.project_name,
           folder_id: isUUID(dbConversation.folder_id ?? '')
             ? dbConversation.folder_id
@@ -650,7 +650,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                 model: dbConversation.model,
                 prompt: dbConversation.prompt,
                 temperature: dbConversation.temperature,
-                user_email: user_identifier || null,
+                user_email: userIdentifier || null,
                 project_name: dbConversation.project_name,
                 folder_id: dbConversation.folder_id,
                 updated_at: new Date(),
@@ -797,11 +797,11 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       const courseName = req.query.courseName as string
       const pageParam = parseInt(req.query.pageParam as string, 0)
       // Search term is optional
-      if (!user_identifier || !courseName || isNaN(pageParam)) {
+      if (!userIdentifier || !courseName || isNaN(pageParam)) {
         console.error('Invalid query parameters:', req.query)
         res.status(400).json({
           error: 'Invalid query parameters',
-          message: 'user_identifier, courseName, and pageParam are required',
+          message: 'userIdentifier, courseName, and pageParam are required',
         })
         return
       }
@@ -815,7 +815,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           search_conversations_v3: { conversations: any[]; total_count: number }
         }>(sql`
           SELECT * FROM search_conversations_v3(
-            ${user_identifier},
+            ${userIdentifier},
             ${courseName},
             ${searchTerm || null},
             ${pageSize},
@@ -842,35 +842,51 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
         const count = parsedData?.total_count || 0
         const conversations = parsedData?.conversations || []
-        const conversationIds = conversations
-          .map((conv: any) => conv?.id)
-          .filter((id: unknown): id is string => typeof id === 'string')
+
+        // `search_conversations_v3` may already include messages. Only fetch messages
+        // separately when they are missing to avoid redundant DB queries (and to keep
+        // tests/mocks simpler).
+        const conversationIdsMissingMessages = conversations
+          .filter(
+            (conv: any) =>
+              typeof conv?.id === 'string' && !Array.isArray(conv?.messages),
+          )
+          .map((conv: any) => conv.id as string)
 
         let messagesByConversation = new Map<string, DBMessage[]>()
 
-        if (conversationIds.length > 0) {
+        if (conversationIdsMissingMessages.length > 0) {
           const dbMessagesForConversations = await db
             .select()
             .from(messages)
-            .where(inArray(messages.conversation_id, conversationIds))
+            .where(
+              inArray(messages.conversation_id, conversationIdsMissingMessages),
+            )
 
-          messagesByConversation = dbMessagesForConversations.reduce(
-            (acc, msg) => {
-              const key = msg.conversation_id as string
-              const existing = acc.get(key)
-              if (existing) {
-                existing.push(msg as unknown as DBMessage)
-              } else {
-                acc.set(key, [msg as unknown as DBMessage])
-              }
-              return acc
-            },
-            new Map<string, DBMessage[]>(),
-          )
+          const safeMessages = Array.isArray(dbMessagesForConversations)
+            ? dbMessagesForConversations
+            : []
+
+          messagesByConversation = safeMessages.reduce((acc, msg) => {
+            const key = msg.conversation_id as string
+            const existing = acc.get(key)
+            if (existing) {
+              existing.push(msg as unknown as DBMessage)
+            } else {
+              acc.set(key, [msg as unknown as DBMessage])
+            }
+            return acc
+          }, new Map<string, DBMessage[]>())
         }
 
         const fetchedConversations = conversations.map((conv: any) => {
-          const convMessages = messagesByConversation.get(conv.id) ?? []
+          const convId = conv?.id
+          const convMessages = Array.isArray(conv?.messages)
+            ? (conv.messages as DBMessage[])
+            : typeof convId === 'string'
+              ? (messagesByConversation.get(convId) ?? [])
+              : []
+
           return convertDBToChatConversation(conv, convMessages)
         })
 
@@ -907,14 +923,14 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       }
 
       try {
-        if (id && user_identifier) {
+        if (id && userIdentifier) {
           // Delete single conversation, but only if it belongs to the current user
           const deleted = await db
             .delete(conversationsTable)
             .where(
               and(
                 eq(conversationsTable.id, id),
-                eq(conversationsTable.user_email, user_identifier),
+                eq(conversationsTable.user_email, userIdentifier),
               ),
             )
             .returning({ id: conversationsTable.id })
@@ -923,13 +939,13 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
               .status(403)
               .json({ error: 'Not allowed to delete this conversation' })
           }
-        } else if (user_identifier && course_name) {
+        } else if (userIdentifier && course_name) {
           // Delete all conversations for this user/course that are not in folders
           const deleted = await db
             .delete(conversationsTable)
             .where(
               and(
-                eq(conversationsTable.user_email, user_identifier),
+                eq(conversationsTable.user_email, userIdentifier),
                 eq(conversationsTable.project_name, course_name),
                 isNull(conversationsTable.folder_id),
               ),

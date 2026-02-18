@@ -81,7 +81,9 @@ export const cleanConversationHistory = (history: any[]): ConversationPage => {
     }
   }
 
-  return history.reduce((acc: Conversation[], conversation) => {
+  const conversations: Conversation[] = []
+
+  for (const conversation of history) {
     try {
       if (!conversation.model) {
         conversation.model = OpenAIModels[OpenAIModelID.GPT_4]
@@ -103,16 +105,14 @@ export const cleanConversationHistory = (history: any[]): ConversationPage => {
         conversation.messages = []
       }
 
-      acc.push(conversation)
-      return acc
+      conversations.push(conversation)
     } catch (error) {
       console.warn(
         `error while cleaning conversations' history. Removing culprit`,
         error,
       )
     }
-    return {
-      conversations: acc,
-    }
-  }, [])
+  }
+
+  return { conversations, nextCursor: null }
 }

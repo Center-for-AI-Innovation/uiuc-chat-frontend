@@ -8,9 +8,7 @@ import { ensureRedisConnected } from '~/utils/redisClient'
  * @returns Promise<boolean> - true if course exists, false otherwise
  * @throws Error if Redis connection fails
  */
-export async function checkCourseExists(
-  courseName: string,
-): Promise<boolean> {
+export async function checkCourseExists(courseName: string): Promise<boolean> {
   const redisClient = await ensureRedisConnected()
   return await redisClient.hExists('course_metadatas', courseName)
 }
