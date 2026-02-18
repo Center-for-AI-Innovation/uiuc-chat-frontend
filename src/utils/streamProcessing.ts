@@ -76,6 +76,11 @@ export async function processChunkWithStateMachine(
   stateMachineContext: { state: State; buffer: string },
   citationLinkCache: Map<number, string>,
   courseName: string,
+  /** Optional server-side presigned URL generator (bypasses API auth) */
+  serverPresignedUrlFn?: (
+    filePath: string,
+    courseName: string,
+  ) => Promise<string | null>,
 ): Promise<string> {
   let { state, buffer } = stateMachineContext
   let processedChunk = ''
@@ -156,12 +161,20 @@ export async function processChunkWithStateMachine(
               i += 6 // Skip all 7 characters (loop will increment i by 1)
               state = State.Normal
               // Process the citation without adding extra spaces
-              const processedCitation = await replaceCitationLinks(
-                buffer,
-                lastMessage,
-                citationLinkCache,
-                courseName,
-              )
+              const processedCitation = serverPresignedUrlFn
+                ? await replaceCitationLinks(
+                    buffer,
+                    lastMessage,
+                    citationLinkCache,
+                    courseName,
+                    serverPresignedUrlFn,
+                  )
+                : await replaceCitationLinks(
+                    buffer,
+                    lastMessage,
+                    citationLinkCache,
+                    courseName,
+                  )
               processedChunk += processedCitation
               buffer = ''
               continue
@@ -221,12 +234,20 @@ export async function processChunkWithStateMachine(
 
       case State.InFilenameLink:
         if (char === ')') {
-          processedChunk += await replaceCitationLinks(
-            buffer + char,
-            lastMessage,
-            citationLinkCache,
-            courseName,
-          )
+          processedChunk += serverPresignedUrlFn
+            ? await replaceCitationLinks(
+                buffer + char,
+                lastMessage,
+                citationLinkCache,
+                courseName,
+                serverPresignedUrlFn,
+              )
+            : await replaceCitationLinks(
+                buffer + char,
+                lastMessage,
+                citationLinkCache,
+                courseName,
+              )
           buffer = ''
           if (
             i < combinedChunk.length - 1 &&

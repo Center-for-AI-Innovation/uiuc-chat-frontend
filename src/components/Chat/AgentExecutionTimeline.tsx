@@ -10,120 +10,270 @@ import {
   ChainOfThoughtSearchResult,
 } from '@/components/ai-elements/chain-of-thought'
 import { cn } from '@/components/shadcn/lib/utils'
-import { Search } from 'lucide-react'
-import type { AgentEvent } from '@/types/chat'
+import { Search, Wrench, CheckCircle2, Clock } from 'lucide-react'
+import { LoadingSpinner } from '@/components/UIUC-Components/LoadingSpinner'
+import type { AgentEvent, AgentEventMetadata } from '@/types/chat'
 
 interface AgentExecutionTimelineProps {
   events?: AgentEvent[]
 }
 
-const getEventTimestamp = (event: AgentEvent) =>
-  new Date(event.updatedAt ?? event.createdAt ?? 0).getTime()
-
-const summariseEvent = (event: AgentEvent) => {
-  const meta = event.metadata
-
-  if (event.type === 'retrieval') {
-    const query = meta?.contextQuery || 'documents'
-    const count =
-      typeof meta?.contextsRetrieved === 'number'
-        ? meta.contextsRetrieved
-        : undefined
-
-    return {
-      title: `Searching for ${query}`,
-      count: count,
-      detail: '',
-      show: true,
-    }
-  }
-
-  if (event.type === 'final_response') {
-    return {
-      title: 'Response generated',
-      count: undefined,
-      detail: '',
-      show: true,
-    }
-  }
-
-  if (event.type === 'tool') {
-    const tool =
-      meta?.readableToolName ?? meta?.toolName ?? meta?.selectedToolNames?.[0]
-    const output = meta?.outputText
-    return {
-      title: tool || 'Tool executed',
-      count: undefined,
-      detail: output || meta?.info || '',
-      show: true,
-    }
-  }
-
-  // Skip action_selection - redundant
-  return {
-    title: '',
-    count: undefined,
-    detail: '',
-    show: false,
-  }
+// Grouped event - multiple retrievals in same step become one group
+interface GroupedEvent {
+  id: string
+  stepNumber: number
+  type: 'initializing' | 'retrieval_group' | 'tool' | 'final_response'
+  status: 'running' | 'done' | 'error' | 'pending'
+  retrievals?: Array<{
+    query: string
+    count?: number
+    status: 'running' | 'done' | 'error' | 'pending'
+  }>
+  // For non-retrieval events
+  title?: string
+  detail?: string
+  errorMessage?: string
+  createdAt: string
+  updatedAt?: string
 }
 
-// Only filter out action_selection, keep all other events
-const getFilteredEvents = (events: AgentEvent[]): AgentEvent[] => {
-  return events.filter((e) => {
-    const summary = summariseEvent(e)
-    return summary.show
-  })
+const getEventTimestamp = (event: AgentEvent | GroupedEvent) =>
+  new Date(event.updatedAt ?? event.createdAt ?? 0).getTime()
+
+// Group retrieval events by step number
+const groupEventsByStep = (events: AgentEvent[]): GroupedEvent[] => {
+  const grouped: GroupedEvent[] = []
+  const retrievalsByStep = new Map<number, AgentEvent[]>()
+  let initializingEvent: AgentEvent | null = null
+  let hasRealEvents = false
+
+  for (const event of events) {
+    if (event.type === 'initializing') {
+      initializingEvent = event
+    } else if (event.type === 'retrieval') {
+      hasRealEvents = true
+      const step = event.stepNumber
+      if (!retrievalsByStep.has(step)) {
+        retrievalsByStep.set(step, [])
+      }
+      retrievalsByStep.get(step)!.push(event)
+    } else if (event.type === 'tool') {
+      hasRealEvents = true
+      grouped.push({
+        id: event.id,
+        stepNumber: event.stepNumber,
+        type: 'tool',
+        status: event.status,
+        title:
+          event.metadata?.readableToolName ??
+          event.metadata?.toolName ??
+          'Tool',
+        detail: event.metadata?.outputText || event.metadata?.info,
+        errorMessage: event.metadata?.errorMessage,
+        createdAt: event.createdAt,
+        updatedAt: event.updatedAt,
+      })
+    } else if (event.type === 'final_response') {
+      hasRealEvents = true
+      grouped.push({
+        id: event.id,
+        stepNumber: event.stepNumber,
+        type: 'final_response',
+        status: event.status,
+        title: event.status === 'done' ? 'Done' : 'Generating response',
+        createdAt: event.createdAt,
+        updatedAt: event.updatedAt,
+      })
+    }
+    // Skip action_selection - redundant
+  }
+
+  if (
+    initializingEvent &&
+    (initializingEvent.status === 'running' || !hasRealEvents)
+  ) {
+    grouped.unshift({
+      id: initializingEvent.id,
+      stepNumber: initializingEvent.stepNumber,
+      type: 'initializing',
+      status: initializingEvent.status,
+      title: initializingEvent.title || 'Initializing agent...',
+      createdAt: initializingEvent.createdAt,
+      updatedAt: initializingEvent.updatedAt,
+    })
+  }
+
+  // Convert retrieval groups
+  for (const [stepNumber, retrievals] of retrievalsByStep) {
+    const allDone = retrievals.every((r) => r.status === 'done')
+    const anyError = retrievals.some((r) => r.status === 'error')
+    const anyRunning = retrievals.some((r) => r.status === 'running')
+
+    grouped.push({
+      id: `retrieval-group-step-${stepNumber}`,
+      stepNumber,
+      type: 'retrieval_group',
+      status: anyError
+        ? 'error'
+        : anyRunning
+          ? 'running'
+          : allDone
+            ? 'done'
+            : 'pending',
+      retrievals: retrievals.map((r) => ({
+        query: r.metadata?.contextQuery || 'documents',
+        count:
+          typeof r.metadata?.contextsRetrieved === 'number'
+            ? r.metadata.contextsRetrieved
+            : undefined,
+        status: r.status,
+      })),
+      createdAt: retrievals[0]?.createdAt || new Date().toISOString(),
+      updatedAt: retrievals[retrievals.length - 1]?.updatedAt,
+    })
+  }
+
+  // Sort by timestamp
+  return grouped.sort((a, b) => getEventTimestamp(a) - getEventTimestamp(b))
+}
+
+// Get all queries from grouped events for scrolling preview
+const getAllQueries = (
+  events: GroupedEvent[],
+): Array<{ query: string; status: string; count?: number }> => {
+  const queries: Array<{ query: string; status: string; count?: number }> = []
+  for (const event of events) {
+    if (event.type === 'retrieval_group' && event.retrievals) {
+      for (const r of event.retrievals) {
+        queries.push({ query: r.query, status: r.status, count: r.count })
+      }
+    }
+  }
+  return queries
+}
+
+// Format elapsed time
+const formatElapsedTime = (seconds: number): string => {
+  if (seconds < 60) return `${seconds}s`
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}m ${secs}s`
 }
 
 export const AgentExecutionTimeline = ({
   events,
 }: AgentExecutionTimelineProps) => {
-  const sortedEvents = useMemo(() => {
+  const groupedEvents = useMemo(() => {
     if (!events) return []
-    return [...events].sort(
-      (a, b) => getEventTimestamp(a) - getEventTimestamp(b),
-    )
+    return groupEventsByStep(events)
   }, [events])
 
-  const filteredEvents = useMemo(
-    () => getFilteredEvents(sortedEvents),
-    [sortedEvents],
+  // Get all queries for scrolling preview
+  const allQueries = useMemo(
+    () => getAllQueries(groupedEvents),
+    [groupedEvents],
   )
 
-  const previewEvents = useMemo(
-    () => filteredEvents.slice(-5),
-    [filteredEvents],
-  )
+  // Calculate total chunks
+  const totalChunks = useMemo(() => {
+    return groupedEvents.reduce((sum, event) => {
+      if (event.type === 'retrieval_group' && event.retrievals) {
+        return sum + event.retrievals.reduce((s, r) => s + (r.count || 0), 0)
+      }
+      return sum
+    }, 0)
+  }, [groupedEvents])
 
-  const streaming = useMemo(
-    () =>
-      sortedEvents.some(
-        (event) => event.status === 'running' || event.status === 'pending',
-      ),
-    [sortedEvents],
-  )
+  // Agent is "active" until final_response is done (not just when something is running)
+  const streaming = useMemo(() => {
+    if (groupedEvents.length === 0) return false
+
+    // Check if final_response exists and is done
+    const finalResponse = groupedEvents.find((e) => e.type === 'final_response')
+    if (finalResponse?.status === 'done') return false
+
+    // If no final response yet, or it's still running, we're active
+    return true
+  }, [groupedEvents])
+
+  // Elapsed time tracking
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const startTimeRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (events && events.length > 0 && !startTimeRef.current) {
+      // Set start time from first event
+      const firstEvent = events[0]
+      startTimeRef.current = new Date(
+        firstEvent?.createdAt || Date.now(),
+      ).getTime()
+    }
+
+    if (!streaming) {
+      // Calculate final elapsed time
+      if (startTimeRef.current && events && events.length > 0) {
+        const lastEvent = events[events.length - 1]
+        const endTime = new Date(
+          lastEvent?.updatedAt || lastEvent?.createdAt || Date.now(),
+        ).getTime()
+        setElapsedSeconds(Math.round((endTime - startTimeRef.current) / 1000))
+      }
+      return
+    }
+
+    // Update every second while streaming
+    const interval = setInterval(() => {
+      if (startTimeRef.current) {
+        setElapsedSeconds(
+          Math.round((Date.now() - startTimeRef.current) / 1000),
+        )
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [streaming, events])
 
   const [isOpen, setIsOpen] = useState(false)
+  const [showPreview, setShowPreview] = useState(true)
   const previewRef = useRef<HTMLDivElement | null>(null)
 
+  // Delay showing collapsed preview when closing to avoid overlap with collapse animation
+  useEffect(() => {
+    if (isOpen) {
+      setShowPreview(false)
+    } else {
+      const timer = setTimeout(() => setShowPreview(true), 150)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen])
+
+  // Auto-scroll preview
   useEffect(() => {
     if (!streaming || !previewRef.current) return
     previewRef.current.scrollTo({
       top: previewRef.current.scrollHeight,
       behavior: 'smooth',
     })
-  }, [previewEvents, streaming])
+  }, [allQueries, streaming])
 
-  if (sortedEvents.length === 0) {
+  if (groupedEvents.length === 0) {
     return null
   }
 
-  const getStatus = (event: AgentEvent): 'complete' | 'active' | 'pending' => {
+  const getStatus = (
+    event: GroupedEvent,
+  ): 'complete' | 'active' | 'pending' => {
     if (event.status === 'error') return 'complete'
     if (event.status === 'running') return 'active'
     if (event.status === 'pending') return 'pending'
     return 'complete'
+  }
+
+  const getIcon = (event: GroupedEvent) => {
+    if (event.type === 'retrieval_group') return Search
+    if (event.type === 'tool') return Wrench
+    if (event.type === 'final_response') return CheckCircle2
+    return undefined
   }
 
   return (
@@ -136,61 +286,170 @@ export const AgentExecutionTimeline = ({
         <ChainOfThoughtHeader className="p-3 pb-0">
           <div className="flex w-full items-center justify-between">
             <span>Agent reasoning</span>
-            {streaming && (
-              <span className="flex items-center gap-1.5 text-xs text-[--foreground-faded]">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[--primary]" />
-                Active
+            <div className="flex items-center gap-3">
+              {/* Elapsed time */}
+              <span className="flex items-center gap-1 text-xs text-[--foreground-faded]">
+                <Clock className="h-3 w-3" />
+                {formatElapsedTime(elapsedSeconds)}
               </span>
-            )}
+              {streaming && (
+                <span className="flex items-center gap-1.5 text-xs text-[--foreground-faded]">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[--primary]" />
+                  Active
+                </span>
+              )}
+            </div>
           </div>
         </ChainOfThoughtHeader>
 
-        {!isOpen && (
-          <div className="p-3 px-3 pt-2">
+        {/* Collapsed preview - show scrolling queries */}
+        {!isOpen && showPreview && (
+          <div className="px-3 pt-1">
+            {/* Queries list */}
             <div
               ref={previewRef}
-              className="max-h-20 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,rgba(0,0,0,0.15),rgba(0,0,0,0.6),rgba(0,0,0,1))]"
+              className="max-h-36 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,rgba(0,0,0,0.1),rgba(0,0,0,0.5),rgba(0,0,0,1))]"
             >
               <div className="space-y-1">
-                {previewEvents.map((event) => {
-                  const { title, count } = summariseEvent(event)
-                  const isRunning = event.status === 'running'
+                {allQueries.map((q, idx) => {
+                  const isRunning = q.status === 'running'
+                  const isDone = q.status === 'done'
                   return (
                     <div
-                      key={event.id}
+                      key={`query-${idx}`}
                       className="flex items-start gap-2 text-xs"
                     >
-                      <span
+                      <Search
                         className={cn(
-                          'mt-1.5 h-1 w-1 shrink-0 rounded-full',
+                          'mt-0.5 h-3 w-3 shrink-0',
                           isRunning
-                            ? 'animate-pulse bg-[--primary]'
-                            : 'bg-[--foreground-faded]',
+                            ? 'animate-pulse text-[--primary]'
+                            : 'text-[--foreground-faded]',
                         )}
                       />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[--foreground]">{title}</span>
-                        {count !== undefined && (
-                          <span className="text-[--foreground-faded]">
-                            {' '}
-                            · {count} doc{count === 1 ? '' : 's'}
-                          </span>
+                      <span
+                        className={cn(
+                          'flex-1 truncate',
+                          isRunning
+                            ? 'text-[--foreground]'
+                            : 'text-[--foreground-faded]',
                         )}
-                      </div>
+                      >
+                        {q.query}
+                      </span>
+                      {isDone && q.count !== undefined && (
+                        <span className="text-[--foreground-faded]/60 shrink-0">
+                          {q.count}
+                        </span>
+                      )}
                     </div>
                   )
                 })}
               </div>
             </div>
+            {/* Summary line - always visible when collapsed (not part of delayed animation) */}
+            {totalChunks > 0 && (
+              <div className="border-[--foreground-faded]/10 mt-3 flex items-center gap-1.5 border-t pt-2 text-xs text-[--foreground-faded]">
+                {streaming ? (
+                  <>
+                    <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-[--primary]" />
+                    <span>{totalChunks} chunks so far</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-3 w-3 shrink-0 text-green-500" />
+                    <span>{totalChunks} chunks retrieved</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         )}
 
+        {/* Expanded view */}
         <ChainOfThoughtContent className="p-4">
-          {filteredEvents.map((event) => {
-            const { title, count, detail } = summariseEvent(event)
+          {groupedEvents.map((event) => {
             const status = getStatus(event)
-            const icon = event.type === 'retrieval' ? Search : undefined
+            const icon = getIcon(event)
 
+            // Render retrieval group with sub-queries
+            if (event.type === 'retrieval_group' && event.retrievals) {
+              const totalChunksInGroup = event.retrievals.reduce(
+                (sum, r) => sum + (r.count || 0),
+                0,
+              )
+              const queryCount = event.retrievals.length
+
+              return (
+                <ChainOfThoughtStep
+                  key={event.id}
+                  status={status}
+                  icon={icon}
+                  label={
+                    <div className="space-y-2">
+                      <div className="font-medium text-[--foreground]">
+                        {queryCount > 1
+                          ? `Searching ${queryCount} queries`
+                          : 'Searching documents'}
+                        {status === 'complete' && totalChunksInGroup > 0 && (
+                          <span className="font-normal text-[--foreground-faded]">
+                            {' '}
+                            · {totalChunksInGroup} chunks
+                          </span>
+                        )}
+                      </div>
+                      {/* Sub-queries */}
+                      <div className="space-y-1 pl-4 md:space-y-1.5 md:pl-5">
+                        {event.retrievals.map((r, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-2 text-xs text-[--foreground-faded] md:text-sm"
+                          >
+                            <span
+                              className={cn(
+                                'h-1 w-1 shrink-0 rounded-full md:h-1.5 md:w-1.5',
+                                r.status === 'running'
+                                  ? 'animate-pulse bg-[--primary]'
+                                  : r.status === 'error'
+                                    ? 'bg-red-500'
+                                    : 'bg-green-500',
+                              )}
+                            />
+                            <span className="flex-1" title={r.query}>
+                              {`"${r.query}"`}
+                            </span>
+                            {r.count !== undefined && r.status === 'done' && (
+                              <span className="text-[--foreground-faded]/60 shrink-0">
+                                {r.count}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  }
+                />
+              )
+            }
+
+            if (event.type === 'initializing') {
+              return (
+                <div
+                  key={event.id}
+                  className="flex gap-2 text-sm text-foreground animate-in fade-in-0 slide-in-from-top-2"
+                >
+                  <div className="relative mt-0.5">
+                    <LoadingSpinner size="xs" />
+                    <div className="absolute bottom-0 left-1/2 top-7 -mx-px w-px bg-border" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-[--foreground]">{event.title}</div>
+                  </div>
+                </div>
+              )
+            }
+
+            // Render tool or final_response
             return (
               <ChainOfThoughtStep
                 key={event.id}
@@ -198,22 +457,15 @@ export const AgentExecutionTimeline = ({
                 icon={icon}
                 label={
                   <div className="space-y-1">
-                    <div className="text-[--foreground]">{title}</div>
-                    {count !== undefined && (
-                      <ChainOfThoughtSearchResults>
-                        <ChainOfThoughtSearchResult className="border-0 bg-[--primary] text-[--primary-foreground] hover:bg-[--primary]">
-                          Found {count} document chunk{count === 1 ? '' : 's'}
-                        </ChainOfThoughtSearchResult>
-                      </ChainOfThoughtSearchResults>
-                    )}
-                    {detail && (
+                    <div className="text-[--foreground]">{event.title}</div>
+                    {event.detail && (
                       <div className="text-sm text-[--foreground-faded]">
-                        {detail}
+                        {event.detail}
                       </div>
                     )}
-                    {event.metadata?.errorMessage && (
+                    {event.errorMessage && (
                       <div className="text-sm text-red-500">
-                        {event.metadata.errorMessage}
+                        {event.errorMessage}
                       </div>
                     )}
                   </div>
@@ -221,6 +473,22 @@ export const AgentExecutionTimeline = ({
               />
             )
           })}
+          {/* Total chunks indicator at bottom of expanded view */}
+          {totalChunks > 0 && (
+            <div className="border-[--foreground-faded]/10 mt-3 flex items-center gap-1.5 border-t pt-2 text-xs text-[--foreground-faded] md:gap-2 md:text-sm">
+              {streaming ? (
+                <>
+                  <span className="h-3 w-3 shrink-0 animate-pulse rounded-full bg-[--primary] md:h-4 md:w-4" />
+                  <span>{totalChunks} chunks retrieved so far</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-3 w-3 shrink-0 text-green-500 md:h-4 md:w-4" />
+                  <span>{totalChunks} chunks retrieved</span>
+                </>
+              )}
+            </div>
+          )}
         </ChainOfThoughtContent>
       </ChainOfThought>
     </div>

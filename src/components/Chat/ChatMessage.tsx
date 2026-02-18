@@ -9,7 +9,14 @@ import React, {
   createContext,
   useContext as useReactContext,
 } from 'react'
-import { Text, createStyles, Badge, Tooltip, Modal } from '@mantine/core'
+import {
+  Text,
+  createStyles,
+  Badge,
+  Tooltip,
+  Modal,
+  Button,
+} from '@mantine/core'
 import {
   IconCheck,
   IconEdit,
@@ -19,6 +26,8 @@ import {
   IconFileTypePdf,
   IconFileTypeDocx,
   IconFileTypeTxt,
+  IconFileTypeXls,
+  IconFileTypePpt,
   IconFile,
   IconEye,
 } from '@tabler/icons-react'
@@ -44,7 +53,7 @@ import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 import {
   saveConversationToServer,
   createLogConversationPayload,
-} from '@/hooks/__internal__/conversation'
+} from '@/utils/app/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -1704,7 +1713,6 @@ export const ChatMessage = memo(
                   {isEditing ? (
                     <div className="flex w-full flex-col">
                       <textarea
-                        aria-label="Edit message"
                         ref={textareaRef}
                         className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
                         value={messageContent}
@@ -2163,11 +2171,14 @@ export const ChatMessage = memo(
                                 </>
                               )}
 
+                              {/* Only show "Generating final response" for NON-agent mode.
+                                  Agent mode shows status via AgentExecutionTimeline instead. */}
                               {!isRouting &&
                                 !isRetrievalLoading &&
                                 !isImg2TextLoading &&
                                 !isQueryRewriting &&
                                 loading &&
+                                !selectedConversation?.agentModeEnabled && // Don't show for agent mode
                                 (messageIndex ===
                                   (selectedConversation?.messages.length ?? 0) -
                                     1 ||
@@ -2215,11 +2226,10 @@ export const ChatMessage = memo(
                             }}
                           >
                             <button
-                              tabIndex={0}
-                              aria-label="Edit Message"
+                              type="button"
+                              aria-label="Edit message"
                               className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
                                 ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
-                              type="button"
                               onClick={toggleEditing}
                             >
                               <IconEdit
@@ -2244,15 +2254,6 @@ export const ChatMessage = memo(
                     {shouldShowSources && (
                       <div className="relative z-0 mb-1 flex justify-start">
                         <button
-                          tabIndex={0}
-                          aria-label={
-                            'Open citations for ' +
-                            getContextsLength(message.contexts) +
-                            ' Source' +
-                            (getContextsLength(message.contexts) == 1
-                              ? ''
-                              : 's')
-                          }
                           className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
                           onClick={() => handleSourcesSidebarToggle(true)}
                         >

@@ -40,6 +40,10 @@ import { ErrorMessageDiv } from './ErrorMessageDiv'
 import { MemoizedChatMessage } from './MemoizedChatMessage'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
+import {
+  deriveAgentModeEnabled,
+  shouldShowChatLoader,
+} from '~/utils/app/agentMode'
 
 import { SourcesSidebarProvider } from './ChatMessage'
 
@@ -61,13 +65,9 @@ import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
-import { useFetchEnabledDocGroups } from '@/hooks/queries/useFetchEnabledDocGroups'
-import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
-import { useDeleteMessages } from '@/hooks/queries/useDeleteMessages'
-import { useLogConversation } from '@/hooks/queries/useLogConversation'
-import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
-import { useRouteChat } from '@/hooks/queries/useRouteChat'
-import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+import { useUpdateConversation } from '~/hooks/conversationQueries'
+import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
+import { useDeleteMessages } from '~/hooks/messageQueries'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
@@ -89,7 +89,18 @@ import {
   handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
-import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
+import { createLogConversationPayload } from '@/utils/app/conversation'
+import { runAgentStream } from '~/hooks/useAgentStream'
+import {
+  type AgentRunRequest,
+  type ClientUIUCTool,
+  type ContextMetadata,
+} from '~/types/agentStream'
+import {
+  type ClientMessage,
+  toClientMessage,
+  toClientConversation,
+} from '~/types/clientConversation'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -114,11 +125,6 @@ export const Chat = memo(
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
-    const { refetch: refetchLLMProviders } = useFetchLLMProviders({
-      projectName: courseName,
-    })
-    const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
-    const { mutateAsync: routeChatAsync } = useRouteChat()
     // const
     const [bannerUrl, setBannerUrl] = useState<string | null>(null)
     const getCurrentPageName = () => {
@@ -133,8 +139,6 @@ export const Chat = memo(
       string[]
     >(['All Documents']) // Default to 'All Documents' so retrieval can work immediately
     const [enabledTools, setEnabledTools] = useState<string[]>([])
-
-    const logConversationMutation = useLogConversation(getCurrentPageName())
 
     const {
       data: documentGroupsHook,
@@ -179,12 +183,13 @@ export const Chat = memo(
         tools,
         llmProviders,
         selectedModel,
-        agentModeEnabled,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
+
+    const agentModeEnabled = deriveAgentModeEnabled(selectedConversation)
 
     useEffect(() => {
       const loadModel = async () => {
@@ -318,10 +323,7 @@ export const Chat = memo(
     const handleSend = useCallback(
       async (
         message: Message,
-        // if user edit any messages in the conversation,
-        // messages after the edited message will be deleted
         deleteCount = 0,
-
         plugin: Plugin | null = null,
         tools: UIUCTool[],
         documentGroups: string[],
@@ -338,13 +340,26 @@ export const Chat = memo(
         // This happens when the user hits send before the LLM providers have loaded
         if (!llmProviders || Object.keys(llmProviders).length === 0) {
           try {
-            const refetchResult = await refetchLLMProviders({
-              throwOnError: true,
+            const response = await fetch('/api/models', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                projectName: courseName,
+              }),
             })
-            if (!refetchResult.data) {
+
+            if (!response.ok) {
+              throw new Error('Failed to fetch LLM providers')
+            }
+
+            const data = await response.json()
+            llmProviders = data
+
+            if (!llmProviders) {
               throw new Error('No LLM providers returned from API')
             }
-            llmProviders = refetchResult.data
           } catch (error) {
             console.error('Error fetching LLM providers:', error)
             errorToast({
@@ -356,696 +371,986 @@ export const Chat = memo(
           }
         }
 
-        // TODO(BG): should it be written here?
         let searchQuery = Array.isArray(message.content)
           ? message.content.map((content) => content.text).join(' ')
           : message.content
 
-        if (!selectedConversation) {
-          return
-        }
+        if (selectedConversation) {
+          // Add this type guard function
+          function isValidModel(
+            model: any,
+          ): model is { id: string; name: string } {
+            return (
+              model &&
+              typeof model.id === 'string' &&
+              typeof model.name === 'string'
+            )
+          }
 
-        // Add this type guard function
-        // TODO(BG): move to a different file
-        function isValidModel(
-          model: any,
-        ): model is { id: string; name: string } {
-          return (
-            model &&
-            typeof model.id === 'string' &&
-            typeof model.name === 'string'
-          )
-        }
+          // Check if model is defined and valid
+          if (!isValidModel(selectedConversation.model)) {
+            console.error('Selected conversation does not have a valid model.')
+            errorToast({
+              title: 'Model Error',
+              message: 'No valid model selected for the conversation.',
+            })
+            return
+          }
 
-        // Check if model is defined and valid
-        if (!isValidModel(selectedConversation.model)) {
-          console.error('Selected conversation does not have a valid model.')
-          errorToast({
-            title: 'Model Error',
-            message: 'No valid model selected for the conversation.',
+          let updatedConversation: Conversation
+          if (deleteCount) {
+            // Track the edited message ID for logging purposes
+            editedMessageIdRef.current = message.id
+
+            // FIXED: Don't clear contexts if they come from a file upload
+            const isFileUploadMessage =
+              Array.isArray(message.content) &&
+              message.content.some(
+                (c) => typeof c === 'object' && c.type === 'file',
+              )
+
+            if (!isFileUploadMessage) {
+              message.contexts = []
+            }
+
+            // Clear agent events when regenerating
+            message.agentEvents = undefined
+            message.agentStepNumber = undefined
+
+            // Remove tools from message to clear old tools
+            message.tools = []
+            tools.forEach((tool) => {
+              tool.aiGeneratedArgumentValues = undefined
+              tool.output = undefined
+              tool.error = undefined
+            })
+            message.content = Array.isArray(message.content)
+              ? message.content.filter(
+                  (content) => content.type !== 'tool_image_url',
+                )
+              : message.content
+
+            const updatedMessages = [...(selectedConversation.messages || [])]
+            const messagesToDelete = updatedMessages.slice(0, deleteCount)
+            for (let i = 0; i < deleteCount; i++) {
+              updatedMessages.pop()
+            }
+            updatedConversation = {
+              ...selectedConversation,
+              messages: [...updatedMessages, message],
+            }
+            await deleteMessagesMutation.mutate({
+              convoId: selectedConversation.id,
+              deletedMessages: messagesToDelete,
+            })
+          } else {
+            // Clear edited message ID for non-edit sends
+            editedMessageIdRef.current = undefined
+
+            updatedConversation = {
+              ...selectedConversation,
+              messages: [...(selectedConversation.messages || []), message],
+            }
+            // Update the name of the conversation if it's the first message
+            if (updatedConversation.messages?.length === 1) {
+              const { content } = message
+              // Use only text content, exclude file content
+              const contentText = Array.isArray(content)
+                ? content
+                    .filter((content) => content.type === 'text')
+                    .map((content) => content.text)
+                    .join(' ')
+                : content
+
+              // This is where we can customize the name of the conversation
+              const customName =
+                contentText.length > 30
+                  ? contentText.substring(0, 30) + '...'
+                  : contentText
+
+              updatedConversation = {
+                ...updatedConversation,
+                name: customName,
+              }
+            }
+          }
+          updatedConversation = {
+            ...updatedConversation,
+            agentModeEnabled,
+          }
+
+          handleUpdateConversation(updatedConversation, {
+            key: 'messages',
+            value: updatedConversation.messages,
           })
-          return
-        }
+          homeDispatch({ field: 'loading', value: true })
+          homeDispatch({ field: 'messageIsStreaming', value: true })
+          const controller = new AbortController()
 
-        let updatedConversation: Conversation
-        if (deleteCount) {
-          // Track the edited message ID for logging purposes
-          editedMessageIdRef.current = message.id
+          let imgDesc = ''
+          let imageUrls: string[] = []
 
-          // FIXED: Don't clear contexts if they come from a file upload
-          const isFileUploadMessage =
+          // Action 1: Image to Text Conversion
+          if (Array.isArray(message.content)) {
+            const imageContent = (message.content as Content[]).filter(
+              (content) => content.type === 'image_url',
+            )
+
+            if (imageContent.length > 0) {
+              homeDispatch({ field: 'isImg2TextLoading', value: true })
+              try {
+                const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
+                  await handleImageContent(
+                    message,
+                    courseName,
+                    updatedConversation,
+                    searchQuery,
+                    llmProviders,
+                    controller,
+                  )
+                searchQuery = newSearchQuery
+                imgDesc = newImgDesc
+                imageUrls = imageContent.map(
+                  (content) => content.image_url?.url as string,
+                )
+              } catch (error) {
+                console.error(
+                  'Error in chat.tsx running handleImageContent():',
+                  error,
+                )
+              } finally {
+                homeDispatch({ field: 'isImg2TextLoading', value: false })
+              }
+            }
+          }
+
+          const hasConversationFiles = (
+            conversation: Conversation | undefined,
+          ): boolean => {
+            if (!conversation?.messages) return false
+
+            return conversation.messages.some((message) => {
+              if (Array.isArray(message.content)) {
+                return message.content.some(
+                  (content) => content.type === 'file',
+                )
+              }
+              return false
+            })
+          }
+
+          // FIXED: Check if this is a file upload message with contexts
+          const isFileUploadMessageWithContexts =
             Array.isArray(message.content) &&
             message.content.some(
               (c) => typeof c === 'object' && c.type === 'file',
-            )
+            ) &&
+            message.contexts &&
+            Array.isArray(message.contexts) &&
+            message.contexts.length > 0
+          // Updated condition to include conversation files AND current file upload message with contexts
+          const hasAnyDocuments =
+            (documentCount || 0) > 0 ||
+            hasConversationFiles(selectedConversation) ||
+            isFileUploadMessageWithContexts
 
-          if (!isFileUploadMessage) {
-            message.contexts = []
-          }
-
-          // Clear agent events when regenerating
-          message.agentEvents = undefined
-          message.agentStepNumber = undefined
-
-          // Remove tools from message to clear old tools
-          message.tools = []
-          tools.forEach((tool) => {
-            tool.aiGeneratedArgumentValues = undefined
-            tool.output = undefined
-            tool.error = undefined
-          })
-          message.content = Array.isArray(message.content)
-            ? message.content.filter(
-                (content) => content.type !== 'tool_image_url',
-              )
-            : message.content
-
-          const updatedMessages = [...(selectedConversation.messages || [])]
-
-          //????
-          const messagesToDelete = updatedMessages.slice(0, deleteCount)
-          for (let i = 0; i < deleteCount; i++) {
-            updatedMessages.pop()
-          }
-          //????
-
-          updatedConversation = {
-            ...selectedConversation,
-            messages: [...updatedMessages, message],
-          }
-          await deleteMessagesMutation.mutate({
-            convoId: selectedConversation.id,
-            deletedMessages: messagesToDelete,
-          })
-        } else {
-          // Clear edited message ID for non-edit sends
-          editedMessageIdRef.current = undefined
-
-          updatedConversation = {
-            ...selectedConversation,
-            messages: [...(selectedConversation.messages || []), message],
-          }
-          // Update the name of the conversation if it's the first message
-          // TODO(BG): can be written as a helper function
-          if (updatedConversation.messages?.length === 1) {
-            const { content } = message
-            // Use only text content, exclude file content
-            const contentText = Array.isArray(content)
-              ? content
-                  .filter((content) => content.type === 'text')
-                  .map((content) => content.text)
-                  .join(' ')
-              : content
-
-            // This is where we can customize the name of the conversation
-            const customName =
-              contentText.length > 30
-                ? contentText.substring(0, 30) + '...'
-                : contentText
-
-            updatedConversation = {
-              ...updatedConversation,
-              name: customName,
-            }
-          }
-        }
-        updatedConversation = {
-          ...updatedConversation,
-          agentModeEnabled,
-        }
-
-        handleUpdateConversation(updatedConversation, {
-          key: 'messages',
-          value: updatedConversation.messages,
-        })
-        homeDispatch({ field: 'loading', value: true })
-        homeDispatch({ field: 'messageIsStreaming', value: true })
-        const controller = new AbortController()
-
-        let imgDesc = ''
-        let imageUrls: string[] = []
-
-        // Action 1: Image to Text Conversion
-        if (Array.isArray(message.content)) {
-          const imageContent = (message.content as Content[]).filter(
-            (content) => content.type === 'image_url',
-          )
-
-          if (imageContent.length > 0) {
-            homeDispatch({ field: 'isImg2TextLoading', value: true })
-            try {
-              const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
-                await handleImageContent(
-                  message,
-                  courseName,
-                  updatedConversation,
-                  searchQuery,
-                  llmProviders,
-                  controller,
-                )
-              searchQuery = newSearchQuery
-              imgDesc = newImgDesc
-              imageUrls = imageContent.map(
-                (content) => content.image_url?.url as string,
-              )
-            } catch (error) {
-              console.error(
-                'Error in chat.tsx running handleImageContent():',
-                error,
-              )
-            } finally {
-              homeDispatch({ field: 'isImg2TextLoading', value: false })
-            }
-          }
-        }
-
-        const hasConversationFiles = (
-          conversation: Conversation | undefined,
-        ): boolean => {
-          if (!conversation?.messages) return false
-
-          return conversation.messages.some((message) => {
-            if (Array.isArray(message.content)) {
-              return message.content.some((content) => content.type === 'file')
-            }
-            return false
-          })
-        }
-
-        // FIXED: Check if this is a file upload message with contexts
-        const isFileUploadMessageWithContexts =
-          Array.isArray(message.content) &&
-          message.content.some(
-            (c) => typeof c === 'object' && c.type === 'file',
-          ) &&
-          message.contexts &&
-          Array.isArray(message.contexts) &&
-          message.contexts.length > 0
-        // Updated condition to include conversation files AND current file upload message with contexts
-        const hasAnyDocuments =
-          (documentCount || 0) > 0 ||
-          hasConversationFiles(selectedConversation) ||
-          isFileUploadMessageWithContexts
-
-        // Skip vector search entirely if there are no documents AND no conversation files AND no file upload contexts
-        if (!hasAnyDocuments) {
-          homeDispatch({ field: 'wasQueryRewritten', value: false })
-          homeDispatch({ field: 'queryRewriteText', value: null })
-          message.wasQueryRewritten = undefined
-          message.queryRewriteText = undefined
-          // FIXED: Don't clear contexts if this is a file upload message with contexts
-          if (!isFileUploadMessageWithContexts) {
-            message.contexts = []
-          }
-        } else {
-          // Action 2: Context Retrieval: Vector Search
-          let rewrittenQuery = searchQuery // Default to original query
-          // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
-          if (
-            courseMetadata?.vector_search_rewrite_disabled ||
-            updatedConversation.messages.length <= 1 ||
-            documentCount === 0
-          ) {
-            console.log(
-              'Query rewrite skipped: disabled for course, first message, or no documents',
-            )
-            rewrittenQuery = searchQuery
+          // Skip vector search entirely if there are no documents AND no conversation files AND no file upload contexts
+          if (!hasAnyDocuments) {
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
+            // FIXED: Don't clear contexts if this is a file upload message with contexts
+            if (!isFileUploadMessageWithContexts) {
+              message.contexts = []
+            }
           } else {
-            homeDispatch({ field: 'isQueryRewriting', value: true })
-            try {
-              // TODO: add toggle to turn queryRewrite on and off on materials page
-              const QUERY_REWRITE_PROMPT = `You are a vector database query optimizer that improves search queries for semantic vector retrieval.
+            // Action 2: Context Retrieval: Vector Search
+            let rewrittenQuery = searchQuery // Default to original query
+            // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
+            if (
+              courseMetadata?.vector_search_rewrite_disabled ||
+              updatedConversation.messages.length <= 1 ||
+              documentCount === 0
+            ) {
+              console.log(
+                'Query rewrite skipped: disabled for course, first message, or no documents',
+              )
+              rewrittenQuery = searchQuery
+              homeDispatch({ field: 'wasQueryRewritten', value: false })
+              homeDispatch({ field: 'queryRewriteText', value: null })
+              message.wasQueryRewritten = undefined
+              message.queryRewriteText = undefined
+            } else {
+              homeDispatch({ field: 'isQueryRewriting', value: true })
+              try {
+                // TODO: add toggle to turn queryRewrite on and off on materials page
+                const QUERY_REWRITE_PROMPT = `You are a vector database query optimizer that improves search queries for semantic vector retrieval.
 
-                INPUT:
-                The input will include:
-                1. Previous conversation messages (if any)
-                2. Current search query
+                  INPUT:
+                  The input will include:
+                  1. Previous conversation messages (if any)
+                  2. Current search query
 
-                OUTPUT FORMAT:
-                You must respond in ONE of these two formats ONLY:
-                1. The exact string "NO_REWRITE_REQUIRED" or
-                2. An XML tag containing the vector query: <vector_query>your optimized query here</vector_query>
+                  OUTPUT FORMAT:
+                  You must respond in ONE of these two formats ONLY:
+                  1. The exact string "NO_REWRITE_REQUIRED" or
+                  2. An XML tag containing the vector query: <vector_query>your optimized query here</vector_query>
 
-                WHEN TO OUTPUT "NO_REWRITE_REQUIRED":
-                Return "NO_REWRITE_REQUIRED" if ALL of these conditions are met:
-                - Query contains specific, unique terms that would match relevant documents
-                - Query includes all necessary context without requiring conversation history
-                - Query has no ambiguous references (like "it", "this", "that example", "option one")
-                - Query would yield effective vector embeddings without modification
+                  WHEN TO OUTPUT "NO_REWRITE_REQUIRED":
+                  Return "NO_REWRITE_REQUIRED" if ALL of these conditions are met:
+                  - Query contains specific, unique terms that would match relevant documents
+                  - Query includes all necessary context without requiring conversation history
+                  - Query has no ambiguous references (like "it", "this", "that example", "option one")
+                  - Query would yield effective vector embeddings without modification
 
-                WHEN TO REWRITE THE QUERY:
-                Rewrite the query if ANY of these conditions are met:
-                - Query contains references to items from previous messages
-                - Query uses pronouns or demonstratives without clear referents
-                - Query lacks technical terms or context needed for effective matching
-                - Query requires conversation history to be fully understood
+                  WHEN TO REWRITE THE QUERY:
+                  Rewrite the query if ANY of these conditions are met:
+                  - Query contains references to items from previous messages
+                  - Query uses pronouns or demonstratives without clear referents
+                  - Query lacks technical terms or context needed for effective matching
+                  - Query requires conversation history to be fully understood
 
-                REWRITING RULES:
-                When rewriting, follow these rules:
-                1. Replace references to previous items with their specific content
-                  Example: "explain the first option" →
-                  <vector_query>explain the gradient descent optimization algorithm</vector_query>
+                  REWRITING RULES:
+                  When rewriting, follow these rules:
+                  1. Replace references to previous items with their specific content
+                    Example: "explain the first option" →
+                    <vector_query>explain the gradient descent optimization algorithm</vector_query>
 
-                2. Add essential context from conversation history
-                  Example: "what are the steps" →
-                  <vector_query>what are the steps for implementing backpropagation in neural networks</vector_query>
+                  2. Add essential context from conversation history
+                    Example: "what are the steps" →
+                    <vector_query>what are the steps for implementing backpropagation in neural networks</vector_query>
 
-                3. Resolve all pronouns and demonstratives
-                  Example: "how does it work" →
-                  <vector_query>how does the transformer attention mechanism work</vector_query>
+                  3. Resolve all pronouns and demonstratives
+                    Example: "how does it work" →
+                    <vector_query>how does the transformer attention mechanism work</vector_query>
 
-                4. Include key technical terms and synonyms
-                  Example: "what causes this" →
-                  <vector_query>root causes and mechanisms of gradient vanishing in deep neural networks</vector_query>
+                  4. Include key technical terms and synonyms
+                    Example: "what causes this" →
+                    <vector_query>root causes and mechanisms of gradient vanishing in deep neural networks</vector_query>
 
-                IMPORTANT OUTPUT RULES:
-                - Do not include ANY explanatory text
-                - Do not include multiple options
-                - Do not include reasoning or notes
-                - Output ONLY "NO_REWRITE_REQUIRED" or a <vector_query> tag
-                - Never include both formats in one response
-                - Never nest tags or use other XML tags
-                - Never add punctuation or text outside the tags
+                  IMPORTANT OUTPUT RULES:
+                  - Do not include ANY explanatory text
+                  - Do not include multiple options
+                  - Do not include reasoning or notes
+                  - Output ONLY "NO_REWRITE_REQUIRED" or a <vector_query> tag
+                  - Never include both formats in one response
+                  - Never nest tags or use other XML tags
+                  - Never add punctuation or text outside the tags
 
-                The final rewritten query must:
-                - Be self-contained and understandable without conversation context
-                - Maintain the original search intent
-                - Include specific details that enable accurate vector matching
-                - Be concise while containing all necessary context
-                - Contain ONLY the search terms inside the XML tags
+                  The final rewritten query must:
+                  - Be self-contained and understandable without conversation context
+                  - Maintain the original search intent
+                  - Include specific details that enable accurate vector matching
+                  - Be concise while containing all necessary context
+                  - Contain ONLY the search terms inside the XML tags
 
-                Remember: This query optimization is for vector database retrieval only, not for the final LLM prompt.`
+                  Remember: This query optimization is for vector database retrieval only, not for the final LLM prompt.`
 
-              // Get the last user message and some context
-              const lastUserMessageIndex =
-                selectedConversation?.messages?.findLastIndex(
-                  (msg) => msg.role === 'user',
-                )
-              const contextStartIndex = Math.max(0, lastUserMessageIndex - 5) // Get up to 5 messages before the last user message
-              const contextMessages =
-                selectedConversation?.messages?.slice(
-                  contextStartIndex,
-                  lastUserMessageIndex,
-                ) || [] // Removed +1 to exclude last user message
+                // Get the last user message and some context
+                const lastUserMessageIndex =
+                  selectedConversation?.messages?.findLastIndex(
+                    (msg) => msg.role === 'user',
+                  )
+                const contextStartIndex = Math.max(0, lastUserMessageIndex - 5) // Get up to 5 messages before the last user message
+                const contextMessages =
+                  selectedConversation?.messages?.slice(
+                    contextStartIndex,
+                    lastUserMessageIndex,
+                  ) || [] // Removed +1 to exclude last user message
 
-              const queryRewriteConversation: Conversation = {
-                id: uuidv4(),
-                name: 'Query Rewrite',
-                messages: [
-                  {
-                    id: uuidv4(),
-                    role: 'user',
-                    // what the fuck?
-                    content: `Previous conversation:\n${contextMessages
-                      .map((msg) => {
-                        const contentText = Array.isArray(msg.content)
-                          ? msg.content
-                              .filter(
-                                (content) =>
-                                  content.type === 'text' && content.text,
-                              )
-                              .map((content) => content.text!)
-                              .join(' ')
-                          : typeof msg.content === 'string'
+                const queryRewriteConversation: Conversation = {
+                  id: uuidv4(),
+                  name: 'Query Rewrite',
+                  messages: [
+                    {
+                      id: uuidv4(),
+                      role: 'user',
+                      content: `Previous conversation:\n${contextMessages
+                        .map((msg) => {
+                          const contentText = Array.isArray(msg.content)
                             ? msg.content
-                            : ''
-                        return `${msg.role}: ${contentText.trim()}`
-                      })
-                      .filter((text) => text.length > 0)
-                      .join(
-                        '\n',
-                      )}\n\nCurrent query: "${searchQuery}"\n\nEnhanced query:`,
-                    latestSystemMessage: QUERY_REWRITE_PROMPT,
-
-                    // what the fuck?
-                    finalPromtEngineeredMessage: `\n<User Query>\nPrevious conversation:\n${contextMessages
-                      .map((msg) => {
-                        const contentText = Array.isArray(msg.content)
-                          ? msg.content
-                              .filter(
-                                (content) =>
-                                  content.type === 'text' && content.text,
-                              )
-                              .map((content) => content.text!)
-                              .join(' ')
-                          : typeof msg.content === 'string'
+                                .filter(
+                                  (content) =>
+                                    content.type === 'text' && content.text,
+                                )
+                                .map((content) => content.text!)
+                                .join(' ')
+                            : typeof msg.content === 'string'
+                              ? msg.content
+                              : ''
+                          return `${msg.role}: ${contentText.trim()}`
+                        })
+                        .filter((text) => text.length > 0)
+                        .join(
+                          '\n',
+                        )}\n\nCurrent query: "${searchQuery}"\n\nEnhanced query:`,
+                      latestSystemMessage: QUERY_REWRITE_PROMPT,
+                      finalPromtEngineeredMessage: `\n<User Query>\nPrevious conversation:\n${contextMessages
+                        .map((msg) => {
+                          const contentText = Array.isArray(msg.content)
                             ? msg.content
-                            : ''
-                        return `${msg.role}: ${contentText.trim()}`
-                      })
-                      .filter((text) => text.length > 0)
-                      .join(
-                        '\n',
-                      )}\n\nCurrent query: "${searchQuery}"\n\nEnhanced query:\n</User Query>`,
+                                .filter(
+                                  (content) =>
+                                    content.type === 'text' && content.text,
+                                )
+                                .map((content) => content.text!)
+                                .join(' ')
+                            : typeof msg.content === 'string'
+                              ? msg.content
+                              : ''
+                          return `${msg.role}: ${contentText.trim()}`
+                        })
+                        .filter((text) => text.length > 0)
+                        .join(
+                          '\n',
+                        )}\n\nCurrent query: "${searchQuery}"\n\nEnhanced query:\n</User Query>`,
+                    },
+                  ],
+                  model: selectedConversation.model,
+                  prompt: QUERY_REWRITE_PROMPT,
+                  temperature: 0.2,
+                  folderId: null,
+                  userEmail: currentEmail,
+                  projectName: courseName,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                }
+
+                const queryRewriteBody: ChatBody = {
+                  conversation: {
+                    ...queryRewriteConversation,
+                    messages: queryRewriteConversation.messages.map((msg) => ({
+                      ...msg,
+                      content:
+                        typeof msg.content === 'string'
+                          ? msg.content.trim()
+                          : Array.isArray(msg.content)
+                            ? msg.content
+                                .map((c) => c.text)
+                                .join(' ')
+                                .trim()
+                            : '',
+                    })),
                   },
-                ],
-                model: selectedConversation.model,
-                prompt: QUERY_REWRITE_PROMPT,
-                temperature: 0.2,
-                folderId: null,
-                userEmail: currentEmail,
-                projectName: courseName,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-              }
-
-              const queryRewriteBody: ChatBody = {
-                conversation: {
-                  ...queryRewriteConversation,
-                  messages: queryRewriteConversation.messages.map((msg) => ({
-                    ...msg,
-                    content:
-                      typeof msg.content === 'string'
-                        ? msg.content.trim()
-                        : Array.isArray(msg.content)
-                          ? msg.content
-                              .map((c) => c.text)
-                              .join(' ')
-                              .trim()
-                          : '',
-                  })),
-                },
-                key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
-                course_name: courseName,
-                stream: false,
-                courseMetadata: courseMetadata,
-                llmProviders: llmProviders,
-                model: selectedConversation.model,
-                mode: 'chat',
-              }
-
-              console.log('queryRewriteBody:', queryRewriteBody)
-
-              // TODO(BG): should be removed
-              if (!queryRewriteBody.model || !queryRewriteBody.model.id) {
-                queryRewriteBody.model = selectedConversation.model
-              }
-
-              let rewriteResponse:
-                | Response
-                | AsyncIterable<webllm.ChatCompletionChunk>
-                | undefined
-
-              if (
-                selectedConversation.model &&
-                webLLMModels.some(
-                  (model) => model.name === selectedConversation.model.name,
-                )
-              ) {
-                // WebLLM model handling remains the same
-                while (chat_ui.isModelLoading() === true) {
-                  await new Promise((resolve) => setTimeout(resolve, 10))
+                  key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
+                  course_name: courseName,
+                  stream: false,
+                  courseMetadata: courseMetadata,
+                  llmProviders: llmProviders,
+                  model: selectedConversation.model,
+                  mode: 'chat',
                 }
-                try {
-                  rewriteResponse = await chat_ui.runChatCompletion(
-                    queryRewriteBody,
-                    getCurrentPageName(),
-                    courseMetadata,
-                  )
-                } catch (error) {
-                  errorToast({
-                    title: 'Error running query rewrite',
-                    message:
-                      (error as Error).message ||
-                      'An unexpected error occurred',
-                  })
+
+                console.log('queryRewriteBody:', queryRewriteBody)
+
+                if (!queryRewriteBody.model || !queryRewriteBody.model.id) {
+                  queryRewriteBody.model = selectedConversation.model
                 }
-              } else {
-                // Direct call to routeModelRequest instead of going through the API route
-                try {
-                  rewriteResponse = await runQueryRewriteAsync(queryRewriteBody)
-                } catch (error) {
-                  console.error('Error calling query rewrite endpoint:', error)
-                  throw error
-                }
-              }
 
-              // console.log('query rewriteResponse:', rewriteResponse)
+                let rewriteResponse:
+                  | Response
+                  | AsyncIterable<webllm.ChatCompletionChunk>
+                  | undefined
 
-              // After processing the query rewrite response
-              if (rewriteResponse instanceof Response) {
-                try {
-                  const responseData = await rewriteResponse.json()
-                  let choices = responseData.choices
-
-                  if (Array.isArray(choices)) {
-                    // 'choices' is already an array, do nothing
-                  } else if (typeof choices === 'object' && choices !== null) {
-                    // Convert 'choices' object to array
-                    choices = Object.values(choices)
-                  } else {
-                    throw new Error(
-                      'Invalid format for choices in response data.',
-                    )
-                  }
-
-                  rewrittenQuery =
-                    choices?.[0]?.message?.content?.choices?.[0]?.message
-                      ?.content ||
-                    choices?.[0]?.message?.content ||
-                    searchQuery
-                } catch (error) {
-                  console.error('Error parsing non-streaming response:', error)
-                  message.wasQueryRewritten = false
-                }
-              }
-
-              console.log('rewrittenQuery after parsing:', rewrittenQuery)
-
-              if (typeof rewrittenQuery !== 'string') {
-                rewrittenQuery = searchQuery
-                homeDispatch({ field: 'wasQueryRewritten', value: false })
-                homeDispatch({ field: 'queryRewriteText', value: null })
-                message.wasQueryRewritten = false
-                message.queryRewriteText = undefined
-              } else {
-                // Extract vector query from XML tags if present
-                const vectorQueryMatch =
-                  rewrittenQuery.match(
-                    /<\s*vector_query\s*>(.*?)<\s*\/\s*vector_query\s*>/,
-                  ) || null
-                const extractedQuery = vectorQueryMatch?.[1]?.trim()
-
-                // Check if the response is NO_REWRITE_REQUIRED or if we couldn't extract a valid query
                 if (
-                  rewrittenQuery.trim().toUpperCase() ===
-                    'NO_REWRITE_REQUIRED' ||
-                  !extractedQuery
-                ) {
-                  console.log(
-                    'Query rewrite not required or invalid format, using original query',
+                  selectedConversation.model &&
+                  webLLMModels.some(
+                    (model) => model.name === selectedConversation.model.name,
                   )
+                ) {
+                  // WebLLM model handling remains the same
+                  while (chat_ui.isModelLoading() === true) {
+                    await new Promise((resolve) => setTimeout(resolve, 10))
+                  }
+                  try {
+                    rewriteResponse = await chat_ui.runChatCompletion(
+                      queryRewriteBody,
+                      getCurrentPageName(),
+                      courseMetadata,
+                    )
+                  } catch (error) {
+                    errorToast({
+                      title: 'Error running query rewrite',
+                      message:
+                        (error as Error).message ||
+                        'An unexpected error occurred',
+                    })
+                  }
+                } else {
+                  // Direct call to routeModelRequest instead of going through the API route
+                  try {
+                    rewriteResponse = await fetch('/api/queryRewrite', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(queryRewriteBody),
+                    })
+                  } catch (error) {
+                    console.error(
+                      'Error calling query rewrite endpoint:',
+                      error,
+                    )
+                    throw error
+                  }
+                }
+
+                // console.log('query rewriteResponse:', rewriteResponse)
+
+                // After processing the query rewrite response
+                if (rewriteResponse instanceof Response) {
+                  try {
+                    const responseData = await rewriteResponse.json()
+                    let choices = responseData.choices
+
+                    if (Array.isArray(choices)) {
+                      // 'choices' is already an array, do nothing
+                    } else if (
+                      typeof choices === 'object' &&
+                      choices !== null
+                    ) {
+                      // Convert 'choices' object to array
+                      choices = Object.values(choices)
+                    } else {
+                      throw new Error(
+                        'Invalid format for choices in response data.',
+                      )
+                    }
+
+                    rewrittenQuery =
+                      choices?.[0]?.message?.content?.choices?.[0]?.message
+                        ?.content ||
+                      choices?.[0]?.message?.content ||
+                      searchQuery
+                  } catch (error) {
+                    console.error(
+                      'Error parsing non-streaming response:',
+                      error,
+                    )
+                    message.wasQueryRewritten = false
+                  }
+                }
+
+                console.log('rewrittenQuery after parsing:', rewrittenQuery)
+
+                if (typeof rewrittenQuery !== 'string') {
                   rewrittenQuery = searchQuery
                   homeDispatch({ field: 'wasQueryRewritten', value: false })
                   homeDispatch({ field: 'queryRewriteText', value: null })
                   message.wasQueryRewritten = false
                   message.queryRewriteText = undefined
                 } else {
-                  // Use the extracted query
-                  rewrittenQuery = extractedQuery
-                  // console.log('Using rewritten query:', rewrittenQuery)
-                  homeDispatch({ field: 'wasQueryRewritten', value: true })
-                  homeDispatch({
-                    field: 'queryRewriteText',
-                    value: rewrittenQuery,
-                  })
-                  message.wasQueryRewritten = true
-                  message.queryRewriteText = rewrittenQuery
+                  // Extract vector query from XML tags if present
+                  const vectorQueryMatch =
+                    rewrittenQuery.match(
+                      /<\s*vector_query\s*>(.*?)<\s*\/\s*vector_query\s*>/,
+                    ) || null
+                  const extractedQuery = vectorQueryMatch?.[1]?.trim()
+
+                  // Check if the response is NO_REWRITE_REQUIRED or if we couldn't extract a valid query
+                  if (
+                    rewrittenQuery.trim().toUpperCase() ===
+                      'NO_REWRITE_REQUIRED' ||
+                    !extractedQuery
+                  ) {
+                    console.log(
+                      'Query rewrite not required or invalid format, using original query',
+                    )
+                    rewrittenQuery = searchQuery
+                    homeDispatch({ field: 'wasQueryRewritten', value: false })
+                    homeDispatch({ field: 'queryRewriteText', value: null })
+                    message.wasQueryRewritten = false
+                    message.queryRewriteText = undefined
+                  } else {
+                    // Use the extracted query
+                    rewrittenQuery = extractedQuery
+                    // console.log('Using rewritten query:', rewrittenQuery)
+                    homeDispatch({ field: 'wasQueryRewritten', value: true })
+                    homeDispatch({
+                      field: 'queryRewriteText',
+                      value: rewrittenQuery,
+                    })
+                    message.wasQueryRewritten = true
+                    message.queryRewriteText = rewrittenQuery
+                  }
                 }
+              } catch (error) {
+                console.error('Error in query rewriting:', error)
+                homeDispatch({ field: 'wasQueryRewritten', value: false })
+                homeDispatch({ field: 'queryRewriteText', value: null })
+                message.wasQueryRewritten = false
+                message.queryRewriteText = undefined
+              } finally {
+                homeDispatch({ field: 'isQueryRewriting', value: false })
               }
-            } catch (error) {
-              console.error('Error in query rewriting:', error)
-              homeDispatch({ field: 'wasQueryRewritten', value: false })
-              homeDispatch({ field: 'queryRewriteText', value: null })
-              message.wasQueryRewritten = false
-              message.queryRewriteText = undefined
-            } finally {
-              homeDispatch({ field: 'isQueryRewriting', value: false })
+            }
+
+            // In agent mode, skip retrieval here - let the agent decide if/when to search
+            if (!agentModeEnabled) {
+              homeDispatch({ field: 'isRetrievalLoading', value: true })
+
+              // Use enhanced query for context search
+              await handleContextSearch(
+                message,
+                courseName,
+                selectedConversation,
+                rewrittenQuery,
+                enabledDocumentGroups,
+              )
+
+              homeDispatch({ field: 'isRetrievalLoading', value: false })
+            } else {
+              console.log(
+                '[Agent Mode] Skipping hard-coded retrieval, agent will decide',
+              )
             }
           }
 
-          // In agent mode, skip retrieval here - let the agent decide if/when to search
-          if (!agentModeEnabled) {
-            homeDispatch({ field: 'isRetrievalLoading', value: true })
+          const agentMessageIndex =
+            updatedConversation.messages.length > 0
+              ? updatedConversation.messages.length - 1
+              : -1
 
-            // Use enhanced query for context search
-            await handleContextSearch(
-              message,
-              courseName,
-              selectedConversation,
-              rewrittenQuery,
-              enabledDocumentGroups,
-            )
+          const syncAgentMessage = () => {
+            if (
+              agentMessageIndex < 0 ||
+              agentMessageIndex >= updatedConversation.messages.length
+            ) {
+              return
+            }
 
-            homeDispatch({ field: 'isRetrievalLoading', value: false })
-          } else {
-            console.log(
-              '[Agent Mode] Skipping hard-coded retrieval, agent will decide',
-            )
-          }
-        }
+            const updatedMessages = [...updatedConversation.messages]
+            updatedMessages[agentMessageIndex] = { ...message }
 
-        const agentMessageIndex =
-          updatedConversation.messages.length > 0
-            ? updatedConversation.messages.length - 1
-            : -1
-
-        const syncAgentMessage = () => {
-          if (
-            agentMessageIndex < 0 ||
-            agentMessageIndex >= updatedConversation.messages.length
-          ) {
-            return
-          }
-
-          const updatedMessages = [...updatedConversation.messages]
-          updatedMessages[agentMessageIndex] = { ...message }
-
-          updatedConversation = {
-            ...updatedConversation,
-            messages: updatedMessages,
-            agentModeEnabled,
-          }
-
-          homeDispatch({
-            field: 'selectedConversation',
-            value: updatedConversation,
-          })
-
-          if (conversations && conversations.length > 0) {
-            const exists = conversations.some(
-              (c) => c.id === updatedConversation.id,
-            )
-            const updatedConversationList = exists
-              ? conversations.map((c) =>
-                  c.id === updatedConversation.id ? updatedConversation : c,
-                )
-              : [updatedConversation, ...conversations]
+            updatedConversation = {
+              ...updatedConversation,
+              messages: updatedMessages,
+              agentModeEnabled,
+            }
 
             homeDispatch({
-              field: 'conversations',
-              value: updatedConversationList,
+              field: 'selectedConversation',
+              value: updatedConversation,
             })
-          }
-        }
 
-        // Action 3: Tool Execution (with Agent Mode support)
-        if (tools.length > 0 || agentModeEnabled) {
-          try {
-            // Log which pipeline is being used
-            console.log(
-              `[Agent Mode] Pipeline: ${agentModeEnabled ? 'AGENT MODE (iterative)' : 'REGULAR (single-pass)'}`,
-            )
+            if (conversations && conversations.length > 0) {
+              const exists = conversations.some(
+                (c) => c.id === updatedConversation.id,
+              )
+              const updatedConversationList = exists
+                ? conversations.map((c) =>
+                    c.id === updatedConversation.id ? updatedConversation : c,
+                  )
+                : [updatedConversation, ...conversations]
 
-            // If agent mode enabled, add retrieval as a synthetic tool
-            const toolsForAgent = agentModeEnabled
-              ? [
-                  ...tools,
-                  {
-                    id: 'synthetic-retrieval-tool',
-                    name: 'search_documents',
-                    readableName: 'Search Documents',
-                    description: `Primary grounding tool for Agent Mode. Invoke this before any other tool unless the immediately previous step already yielded fresh, highly relevant context for the user's latest request. Provide a concise natural-language query summarizing the user goal or follow-up. The tool returns ranked course passages with citation indices; rely on them when forming your answer and cite sources with <cite>n</cite> tags. Additional specialized tools may appear later, but treat them as complementary steps after retrieval.`,
-                    inputParameters: {
-                      type: 'object' as const,
-                      properties: {
-                        query: {
-                          type: 'string',
-                          description:
-                            "Short natural-language query that captures the user's current need",
-                        },
-                      },
-                      required: ['query'],
-                    },
-                    courseName: courseName,
-                    enabled: true,
-                  } as UIUCTool,
-                ]
-              : tools
-
-            // If agent mode enabled, loop up to 20 steps, otherwise single pass
-            const maxSteps = agentModeEnabled ? 20 : 1
-            const seen = new Set<string>()
-            // Preserve file upload contexts separately (if any)
-            const fileUploadContexts: ContextWithMetadata[] =
-              agentModeEnabled &&
-              message.contexts &&
-              Array.isArray(message.contexts)
-                ? [...message.contexts]
-                : []
-            // Accumulate contexts from all searches in agent mode
-            const accumulatedContexts: ContextWithMetadata[] = []
-
-            const ensureAgentEvents = () => {
-              if (!message.agentEvents) {
-                message.agentEvents = []
-                syncAgentMessage()
-              }
-            }
-
-            const appendAgentEvent = (event: AgentEvent) => {
-              ensureAgentEvents()
-              message.agentEvents = [...(message.agentEvents ?? []), event]
-              syncAgentMessage()
-            }
-
-            const updateAgentEvent = (
-              eventId: string,
-              updates: Partial<AgentEvent> & {
-                metadata?: AgentEventMetadata
-              },
-            ) => {
-              if (!message.agentEvents) return
-              const nextEvents = message.agentEvents.map((event) => {
-                if (event.id !== eventId) {
-                  return event
-                }
-
-                const mergedMetadata =
-                  updates.metadata || event.metadata
-                    ? { ...event.metadata, ...updates.metadata }
-                    : event.metadata
-
-                return {
-                  ...event,
-                  ...updates,
-                  ...(mergedMetadata ? { metadata: mergedMetadata } : {}),
-                  updatedAt: new Date().toISOString(),
-                }
+              homeDispatch({
+                field: 'conversations',
+                value: updatedConversationList,
               })
-
-              message.agentEvents = nextEvents
-              syncAgentMessage()
             }
+          }
 
-            for (let step = 0; step < maxSteps; step++) {
-              homeDispatch({ field: 'isRouting', value: true })
+          // Action 3: Tool Execution (with Agent Mode support)
+          if (tools.length > 0 || agentModeEnabled) {
+            // ========================================
+            // SERVER-SIDE AGENT MODE
+            // ========================================
+            if (agentModeEnabled) {
+              if (courseMetadata?.agent_mode_enabled !== true) {
+                handleUpdateConversation(updatedConversation, {
+                  key: 'agentModeEnabled',
+                  value: false,
+                })
+                errorToast({
+                  title: 'Agent Mode disabled',
+                  message:
+                    'Agent Mode is not enabled for this project. Ask a project admin to enable it in the Prompt settings.',
+                })
+                return
+              }
 
-              // Tag message with step number for UI rendering
-              const stepNumber = step + 1
-              message.agentStepNumber = stepNumber
-              syncAgentMessage()
+              console.log('[Agent Mode] Using SERVER-SIDE agent pipeline')
 
-              const selectionEventId = `agent-step-${stepNumber}-selection`
-              if (agentModeEnabled) {
-                appendAgentEvent({
-                  id: selectionEventId,
-                  stepNumber,
-                  type: 'action_selection',
-                  status: 'running',
-                  title: `Step ${stepNumber}: Selecting next action`,
-                  createdAt: new Date().toISOString(),
+              // Prepare the agent request
+              const agentRequest: AgentRunRequest = {
+                conversationId: updatedConversation.id,
+                courseName,
+                userMessage: {
+                  id: message.id,
+                  content: message.content,
+                  imageUrls: message.imageUrls,
+                },
+                documentGroups: enabledDocumentGroups,
+                model: {
+                  id: selectedConversation.model.id,
+                  name: selectedConversation.model.name,
+                },
+                temperature: selectedConversation.temperature,
+                systemPrompt: selectedConversation.prompt,
+                // Pass file upload contexts if any
+                fileUploadContexts: message.contexts?.map((ctx, idx) => ({
+                  id: ctx.id ?? idx,
+                  text: ctx.text,
+                  readable_filename: ctx.readable_filename,
+                  s3_path: ctx.s3_path,
+                  url: ctx.url,
+                })),
+              }
+
+              // Track assistant response building
+              // Note: Citations are processed server-side, so we just accumulate the already-processed content
+              let assistantContent = ''
+              let assistantMessageId: string | null = null
+              let totalContextsRetrieved = 0
+              const toolsExecuted: Array<{
+                name: string
+                readableName: string
+                hasOutput: boolean
+                hasError: boolean
+              }> = []
+
+              // Helper to save conversation to localStorage (using lightweight ClientConversation)
+              const saveToLocalStorage = () => {
+                try {
+                  // Convert to ClientConversation to strip heavy context data
+                  const clientConversation =
+                    toClientConversation(updatedConversation)
+                  localStorage.setItem(
+                    'selectedConversation',
+                    JSON.stringify(clientConversation),
+                  )
+                } catch (error) {
+                  // Handle localStorage quota exceeded
+                  if (
+                    error instanceof DOMException &&
+                    error.name === 'QuotaExceededError'
+                  ) {
+                    console.warn(
+                      '[Agent Mode] localStorage quota exceeded, saving minimal data',
+                    )
+                    // Save minimal version
+                    const minimalConversation = {
+                      id: updatedConversation.id,
+                      name: updatedConversation.name,
+                      model: updatedConversation.model,
+                      agentModeEnabled: true,
+                    }
+                    localStorage.setItem(
+                      'selectedConversation',
+                      JSON.stringify(minimalConversation),
+                    )
+                  }
+                }
+              }
+
+              const ensureAssistantMessageExists = () => {
+                if (!assistantMessageId) return
+                const existingIdx = updatedConversation.messages.findIndex(
+                  (m) => m.id === assistantMessageId,
+                )
+                if (existingIdx >= 0) return
+
+                const newAssistantMessage: Message = {
+                  id: assistantMessageId,
+                  role: 'assistant',
+                  content: '',
+                  created_at: new Date().toISOString(),
+                }
+                updatedConversation = {
+                  ...updatedConversation,
+                  messages: [
+                    ...updatedConversation.messages,
+                    newAssistantMessage,
+                  ],
+                }
+              }
+
+              // Helper to update the assistant message in the conversation
+              const updateAssistantMessage = (content: string) => {
+                if (!assistantMessageId) return
+                ensureAssistantMessageExists()
+
+                const messageIndex = updatedConversation.messages.findIndex(
+                  (m) => m.id === assistantMessageId,
+                )
+                if (messageIndex < 0) return
+
+                const updatedMessages = [...updatedConversation.messages]
+                updatedMessages[messageIndex] = {
+                  ...updatedMessages[messageIndex]!,
+                  content: content,
+                }
+                updatedConversation = {
+                  ...updatedConversation,
+                  messages: updatedMessages,
+                }
+
+                homeDispatch({
+                  field: 'selectedConversation',
+                  value: updatedConversation,
                 })
               }
 
-              // Call tool selection API
+              try {
+                // Initialize agentEvents array on the message before starting
+                // This ensures the UI has something to render immediately
+                message.agentEvents = []
+                syncAgentMessage()
+
+                posthog.capture('agent_mode_server_run', {
+                  course_name: courseName,
+                  model_id: selectedConversation.model.id,
+                })
+
+                await runAgentStream(
+                  agentRequest,
+                  {
+                    onInitializing: (
+                      messageId,
+                      conversationId,
+                      assistantId,
+                    ) => {
+                      assistantMessageId = assistantId
+
+                      // Create initial "Initializing" event for immediate UI feedback
+                      const initEvent: AgentEvent = {
+                        id: 'agent-initializing',
+                        stepNumber: 0,
+                        type: 'initializing',
+                        status: 'running',
+                        title: 'Initializing agent...',
+                        createdAt: new Date().toISOString(),
+                      }
+                      message.agentEvents = [initEvent]
+                      syncAgentMessage()
+                      homeDispatch({
+                        field: 'selectedConversation',
+                        value: updatedConversation,
+                      })
+                    },
+
+                    onAgentEventsUpdate: (agentEvents, messageId) => {
+                      // Update the user message with agent events - this drives the agent timeline UI
+                      message.agentEvents = agentEvents
+                      syncAgentMessage()
+                      // Save to localStorage so timeline state persists across page refreshes
+                      saveToLocalStorage()
+                    },
+
+                    onToolsUpdate: (clientTools, messageId) => {
+                      // Update tools on the message (lightweight version without full contexts)
+                      message.tools = clientTools.map(
+                        (ct): UIUCTool => ({
+                          id: ct.id,
+                          invocationId: ct.invocationId,
+                          name: ct.name,
+                          readableName: ct.readableName,
+                          description: ct.description,
+                          aiGeneratedArgumentValues:
+                            ct.aiGeneratedArgumentValues,
+                          output: ct.output
+                            ? {
+                                text: ct.output.text,
+                                imageUrls: ct.output.imageUrls,
+                              }
+                            : undefined,
+                          error: ct.error,
+                        }),
+                      )
+                      syncAgentMessage()
+                    },
+
+                    onContextsMetadata: (
+                      messageId,
+                      contextsMetadata,
+                      totalContexts,
+                    ) => {
+                      // Create lightweight context objects for citation processing
+                      // These have the metadata needed for citations but not full text
+                      message.contexts = contextsMetadata.map((meta, idx) => ({
+                        id: idx,
+                        text: '', // Not needed for citation links, just metadata
+                        readable_filename: meta.readable_filename,
+                        course_name: courseName,
+                        'course_name ': courseName,
+                        s3_path: meta.s3_path,
+                        pagenumber: String(meta.pagenumber || ''),
+                        url: meta.url || '',
+                        base_url: meta.base_url || '',
+                      }))
+                      syncAgentMessage()
+                    },
+
+                    onSelectionStart: (stepNumber) => {
+                      // Agent timeline shows selection running via agentEvents
+                      // No need for isRouting flag for agent mode
+                    },
+
+                    onSelectionDone: (stepNumber, event) => {
+                      // Agent timeline shows selection done via agentEvents
+                    },
+
+                    onRetrievalStart: (stepNumber, query) => {
+                      homeDispatch({ field: 'isRetrievalLoading', value: true })
+                    },
+
+                    onRetrievalDone: (stepNumber, query, contextsRetrieved) => {
+                      homeDispatch({
+                        field: 'isRetrievalLoading',
+                        value: false,
+                      })
+                      totalContextsRetrieved += contextsRetrieved
+                    },
+
+                    onToolStart: (stepNumber, toolName, readableToolName) => {
+                      homeDispatch({ field: 'isRunningTool', value: true })
+                    },
+
+                    onToolDone: (stepNumber, toolName, output, error) => {
+                      homeDispatch({ field: 'isRunningTool', value: false })
+                      toolsExecuted.push({
+                        name: toolName,
+                        readableName: toolName,
+                        hasOutput: !!output,
+                        hasError: !!error,
+                      })
+                    },
+
+                    onFinalTokens: (delta, done) => {
+                      // Citations are already processed server-side
+                      if (done) {
+                        homeDispatch({ field: 'loading', value: false })
+                        homeDispatch({
+                          field: 'messageIsStreaming',
+                          value: false,
+                        })
+                      } else {
+                        homeDispatch({ field: 'loading', value: false })
+                        assistantContent += delta
+                        updateAssistantMessage(assistantContent)
+                      }
+                    },
+
+                    onDone: (conversationId, finalMessageId, summary) => {
+                      if (
+                        assistantMessageId &&
+                        assistantMessageId !== finalMessageId
+                      ) {
+                        const idx = updatedConversation.messages.findIndex(
+                          (m) => m.id === assistantMessageId,
+                        )
+                        if (idx >= 0) {
+                          const updatedMessages = [
+                            ...updatedConversation.messages,
+                          ]
+                          updatedMessages[idx] = {
+                            ...updatedMessages[idx]!,
+                            id: finalMessageId,
+                          }
+                          updatedConversation = {
+                            ...updatedConversation,
+                            messages: updatedMessages,
+                          }
+                        }
+                        assistantMessageId = finalMessageId
+                      }
+
+                      console.log('[Agent Mode] Server-side agent completed', {
+                        conversationId,
+                        finalMessageId,
+                        totalContextsRetrieved: summary.totalContextsRetrieved,
+                        toolsExecuted: summary.toolsExecuted.length,
+                      })
+
+                      homeDispatch({ field: 'loading', value: false })
+                      homeDispatch({
+                        field: 'messageIsStreaming',
+                        value: false,
+                      })
+                      homeDispatch({ field: 'isRouting', value: false })
+                      homeDispatch({ field: 'isRunningTool', value: false })
+                      homeDispatch({
+                        field: 'isRetrievalLoading',
+                        value: false,
+                      })
+
+                      // Save final conversation state to localStorage
+                      saveToLocalStorage()
+
+                      // Update conversation in query client cache
+                      queryClient.invalidateQueries({
+                        queryKey: ['conversations'],
+                      })
+                    },
+
+                    onError: (errorMessage, stepNumber, recoverable) => {
+                      console.error(
+                        '[Agent Mode] Server-side agent error:',
+                        errorMessage,
+                      )
+
+                      homeDispatch({ field: 'loading', value: false })
+                      homeDispatch({
+                        field: 'messageIsStreaming',
+                        value: false,
+                      })
+                      homeDispatch({ field: 'isRouting', value: false })
+                      homeDispatch({ field: 'isRunningTool', value: false })
+                      homeDispatch({
+                        field: 'isRetrievalLoading',
+                        value: false,
+                      })
+
+                      errorToast({
+                        title: 'Agent Error',
+                        message: errorMessage,
+                      })
+                    },
+                  },
+                  controller.signal,
+                )
+              } catch (error) {
+                console.error(
+                  '[Agent Mode] Error running server-side agent:',
+                  error,
+                )
+                homeDispatch({ field: 'loading', value: false })
+                homeDispatch({ field: 'messageIsStreaming', value: false })
+
+                errorToast({
+                  title: 'Agent Error',
+                  message:
+                    error instanceof Error ? error.message : 'Unknown error',
+                })
+              } finally {
+                homeDispatch({ field: 'isRouting', value: false })
+                homeDispatch({ field: 'isRunningTool', value: false })
+                homeDispatch({ field: 'isRetrievalLoading', value: false })
+              }
+
+              // Return early - server-side agent handles everything
+              return
+            }
+
+            // ========================================
+            // CLIENT-SIDE NON-AGENT MODE (single-pass tool execution)
+            // ========================================
+            try {
+              // Log which pipeline is being used
+              console.log(
+                `[Non-Agent Mode] Pipeline: REGULAR (single-pass tool execution)`,
+              )
+
+              // Non-agent mode: just use the provided tools directly
+              const toolsToUse = tools
+
+              homeDispatch({ field: 'isRouting', value: true })
+
+              // Call tool selection API (single pass)
               const uiucToolsToRun = await handleFunctionCall(
                 message,
-                toolsForAgent,
+                toolsToUse,
                 imageUrls,
                 imgDesc,
                 updatedConversation,
@@ -1056,306 +1361,137 @@ export const Chat = memo(
               )
               homeDispatch({ field: 'isRouting', value: false })
 
-              const selectionMetadata: AgentEventMetadata = {
-                selectedToolNames: uiucToolsToRun.map(
-                  (tool) => tool.readableName,
-                ),
-              }
+              if (uiucToolsToRun.length > 0) {
+                homeDispatch({ field: 'isRunningTool', value: true })
 
-              if (agentModeEnabled) {
-                updateAgentEvent(selectionEventId, {
-                  status: 'done',
-                  metadata:
-                    uiucToolsToRun.length === 0
-                      ? {
-                          ...selectionMetadata,
-                          info: 'Agent will now generate a response.',
-                        }
-                      : selectionMetadata,
-                })
-              }
-
-              if (uiucToolsToRun.length === 0) break
-
-              // dedupe based on tool name + args
-              const signatures = uiucToolsToRun.map(
-                (t) =>
-                  `${t.name}:${JSON.stringify(
-                    t.aiGeneratedArgumentValues || {},
-                  )}`,
-              )
-              const allSeen = signatures.every((s) => seen.has(s))
-              signatures.forEach((s) => seen.add(s))
-              if (allSeen) {
-                if (agentModeEnabled) {
-                  updateAgentEvent(selectionEventId, {
-                    metadata: {
-                      ...selectionMetadata,
-                      info: 'Skipping repeated tool request.',
-                    },
-                  })
-                }
-                break
-              }
-
-              homeDispatch({ field: 'isRunningTool', value: true })
-
-              // Separate synthetic retrieval tool from N8N tools
-              const retrievalTools = uiucToolsToRun.filter(
-                (t) => t.id === 'synthetic-retrieval-tool',
-              )
-              const n8nTools = uiucToolsToRun.filter(
-                (t) => t.id !== 'synthetic-retrieval-tool',
-              )
-
-              // Execute retrieval tool if requested
-              for (const [
-                retrievalIndex,
-                retrievalTool,
-              ] of retrievalTools.entries()) {
-                const searchQuery =
-                  retrievalTool.aiGeneratedArgumentValues?.query || ''
-                console.log(
-                  `[Agent Mode] Executing retrieval with query: ${searchQuery}`,
+                // Execute N8N tools
+                await handleToolCall(
+                  uiucToolsToRun,
+                  updatedConversation,
+                  courseName,
                 )
-
-                let retrievalEventId = ''
-                if (agentModeEnabled) {
-                  retrievalEventId = `agent-step-${stepNumber}-retrieval-${retrievalIndex}`
-                  appendAgentEvent({
-                    id: retrievalEventId,
-                    stepNumber,
-                    type: 'retrieval',
-                    status: 'running',
-                    title: `Step ${stepNumber}: Searching documents`,
-                    createdAt: new Date().toISOString(),
-                    metadata: {
-                      contextQuery: searchQuery,
-                    },
-                  })
-                }
-
-                try {
-                  homeDispatch({ field: 'isRetrievalLoading', value: true })
-                  // Clear contexts before each search in agent mode to ensure fresh results
-                  // We'll accumulate them separately
-                  if (agentModeEnabled) {
-                    message.contexts = []
-                  }
-                  await handleContextSearch(
-                    message,
-                    courseName,
-                    selectedConversation,
-                    searchQuery,
-                    enabledDocumentGroups,
-                  )
-                  homeDispatch({ field: 'isRetrievalLoading', value: false })
-
-                  // Mark tool as executed with contexts
-                  const contextsFound = message.contexts?.length || 0
-                  const currentSearchContexts = message.contexts || []
-
-                  // Accumulate contexts from this search
-                  if (agentModeEnabled) {
-                    accumulatedContexts.push(...currentSearchContexts)
-                  }
-
-                  retrievalTool.output = {
-                    text: `Retrieved ${contextsFound} document chunks`,
-                    data: { contexts: message.contexts },
-                  }
-
-                  if (agentModeEnabled && retrievalEventId) {
-                    updateAgentEvent(retrievalEventId, {
-                      status: 'done',
-                      metadata: {
-                        contextQuery: searchQuery,
-                        contextsRetrieved: contextsFound,
-                      },
-                    })
-                  }
-                } catch (retrievalError) {
-                  if (agentModeEnabled && retrievalEventId) {
-                    updateAgentEvent(retrievalEventId, {
-                      status: 'error',
-                      metadata: {
-                        contextQuery: searchQuery,
-                        errorMessage: (retrievalError as Error).message,
-                      },
-                    })
-                  }
-                  homeDispatch({ field: 'isRetrievalLoading', value: false })
-                  throw retrievalError
-                }
-              }
-
-              // Execute N8N tools via normal flow
-              const toolEventIds: Record<string, string> = {}
-              if (agentModeEnabled) {
-                n8nTools.forEach((tool, index) => {
-                  const eventId = `agent-step-${stepNumber}-tool-${
-                    tool.invocationId || `${tool.id}-${index}`
-                  }`
-                  toolEventIds[tool.invocationId || `${tool.id}-${index}`] =
-                    eventId
-                  appendAgentEvent({
-                    id: eventId,
-                    stepNumber,
-                    type: 'tool',
-                    status: 'running',
-                    title: `Step ${stepNumber}: ${tool.readableName}`,
-                    createdAt: new Date().toISOString(),
-                    metadata: {
-                      toolName: tool.name,
-                      readableToolName: tool.readableName,
-                      arguments: tool.aiGeneratedArgumentValues,
-                    },
-                  })
-                })
-              }
-
-              if (n8nTools.length > 0) {
-                await handleToolCall(n8nTools, updatedConversation, courseName)
                 syncAgentMessage()
+
+                homeDispatch({ field: 'isRunningTool', value: false })
               }
-
-              if (agentModeEnabled) {
-                n8nTools.forEach((tool, index) => {
-                  const key = tool.invocationId || `${tool.id}-${index}`
-                  const eventId = toolEventIds[key]
-                  if (!eventId) return
-
-                  const targetTool = message.tools?.find((t) =>
-                    tool.invocationId
-                      ? t.invocationId === tool.invocationId
-                      : t.id === tool.id,
-                  )
-
-                  const status: AgentEventStatus = targetTool?.error
-                    ? 'error'
-                    : 'done'
-
-                  const metadata: AgentEventMetadata = {
-                    toolName: targetTool?.name || tool.name,
-                    readableToolName:
-                      targetTool?.readableName || tool.readableName,
-                    arguments:
-                      targetTool?.aiGeneratedArgumentValues ||
-                      tool.aiGeneratedArgumentValues,
-                    outputText: targetTool?.output?.text,
-                    outputData: targetTool?.output?.data,
-                    outputImageUrls: targetTool?.output?.imageUrls,
-                    errorMessage: targetTool?.error,
-                  }
-
-                  updateAgentEvent(eventId, {
-                    status,
-                    metadata,
-                  })
-                })
-              }
-
-              homeDispatch({ field: 'isRunningTool', value: false })
-
-              // Single pass mode: exit after first iteration
-              if (!agentModeEnabled) break
-            }
-
-            // After agent loop completes, merge file upload contexts with accumulated search contexts
-            if (agentModeEnabled) {
-              // Combine file upload contexts (if any) with accumulated search contexts
-              const allContexts = [
-                ...fileUploadContexts,
-                ...accumulatedContexts,
-              ]
-              if (allContexts.length > 0) {
-                message.contexts = allContexts
-                syncAgentMessage()
-              }
-            }
-          } catch (error) {
-            console.error(
-              'Error in chat.tsx running handleFunctionCall():',
-              error,
-            )
-          } finally {
-            homeDispatch({ field: 'isRunningTool', value: false })
-          }
-        }
-
-        const finalChatBody: ChatBody = {
-          conversation: updatedConversation,
-          key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
-          course_name: courseName,
-          stream: true,
-          courseMetadata: courseMetadata,
-          llmProviders: llmProviders,
-          model: selectedConversation.model,
-          skipQueryRewrite: documentCount === 0,
-          mode: 'chat',
-        }
-        updatedConversation = finalChatBody.conversation!
-
-        // Action 4: Build Prompt - Put everything together into a prompt
-        // const buildPromptResponse = await fetch('/api/buildPrompt', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(chatBody),
-        // })
-        // const builtConversation = await buildPromptResponse.json()
-
-        // Update the selected conversation
-        homeDispatch({
-          field: 'selectedConversation',
-          value: updatedConversation,
-        })
-
-        // Action 5: Run Chat Completion based on model provider
-        let response:
-          | AsyncIterable<webllm.ChatCompletionChunk>
-          | Response
-          | undefined
-        let reader
-        let startOfCallToLLM
-
-        if (
-          selectedConversation.model &&
-          webLLMModels.some(
-            (model) => model.name === selectedConversation.model.name,
-          )
-        ) {
-          // Is WebLLM model
-          while (chat_ui.isModelLoading() == true) {
-            await new Promise((resolve) => setTimeout(resolve, 10))
-          }
-          try {
-            response = await chat_ui.runChatCompletion(
-              finalChatBody,
-              getCurrentPageName(),
-              courseMetadata,
-            )
-          } catch (error) {
-            errorToast({
-              title: 'Error running Web LLM models.',
-              message:
-                (error as Error).message ||
-                'In Chat.tsx, we errored when running WebLLM model.',
-            })
-            homeDispatch({ field: 'loading', value: false })
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-            return
-          }
-        } else {
-          try {
-            // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
-            startOfCallToLLM = performance.now()
-
-            try {
-              response = await routeChatAsync(finalChatBody)
             } catch (error) {
-              console.error('Error calling the LLM:', error)
+              console.error(
+                'Error in chat.tsx running handleFunctionCall():',
+                error,
+              )
+            } finally {
+              homeDispatch({ field: 'isRunningTool', value: false })
+            }
+          }
+
+          const finalChatBody: ChatBody = {
+            conversation: updatedConversation,
+            key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
+            course_name: courseName,
+            stream: true,
+            courseMetadata: courseMetadata,
+            llmProviders: llmProviders,
+            model: selectedConversation.model,
+            skipQueryRewrite: documentCount === 0,
+            mode: 'chat',
+          }
+          updatedConversation = finalChatBody.conversation!
+
+          // Action 4: Build Prompt - Put everything together into a prompt
+          // const buildPromptResponse = await fetch('/api/buildPrompt', {
+          //   method: 'POST',
+          //   headers: {
+          //     'Content-Type': 'application/json',
+          //   },
+          //   body: JSON.stringify(chatBody),
+          // })
+          // const builtConversation = await buildPromptResponse.json()
+
+          // Update the selected conversation
+          homeDispatch({
+            field: 'selectedConversation',
+            value: updatedConversation,
+          })
+
+          // Action 5: Run Chat Completion based on model provider
+          let response:
+            | AsyncIterable<webllm.ChatCompletionChunk>
+            | Response
+            | undefined
+          let reader
+          let startOfCallToLLM
+
+          if (
+            selectedConversation.model &&
+            webLLMModels.some(
+              (model) => model.name === selectedConversation.model.name,
+            )
+          ) {
+            // Is WebLLM model
+            while (chat_ui.isModelLoading() == true) {
+              await new Promise((resolve) => setTimeout(resolve, 10))
+            }
+            try {
+              response = await chat_ui.runChatCompletion(
+                finalChatBody,
+                getCurrentPageName(),
+                courseMetadata,
+              )
+            } catch (error) {
+              errorToast({
+                title: 'Error running Web LLM models.',
+                message:
+                  (error as Error).message ||
+                  'In Chat.tsx, we errored when running WebLLM model.',
+              })
+            }
+          } else {
+            try {
+              // CALL OUR NEW ENDPOINT... /api/allNewRoutingChat
+              startOfCallToLLM = performance.now()
+
+              try {
+                response = await fetch('/api/allNewRoutingChat', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(finalChatBody),
+                })
+
+                // Check if response is ok before proceeding
+                if (!response.ok) {
+                  const errorData = await response.json()
+                  console.log(
+                    'Chat.txs --- errorData from /api/allNewRoutingChat',
+                    errorData,
+                  )
+                  // Read our custom error object. But normal errors are captured too via errorData.error.
+                  const customError = new Error(
+                    errorData.message ||
+                      errorData.error ||
+                      'The LLM might be overloaded or misconfigured. Please check your API key, or use a different LLM.',
+                  )
+                  ;(customError as any).title =
+                    errorData.title || "LLM Didn't Respond"
+                  throw customError
+                }
+              } catch (error) {
+                console.error('Error calling the LLM:', error)
+                homeDispatch({ field: 'loading', value: false })
+                homeDispatch({ field: 'messageIsStreaming', value: false })
+
+                errorToast({
+                  title: (error as any).title || 'Error',
+                  message:
+                    error instanceof Error
+                      ? error.message
+                      : 'An unexpected error occurred',
+                })
+                return
+              }
+            } catch (error) {
+              console.error('Error in chat handler:', error)
               homeDispatch({ field: 'loading', value: false })
               homeDispatch({ field: 'messageIsStreaming', value: false })
 
@@ -1368,429 +1504,413 @@ export const Chat = memo(
               })
               return
             }
-          } catch (error) {
-            console.error('Error in chat handler:', error)
+          }
+
+          if (response instanceof Response && !response.ok) {
             homeDispatch({ field: 'loading', value: false })
             homeDispatch({ field: 'messageIsStreaming', value: false })
 
-            errorToast({
-              title: (error as any).title || 'Error',
-              message:
-                error instanceof Error
-                  ? error.message
-                  : 'An unexpected error occurred',
-            })
-            return
-          }
-        }
-
-        if (response instanceof Response && !response.ok) {
-          homeDispatch({ field: 'loading', value: false })
-          homeDispatch({ field: 'messageIsStreaming', value: false })
-
-          try {
-            const errorData = await response.json()
-            errorToast({
-              title: errorData.title || 'Error',
-              message:
-                errorData.message ||
-                'There was an unexpected error calling the LLM. Try using a different model.',
-            })
-          } catch (error) {
-            errorToast({
-              title: 'Error',
-              message:
-                'There was an unexpected error calling the LLM. Try using a different model.',
-            })
-          }
-          return
-        }
-
-        let data
-        // Only create a stream reader when we actually plan to consume the body as a stream.
-        // Plugin responses are handled via `response.json()` below, which is incompatible with
-        // `getReader()` (it locks the body and makes it unusable for JSON parsing).
-        if (!plugin && response instanceof Response) {
-          data = response.body
-          if (!data) {
-            homeDispatch({ field: 'loading', value: false })
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-            return
-          }
-          reader = data.getReader()
-        }
-
-        if (!plugin) {
-          homeDispatch({ field: 'loading', value: false })
-
-          if (startOfCallToLLM) {
-            // Calculate TTFT (Time To First Token)
-            const ttft = performance.now() - startOfCallToLLM
-            const fromSendToLLMResponse = performance.now() - startOfHandleSend
-            // LLM Starts responding
-            posthog.capture('ttft', {
-              course_name: finalChatBody.course_name,
-              model: finalChatBody.model,
-              llmRequestToFirstToken: Math.round(ttft), // Round to whole number of milliseconds
-              fromSendToLLMResponse: Math.round(fromSendToLLMResponse),
-            })
-          }
-
-          let finalResponseEventId: string | null = null
-
-          const updateAgentEventsForFinal = (
-            producer: (events: AgentEvent[]) => AgentEvent[],
-          ) => {
-            const currentEvents = message.agentEvents ?? []
-            const nextEvents = producer(currentEvents)
-            message.agentEvents = nextEvents
-            syncAgentMessage()
-          }
-
-          if (agentModeEnabled) {
-            const existingEvents: AgentEvent[] = message.agentEvents ?? []
-            const maxExistingStep = existingEvents.reduce(
-              (acc, event) => Math.max(acc, event.stepNumber),
-              0,
-            )
-            const finalStepNumber = maxExistingStep + 1
-            finalResponseEventId = `agent-final-response-${message.id}`
-            const finalEvent: AgentEvent = {
-              id: finalResponseEventId,
-              stepNumber: finalStepNumber,
-              type: 'final_response',
-              status: 'running',
-              title: `Step ${finalStepNumber}: Crafting final response`,
-              createdAt: new Date().toISOString(),
+            try {
+              const errorData = await response.json()
+              errorToast({
+                title: errorData.title || 'Error',
+                message:
+                  errorData.message ||
+                  'There was an unexpected error calling the LLM. Try using a different model.',
+              })
+            } catch (error) {
+              errorToast({
+                title: 'Error',
+                message:
+                  'There was an unexpected error calling the LLM. Try using a different model.',
+              })
             }
-            updateAgentEventsForFinal((events) => [...events, finalEvent])
+            return
           }
 
-          const updateFinalEventStatus = (
-            status: AgentEventStatus,
-            metadata?: AgentEventMetadata,
-          ) => {
-            if (!agentModeEnabled || !finalResponseEventId) return
-            updateAgentEventsForFinal((events) =>
-              events.map((event) => {
-                if (event.id !== finalResponseEventId) return event
-                const mergedMetadata =
-                  metadata || event.metadata
-                    ? { ...event.metadata, ...metadata }
-                    : event.metadata
-                return {
-                  ...event,
-                  status,
-                  ...(mergedMetadata ? { metadata: mergedMetadata } : {}),
-                  updatedAt: new Date().toISOString(),
-                }
-              }),
-            )
-            syncAgentMessage()
+          let data
+          // Only create a stream reader when we actually plan to consume the body as a stream.
+          // For plugin-style JSON responses we call `response.json()`, which would fail if the
+          // body is already locked by a reader.
+          if (!plugin && response instanceof Response) {
+            data = response.body
+            if (!data) {
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              return
+            }
+            reader = data.getReader()
           }
 
-          const decoder = new TextDecoder()
-          let done = false
-          let isFirst = true
-          let text = ''
-          let chunkValue
-          let finalAssistantRespose = ''
-          const citationLinkCache = new Map<number, string>()
-          const stateMachineContext = { state: State.Normal, buffer: '' }
-          if (agentModeEnabled) {
-            posthog.capture('agent_mode_run', {
-              course_name: finalChatBody.course_name,
-              model_id: finalChatBody.model?.id,
-            })
-          }
-          try {
-            // Action 6: Stream the LLM response, based on model provider.
-            while (!done) {
-              if (stopConversationRef.current === true) {
-                controller.abort()
-                done = true
-                break
+          if (!plugin) {
+            homeDispatch({ field: 'loading', value: false })
+
+            if (startOfCallToLLM) {
+              // Calculate TTFT (Time To First Token)
+              const ttft = performance.now() - startOfCallToLLM
+              const fromSendToLLMResponse =
+                performance.now() - startOfHandleSend
+              // LLM Starts responding
+              posthog.capture('ttft', {
+                course_name: finalChatBody.course_name,
+                model: finalChatBody.model,
+                llmRequestToFirstToken: Math.round(ttft), // Round to whole number of milliseconds
+                fromSendToLLMResponse: Math.round(fromSendToLLMResponse),
+              })
+            }
+
+            let finalResponseEventId: string | null = null
+
+            const updateAgentEventsForFinal = (
+              producer: (events: AgentEvent[]) => AgentEvent[],
+            ) => {
+              const currentEvents = message.agentEvents ?? []
+              const nextEvents = producer(currentEvents)
+              message.agentEvents = nextEvents
+              syncAgentMessage()
+            }
+
+            if (agentModeEnabled) {
+              const existingEvents: AgentEvent[] = message.agentEvents ?? []
+              const maxExistingStep = existingEvents.reduce(
+                (acc, event) => Math.max(acc, event.stepNumber),
+                0,
+              )
+              const finalStepNumber = maxExistingStep + 1
+              finalResponseEventId = `agent-final-response-${message.id}`
+              const finalEvent: AgentEvent = {
+                id: finalResponseEventId,
+                stepNumber: finalStepNumber,
+                type: 'final_response',
+                status: 'running',
+                title: `Step ${finalStepNumber}: Crafting final response`,
+                createdAt: new Date().toISOString(),
               }
-              if (response && 'next' in response) {
-                // Run WebLLM models
-                const iterator = (
-                  response as AsyncIterable<webllm.ChatCompletionChunk>
-                )[Symbol.asyncIterator]()
-                const result = await iterator.next()
-                done = result.done ?? false
-                if (
-                  done ||
-                  result.value == undefined ||
-                  result.value.choices[0]?.delta.content == undefined
-                ) {
-                  // exit early
-                  continue
+              updateAgentEventsForFinal((events) => [...events, finalEvent])
+            }
+
+            const updateFinalEventStatus = (
+              status: AgentEventStatus,
+              metadata?: AgentEventMetadata,
+            ) => {
+              if (!agentModeEnabled || !finalResponseEventId) return
+              updateAgentEventsForFinal((events) =>
+                events.map((event) => {
+                  if (event.id !== finalResponseEventId) return event
+                  const mergedMetadata =
+                    metadata || event.metadata
+                      ? { ...event.metadata, ...metadata }
+                      : event.metadata
+                  return {
+                    ...event,
+                    status,
+                    ...(mergedMetadata ? { metadata: mergedMetadata } : {}),
+                    updatedAt: new Date().toISOString(),
+                  }
+                }),
+              )
+              syncAgentMessage()
+            }
+
+            const decoder = new TextDecoder()
+            let done = false
+            let isFirst = true
+            let text = ''
+            let chunkValue
+            let finalAssistantRespose = ''
+            const citationLinkCache = new Map<number, string>()
+            const stateMachineContext = { state: State.Normal, buffer: '' }
+            if (agentModeEnabled) {
+              posthog.capture('agent_mode_run', {
+                course_name: finalChatBody.course_name,
+                model_id: finalChatBody.model?.id,
+              })
+            }
+            try {
+              // Action 6: Stream the LLM response, based on model provider.
+              while (!done) {
+                if (stopConversationRef.current === true) {
+                  controller.abort()
+                  done = true
+                  break
                 }
-                chunkValue = result.value.choices[0]?.delta.content
-                text += chunkValue
-              } else {
-                // OpenAI models & Vercel AI SDK models
-                const { value, done: doneReading } = await reader!.read()
-                done = doneReading
-                chunkValue = decoder.decode(value)
-                text += chunkValue
-              }
-
-              if (isFirst) {
-                // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
-                isFirst = false
-                const updatedMessages: Message[] = [
-                  ...updatedConversation.messages,
-                  {
-                    id: uuidv4(),
-                    role: 'assistant',
-                    content: chunkValue,
-                    feedback: message.feedback,
-                    wasQueryRewritten: message.wasQueryRewritten,
-                    queryRewriteText: message.queryRewriteText,
-                  },
-                ]
-
-                // console.log('updatedMessages with queryRewrite info:', updatedMessages)
-
-                finalAssistantRespose += chunkValue
-                updatedConversation = {
-                  ...updatedConversation,
-                  messages: updatedMessages,
-                }
-                homeDispatch({
-                  field: 'selectedConversation',
-                  value: updatedConversation,
-                })
-              } else {
-                if (updatedConversation.messages?.length > 0) {
-                  const lastMessageIndex =
-                    updatedConversation.messages?.length - 1
-                  const lastMessage =
-                    updatedConversation.messages[lastMessageIndex]
-                  const lastUserMessage =
-                    updatedConversation.messages[lastMessageIndex - 1]
+                if (response && 'next' in response) {
+                  // Run WebLLM models
+                  const iterator = (
+                    response as AsyncIterable<webllm.ChatCompletionChunk>
+                  )[Symbol.asyncIterator]()
+                  const result = await iterator.next()
+                  done = result.done ?? false
                   if (
-                    lastMessage &&
-                    lastUserMessage &&
-                    lastUserMessage.contexts
+                    done ||
+                    result.value == undefined ||
+                    result.value.choices[0]?.delta.content == undefined
                   ) {
-                    // Handle citations via state machine
-                    finalAssistantRespose += await processChunkWithStateMachine(
-                      chunkValue,
-                      lastUserMessage,
-                      stateMachineContext,
-                      citationLinkCache,
-                      getCurrentPageName(),
-                    )
+                    // exit early
+                    continue
+                  }
+                  chunkValue = result.value.choices[0]?.delta.content
+                  text += chunkValue
+                } else {
+                  // OpenAI models & Vercel AI SDK models
+                  const { value, done: doneReading } = await reader!.read()
+                  done = doneReading
+                  chunkValue = decoder.decode(value)
+                  text += chunkValue
+                }
 
-                    // Update the last message with the new content
-                    // TODO(BG): why use map?
-                    const updatedMessages = updatedConversation.messages?.map(
-                      (msg, index) =>
-                        index === lastMessageIndex
-                          ? { ...msg, content: finalAssistantRespose }
-                          : msg,
-                    )
+                if (isFirst) {
+                  // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
+                  isFirst = false
+                  const updatedMessages: Message[] = [
+                    ...updatedConversation.messages,
+                    {
+                      id: uuidv4(),
+                      role: 'assistant',
+                      content: chunkValue,
+                      feedback: message.feedback,
+                      wasQueryRewritten: message.wasQueryRewritten,
+                      queryRewriteText: message.queryRewriteText,
+                    },
+                  ]
 
-                    // Update the conversation with the new messages
-                    updatedConversation = {
-                      ...updatedConversation,
-                      messages: updatedMessages,
+                  // console.log('updatedMessages with queryRewrite info:', updatedMessages)
+
+                  finalAssistantRespose += chunkValue
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedMessages,
+                  }
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+                } else {
+                  if (updatedConversation.messages?.length > 0) {
+                    const lastMessageIndex =
+                      updatedConversation.messages?.length - 1
+                    const lastMessage =
+                      updatedConversation.messages[lastMessageIndex]
+                    const lastUserMessage =
+                      updatedConversation.messages[lastMessageIndex - 1]
+                    if (
+                      lastMessage &&
+                      lastUserMessage &&
+                      lastUserMessage.contexts
+                    ) {
+                      // Handle citations via state machine
+                      finalAssistantRespose +=
+                        await processChunkWithStateMachine(
+                          chunkValue,
+                          lastUserMessage,
+                          stateMachineContext,
+                          citationLinkCache,
+                          getCurrentPageName(),
+                        )
+
+                      // Update the last message with the new content
+                      const updatedMessages = updatedConversation.messages?.map(
+                        (msg, index) =>
+                          index === lastMessageIndex
+                            ? { ...msg, content: finalAssistantRespose }
+                            : msg,
+                      )
+
+                      // Update the conversation with the new messages
+                      updatedConversation = {
+                        ...updatedConversation,
+                        messages: updatedMessages,
+                      }
+
+                      // Dispatch the updated conversation
+                      homeDispatch({
+                        field: 'selectedConversation',
+                        value: updatedConversation,
+                      })
                     }
-
-                    // Dispatch the updated conversation
-                    homeDispatch({
-                      field: 'selectedConversation',
-                      value: updatedConversation,
-                    })
                   }
                 }
               }
+            } catch (error) {
+              console.error('Error reading from stream:', error)
+              updateFinalEventStatus('error', {
+                errorMessage:
+                  error instanceof Error ? error.message : 'Streaming error',
+              })
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
+              return
             }
-          } catch (error) {
-            console.error('Error reading from stream:', error)
-            updateFinalEventStatus('error', {
-              errorMessage:
-                error instanceof Error ? error.message : 'Streaming error',
+
+            if (!done) {
+              throw new Error('LLM response stream ended before it was done.')
+            }
+
+            updateFinalEventStatus('done', {
+              info: 'Assistant response generated.',
             })
-            homeDispatch({ field: 'loading', value: false })
+
             homeDispatch({ field: 'messageIsStreaming', value: false })
-            return
-          }
-          // TODO(BG): i don't think this code is reachable.
-          if (!done) {
-            throw new Error('LLM response stream ended before it was done.')
-          }
 
-          updateFinalEventStatus('done', {
-            info: 'Assistant response generated.',
-          })
-
-          homeDispatch({ field: 'messageIsStreaming', value: false })
-
-          try {
-            // This is after the response is done streaming
-            console.debug(
-              'updatedConversation after streaming:',
-              updatedConversation,
-            )
-            handleUpdateConversation(updatedConversation, {
-              key: 'messages',
-              value: updatedConversation.messages,
-            })
-            // Here, we want to persist the full streamed assistant message, not the initial user message.
-            // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
-            const streamedAssistantMessage =
-              updatedConversation.messages?.[
-                updatedConversation.messages.length - 1
-              ] ?? message
-
-            const precedingUserMessage =
-              updatedConversation.messages?.[
-                updatedConversation.messages.length - 2
-              ]
-
-            if (
-              precedingUserMessage &&
-              precedingUserMessage.role === 'user' &&
-              Array.isArray(precedingUserMessage.agentEvents) &&
-              precedingUserMessage.agentEvents.length > 0
-            ) {
-              await updateConversationMutation.mutateAsync({
-                conversation: updatedConversation,
-                message: precedingUserMessage,
-              })
-            }
-
-            if (streamedAssistantMessage.role === 'assistant') {
-              await updateConversationMutation.mutateAsync({
-                conversation: updatedConversation,
-                message: streamedAssistantMessage,
-              })
-            } else {
-              // Fallback: do not trigger mutation if it's not an assistant message
-              console.warn(
-                'Attempted to persist a non-assistant message after stream:',
-                streamedAssistantMessage,
-              )
-            }
-            console.debug(
-              'updatedConversation after mutation:',
-              updatedConversation,
-            )
-
-            if (streamedAssistantMessage) {
-              onMessageReceived(
+            try {
+              // This is after the response is done streaming
+              console.debug(
+                'updatedConversation after streaming:',
                 updatedConversation,
-                streamedAssistantMessage,
-                editedMessageIdRef.current,
               )
-              // Clear the ref after logging
-              editedMessageIdRef.current = undefined
+              handleUpdateConversation(updatedConversation, {
+                key: 'messages',
+                value: updatedConversation.messages,
+              })
+              // Here, we want to persist the full streamed assistant message, not the initial user message.
+              // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
+              const streamedAssistantMessage =
+                updatedConversation.messages?.[
+                  updatedConversation.messages.length - 1
+                ] ?? message
+
+              const precedingUserMessage =
+                updatedConversation.messages?.[
+                  updatedConversation.messages.length - 2
+                ]
+
+              if (
+                precedingUserMessage &&
+                precedingUserMessage.role === 'user' &&
+                Array.isArray(precedingUserMessage.agentEvents) &&
+                precedingUserMessage.agentEvents.length > 0
+              ) {
+                await updateConversationMutation.mutateAsync({
+                  conversation: updatedConversation,
+                  message: precedingUserMessage,
+                })
+              }
+
+              if (streamedAssistantMessage.role === 'assistant') {
+                await updateConversationMutation.mutateAsync({
+                  conversation: updatedConversation,
+                  message: streamedAssistantMessage,
+                })
+              } else {
+                // Fallback: do not trigger mutation if it's not an assistant message
+                console.warn(
+                  'Attempted to persist a non-assistant message after stream:',
+                  streamedAssistantMessage,
+                )
+              }
+              console.debug(
+                'updatedConversation after mutation:',
+                updatedConversation,
+              )
+
+              if (streamedAssistantMessage) {
+                onMessageReceived(
+                  updatedConversation,
+                  streamedAssistantMessage,
+                  editedMessageIdRef.current,
+                )
+                // Clear the ref after logging
+                editedMessageIdRef.current = undefined
+              }
+
+              // } else {
+              //   onMessageReceived(updatedConversation)
+              // }
+
+              // Save the conversation to the server
+
+              // await saveConversationToServer(updatedConversation).catch(
+              //   (error) => {
+              //     console.error(
+              //       'Error saving updated conversation to server:',
+              //       error,
+              //     )
+              //   },
+              // )
+
+              // const updatedConversations: Conversation[] = conversations.map(
+              //   (conversation) => {
+              //     if (conversation.id === selectedConversation.id) {
+              //       return updatedConversation
+              //     }
+              //     return conversation
+              //   },
+              // )
+              // if (updatedConversations.length === 0) {
+              //   updatedConversations.push(updatedConversation)
+              // }
+              // homeDispatch({
+              //   field: 'conversations',
+              //   value: updatedConversations,
+              // })
+              // console.log('updatedConversations: ', updatedConversations)
+              // saveConversations(updatedConversations)
+            } catch (error) {
+              console.error('An error occurred: ', error)
+              updateFinalEventStatus('error', {
+                errorMessage:
+                  error instanceof Error
+                    ? error.message
+                    : 'Unable to finalize response',
+              })
+              controller.abort()
             }
+          } else {
+            if (response instanceof Response) {
+              const { answer } = await response.json()
+              const updatedMessages: Message[] = [
+                ...updatedConversation.messages,
+                {
+                  id: uuidv4(),
+                  role: 'assistant',
+                  content: answer,
+                  feedback: message.feedback,
+                  wasQueryRewritten: message.wasQueryRewritten,
+                  queryRewriteText: message.queryRewriteText,
+                },
+              ]
+              updatedConversation = {
+                ...updatedConversation,
+                messages: updatedMessages,
+              }
+              homeDispatch({
+                field: 'selectedConversation',
+                value: updatedConversation,
+              })
+              // This is after the response is done streaming for plugins
 
-            // } else {
-            //   onMessageReceived(updatedConversation)
-            // }
+              // handleUpdateConversation(updatedConversation, {
+              //   key: 'messages',
+              //   value: updatedMessages,
+              // })
 
-            // Save the conversation to the server
-
-            // await saveConversationToServer(updatedConversation).catch(
-            //   (error) => {
-            //     console.error(
-            //       'Error saving updated conversation to server:',
-            //       error,
-            //     )
-            //   },
-            // )
-
-            // const updatedConversations: Conversation[] = conversations.map(
-            //   (conversation) => {
-            //     if (conversation.id === selectedConversation.id) {
-            //       return updatedConversation
-            //     }
-            //     return conversation
-            //   },
-            // )
-            // if (updatedConversations.length === 0) {
-            //   updatedConversations.push(updatedConversation)
-            // }
-            // homeDispatch({
-            //   field: 'conversations',
-            //   value: updatedConversations,
-            // })
-            // console.log('updatedConversations: ', updatedConversations)
-            // saveConversations(updatedConversations)
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-          } catch (error) {
-            console.error('An error occurred: ', error)
-            updateFinalEventStatus('error', {
-              errorMessage:
-                error instanceof Error
-                  ? error.message
-                  : 'Unable to finalize response',
-            })
-            controller.abort()
-          }
-
-          // BG: what does plugin do?
-        } else {
-          if (response instanceof Response) {
-            const { answer } = await response.json()
-            const updatedMessages: Message[] = [
-              ...updatedConversation.messages,
-              {
-                id: uuidv4(),
-                role: 'assistant',
-                content: answer,
-                contexts: message.contexts,
-                feedback: message.feedback,
-                wasQueryRewritten: message.wasQueryRewritten,
-                queryRewriteText: message.queryRewriteText,
-              },
-            ]
-            updatedConversation = {
-              ...updatedConversation,
-              messages: updatedMessages,
+              // await saveConversationToServer(updatedConversation).catch(
+              //   (error) => {
+              //     console.error(
+              //       'Error saving updated conversation to server:',
+              //       error,
+              //     )
+              //   },
+              // )
+              // Do we need this?
+              // saveConversation(updatedConversation)
+              const updatedConversations: Conversation[] = conversations.map(
+                (conversation) =>
+                  conversation.id === selectedConversation.id
+                    ? updatedConversation
+                    : conversation,
+              )
+              if (updatedConversations.length === 0) {
+                updatedConversations.push(updatedConversation)
+              }
+              homeDispatch({
+                field: 'conversations',
+                value: updatedConversations,
+              })
+              // saveConversations(updatedConversations)
+              homeDispatch({ field: 'loading', value: false })
+              homeDispatch({ field: 'messageIsStreaming', value: false })
             }
-            homeDispatch({
-              field: 'selectedConversation',
-              value: updatedConversation,
-            })
-            // This is after the response is done streaming for plugins
-
-            // handleUpdateConversation(updatedConversation, {
-            //   key: 'messages',
-            //   value: updatedMessages,
-            // })
-
-            // await saveConversationToServer(updatedConversation).catch(
-            //   (error) => {
-            //     console.error(
-            //       'Error saving updated conversation to server:',
-            //       error,
-            //     )
-            //   },
-            // )
-            // Do we need this?
-            // saveConversation(updatedConversation)
-            const updatedConversations: Conversation[] = conversations.map(
-              (conversation) =>
-                conversation.id === selectedConversation.id
-                  ? updatedConversation
-                  : conversation,
-            )
-            if (updatedConversations.length === 0) {
-              updatedConversations.push(updatedConversation)
-            }
-            homeDispatch({
-              field: 'conversations',
-              value: updatedConversations,
-            })
-            // saveConversations(updatedConversations)
-            homeDispatch({ field: 'loading', value: false })
-            homeDispatch({ field: 'messageIsStreaming', value: false })
           }
         }
       },
@@ -1802,9 +1922,6 @@ export const Chat = memo(
         stopConversationRef,
         chat_ui,
         agentModeEnabled,
-        refetchLLMProviders,
-        routeChatAsync,
-        runQueryRewriteAsync,
       ],
     )
 
@@ -2447,7 +2564,6 @@ export const Chat = memo(
         conversations,
         homeDispatch,
         updateConversationMutation,
-        logConversationMutation,
       ],
     )
 
@@ -2472,7 +2588,6 @@ export const Chat = memo(
             {permission == 'edit' ? (
               <div className="group absolute right-4 top-4 z-20">
                 <button
-                  aria-label="Open Admin Dashboard"
                   className="rounded-md border border-[--dashboard-border] bg-transparent p-[.35rem] text-[--foreground] hover:border-[--dashboard-button] hover:bg-transparent hover:text-[--dashboard-button]"
                   onClick={() => {
                     if (courseName) router.push(`/${courseName}/dashboard`)
@@ -2534,7 +2649,10 @@ export const Chat = memo(
                             />
                           ),
                         )}
-                        {loading && <ChatLoader />}
+                        {shouldShowChatLoader(
+                          loading,
+                          selectedConversation,
+                        ) && <ChatLoader />}
                         {/*                          className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,14,0.4)]"
 //safe to remove in the future- left here in case we want the gradient in dark mode (in light mode, it really sticks
  */}
@@ -2575,6 +2693,9 @@ export const Chat = memo(
                 })()}
                 courseName={courseName}
                 chat_ui={chat_ui}
+                agentModeFeatureEnabled={
+                  courseMetadata?.agent_mode_enabled === true
+                }
               />
             </div>
           </div>

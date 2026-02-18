@@ -8,6 +8,7 @@ export default async function fetchContextsFromBackend(
   token_limit = 4000,
   doc_groups: string[] = [],
   conversation_id?: string,
+  signal?: AbortSignal,
 ): Promise<ContextWithMetadata[]> {
   const backendUrl = getBackendUrl()
 
@@ -19,13 +20,17 @@ export default async function fetchContextsFromBackend(
     conversation_id: conversation_id,
   }
 
-  const response = await fetch(`${backendUrl}/getTopContexts`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
+  const response = await fetch(
+    `https://ai-ta-backend-vyriad.up.railway.app/getTopContexts`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal,
     },
-    body: JSON.stringify(requestBody),
-  })
+  )
 
   if (!response.ok) {
     throw new Error(`Failed to fetch contexts. Status: ${response.status}`)

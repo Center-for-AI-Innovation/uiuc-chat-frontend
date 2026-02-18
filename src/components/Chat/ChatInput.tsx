@@ -1,3 +1,4 @@
+// chatinput.tsx
 import {
   type Content,
   type Message,
@@ -53,7 +54,7 @@ import { type CSSProperties } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
-import { fetchPresignedUrl, uploadToS3 } from '~/utils/apiUtils'
+import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import {
   selectBestModel,
@@ -62,10 +63,10 @@ import {
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
-import { useRouteChat } from '@/hooks/queries/useRouteChat'
-import { type ChatBody, ContextWithMetadata } from '~/types/chat'
+import { ContextWithMetadata } from '~/types/chat'
 import { modelSupportsTools } from '~/utils/modelProviders/capabilities'
 import posthog from 'posthog-js'
+import { deriveAgentModeEnabled } from '~/utils/app/agentMode'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -123,11 +124,7 @@ const ALLOWED_FILE_EXTENSIONS = [
 type FileUploadStatus = {
   file: File
   status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'error'
-
-  // BG: url for image file
   url?: string
-
-  // BG: contexts for non-image file
   contexts?: ContextWithMetadata[]
 }
 
@@ -143,6 +140,7 @@ interface Props {
   courseName: string
   chat_ui?: ChatUI
   onRegenerate?: () => void
+  agentModeFeatureEnabled?: boolean
 }
 
 async function createNewConversation(
@@ -169,7 +167,6 @@ async function createNewConversation(
   }
 
   homeDispatch({ field: 'selectedConversation', value: newConversation })
-  homeDispatch({ field: 'agentModeEnabled', value: false })
   homeDispatch({
     field: 'conversations',
     value: (prev: Conversation[]) => [newConversation, ...prev],
@@ -235,6 +232,7 @@ export const ChatInput = ({
   courseName,
   chat_ui,
   onRegenerate,
+  agentModeFeatureEnabled = false,
 }: Props) => {
   const { t } = useTranslation('chat')
 
@@ -245,13 +243,14 @@ export const ChatInput = ({
       prompts,
       showModelSettings,
       llmProviders,
-      agentModeEnabled,
       tools,
     },
 
     dispatch: homeDispatch,
     handleUpdateConversation,
   } = useContext(HomeContext)
+
+  const agentModeEnabled = deriveAgentModeEnabled(selectedConversation)
 
   const [content, setContent] = useState<string>(() => inputContent)
   const [isTyping, setIsTyping] = useState<boolean>(false)
@@ -271,7 +270,6 @@ export const ChatInput = ({
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
   const fileUploadRef = useRef<HTMLInputElement | null>(null)
   const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
-  const { mutateAsync: routeChatAsync } = useRouteChat()
 
   const handleFocus = () => {
     setIsFocused(true)
@@ -348,7 +346,7 @@ export const ChatInput = ({
       (fu) =>
         fu.status === 'processing' ||
         fu.status === 'uploading' ||
-        fu.status === 'uploaded', // BG: haven't finished processing the file
+        fu.status === 'uploaded',
     )
 
     if (messageIsStreaming || hasProcessingFiles) {
@@ -368,7 +366,6 @@ export const ChatInput = ({
     const allFileContexts: ContextWithMetadata[] = []
 
     if (fileUploads.length > 0) {
-      // BG: removable?
       const pendingFiles = fileUploads.filter((fu) => fu.status !== 'completed')
 
       if (pendingFiles.length > 0) {
@@ -378,7 +375,6 @@ export const ChatInput = ({
         )
         return
       }
-      // END BG
 
       // Create file content for the message (files are already processed)
       fileContent = fileUploads
@@ -578,16 +574,27 @@ export const ChatInput = ({
       return
     }
 
-    const chatBody: ChatBody = {
-      conversation: selectedConversation ?? undefined,
-      course_name: courseName,
-      stream: true,
-      key: '',
-      mode: 'chat',
-    }
-
     try {
-      await routeChatAsync(chatBody)
+      const response = await fetch('/api/allNewRoutingChat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversation: selectedConversation,
+          course_name: courseName,
+          stream: true,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorResponse = await response.json()
+        const errorMessage =
+          errorResponse.error ||
+          'An error occurred while processing your request'
+        showErrorToast(errorMessage)
+        return
+      }
     } catch (error) {
       console.error('Error in chat submission:', error)
       showErrorToast(
@@ -714,8 +721,6 @@ export const ChatInput = ({
           conversation = await createNewConversation(courseName, homeDispatch)
         }
 
-        // image file returns a presigned URL for display
-        // non-image file returns a context from context search service
         if (isImageFile) {
           console.log('=== FILE UPLOAD STEP 4A: Processing image file ===')
           // For image files, generate a presigned URL for display
@@ -1153,8 +1158,6 @@ export const ChatInput = ({
                             prev.filter((_, i) => i !== index),
                           )
                         }}
-                        title="Remove file"
-                        aria-label="Remove file"
                         style={{
                           marginLeft: '8px',
                           color: 'var(--foreground-faded)',
@@ -1197,7 +1200,6 @@ export const ChatInput = ({
                 <IconPaperclip size={20} />
               </button>
               <input
-                aria-label="Upload files"
                 type="file"
                 multiple
                 ref={fileUploadRef}
@@ -1242,12 +1244,11 @@ export const ChatInput = ({
 
               {/* Send button */}
               <button
-                tabIndex={0}
+                type="button"
+                aria-label="Send message"
                 className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center justify-center rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
                 onClick={handleSend}
                 style={{ pointerEvents: 'auto' }}
-                type="button"
-                aria-label="Send message"
               >
                 {messageIsStreaming ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
@@ -1286,7 +1287,7 @@ export const ChatInput = ({
             {showScrollDownButton && (
               <div className="absolute bottom-2 right-10 lg:-right-10 lg:bottom-0">
                 <button
-                  tabIndex={0}
+                  type="button"
                   aria-label="Scroll Down"
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
                   onClick={onScrollDownClick}
@@ -1324,28 +1325,26 @@ export const ChatInput = ({
             )}
           </div>
 
-          <Text
-            role="button"
-            tabIndex={0}
-            aria-label="Chat Settings"
-            size={isSmallScreen ? '10px' : 'xs'}
-            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
-            onClick={handleTextClick}
-            style={{ cursor: 'pointer', pointerEvents: 'auto' }}
-          >
-            {selectBestModel(llmProviders)?.name}
-            {selectedConversation?.model &&
-              webLLMModels.some(
-                (m) => m.name === selectedConversation?.model?.name,
-              ) &&
-              chat_ui?.isModelLoading() &&
-              '  Please wait while the model is loading...'}
-            <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
-          </Text>
-          {/* Agent Mode pill */}
-          <div className="absolute bottom-[.35rem] right-5 flex items-center gap-2">
-            {/* Render pill only if model supports tools */}
-            {selectedConversation?.model &&
+          {/* Model picker and Agent Mode pill container */}
+          <div className="absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-2">
+            <Text
+              size={isSmallScreen ? '10px' : 'xs'}
+              className={`font-montserratHeading ${montserrat_heading.variable} flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
+              onClick={handleTextClick}
+              style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+            >
+              {selectBestModel(llmProviders)?.name}
+              {selectedConversation?.model &&
+                webLLMModels.some(
+                  (m) => m.name === selectedConversation?.model?.name,
+                ) &&
+                chat_ui?.isModelLoading() &&
+                '  Please wait while the model is loading...'}
+              <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
+            </Text>
+            {/* Agent Mode pill */}
+            {agentModeFeatureEnabled &&
+            selectedConversation?.model &&
             llmProviders &&
             modelSupportsTools(selectedConversation.model, llmProviders) ? (
               <button
@@ -1354,16 +1353,12 @@ export const ChatInput = ({
                     ? 'bg-[--primary] text-[--background]'
                     : 'bg-[--background-faded] text-[--foreground]'
                 }`}
-                disabled={messageIsStreaming || (tools?.length ?? 0) === 0}
+                disabled={messageIsStreaming}
                 onClick={() => {
                   const next = !agentModeEnabled
                   posthog.capture('agent_mode_toggled', {
                     enabled: next,
                     model_id: selectedConversation?.model?.id,
-                  })
-                  homeDispatch({
-                    field: 'agentModeEnabled',
-                    value: next,
                   })
                   if (selectedConversation) {
                     handleUpdateConversation(selectedConversation, {

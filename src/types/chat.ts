@@ -90,6 +90,7 @@ export type MessageFeedback = {
 export type AgentEventStatus = 'pending' | 'running' | 'done' | 'error'
 
 export type AgentEventType =
+  | 'initializing'
   | 'action_selection'
   | 'retrieval'
   | 'tool'

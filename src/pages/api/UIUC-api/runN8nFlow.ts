@@ -7,11 +7,18 @@ export const runN8nFlowBackend = async (
   api_key: string,
   name: string,
   data: any,
+  signal?: AbortSignal,
 ): Promise<any> => {
   const backendUrl = getBackendUrl()
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 300000) // 5minutes timeout
+  const onAbort = () => controller.abort()
+  if (signal?.aborted) {
+    controller.abort()
+  } else {
+    signal?.addEventListener('abort', onAbort, { once: true })
+  }
 
   try {
     const body = JSON.stringify({
@@ -20,7 +27,7 @@ export const runN8nFlowBackend = async (
       data: data,
     })
 
-    const response = await fetch(`${backendUrl}/run_flow`, {
+    const response = await fetch(`http://localhost:8000/run_flow`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -73,6 +80,8 @@ export const runN8nFlowBackend = async (
     }
 
     throw error
+  } finally {
+    signal?.removeEventListener('abort', onAbort)
   }
 }
 
