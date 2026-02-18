@@ -584,16 +584,21 @@ const Home = ({
     }
 
     const handleDocumentDragEnter = (e: DragEvent) => {
+      e.preventDefault()
       setDragEnterCounter((prev) => prev + 1)
       setIsDragging(true)
     }
 
     const handleDocumentDragLeave = (e: DragEvent) => {
       e.preventDefault()
-      setDragEnterCounter((prev) => prev - 1)
-      if (dragEnterCounter === 1 || e.relatedTarget === null) {
-        setIsDragging(false)
-      }
+      setDragEnterCounter((prev) => {
+        const next = Math.max(0, prev - 1)
+        if (next === 0 || e.relatedTarget == null) {
+          setIsDragging(false)
+          return 0
+        }
+        return next
+      })
     }
 
     const handleDocumentDrop = (e: DragEvent) => {

@@ -231,7 +231,7 @@ describe('pages/api/home/home (shared Home component)', () => {
 
     fireEvent.dragEnter(document)
     fireEvent.dragOver(document)
-    expect(screen.queryByText('Drop your image here!')).toBeNull()
+    expect(screen.getByText('Drop your image here!')).toBeInTheDocument()
 
     fireEvent.dragLeave(document, { relatedTarget: null })
     expect(screen.queryByText('Drop your image here!')).toBeNull()
