@@ -76,7 +76,8 @@ export async function replaceCitationLinks(
     courseName: string,
   ) => Promise<string | null>,
 ): Promise<string> {
-  if (!lastMessage.contexts) {
+  const contexts = lastMessage.contexts
+  if (!contexts) {
     console.log(
       '[Citations] No contexts on message, returning sanitized content:',
       content.substring(0, 100),
@@ -101,7 +102,7 @@ export async function replaceCitationLinks(
       '[Citations] Pattern did not match. Content:',
       content,
       'Contexts count:',
-      lastMessage.contexts?.length,
+      contexts.length,
     )
     return safeText(content)
   }
@@ -124,10 +125,7 @@ export async function replaceCitationLinks(
         .split(',')
         .map((idx) => parseInt(idx.trim(), 10))
         .filter(
-          (idx) =>
-            Number.isFinite(idx) &&
-            idx > 0 &&
-            idx <= lastMessage.contexts.length,
+          (idx) => Number.isFinite(idx) && idx > 0 && idx <= contexts.length,
         )
 
       if (citationIndices.length === 0) {
@@ -140,7 +138,7 @@ export async function replaceCitationLinks(
 
       const citationLinks = await Promise.all(
         citationIndices.map(async (citationIndex) => {
-          const context = lastMessage.contexts[citationIndex - 1]
+          const context = contexts[citationIndex - 1]
           if (!context) return null
 
           const link = await getCitationLink(
@@ -231,7 +229,7 @@ export async function replaceCitationLinks(
       next += result.slice(cursor, matchIndex)
 
       const filenameIndex = parseInt((match[1] as string) || '', 10)
-      const context = lastMessage.contexts[filenameIndex - 1]
+      const context = contexts[filenameIndex - 1]
 
       if (!context) {
         next += match[0]
