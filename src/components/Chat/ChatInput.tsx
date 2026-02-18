@@ -1231,7 +1231,7 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={'Message Illinois.chat'}
+                placeholder={'Message Illinois Chat'}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
@@ -1244,6 +1244,8 @@ export const ChatInput = ({
 
               {/* Send button */}
               <button
+                type="button"
+                aria-label="Send message"
                 className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center justify-center rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
                 onClick={handleSend}
                 style={{ pointerEvents: 'auto' }}
@@ -1285,6 +1287,8 @@ export const ChatInput = ({
             {showScrollDownButton && (
               <div className="absolute bottom-2 right-10 lg:-right-10 lg:bottom-0">
                 <button
+                  type="button"
+                  aria-label="Scroll Down"
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
                   onClick={onScrollDownClick}
                   style={{ pointerEvents: 'auto' }}
