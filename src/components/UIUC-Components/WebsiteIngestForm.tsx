@@ -43,18 +43,14 @@ const montserrat_med = Montserrat({
   subsets: ['latin'],
 })
 export default function WebsiteIngestForm({
-                                            project_name,
-                                            setUploadFiles,
-                                            queryClient,
-                                          }: {
+  project_name,
+  setUploadFiles,
+  queryClient,
+}: {
   project_name: string
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
-  const useIllinoisChatConfig = useMemo(() => {
-    return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
-  }, [])
-
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -119,35 +115,53 @@ export default function WebsiteIngestForm({
   })
 
   const handleIngest = async () => {
+    const ingestUrl = url
+    const ingestMaxUrls = maxUrls
+    const ingestStrategy = scrapeStrategy
+    const maxUrlsHasError = inputErrors.maxUrls.error
+    const urlIsValid = isUrlValid
+
     setOpen(false)
 
-    if (inputErrors.maxUrls.error) {
+    if (maxUrlsHasError) {
       alert('Invalid max URLs input (1 to 500)')
       return
     }
 
-    if (isUrlValid) {
+    if (urlIsValid) {
       const newFile: FileUpload = {
-        name: url,
+        name: ingestUrl,
         status: 'uploading',
         type: 'webscrape',
-        url: url,
+        url: ingestUrl,
         isBaseUrl: true,
       }
       setUploadFiles((prevFiles) => [...prevFiles, newFile])
 
       try {
         const response = await scrapeWeb(
-          url,
+          ingestUrl,
           project_name,
           maxUrls.trim() !== '' ? parseInt(maxUrls) : 50,
           scrapeStrategy,
+        )
+        // Transition to 'ingesting' status after API call succeeds
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'ingesting' } : file,
+          ),
+        )
+        // Transition to 'ingesting' status after API call succeeds
+        setUploadFiles((prevFiles) =>
+          prevFiles.map((file) =>
+            file.name === url ? { ...file, status: 'ingesting' } : file,
+          ),
         )
       } catch (error: unknown) {
         console.error('Error while scraping web:', error)
         setUploadFiles((prevFiles) =>
           prevFiles.map((file) =>
-            file.name === url ? { ...file, status: 'error' } : file,
+            file.name === ingestUrl ? { ...file, status: 'error' } : file,
           ),
         )
         // Remove the timeout since we're handling errors properly now
@@ -200,20 +214,38 @@ export default function WebsiteIngestForm({
       ) => {
         return currentFiles.map((file) => {
           if (file.type !== 'webscrape') return file
+          const fileUrl = file.url ?? ''
 
           const isStillIngesting = docsInProgress.some(
-            (doc) => doc.base_url === file.name,
+            (doc) =>
+              doc.base_url === file.name ||
+              (file.isBaseUrl && doc.base_url === file.url),
           )
 
           if (file.status === 'uploading' && isStillIngesting) {
             return { ...file, status: 'ingesting' as const }
           } else if (file.status === 'ingesting') {
             if (!isStillIngesting) {
+              // Check if any child URLs are still in progress
+              const childFiles = currentFiles.filter(
+                (f) => f.url && f.url !== fileUrl && f.url.startsWith(fileUrl),
+              )
+              const allChildrenDone =
+                childFiles.length === 0 ||
+                childFiles.every(
+                  (f) => f.status === 'complete' || f.status === 'error',
+                )
+
               const isInCompletedDocs = docsData?.documents?.some(
-                (doc: { url: string }) => doc.url === file.url,
+                (doc: { url: string; base_url?: string }) =>
+                  doc.url === file.url ||
+                  (file.isBaseUrl && doc.base_url === file.url),
               )
 
-              if (isInCompletedDocs) {
+              if (file.isBaseUrl && allChildrenDone && isInCompletedDocs) {
+                // Base URL can only complete if all children done
+                return { ...file, status: 'complete' as const }
+              } else if (!file.isBaseUrl && isInCompletedDocs) {
                 return { ...file, status: 'complete' as const }
               }
 
@@ -346,8 +378,7 @@ export default function WebsiteIngestForm({
         withBorder: true,
         loading: false,
       })
-      // return error
-      // throw error
+      throw error // Re-throw so handleIngest can update file status to 'error'
     }
   }
 
@@ -369,14 +400,19 @@ export default function WebsiteIngestForm({
           }
         }}
       >
-        <DialogTrigger asChild>
+        <DialogTrigger
+          asChild
+          role="link"
+          tabIndex={0}
+          className="focus:bg-[--dashboard-background-dark]"
+        >
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[--dashboard-border] bg-transparent px-6 py-4 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
+            <div className="-ml-2 mb-2 flex items-center justify-between">
+              <div className="flex items-center space-x-1">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full">
                   <IconWorldDownload className="h-8 w-8" />
                 </div>
                 <Text className="text-xl font-semibold text-[--dashboard-foreground]">
@@ -415,13 +451,6 @@ export default function WebsiteIngestForm({
                     event.preventDefault()
                   }}
                 >
-                  {useIllinoisChatConfig && <Text
-                    style={{ color: 'red', fontSize: '16px' }}
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
-                  >
-                    Coming soon! Contact us if interested.
-                  </Text>}
-
                   <Input
                     icon={icon}
                     className="w-full rounded-full"
@@ -449,7 +478,6 @@ export default function WebsiteIngestForm({
                     onChange={(e) => {
                       handleUrlChange(e)
                     }}
-                    disabled={useIllinoisChatConfig} // Disable if using Illinois Chat config
                   />
                   <div className="pb-2 pt-2">
                     <Tooltip
@@ -505,7 +533,6 @@ export default function WebsiteIngestForm({
                               width: '100%',
                             },
                           }}
-                          disabled={useIllinoisChatConfig}
                         />
                       </div>
                     </Tooltip>

@@ -237,7 +237,7 @@ function UploadNotificationContent({
       shadow="sm"
       padding={0}
       radius="md"
-      className={`fixed bottom-4 right-4 z-50 w-[320px] overflow-hidden border border-[--modal-border] bg-[--modal] shadow-xl shadow-black/25 md:w-[420px] ${montserrat_paragraph.variable}`}
+      className={`fixed bottom-20 right-4 z-50 w-[320px] overflow-hidden border border-[--modal-border] bg-[--modal] shadow-xl shadow-black/25 md:w-[420px] ${montserrat_paragraph.variable}`}
     >
       <div className="flex items-center justify-between border-b border-[--modal-border] bg-[--modal-dark] px-5 py-4 text-[--modal-text]">
         <div className="flex flex-col gap-1">
@@ -270,6 +270,7 @@ function UploadNotificationContent({
             color="gray"
             compact
             onClick={toggleMinimize}
+            aria-label={isMinimized ? 'Expand uploads' : 'Minimize uploads'}
             className="h-8 w-8 rounded-md p-0 text-[--modal-button] hover:bg-[--background-dark] hover:text-[--modal-button-text-hover]"
           >
             {isMinimized ? (
@@ -283,6 +284,7 @@ function UploadNotificationContent({
             color="gray"
             compact
             onClick={onClose}
+            aria-label="Close uploads"
             className="h-8 w-8 rounded-md p-0 text-[--modal-button] hover:bg-[--background-dark] hover:text-[--modal-button-text-hover]"
           >
             <IconX size={18} />

@@ -3,7 +3,7 @@
 import {
   type LLMProvider,
   type ProviderNames,
-} from '../utils/modelProviders/LLMProvider'
+} from '@/utils/modelProviders/LLMProvider'
 
 // courseMetadata.ts
 export interface CourseMetadata {

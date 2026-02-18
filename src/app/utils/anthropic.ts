@@ -328,16 +328,18 @@ function convertConversationToVercelAISDKv3(
     } else if (Array.isArray(message.content)) {
       // Handle both text and file content
       const textParts: string[] = []
-      
+
       message.content.forEach((c) => {
         if (c.type === 'text') {
           textParts.push(c.text || '')
         } else if (c.type === 'file') {
           // Convert file content to text representation for Anthropic
-          textParts.push(`[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`)
+          textParts.push(
+            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+          )
         }
       })
-      
+
       content = textParts.join('\n')
     } else {
       content = message.content as string

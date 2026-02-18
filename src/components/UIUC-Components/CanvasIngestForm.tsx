@@ -82,19 +82,28 @@ export default function CanvasIngestForm({
           file.name === url ? { ...file, status: 'ingesting' } : file,
         ),
       )
-      const response = await fetch('/api/UIUC-api/ingestCanvas', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          courseName: courseName,
-          canvas_url: url,
-          selectedCanvasOptions: selectedOptions,
-        }),
-      })
-      const data = await response.json()
-      if (response.ok) {
+
+      try {
+        const response = await fetch('/api/UIUC-api/ingestCanvas', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            courseName: courseName,
+            canvas_url: url,
+            selectedCanvasOptions: selectedOptions,
+          }),
+        })
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        if (data && data.error) {
+          throw new Error(data.error)
+        }
+
         setUploadFiles((prevFiles) =>
           prevFiles.map((file) =>
             file.name === url ? { ...file, status: 'complete' } : file,
@@ -103,21 +112,19 @@ export default function CanvasIngestForm({
         queryClient.invalidateQueries({
           queryKey: ['documents', project_name],
         })
-      }
-      if (!response.ok) {
+
+        await new Promise((resolve) => setTimeout(resolve, 8000)) // wait a moment before redirecting
+        console.log('Canvas content ingestion was successful!')
+        console.log('Ingesting:', url, 'with options:', selectedOptions)
+      } catch (error) {
         setUploadFiles((prevFiles) =>
           prevFiles.map((file) =>
             file.name === url ? { ...file, status: 'error' } : file,
           ),
         )
-        throw new Error(`HTTP error! status: ${response.status}`)
+        console.error('Error ingesting Canvas content:', error)
+        alert('Error ingesting Canvas content. Please try again.')
       }
-      if (data && data.error) {
-        throw new Error(data.error)
-      }
-      await new Promise((resolve) => setTimeout(resolve, 8000)) // wait a moment before redirecting
-      console.log('Canvas content ingestion was successful!')
-      console.log('Ingesting:', url, 'with options:', selectedOptions)
     } else {
       alert('Invalid URL (please include https://)')
     }
@@ -136,14 +143,18 @@ export default function CanvasIngestForm({
           }
         }}
       >
-        <DialogTrigger asChild>
+        <DialogTrigger
+          asChild
+          tabIndex={0}
+          className="focus:bg-[--dashboard-background-dark]"
+        >
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[--dashboard-border] bg-transparent px-6 py-4 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
+            <div className="-ml-2 mb-2 flex items-center justify-between">
+              <div className="flex items-center space-x-1">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full">
                   <Image
                     src="/media/canvas_logo.png"
                     alt="Canvas logo"
@@ -156,11 +167,11 @@ export default function CanvasIngestForm({
               </div>
             </div>
 
-            <Text className="mb-4 text-sm leading-relaxed text-[--dashboard-foreground-faded]">
+            <Text className="text-sm leading-relaxed text-[--dashboard-foreground-faded]">
               Import content directly from your Canvas course, including
               assignments, discussions, files, and more.
             </Text>
-            <div className="mt-auto flex items-center text-sm font-bold text-[--dashboard-button]">
+            <div className="mt-4 flex items-center text-sm font-bold text-[--dashboard-button]">
               <span>Configure import</span>
               <IconArrowRight
                 size={16}

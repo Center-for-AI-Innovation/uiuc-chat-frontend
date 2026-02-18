@@ -70,14 +70,18 @@ export default function CourseraIngestForm(): JSX.Element {
           }
         }}
       >
-        <DialogTrigger asChild>
+        <DialogTrigger
+          asChild
+          tabIndex={0}
+          className="focus:bg-[--dashboard-background-dark]"
+        >
           <Card
-            className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[--dashboard-background-faded] p-6 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
+            className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[--dashboard-border] bg-transparent px-6 py-4 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[--dashboard-background-darker]">
+            <div className="-ml-2 mb-2 flex items-center justify-between">
+              <div className="flex items-center space-x-1">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full">
                   <Image
                     src="/media/coursera_logo_cutout.png"
                     alt="Coursera Logo"

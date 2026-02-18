@@ -23,7 +23,9 @@ type ReasoningRequestPattern = 'reasoning_effort' | 'openrouter' | 'none'
  * Detect what reasoning request pattern to use based on the base URL
  * Only Groq requires special request parameters, others output reasoning by default
  */
-function detectReasoningRequestPattern(baseUrl: string): ReasoningRequestPattern {
+function detectReasoningRequestPattern(
+  baseUrl: string,
+): ReasoningRequestPattern {
   try {
     const parsedUrl = new URL(baseUrl)
     const hostname = parsedUrl.hostname.toLowerCase()
@@ -45,7 +47,10 @@ function detectReasoningRequestPattern(baseUrl: string): ReasoningRequestPattern
 /**
  * Add reasoning parameters to request body based on detected pattern
  */
-function addReasoningParams(body: Record<string, unknown>, pattern: ReasoningRequestPattern): Record<string, unknown> {
+function addReasoningParams(
+  body: Record<string, unknown>,
+  pattern: ReasoningRequestPattern,
+): Record<string, unknown> {
   if (pattern === 'reasoning_effort') {
     // Groq-style: add reasoning_effort as top-level string parameter
     // Supported values: 'low', 'medium', 'high'
@@ -95,17 +100,18 @@ export async function runOpenAICompatibleChat(
     const reasoningPattern = detectReasoningRequestPattern(baseUrl)
     const isOpenRouter = reasoningPattern === 'openrouter'
     // OpenRouter requires lowercase model IDs
-    const modelId = isOpenRouter 
-      ? conversation.model.id.toLowerCase() 
+    const modelId = isOpenRouter
+      ? conversation.model.id.toLowerCase()
       : conversation.model.id
 
     const provider = createOpenAICompatible({
       name: PROVIDER_NAME,
       baseURL: baseUrl,
       apiKey: apiKey,
-      fetch: isReasoningModel && stream
-        ? createReasoningFetchMiddleware(reasoningPattern)
-        : undefined,
+      fetch:
+        isReasoningModel && stream
+          ? createReasoningFetchMiddleware(reasoningPattern)
+          : undefined,
     })
 
     const model = provider(modelId)
@@ -116,26 +122,33 @@ export async function runOpenAICompatibleChat(
       temperature: conversation.temperature,
       maxTokens: 16384,
       // OpenRouter requires reasoning via providerOptions
-      ...(isReasoningModel && reasoningPattern === 'openrouter' && {
-        providerOptions: {
-          [PROVIDER_NAME]: {
-            reasoning: { effort: 'medium' },
+      ...(isReasoningModel &&
+        reasoningPattern === 'openrouter' && {
+          providerOptions: {
+            [PROVIDER_NAME]: {
+              reasoning: { effort: 'medium' },
+            },
           },
-        },
-      }),
+        }),
     }
 
     if (stream) {
       return await handleStreamingResponse(commonParams)
     } else {
-      return await handleNonStreamingResponse(baseUrl, apiKey, conversation, isReasoningModel)
+      return await handleNonStreamingResponse(
+        baseUrl,
+        apiKey,
+        conversation,
+        isReasoningModel,
+      )
     }
   } catch (error) {
     console.error('OpenAI-compatible error:', error)
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : 'Unknown error',
-        detailed_error: error instanceof Error ? error.toString() : 'Unknown error',
+        detailed_error:
+          error instanceof Error ? error.toString() : 'Unknown error',
         source: 'OpenAICompatible',
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } },
@@ -147,25 +160,35 @@ export async function runOpenAICompatibleChat(
  * Custom fetch middleware to handle reasoning for multiple providers
  * - Modifies request body with reasoning parameters based on detected pattern
  * - Transforms response stream to extract reasoning into <think> tags
- * 
+ *
  * Response formats handled (all providers):
  * - delta.reasoning (Groq, Cerebras)
  * - delta.reasoning_details[].text (OpenRouter)
  * - delta.reasoning_content (DeepSeek)
  * - delta.content[].type="thinking" (Mistral Magistral)
  */
-function createReasoningFetchMiddleware(reasoningPattern: ReasoningRequestPattern) {
-  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+function createReasoningFetchMiddleware(
+  reasoningPattern: ReasoningRequestPattern,
+) {
+  return async (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> => {
     let modifiedInit = init
     if (init?.body && reasoningPattern === 'reasoning_effort') {
       try {
         const body = JSON.parse(init.body as string)
-        modifiedInit = { ...init, body: JSON.stringify(addReasoningParams(body, reasoningPattern)) }
-      } catch { /* ignore parse errors */ }
+        modifiedInit = {
+          ...init,
+          body: JSON.stringify(addReasoningParams(body, reasoningPattern)),
+        }
+      } catch {
+        /* ignore parse errors */
+      }
     }
-    
+
     const response = await fetch(input, modifiedInit)
-    
+
     // For error responses, throw an error that will propagate to the caller
     if (!response.ok) {
       const errorBody = await response.text()
@@ -173,12 +196,14 @@ function createReasoningFetchMiddleware(reasoningPattern: ReasoningRequestPatter
       try {
         const json = JSON.parse(errorBody)
         errorMessage = json.error?.message || errorMessage
-      } catch { /* not JSON */ }
+      } catch {
+        /* not JSON */
+      }
       const error = new Error(errorMessage)
       ;(error as any).status = response.status
       throw error
     }
-    
+
     if (!response.body) {
       throw new Error('No response body from API')
     }
@@ -196,7 +221,10 @@ function createReasoningFetchMiddleware(reasoningPattern: ReasoningRequestPatter
         if (e instanceof Error && e.message !== text) throw e
       }
       // Return as response
-      return new Response(text, { status: response.status, headers: response.headers })
+      return new Response(text, {
+        status: response.status,
+        headers: response.headers,
+      })
     }
     // Transform stream to extract reasoning
     const reader = response.body.getReader()
@@ -284,7 +312,10 @@ function createReasoningFetchMiddleware(reasoningPattern: ReasoningRequestPatter
 
           // Extract reasoning from various provider formats:
           // 1. OpenRouter: reasoning_details[].text
-          if (delta.reasoning_details && Array.isArray(delta.reasoning_details)) {
+          if (
+            delta.reasoning_details &&
+            Array.isArray(delta.reasoning_details)
+          ) {
             for (const detail of delta.reasoning_details) {
               if (detail.type === 'reasoning.text' && detail.text) {
                 reasoningText += detail.text
@@ -296,7 +327,10 @@ function createReasoningFetchMiddleware(reasoningPattern: ReasoningRequestPatter
             reasoningText += delta.reasoning
           }
           // 3. DeepSeek: reasoning_content
-          if (delta.reasoning_content && typeof delta.reasoning_content === 'string') {
+          if (
+            delta.reasoning_content &&
+            typeof delta.reasoning_content === 'string'
+          ) {
             reasoningText += delta.reasoning_content
           }
           // 4. Mistral Magistral: content array with { type: "thinking" } objects
@@ -318,7 +352,9 @@ function createReasoningFetchMiddleware(reasoningPattern: ReasoningRequestPatter
           if (typeof delta.content === 'string' && delta.content) {
             // Check if model outputs <think> tags natively (first chunk)
             if (modelOutputsThinkTags === null) {
-              modelOutputsThinkTags = delta.content.trimStart().startsWith('<think>')
+              modelOutputsThinkTags = delta.content
+                .trimStart()
+                .startsWith('<think>')
             }
             // If native tags, pass through unchanged
             if (modelOutputsThinkTags) {
@@ -353,7 +389,10 @@ function createReasoningFetchMiddleware(reasoningPattern: ReasoningRequestPatter
             delete newDelta.reasoning
             delete newDelta.reasoning_details
             delete newDelta.reasoning_content
-            const newData = { ...data, choices: [{ ...data.choices[0], delta: newDelta }] }
+            const newData = {
+              ...data,
+              choices: [{ ...data.choices[0], delta: newDelta }],
+            }
             output += `data: ${JSON.stringify(newData)}\n`
           } else {
             output += line + '\n'
@@ -379,16 +418,16 @@ async function handleStreamingResponse(commonParams: any): Promise<Response> {
     ...commonParams,
     experimental_transform: [smoothStream({ chunking: 'word' })],
   })
-  
+
   const encoder = new TextEncoder()
   const iterator = result.fullStream[Symbol.asyncIterator]()
-  
+
   // Read first part to catch errors before returning
   const first = await iterator.next()
   if (!first.done && first.value.type === 'error') {
     throw first.value.error
   }
-  
+
   const stream = new ReadableStream({
     async start(controller) {
       if (!first.done && first.value.type === 'text-delta') {
@@ -396,12 +435,13 @@ async function handleStreamingResponse(commonParams: any): Promise<Response> {
       }
       for await (const part of { [Symbol.asyncIterator]: () => iterator }) {
         if (part.type === 'error') throw part.error
-        if (part.type === 'text-delta') controller.enqueue(encoder.encode(part.textDelta))
+        if (part.type === 'text-delta')
+          controller.enqueue(encoder.encode(part.textDelta))
       }
       controller.close()
     },
   })
-  
+
   return new Response(stream, {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
   })
@@ -415,10 +455,11 @@ async function handleNonStreamingResponse(
 ): Promise<Response> {
   const reasoningPattern = detectReasoningRequestPattern(baseUrl)
   // OpenRouter requires lowercase model IDs
-  const modelId = reasoningPattern === 'openrouter'
-    ? conversation.model.id.toLowerCase()
-    : conversation.model.id
-  
+  const modelId =
+    reasoningPattern === 'openrouter'
+      ? conversation.model.id.toLowerCase()
+      : conversation.model.id
+
   let requestBody: Record<string, unknown> = {
     model: modelId,
     messages: convertConversationToVercelAISDKv3(conversation).map((msg) => ({
@@ -429,7 +470,7 @@ async function handleNonStreamingResponse(
     max_tokens: 16384,
     stream: false,
   }
-  
+
   // Add reasoning parameters based on detected pattern
   if (isReasoningModel) {
     if (reasoningPattern === 'openrouter') {
@@ -482,7 +523,10 @@ async function handleNonStreamingResponse(
   if (isReasoningModel && !hasNativeThinkTags) {
     // Extract from various formats (if not already extracted from Mistral format)
     if (!reasoning) {
-      if (message.reasoning_details && Array.isArray(message.reasoning_details)) {
+      if (
+        message.reasoning_details &&
+        Array.isArray(message.reasoning_details)
+      ) {
         for (const detail of message.reasoning_details) {
           if (detail.type === 'reasoning.text' && detail.text) {
             reasoning += detail.text
@@ -498,13 +542,14 @@ async function handleNonStreamingResponse(
     }
   }
 
-  return new Response(
-    JSON.stringify({ choices: [{ message: { content } }] }),
-    { headers: { 'Content-Type': 'application/json' } },
-  )
+  return new Response(JSON.stringify({ choices: [{ message: { content } }] }), {
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
 
-function convertConversationToVercelAISDKv3(conversation: Conversation): CoreMessage[] {
+function convertConversationToVercelAISDKv3(
+  conversation: Conversation,
+): CoreMessage[] {
   const coreMessages: CoreMessage[] = []
 
   const systemMessage = conversation.messages.findLast(
@@ -539,7 +584,10 @@ function convertConversationToVercelAISDKv3(conversation: Conversation): CoreMes
         } else if (c.type === 'image_url' || c.type === 'tool_image_url') {
           const imageUrl = c.image_url?.url || ''
           if (imageUrl) {
-            contentParts.push({ type: 'image_url', image_url: { url: imageUrl } })
+            contentParts.push({
+              type: 'image_url',
+              image_url: { url: imageUrl },
+            })
           }
         } else if (c.type === 'file') {
           contentParts.push(
@@ -573,10 +621,10 @@ function convertConversationToVercelAISDKv3(conversation: Conversation): CoreMes
       } else {
         const textContent =
           typeof contentParts[0] === 'string'
-          ? contentParts[0] 
-          : contentParts[0]?.type === 'text' 
-            ? contentParts[0].text 
-            : ''
+            ? contentParts[0]
+            : contentParts[0]?.type === 'text'
+              ? contentParts[0].text
+              : ''
         if (textContent) {
           coreMessages.push({
             role: message.role as 'user' | 'assistant',
