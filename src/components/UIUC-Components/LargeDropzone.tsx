@@ -1,4 +1,10 @@
 // LargeDropzone.tsx
+import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
+import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
+import { useIngest } from '~/hooks/queries/useIngest'
+
 import React, { useRef, useState, useEffect } from 'react'
 import {
   createStyles,
@@ -25,7 +31,6 @@ import { useRouter } from 'next/router'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import SupportedFileUploadTypes from './SupportedFileUploadTypes'
 import { useMediaQuery } from '@mantine/hooks'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { v4 as uuidv4 } from 'uuid'
 import { type FileUpload } from './UploadNotification'
 import { type AuthContextProps } from 'react-oidc-context'
@@ -77,6 +82,13 @@ export function LargeDropzone({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   auth: AuthContextProps
 }) {
+  const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(courseName)
+  const { refetch: refetchDocsInProgress } = useFetchDocsInProgress(courseName)
+  const uploadToS3Mutation = useUploadToS3()
+  const ingestMutation = useIngest()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useUpdateCourseMetadata(courseName)
+
   // upload-in-progress spinner control
   const [uploadInProgress, setUploadInProgress] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
@@ -101,54 +113,6 @@ export function LargeDropzone({
     // refresh current page
     await new Promise((resolve) => setTimeout(resolve, 200))
     await router.reload()
-  }
-  const uploadToS3 = async (file: File | null, uniqueFileName: string) => {
-    if (!file) return
-
-    const requestObject = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        uniqueFileName: uniqueFileName,
-        fileType: file.type,
-        courseName: courseName,
-        // No user_id needed since document uploads use courses/${courseName}/ path
-      }),
-    }
-
-    try {
-      interface PresignedPostResponse {
-        post: {
-          url: string
-          fields: { [key: string]: string }
-        }
-      }
-
-      // Then, update the lines where you fetch the response and parse the JSON
-      const response = await fetch('/api/UIUC-api/uploadToS3', requestObject)
-      const data = (await response.json()) as PresignedPostResponse
-
-      const { url, fields } = data.post as {
-        url: string
-        fields: { [key: string]: string }
-      }
-      const formData = new FormData()
-
-      Object.entries(fields).forEach(([key, value]) => {
-        formData.append(key, value)
-      })
-
-      formData.append('file', file)
-
-      await fetch(url, {
-        method: 'POST',
-        body: formData,
-      })
-    } catch (error) {
-      console.error('Error uploading file:', error)
-    }
   }
 
   const ingestFiles = async (files: File[] | null, is_new_course: boolean) => {
@@ -177,8 +141,7 @@ export function LargeDropzone({
     setUploadFiles((prev) => [...prev, ...initialFileUploads])
 
     if (is_new_course) {
-      await callSetCourseMetadata(
-        courseName,
+      await setCourseMetadataAsync(
         courseMetadata || {
           course_owner: current_user_email,
           course_admins: undefined,
@@ -201,21 +164,18 @@ export function LargeDropzone({
         const uniqueReadableFileName = `${nameWithoutExtension}${extension}`
 
         try {
-          await uploadToS3(file, uniqueFileName)
+          await uploadToS3Mutation.mutateAsync({
+            file,
+            uniqueFileName,
+            courseName,
+          })
           setSuccessfulUploads((prev) => prev + 1)
 
-          const response = await fetch(`/api/UIUC-api/ingest`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              uniqueFileName: uniqueFileName,
-              courseName: courseName,
-              readableFilename: uniqueReadableFileName,
-            }),
+          const res = await ingestMutation.mutateAsync({
+            uniqueFileName,
+            courseName,
+            readableFilename: uniqueReadableFileName,
           })
-          const res = await response.json()
           console.debug('Ingest submitted...', res)
           return { ok: true, s3_path: file.name }
         } catch (error) {
@@ -250,6 +210,7 @@ export function LargeDropzone({
       await refreshOrRedirect(redirect_to_gpt_4)
     }
   }
+
   useEffect(() => {
     let pollInterval = 9000 // Start with a slower interval
     const MIN_INTERVAL = 1000 // Fast polling when active
@@ -257,17 +218,12 @@ export function LargeDropzone({
     let consecutiveEmptyPolls = 0
 
     const checkIngestStatus = async () => {
-      const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${courseName}`,
-      )
-      const data = await response.json()
+      const { data } = await refetchDocsInProgress()
 
-      const docsResponse = await fetch(
-        `/api/materialsTable/successDocs?course_name=${courseName}`,
-      )
-      const docsData = await docsResponse.json()
+      const { data: successDocs } = await refetchSuccessDocs()
+      const docsData = { documents: successDocs }
       // Adjust polling interval based on activity
-      if (data.documents.length > 0) {
+      if (data && data.documents.length > 0) {
         pollInterval = MIN_INTERVAL
         consecutiveEmptyPolls = 0
       } else {

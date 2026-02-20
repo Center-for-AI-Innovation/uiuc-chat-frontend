@@ -1,3 +1,4 @@
+// Mutation: Rewrites a user query for improved search/retrieval before sending to the LLM.
 import { useMutation } from '@tanstack/react-query'
 
 import { type ChatBody } from '~/types/chat'

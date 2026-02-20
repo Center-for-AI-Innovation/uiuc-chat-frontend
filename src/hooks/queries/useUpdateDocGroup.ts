@@ -1,3 +1,4 @@
+// Mutation: Toggles a document group's enabled/disabled status with optimistic cache updates and rollback.
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { type DocumentGroup } from '~/types/courseMaterials'

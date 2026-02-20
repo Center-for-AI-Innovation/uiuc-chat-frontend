@@ -1,3 +1,4 @@
+// Mutation: Deletes messages by ID from a conversation.
 import { useMutation } from '@tanstack/react-query'
 import { type Message } from '~/types/chat'
 import { deleteMessagesFromServer } from '@/hooks/__internal__/message'

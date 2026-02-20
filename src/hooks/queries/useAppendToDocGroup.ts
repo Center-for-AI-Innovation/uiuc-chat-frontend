@@ -1,3 +1,4 @@
+// Mutation: Appends a document to a document group with optimistic cache updates and rollback on error.
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import {

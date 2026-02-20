@@ -3,7 +3,7 @@ import { type Dispatch, createContext } from 'react'
 import { type ActionType } from '@/hooks/useCreateReducer'
 
 import { Action, type Conversation } from '@/types/chat'
-import { type KeyValuePair } from '@/types/data'
+import { type KeyValuePair } from '@/types/plugin'
 import { type FolderType } from '@/types/folder'
 
 import { type HomeInitialState } from './home.state'

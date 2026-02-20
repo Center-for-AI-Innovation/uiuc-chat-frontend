@@ -1,3 +1,4 @@
+// InfiniteQuery: Fetches paginated conversation history with search support. Auto-refetches every 20s.
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { type ConversationPage } from '~/types/chat'
 import { fetchConversationHistory } from '@/hooks/__internal__/conversation'

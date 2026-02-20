@@ -1,3 +1,4 @@
+// Query: Fetches only enabled document groups for a course (used in chat context filtering).
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { type DocumentGroup } from '~/types/courseMaterials'

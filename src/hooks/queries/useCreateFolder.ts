@@ -1,3 +1,4 @@
+// Mutation: Creates a new conversation folder with optimistic cache updates and rollback on error.
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import {
   type FolderWithConversation,

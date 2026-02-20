@@ -1,3 +1,4 @@
+// Mutation: Updates a conversation (rename, move to folder) with optimistic cache updates and rollback.
 import {
   type InfiniteData,
   type QueryClient,

@@ -1,10 +1,11 @@
+// Query: Fetches whether the app is in maintenance mode (boolean). Cached for 30s, no refetch on focus.
 import { useQuery } from '@tanstack/react-query'
 
-interface UseFetchMaintenanceModeOptions {
+export interface UseFetchMaintenanceModeOptions {
   enabled?: boolean
 }
 
-interface MaintenanceModeResponse {
+export interface MaintenanceModeResponse {
   isMaintenanceMode: boolean
 }
 

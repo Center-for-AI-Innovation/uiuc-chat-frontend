@@ -1,10 +1,11 @@
+// Query: Fetches the list of all available course names. Cached for 5 minutes.
 import { useQuery } from '@tanstack/react-query'
 
-interface UseFetchAllCourseNamesOptions {
+export interface UseFetchAllCourseNamesOptions {
   enabled?: boolean
 }
 
-interface AllCourseNamesResponse {
+export interface AllCourseNamesResponse {
   all_course_names: string[]
 }
 

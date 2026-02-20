@@ -1,11 +1,13 @@
+import { useFetchAllCourseMetadata } from '~/hooks/queries/useFetchAllCourseMetadata'
+
 import { useAuth } from 'react-oidc-context'
-import { Table, Title, Text } from '@mantine/core'
+import { Table, Text } from '@mantine/core'
+import { notifications } from '@mantine/notifications'
 import { useEffect, useState } from 'react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { useRouter } from 'next/router'
-import { DataTable } from 'mantine-datatable'
 import styled from 'styled-components'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { montserrat_heading } from 'fonts'
 import Link from 'next/link'
 import React from 'react'
 import { useMediaQuery } from '@mantine/hooks'
@@ -15,7 +17,6 @@ import {
   IconSelector,
   IconAlertCircle,
 } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
 
 const StyledRow = styled.tr`
   &:hover {
@@ -75,21 +76,22 @@ const ResponsiveTableWrapper = styled.div`
 type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'privacy' | 'owner' | 'admins'
 
+const EMPTY_COURSES: { [key: string]: CourseMetadata }[] = []
+
 const ListProjectTable: React.FC = () => {
   const auth = useAuth()
-  const [courses, setProjects] = useState<
-    { [key: string]: CourseMetadata }[] | null
-  >(null)
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+
+  // React Query hooks
+  const { data: rawData = EMPTY_COURSES, isFetched } =
+    useFetchAllCourseMetadata({
+      currUserEmail: auth.user?.profile.email || '',
+      enabled: !auth.isLoading && auth.isAuthenticated === true,
+    })
+
   const [rows, setRows] = useState<JSX.Element[]>([])
-  const [isFullyLoaded, setIsFullyLoaded] = useState<boolean>(false)
-  const isMobile = useMediaQuery('(max-width: 768px)')
   const [sortColumn, setSortColumn] = useState<SortableColumn>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
-  const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>(
-    [],
-  )
 
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {
@@ -214,41 +216,7 @@ const ListProjectTable: React.FC = () => {
     sortData()
   }, [sortColumn, sortDirection, rawData])
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      console.log('Fetching projects')
-
-      if (auth.isLoading) {
-        return
-      }
-
-      if (auth.isAuthenticated && auth.user?.profile.email) {
-        console.log('Signed')
-
-        const currUserEmail = auth.user.profile.email
-        console.log(currUserEmail)
-        if (!currUserEmail) {
-          throw new Error('No email found for the user')
-        }
-
-        const response = await fetch(
-          `/api/UIUC-api/getAllCourseMetadata?currUserEmail=${currUserEmail}`,
-        )
-        const data = await response.json()
-        if (data) {
-          setRawData(data)
-          setIsFullyLoaded(true)
-        } else {
-          console.log('No project found with the given name')
-          setIsFullyLoaded(true)
-        }
-      } else {
-        console.log('User not signed in')
-        setIsFullyLoaded(true)
-      }
-    }
-    fetchCourses()
-  }, [auth.isLoading, auth.isAuthenticated])
+  const isFullyLoaded = !auth.isAuthenticated || isFetched
 
   if (auth.isLoading || !isFullyLoaded) {
     // Loading screen is actually NOT worth it :/ just return null

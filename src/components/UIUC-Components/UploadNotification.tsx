@@ -1,5 +1,7 @@
 'use client'
 
+import { useFetchFailedDocuments } from '~/hooks/queries/useFetchFailedDocuments'
+
 import React, { useState, useEffect } from 'react'
 import { Card, Text, Button, Tooltip } from '@mantine/core'
 import {
@@ -21,7 +23,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useQuery } from '@tanstack/react-query'
 
 export interface FileUpload {
   name: string
@@ -30,21 +31,6 @@ export interface FileUpload {
   url?: string
   error?: string
   isBaseUrl?: boolean
-}
-
-interface FailedDocumentsResponse {
-  final_docs: Array<{
-    id: string | number
-    course_name: string
-    readable_filename: string
-    s3_path: string
-    url: string
-    base_url: string
-    created_at: string
-    error: string
-  }>
-  total_count: number
-  recent_fail_count: number
 }
 
 interface UploadNotificationProps {
@@ -59,30 +45,20 @@ function UploadNotificationContent({
   onClose,
   projectName,
 }: UploadNotificationProps) {
-  const [isMinimized, setIsMinimized] = useState(false)
-  const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
-  const { data: failedDocuments } = useQuery<FailedDocumentsResponse>({
-    queryKey: ['failedDocuments', projectName, 1, '', '', 'created_at', 'desc'],
-    queryFn: async () => {
-      // FIXME match queryKey parameters
-      const from = 0
-      const to = 19 // 20 results per page, adjust as needed
-      const filter_key = ''
-      const filter_value = ''
-      const sort_column = 'created_at'
-      const sort_direction = 'desc'
-
-      const response = await fetch(
-        `/api/materialsTable/fetchFailedDocuments?from=${from}&to=${to}&course_name=${projectName}&filter_key=${filter_key}&filter_value=${filter_value}&sort_column=${sort_column}&sort_direction=${sort_direction}`,
-      )
-      if (!response.ok) {
-        throw new Error('Failed to fetch failed documents')
-      }
-      return response.json()
-    },
+  const { data: failedDocuments } = useFetchFailedDocuments({
+    courseName: projectName,
+    from: 0,
+    to: 19,
+    filterKey: '',
+    filterValue: '',
+    sortColumn: 'created_at',
+    sortDirection: 'desc',
     staleTime: 10000,
     enabled: !!projectName,
   })
+
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [currentFiles, setCurrentFiles] = useState<FileUpload[]>([])
   useEffect(() => {
     if (files && Array.isArray(files)) {
       setCurrentFiles((prevFiles) => {

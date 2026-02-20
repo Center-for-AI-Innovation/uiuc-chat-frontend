@@ -1,3 +1,8 @@
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchN8nApiKey } from '~/hooks/queries/useFetchN8nApiKey'
+import { useTestN8nAPI } from '~/hooks/queries/useTestN8nAPI'
+import { useUpdateN8nApiKey } from '~/hooks/queries/useUpdateN8nApiKey'
+
 import {
   Button,
   Card,
@@ -19,7 +24,6 @@ import {
   IconExternalLink,
 } from '@tabler/icons-react'
 
-import { type CourseMetadata } from '~/types/courseMetadata'
 import { CannotEditCourse } from './CannotEditCourse'
 
 import { notifications } from '@mantine/notifications'
@@ -37,7 +41,6 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { useFetchAllWorkflows } from '~/utils/functionCalling/handleFunctionCalling'
 import { IntermediateStateAccordion } from './IntermediateStateAccordion'
 
@@ -58,13 +61,18 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
   const currentPageName = GetCurrentPageName()
   const auth = useAuth()
 
+  const { data: courseMetadata } = useFetchCourseMetadata({
+    courseName: currentPageName,
+    enabled: Boolean(currentPageName) && !auth.isLoading,
+  })
+  const testN8nAPI = useTestN8nAPI()
+  const { data: fetchedN8nApiKey } = useFetchN8nApiKey(currentPageName)
+  const updateN8nApiKey = useUpdateN8nApiKey()
+
   const useIllinoisChatConfig = useMemo(() => {
     return process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
   }, [])
 
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
   const [currentEmail, setCurrentEmail] = useState('')
   const [n8nApiKeyTextbox, setN8nApiKeyTextbox] = useState('')
   const [n8nApiKey, setN8nApiKey] = useState('')
@@ -122,18 +130,12 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
 
     // TEST KEY TO SEE IF VALID (unless it's empty, that's fine.)
     if (n8nApiKeyTextbox) {
-      const keyTestResponse = await fetch(`/api/UIUC-api/tools/testN8nAPI`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      try {
+        const keyTestResult = await testN8nAPI.mutateAsync({
           n8nApiKey: n8nApiKeyTextbox,
-        }),
-      })
-      console.log('keyTestResponse: ', await keyTestResponse.json())
-
-      if (!keyTestResponse.ok) {
+        })
+        console.log('keyTestResponse: ', keyTestResult)
+      } catch {
         notifications.show({
           id: 'error-notification-bad-key',
           title: 'Key appears invalid',
@@ -158,122 +160,83 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
     }
 
     console.log('Saving n8n API Key:', n8nApiKeyTextbox)
-    const response = await fetch(`/api/UIUC-api/tools/upsertN8nAPIKey`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    updateN8nApiKey.mutate(
+      {
         course_name: currentPageName,
         n8n_api_key: n8nApiKeyTextbox,
-      }),
-    })
-    setN8nApiKey(n8nApiKeyTextbox)
-    refetchWorkflows()
+      },
+      {
+        onSuccess: () => {
+          setN8nApiKey(n8nApiKeyTextbox)
+          refetchWorkflows()
 
-    if (isErrorTools) {
-      errorFetchingWorkflowsToast()
-      return
-    }
+          if (isErrorTools) {
+            errorFetchingWorkflowsToast()
+            return
+          }
 
-    if (!flows_table) {
-      notifications.show({
-        id: 'error-notification',
-        title: 'Error',
-        message: 'Failed to fetch workflows. Please try again later.',
-        autoClose: 10000,
-        color: 'red',
-        radius: 'lg',
-        icon: <IconAlertCircle />,
-        className: 'my-notification-class',
-        styles: notificationStyles(true),
-        loading: false,
-      })
-      return
-    }
+          if (!flows_table) {
+            notifications.show({
+              id: 'error-notification',
+              title: 'Error',
+              message: 'Failed to fetch workflows. Please try again later.',
+              autoClose: 10000,
+              color: 'red',
+              radius: 'lg',
+              icon: <IconAlertCircle />,
+              className: 'my-notification-class',
+              styles: notificationStyles(true),
+              loading: false,
+            })
+            return
+          }
 
-    if (response.ok) {
-      notifications.show({
-        id: 'n8n-api-key-saved',
-        title: 'Success',
-        message: 'n8n API Key saved successfully!',
-        autoClose: 10000,
-        color: 'green',
-        radius: 'lg',
-        icon: <IconCheck />,
-        className: 'my-notification-class',
-        styles: notificationStyles(false),
-        loading: false,
-      })
-    } else {
-      notifications.show({
-        id: 'error-notification',
-        title: 'Error',
-        message: 'Failed to save n8n API Key. Please try again later.',
-        autoClose: 10000,
-        color: 'red',
-        radius: 'lg',
-        icon: <IconAlertCircle />,
-        className: 'my-notification-class',
-        styles: notificationStyles(true),
-        loading: false,
-      })
-    }
-    setIsLoading(false)
+          notifications.show({
+            id: 'n8n-api-key-saved',
+            title: 'Success',
+            message: 'n8n API Key saved successfully!',
+            autoClose: 10000,
+            color: 'green',
+            radius: 'lg',
+            icon: <IconCheck />,
+            className: 'my-notification-class',
+            styles: notificationStyles(false),
+            loading: false,
+          })
+          setIsLoading(false)
+        },
+        onError: () => {
+          notifications.show({
+            id: 'error-notification',
+            title: 'Error',
+            message: 'Failed to save n8n API Key. Please try again later.',
+            autoClose: 10000,
+            color: 'red',
+            radius: 'lg',
+            icon: <IconAlertCircle />,
+            className: 'my-notification-class',
+            styles: notificationStyles(true),
+            loading: false,
+          })
+          setIsLoading(false)
+        },
+      },
+    )
   }
 
   useEffect(() => {
-    const getApiKey = async () => {
-      try {
-        const response = await fetch('/api/UIUC-api/getN8Napikey', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ course_name: currentPageName }),
-        })
-
-        const data = await response.json()
-        const apiKey = data.api_key?.[0]?.n8n_api_key
-
-        if (apiKey) {
-          setN8nApiKeyTextbox(apiKey)
-          setN8nApiKey(apiKey)
-        } else {
-          console.warn('API key not found in response:', data)
-        }
-      } catch (error) {
-        console.error('Error getting course data:', error)
-      }
+    if (fetchedN8nApiKey) {
+      setN8nApiKeyTextbox(fetchedN8nApiKey)
+      setN8nApiKey(fetchedN8nApiKey)
     }
+  }, [fetchedN8nApiKey])
 
-    getApiKey()
-  }, [currentPageName])
-
+  // Set current email when auth is ready
   useEffect(() => {
-    const fetchData = async () => {
-      const userEmail = auth.user?.profile.email
-      setCurrentEmail(userEmail as string)
-
-      try {
-        const metadata: CourseMetadata = (await fetchCourseMetadata(
-          currentPageName,
-        )) as CourseMetadata
-
-        if (metadata && metadata.is_private) {
-          metadata.is_private = JSON.parse(
-            metadata.is_private as unknown as string,
-          )
-        }
-        setCourseMetadata(metadata)
-      } catch (error) {
-        console.error(error)
-        // alert('An error occurred while fetching course metadata. Please try again later.')
-      }
+    if (!auth.isLoading && auth.user?.profile.email) {
+      setCurrentEmail(auth.user.profile.email)
     }
-
-    fetchData()
-  }, [currentPageName, !auth.isLoading])
+  }, [auth.isLoading, auth.user?.profile.email])
 
   const errorFetchingWorkflowsToast = () => {
     notifications.show({

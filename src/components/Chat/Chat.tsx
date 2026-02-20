@@ -1,4 +1,13 @@
 // src/components/Chat/Chat.tsx
+import { useDownloadPresignedUrlQuery } from '~/hooks/queries/useDownloadPresignedUrl'
+import { useFetchEnabledDocGroups } from '@/hooks/queries/useFetchEnabledDocGroups'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
+import { useDeleteMessages } from '@/hooks/queries/useDeleteMessages'
+import { useLogConversation } from '@/hooks/queries/useLogConversation'
+import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+
 import { Button, Text } from '@mantine/core'
 import {
   IconAlertCircle,
@@ -29,7 +38,6 @@ import { v4 as uuidv4 } from 'uuid'
 
 import HomeContext from '~/pages/api/home/home.context'
 
-import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { ChatInput } from './ChatInput'
 import { ChatLoader } from './ChatLoader'
 import { ErrorMessageDiv } from './ErrorMessageDiv'
@@ -57,13 +65,6 @@ import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
-import { useFetchEnabledDocGroups } from '@/hooks/queries/useFetchEnabledDocGroups'
-import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
-import { useDeleteMessages } from '@/hooks/queries/useDeleteMessages'
-import { useLogConversation } from '@/hooks/queries/useLogConversation'
-import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
-import { useRouteChat } from '@/hooks/queries/useRouteChat'
-import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
@@ -110,34 +111,28 @@ export const Chat = memo(
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
+    const getCurrentPageName = () => {
+      // /CS-125/dashboard --> CS-125
+      return router.asPath.slice(1).split('/')[0] as string
+    }
+    const bannerS3Path = courseMetadata?.banner_image_s3 || undefined
+
+    // React Query hooks
     const { refetch: refetchLLMProviders } = useFetchLLMProviders({
       projectName: courseName,
     })
     const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
     const { mutateAsync: routeChatAsync } = useRouteChat()
-    // const
-    const [bannerUrl, setBannerUrl] = useState<string | null>(null)
-    const getCurrentPageName = () => {
-      // /CS-125/dashboard --> CS-125
-      return router.asPath.slice(1).split('/')[0] as string
-    }
-    const [chat_ui] = useState(new ChatUI(new MLCEngine()))
-
-    const [inputContent, setInputContent] = useState<string>('')
-
-    const [enabledDocumentGroups, setEnabledDocumentGroups] = useState<
-      string[]
-    >(['All Documents']) // Default to 'All Documents' so retrieval can work immediately
-    const [enabledTools, setEnabledTools] = useState<string[]>([])
-
+    const { data: bannerUrl } = useDownloadPresignedUrlQuery(
+      bannerS3Path,
+      courseName,
+    )
     const logConversationMutation = useLogConversation(getCurrentPageName())
-
     const {
       data: documentGroupsHook,
       isSuccess: isSuccessDocumentGroups,
       // isError: isErrorDocumentGroups,
     } = useFetchEnabledDocGroups(getCurrentPageName())
-
     const {
       data: toolsHook,
       isSuccess: isSuccessTools,
@@ -145,21 +140,14 @@ export const Chat = memo(
       isError: isErrorTools,
       error: toolLoadingError,
     } = useFetchAllWorkflows(getCurrentPageName())
+    const updateConversationMutation = useUpdateConversation(
+      currentEmail,
+      queryClient,
+      courseName,
+    )
+    const deleteMessagesMutation = useDeleteMessages(currentEmail, courseName)
 
     const permission = get_user_permission(courseMetadata, auth)
-
-    useEffect(() => {
-      if (
-        courseMetadata?.banner_image_s3 &&
-        courseMetadata.banner_image_s3 !== ''
-      ) {
-        fetchPresignedUrl(courseMetadata.banner_image_s3, courseName).then(
-          (url) => {
-            setBannerUrl(url)
-          },
-        )
-      }
-    }, [courseMetadata])
 
     const {
       state: {
@@ -180,6 +168,16 @@ export const Chat = memo(
       handleFeedbackUpdate,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
+
+    // const
+    const [chat_ui] = useState(new ChatUI(new MLCEngine()))
+
+    const [inputContent, setInputContent] = useState<string>('')
+
+    const [enabledDocumentGroups, setEnabledDocumentGroups] = useState<
+      string[]
+    >(['All Documents']) // Default to 'All Documents' so retrieval can work immediately
+    const [enabledTools, setEnabledTools] = useState<string[]>([])
 
     useEffect(() => {
       const loadModel = async () => {
@@ -215,13 +213,6 @@ export const Chat = memo(
     const chatContainerRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const editedMessageIdRef = useRef<string | undefined>(undefined)
-    const updateConversationMutation = useUpdateConversation(
-      currentEmail,
-      queryClient,
-      courseName,
-    )
-
-    const deleteMessagesMutation = useDeleteMessages(currentEmail, courseName)
 
     // Document Groups
     useEffect(() => {
@@ -281,22 +272,14 @@ export const Chat = memo(
     ) => {
       // Log conversation to database
       try {
-        const response = await fetch(`/api/UIUC-api/logConversation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(
-            createLogConversationPayload(
-              getCurrentPageName(),
-              conversation,
-              message,
-              earliestEditedMessageId,
-            ),
+        await logConversationMutation.mutateAsync(
+          createLogConversationPayload(
+            getCurrentPageName(),
+            conversation,
+            message,
+            earliestEditedMessageId,
           ),
-        })
-        // const data = await response.json()
-        // return data.success
+        )
       } catch (error) {
         console.error('Error setting course data:', error)
       }
@@ -1937,19 +1920,13 @@ export const Chat = memo(
               updatedConversation.messages.length - 1
             ] ?? null
           if (latestAssistantMessage) {
-            await fetch('/api/UIUC-api/logConversation', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(
-                createLogConversationPayload(
-                  getCurrentPageName(),
-                  updatedConversation,
-                  latestAssistantMessage,
-                ),
+            await logConversationMutation.mutateAsync(
+              createLogConversationPayload(
+                getCurrentPageName(),
+                updatedConversation,
+                latestAssistantMessage,
               ),
-            })
+            )
           }
         } catch (error) {
           homeDispatch({

@@ -1,3 +1,5 @@
+import { useFetchMaintenanceMode } from '~/hooks/queries/useFetchMaintenanceMode'
+
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
 import { appWithTranslation } from 'next-i18next'
@@ -12,7 +14,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useRouter } from 'next/router'
 import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
-import { useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect } from 'react'
 
 // import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
@@ -52,11 +54,19 @@ if (typeof window !== 'undefined') {
   }
 }
 
+function MaintenanceGate({ children }: { children: ReactNode }) {
+  const { data: isMaintenanceMode } = useFetchMaintenanceMode()
+
+  if (isMaintenanceMode) {
+    return <Maintenance />
+  }
+
+  return <>{children}</>
+}
+
 const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
   const router = useRouter()
   const queryClient = new QueryClient()
-  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false)
-  const effectRan = useRef(false)
 
   useEffect(() => {
     // Track page views in PostHog
@@ -68,30 +78,10 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
     }
   }, [])
 
-  useEffect(() => {
-    const checkMaintenanceMode = async () => {
-      if (effectRan.current) return
-
-      try {
-        const response = await fetch('/api/UIUC-api/getMaintenanceModeFast')
-        const data = await response.json()
-        setIsMaintenanceMode(data.isMaintenanceMode)
-      } catch (error) {
-        console.error('Failed to check maintenance mode:', error)
-        setIsMaintenanceMode(false)
-      }
-    }
-
-    checkMaintenanceMode()
-    effectRan.current = true
-  }, [])
-
-  if (isMaintenanceMode) {
-    return <Maintenance />
-  } else {
-    return (
-      <KeycloakProvider>
-        <QueryClientProvider client={queryClient}>
+  return (
+    <KeycloakProvider>
+      <QueryClientProvider client={queryClient}>
+        <MaintenanceGate>
           <PostHogProvider client={posthog}>
             {/* <SpeedInsights /> */}
             <Analytics />
@@ -142,10 +132,10 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
               </ThemeProvider>
             </MantineProvider>
           </PostHogProvider>
-        </QueryClientProvider>
-      </KeycloakProvider>
-    )
-  }
+        </MaintenanceGate>
+      </QueryClientProvider>
+    </KeycloakProvider>
+  )
 }
 
 // export default .withTRPC(MyApp)

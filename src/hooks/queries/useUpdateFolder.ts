@@ -1,3 +1,4 @@
+// Mutation: Updates a conversation folder (rename) with optimistic cache updates and rollback.
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { type FolderWithConversation } from '~/types/folder'
 import { saveFolderToServer } from '@/hooks/__internal__/folders'

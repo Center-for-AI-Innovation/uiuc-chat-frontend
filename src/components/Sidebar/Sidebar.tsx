@@ -1,3 +1,5 @@
+import { useDownloadPresignedUrlQuery } from '@/hooks/queries/useDownloadPresignedUrl'
+
 import {
   IconEdit,
   IconFolderPlus,
@@ -7,7 +9,6 @@ import {
 } from '@tabler/icons-react'
 import { type ReactNode } from 'react'
 import Image from 'next/image'
-import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 
 import { IconSettings } from '@tabler/icons-react'
@@ -65,23 +66,10 @@ const Sidebar = <T,>({
   const permission = courseMetadata
     ? get_user_permission(courseMetadata, auth)
     : 'no_permission'
-  const { data: presignedBannerUrl } = useQuery({
-    queryKey: ['bannerUrl', courseName, courseMetadata?.banner_image_s3],
-    enabled:
-      Boolean(courseName && courseName !== 'chat') &&
-      Boolean(courseMetadata?.banner_image_s3),
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        s3_path: courseMetadata?.banner_image_s3 as string,
-        course_name: courseName as string,
-      })
-      const res = await fetch(`/api/UIUC-api/getPresignedUrl?${params}`)
-      if (!res.ok) throw new Error('Failed to fetch banner URL')
-      const json = await res.json()
-      return json.presignedUrl as string
-    },
-  })
+  const { data: presignedBannerUrl } = useDownloadPresignedUrlQuery(
+    courseMetadata?.banner_image_s3,
+    courseName,
+  )
   const imageSrc =
     courseName === 'chat'
       ? '/media/logo_illinois.png'

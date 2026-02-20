@@ -1,3 +1,6 @@
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
+
 import {
   Button,
   Card,
@@ -14,7 +17,6 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { callSetCourseMetadata, uploadToS3 } from '~/utils/apiUtils'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import SetExampleQuestions from './SetExampleQuestions'
 // import { Checkbox } from '@radix-ui/react-checkbox'
@@ -94,6 +96,11 @@ export const UploadCard = memo(function UploadCard({
   sidebarCollapsed?: boolean
 }) {
   const auth = useAuth()
+  const queryClient = useQueryClient()
+  const uploadToS3Mutation = useUploadToS3()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useUpdateCourseMetadata(projectName)
+
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
 
   // Get responsive card width classes based on sidebar state
@@ -101,7 +108,6 @@ export const UploadCard = memo(function UploadCard({
   const [projectDescription, setProjectDescription] = useState(
     initialMetadata?.project_description || '',
   )
-  const queryClient = useQueryClient()
   const [introMessage, setIntroMessage] = useState(
     initialMetadata?.course_intro_message || '',
   )
@@ -302,16 +308,12 @@ export const UploadCard = memo(function UploadCard({
                 onClick={async () => {
                   if (metadata) {
                     metadata.project_description = projectDescription
-                    const resp = await callSetCourseMetadata(
-                      projectName,
-                      metadata,
-                    )
-                    if (!resp) {
+                    await setCourseMetadataAsync(metadata).catch(() => {
                       console.log(
                         'Error upserting course metadata for course: ',
                         projectName,
                       )
-                    }
+                    })
                   }
                 }}
               >
@@ -371,16 +373,12 @@ export const UploadCard = memo(function UploadCard({
                           metadata.course_intro_message = introMessage
                           // Update the courseMetadata object
 
-                          const resp = await callSetCourseMetadata(
-                            projectName,
-                            metadata,
-                          )
-                          if (!resp) {
+                          await setCourseMetadataAsync(metadata).catch(() => {
                             console.log(
                               'Error upserting course metadata for course: ',
                               projectName,
                             )
-                          }
+                          })
                         }
                       }}
                     >
@@ -430,15 +428,21 @@ export const UploadCard = memo(function UploadCard({
                     // Assuming the file is converted to a URL somewhere else
                     if (e.target.files?.length) {
                       console.log('Uploading to s3')
-                      const banner_s3_image = await uploadToS3(
-                        e.target.files?.[0] ?? null,
-                        '', // No user_id needed for course logos
-                        projectName,
-                        'document-group', // Course logos belong with course materials
-                      )
+                      const file = e.target.files[0]
+                      if (!file) {
+                        console.error('No file selected')
+                        return
+                      }
+                      const banner_s3_image =
+                        await uploadToS3Mutation.mutateAsync({
+                          file,
+                          uniqueFileName: `${crypto.randomUUID()}.${file.name.split('.').pop()}`,
+                          courseName: projectName,
+                          uploadType: 'document-group',
+                        })
                       if (banner_s3_image && metadata) {
                         metadata.banner_image_s3 = banner_s3_image
-                        await callSetCourseMetadata(projectName, metadata)
+                        await setCourseMetadataAsync(metadata)
                       }
                     }
                   }}

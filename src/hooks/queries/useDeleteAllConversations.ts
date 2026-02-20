@@ -1,3 +1,4 @@
+// Mutation: Deletes all conversations for a project with optimistic cache clearing and delayed invalidation.
 import {
   type InfiniteData,
   type QueryClient,

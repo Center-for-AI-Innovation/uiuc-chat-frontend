@@ -1,3 +1,4 @@
+// Mutation: Deletes a conversation folder with optimistic cache removal. Invalidates conversationHistory on settle.
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { type FolderWithConversation } from '~/types/folder'
 import { deleteFolderFromServer } from '@/hooks/__internal__/folders'

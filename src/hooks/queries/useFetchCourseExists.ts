@@ -1,14 +1,16 @@
+// Query: Checks whether a course exists by name. Returns boolean.
 import { useQuery } from '@tanstack/react-query'
 
-interface FetchCourseExistsVariables {
+export interface FetchCourseExistsVariables {
   courseName: string
 }
 
-interface UseFetchCourseExistsOptions extends FetchCourseExistsVariables {
+export interface UseFetchCourseExistsOptions
+  extends FetchCourseExistsVariables {
   enabled?: boolean
 }
 
-interface CourseExistsResponse {
+export interface CourseExistsResponse {
   exists: boolean
 }
 

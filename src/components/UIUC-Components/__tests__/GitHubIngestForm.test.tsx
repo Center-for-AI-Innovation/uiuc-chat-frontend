@@ -1,9 +1,12 @@
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-import { createTestQueryClient } from '~/test-utils/renderWithProviders'
+import {
+  createTestQueryClient,
+  renderWithProviders,
+} from '~/test-utils/renderWithProviders'
 import type { FileUpload } from '../UploadNotification'
 
 vi.mock('framer-motion', () => {
@@ -68,14 +71,14 @@ describe('GitHubIngestForm', () => {
     const axios = (await import('axios')).default as any
     axios.post.mockResolvedValueOnce({ data: { ok: true } })
 
-    // First poll: docs in progress (creates additional file entries)
-    // Second poll: completed docs (marks additional entries complete)
+    // React-query auto-fetches on mount (pollStep 1), so the first manual
+    // interval callback sees pollStep 2.  Thresholds are shifted by 1.
     let pollStep = 0
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
       const url = String(input?.url ?? input)
       if (url.includes('/api/materialsTable/docsInProgress')) {
         pollStep += 1
-        if (pollStep === 1) {
+        if (pollStep <= 2) {
           return new Response(
             JSON.stringify({
               documents: [
@@ -100,7 +103,7 @@ describe('GitHubIngestForm', () => {
         })
       }
       if (url.includes('/api/materialsTable/successDocs')) {
-        if (pollStep <= 1) {
+        if (pollStep <= 2) {
           return new Response(JSON.stringify({ documents: [] }), {
             status: 200,
             headers: { 'content-type': 'application/json' },
@@ -123,12 +126,13 @@ describe('GitHubIngestForm', () => {
     })
 
     const GitHubIngestForm = (await import('../GitHubIngestForm')).default
-    render(
+    renderWithProviders(
       <GitHubIngestForm
         project_name="CS101"
         setUploadFiles={setUploadFiles as any}
         queryClient={queryClient}
       />,
+      { queryClient },
     )
 
     await waitFor(() => expect(setIntervalSpy).toHaveBeenCalled())
@@ -151,6 +155,7 @@ describe('GitHubIngestForm', () => {
     await user.click(ingestButton)
     await waitFor(() => expect(axios.post).toHaveBeenCalled())
 
+    if (intervalCallback) await intervalCallback()
     if (intervalCallback) await intervalCallback()
     if (intervalCallback) await intervalCallback()
 
@@ -197,12 +202,13 @@ describe('GitHubIngestForm', () => {
     const { notifications } = await import('@mantine/notifications')
     const GitHubIngestForm = (await import('../GitHubIngestForm')).default
 
-    render(
+    renderWithProviders(
       <GitHubIngestForm
         project_name="CS101"
         setUploadFiles={setUploadFiles as any}
         queryClient={queryClient}
       />,
+      { queryClient },
     )
 
     await user.click(screen.getByText(/^GitHub$/i))

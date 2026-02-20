@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { handleExport } from '../handleExport'
+import handleExport from '~/hooks/__internal__/handleExport'
 
 describe('handleExport', () => {
   it('returns server error message for non-ok responses', async () => {

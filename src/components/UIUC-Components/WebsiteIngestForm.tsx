@@ -1,3 +1,6 @@
+import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
+import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
+
 import React, { useEffect, useMemo, useState } from 'react'
 import {
   Text,
@@ -51,6 +54,10 @@ export default function WebsiteIngestForm({
   setUploadFiles: React.Dispatch<React.SetStateAction<FileUpload[]>>
   queryClient: QueryClient
 }): JSX.Element {
+  const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(project_name)
+  const { refetch: refetchDocsInProgress } =
+    useFetchDocsInProgress(project_name)
+
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -183,14 +190,9 @@ export default function WebsiteIngestForm({
 
   useEffect(() => {
     const checkIngestStatus = async () => {
-      const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${project_name}`,
-      )
-      const data = await response.json()
-      const docsResponse = await fetch(
-        `/api/materialsTable/successDocs?course_name=${project_name}`,
-      )
-      const docsData = await docsResponse.json()
+      const { data } = await refetchDocsInProgress()
+      const { data: successDocs } = await refetchSuccessDocs()
+      const docsData = { documents: successDocs }
       // Helper function to organize docs by base URL
       const organizeDocsByBaseUrl = (
         docs: Array<{ base_url: string; url: string }>,

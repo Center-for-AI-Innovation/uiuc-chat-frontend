@@ -1,3 +1,5 @@
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+
 import React, { useState, useEffect, useMemo } from 'react'
 import {
   IconLock,
@@ -9,7 +11,6 @@ import {
 } from '@tabler/icons-react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import EmailListAccordion from './EmailListAccordion'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { motion } from 'framer-motion'
 import { Accordion } from '@/components/shadcn/accordion'
@@ -66,6 +67,8 @@ export default function ShareSettingsModal({
   }, [])
 
   const queryClient = useQueryClient()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useUpdateCourseMetadata(projectName)
   const [metadata, setMetadata] = useState<CourseMetadata>(initialMetadata)
 
   // Only update from props when modal is opened
@@ -165,7 +168,7 @@ export default function ShareSettingsModal({
 
     setMetadata(updatedMetadata)
     queryClient.setQueryData(['courseMetadata', projectName], updatedMetadata)
-    await callSetCourseMetadata(projectName, updatedMetadata)
+    await setCourseMetadataAsync(updatedMetadata)
   }
 
   // Removed old toggle handlers in favor of unified dropdown access control

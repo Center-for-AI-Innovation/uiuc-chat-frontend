@@ -29,19 +29,27 @@ vi.mock('../VariableModal', () => ({
   ),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
+vi.mock('~/hooks/queries/useUploadToS3', async () => {
+  const { useMutation } = await import('@tanstack/react-query')
+  const mockUploadToS3 = vi.fn(async ({ file }: any) => {
+    if (!file) return undefined
+    return `cs101/${file.name}`
+  })
   return {
-    ...actual,
-    uploadToS3: vi.fn(async (file: File | null) => {
-      if (!file) return undefined
-      return `cs101/${file.name}`
-    }),
-    fetchPresignedUrl: vi.fn(async () => {
-      return 'https://s3.amazonaws.com/bucket/file?X-Amz-Signature=abc&X-Amz-Date=20000101T000000Z&X-Amz-Expires=60'
-    }),
+    uploadToS3: mockUploadToS3,
+    useUploadToS3: () =>
+      useMutation({
+        mutationKey: ['uploadToS3'],
+        mutationFn: mockUploadToS3,
+      }),
   }
 })
+
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(async () => {
+    return 'https://s3.amazonaws.com/bucket/file?X-Amz-Signature=abc&X-Amz-Date=20000101T000000Z&X-Amz-Expires=60'
+  }),
+}))
 
 describe('ChatInput', () => {
   afterEach(() => {
@@ -568,7 +576,7 @@ describe('ChatInput', () => {
     const user = userEvent.setup()
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('@/hooks/__internal__/downloadPresignedUrl')
     ;(api.fetchPresignedUrl as any).mockResolvedValueOnce(undefined)
 
     const { container } = renderWithProviders(
@@ -600,7 +608,7 @@ describe('ChatInput', () => {
   it('marks image uploads as failed when uploadToS3 returns no key', async () => {
     const user = userEvent.setup()
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('~/hooks/queries/useUploadToS3')
     ;(api.uploadToS3 as any).mockResolvedValueOnce(undefined)
 
     const { container } = renderWithProviders(

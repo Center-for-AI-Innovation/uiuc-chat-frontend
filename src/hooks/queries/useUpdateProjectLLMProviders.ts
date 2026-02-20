@@ -1,9 +1,10 @@
+// Mutation: Updates a project's LLM provider configuration with debouncing (1s debounce, 10s max wait) and optimistic cache updates.
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { debounce } from 'lodash'
 import { useMemo, useRef } from 'react'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
-type PendingPromise = {
+export type PendingPromise = {
   resolve: (value: unknown) => void
   reject: (reason?: unknown) => void
 }

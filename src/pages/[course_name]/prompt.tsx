@@ -1,5 +1,8 @@
 // src/pages/[course_name]/prompt.tsx
 'use client'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
+
 import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
@@ -21,8 +24,6 @@ import SettingsLayout, {
 import PromptEditor from '~/components/UIUC-Components/PromptEditor'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -46,8 +47,24 @@ const CourseMain: NextPage = () => {
   const isLoaded = !auth.isLoading
   const isSignedIn = auth.isAuthenticated
   const user = auth.user
-  const [courseExists, setCourseExists] = useState<boolean | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+
+  const shouldFetch = router.isReady && !auth.isLoading && Boolean(courseName)
+
+  // React Query hooks
+  const { data: courseExists, isLoading: isCheckingExists } =
+    useFetchCourseExists({
+      courseName: courseName || '',
+      enabled: shouldFetch,
+    })
+  const {
+    data: metadata,
+    isLoading: isFetchingMetadata,
+    error,
+  } = useFetchCourseMetadata({
+    courseName: courseName || '',
+    enabled: shouldFetch,
+  })
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
@@ -55,39 +72,42 @@ const CourseMain: NextPage = () => {
 
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
+  // Handle error states from the hook
   useEffect(() => {
-    if (!router.isReady || auth.isLoading) return
-    const fetchCourseData = async () => {
-      setIsLoading(true)
-      const response = await fetch(
-        `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
-      )
-      const data = await response.json()
-      setCourseExists(data)
-      try {
-        const fetchedMetadata: CourseMetadata = (await fetchCourseMetadata(
-          courseName,
-        )) as CourseMetadata
-        if (fetchedMetadata === null) {
-          setErrorType(404)
-          return
-        }
-      } catch (error) {
-        console.error(error)
-
-        const errorWithStatus = error as Error & { status?: number }
-        const status = errorWithStatus.status
-        if (status === 401 || status === 403 || status === 404) {
-          setErrorType(status as 401 | 403 | 404)
-        }
-      } finally {
-        setIsLoading(false)
+    if (error) {
+      console.error(error)
+      const errorWithStatus = error as Error & { status?: number }
+      const status = errorWithStatus.status
+      if (status === 401 || status === 403 || status === 404) {
+        setErrorType(status as 401 | 403 | 404)
       }
     }
-    fetchCourseData()
-  }, [router.isReady, auth.isLoading, courseName])
+  }, [error])
 
-  if (!isLoaded || isLoading) {
+  // Check for 404 when metadata is null after loading completes
+  useEffect(() => {
+    if (
+      !isFetchingMetadata &&
+      router.isReady &&
+      !auth.isLoading &&
+      courseName &&
+      metadata === undefined &&
+      !error
+    ) {
+      setErrorType(404)
+    }
+  }, [
+    isFetchingMetadata,
+    router.isReady,
+    auth.isLoading,
+    courseName,
+    metadata,
+    error,
+  ])
+
+  const isLoading = !isLoaded || isFetchingMetadata || isCheckingExists
+
+  if (isLoading) {
     return <LoadingPlaceholderForAdminPages />
   }
 
@@ -129,7 +149,7 @@ const CourseMain: NextPage = () => {
     return <CannotEditGPT4Page course_name={courseName as string} />
   }
 
-  if (courseExists === null) {
+  if (courseExists === undefined) {
     return (
       <MainPageBackground>
         <LoadingSpinner />

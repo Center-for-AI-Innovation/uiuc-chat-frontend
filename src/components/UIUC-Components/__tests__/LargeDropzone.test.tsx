@@ -1,6 +1,7 @@
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
+import { renderWithProviders } from '~/test-utils/renderWithProviders'
 import userEvent from '@testing-library/user-event'
 
 import type { FileUpload } from '../UploadNotification'
@@ -46,10 +47,9 @@ vi.mock('@mantine/dropzone', () => {
   return { Dropzone }
 })
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return { ...actual, callSetCourseMetadata: vi.fn(async () => ({})) }
-})
+vi.mock('@/hooks/__internal__/setCourseMetadata', () => ({
+  callSetCourseMetadata: vi.fn(async () => true),
+}))
 
 vi.mock('uuid', () => ({ v4: () => 'uuid-1' }))
 
@@ -61,7 +61,7 @@ describe('LargeDropzone', () => {
   it('shows the disabled state message', async () => {
     const { default: LargeDropzone } = await import('../LargeDropzone')
 
-    render(
+    renderWithProviders(
       <LargeDropzone
         courseName="CS101"
         current_user_email="me@example.com"
@@ -81,7 +81,9 @@ describe('LargeDropzone', () => {
   it('uploads + ingests files for a new course and redirects to dashboard', async () => {
     const user = userEvent.setup()
     const { default: LargeDropzone } = await import('../LargeDropzone')
-    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+    const { callSetCourseMetadata } = await import(
+      '@/hooks/__internal__/setCourseMetadata'
+    )
 
     const push = vi.fn(async () => {})
     const reload = vi.fn()
@@ -149,7 +151,7 @@ describe('LargeDropzone', () => {
       },
     )
 
-    render(
+    renderWithProviders(
       <LargeDropzone
         courseName="CS101"
         current_user_email="me@example.com"

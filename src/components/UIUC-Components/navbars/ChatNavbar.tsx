@@ -1,3 +1,5 @@
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import {
   Burger,
   Container,
@@ -161,10 +163,22 @@ interface ChatNavbarProps {
 
 const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   const router = useRouter()
+  const auth = useAuth()
+
+  const getCurrentCourseName = () => {
+    return router.asPath.split('/')[1]
+  }
+  const courseName = getCurrentCourseName()
+
+  // Use React Query hook to fetch course metadata
+  const { data: courseMetadata } = useFetchCourseMetadata({
+    courseName: courseName || '',
+    enabled: auth.isAuthenticated && Boolean(courseName),
+  })
+
   const [opened, { toggle }] = useDisclosure(false)
   const [show, setShow] = useState(true)
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false)
-  const auth = useAuth()
 
   const { classes, theme } = useStyles({ isAdmin: isAdminOrOwner })
   const [windowWidth, setWindowWidth] = useState(
@@ -178,26 +192,17 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
   } = useContext(HomeContext)
 
   const topBarRef = useRef<HTMLDivElement | null>(null)
-  const getCurrentCourseName = () => {
-    return router.asPath.split('/')[1]
-  }
 
+  // PostHog identification and admin/owner check
   useEffect(() => {
-    const fetchCourses = async () => {
-      if (auth.isAuthenticated) {
-        const userEmail = auth.user?.profile.email
-        const currUserEmails = userEmail ? [userEmail] : []
-        posthog?.identify(auth.user?.profile.sub, {
-          email: currUserEmails[0] || 'no_email',
-        })
+    if (auth.isAuthenticated && auth.user?.profile.email) {
+      const userEmail = auth.user.profile.email
+      const currUserEmails = [userEmail]
+      posthog?.identify(auth.user.profile.sub, {
+        email: currUserEmails[0] || 'no_email',
+      })
 
-        const response = await fetch(
-          `/api/UIUC-api/getCourseMetadata?course_name=${getCurrentCourseName()}`,
-        )
-        const courseMetadata = await response.json().then((data) => {
-          return data['course_metadata']
-        })
-
+      if (courseMetadata) {
         if (
           currUserEmails.includes(courseMetadata.course_owner) ||
           currUserEmails.some((email) =>
@@ -210,8 +215,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
         }
       }
     }
-    fetchCourses()
-  }, [auth.isAuthenticated])
+  }, [auth.isAuthenticated, auth.user?.profile.email, courseMetadata, posthog])
 
   useEffect(() => {
     const handleResize = () => {
