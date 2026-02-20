@@ -1,5 +1,5 @@
-// Populate the db: pgvector/embeddings (init-vector.sql) and custom functions (0001_custom_functions.sql).
-// Run after db:push. Requires psql and POSTGRES_* env.
+// Populate the db: custom functions (0001_custom_functions.sql). pgvector + embeddings table are applied via db:migrate (0006_pgvector_extension.sql, 0007_embeddings_table.sql).
+// Run after db:migrate if you need to re-run custom functions. Requires psql and POSTGRES_* env.
 import { spawn } from 'child_process'
 import path from 'path'
 import dotenv from 'dotenv'
@@ -8,7 +8,6 @@ dotenv.config()
 
 // Paths relative to project root (where npm run db:populate is run)
 const sqlFiles = [
-  path.join(process.cwd(), 'src/db/init-vector.sql'), // pgvector extension + embeddings table
   path.join(process.cwd(), 'src/db/migrations/0001_custom_functions.sql'),
 ]
 

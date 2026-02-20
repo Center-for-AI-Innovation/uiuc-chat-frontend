@@ -1,38 +1,50 @@
-// vectorUtils.ts — updates doc_groups in vector store via backend (pgvector).
+// vectorUtils.ts — updates doc_groups in the vector store (pgvector) via Drizzle.
+import { and, eq, or, sql } from 'drizzle-orm'
 import { type CourseDocument } from '~/types/courseMaterials'
 import posthog from 'posthog-js'
-import { getBackendUrl } from '~/utils/apiUtils'
+import { db } from '~/db/dbClient'
+import { embeddings } from '~/db/schema'
 
-/** Response shape from backend /update-doc-groups (for compatibility with callers). */
+/** Response shape for compatibility with callers. */
 export interface UpdateDocGroupsResponse {
   status: 'completed'
 }
 
 /**
- * Update doc_groups for the given document in the vector store (pgvector) via backend.
+ * Update doc_groups for the given document in the embeddings table (pgvector) via Drizzle.
+ * Matches backend logic: WHERE course_name AND s3_path AND (url = $url or url IS NULL/empty).
  */
 export async function updateDocGroupsInVectorStore(
   courseName: string,
   doc: CourseDocument,
 ): Promise<UpdateDocGroupsResponse> {
   try {
-    const backendUrl = getBackendUrl()
-    const response = await fetch(`${backendUrl}/update-doc-groups`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        courseName,
-        s3_path: doc.s3_path ?? '',
-        url: doc.url ?? '',
-        doc_groups: doc.doc_groups ?? [],
-      }),
-    })
-    if (!response.ok) {
-      const text = await response.text()
-      throw new Error(text || `update-doc-groups ${response.status}`)
-    }
-    const data = (await response.json()) as UpdateDocGroupsResponse
-    return data
+    const s3_path = doc.s3_path ?? ''
+    const url = doc.url ?? ''
+    const doc_groups = doc.doc_groups ?? []
+
+    const where =
+      url !== ''
+        ? and(
+            eq(embeddings.course_name, courseName),
+            eq(embeddings.s3_path, s3_path),
+            eq(embeddings.url, url),
+          )
+        : and(
+            eq(embeddings.course_name, courseName),
+            eq(embeddings.s3_path, s3_path),
+            or(sql`${embeddings.url} IS NULL`, eq(embeddings.url, '')),
+          )
+
+    await db
+      .update(embeddings)
+      .set({
+        doc_groups,
+        updated_at: new Date(),
+      })
+      .where(where)
+
+    return { status: 'completed' }
   } catch (error) {
     console.error('Error in updateDocGroupsInVectorStore:', error)
     posthog.capture('add_doc_group', {

@@ -43,6 +43,31 @@ export async function fetchDocumentGroups(courseName: string) {
   }
 }
 
+/** Shape expected by vectorSearchWithDrizzle for doc-group filtering. */
+export interface DocGroupsForVectorSearch {
+  disabled_doc_groups: string[]
+  public_doc_groups: { course_name: string; name: string; enabled: boolean }[]
+}
+
+/**
+ * Get disabled and public doc groups for a course for use in vector search.
+ * Replaces backend getDisabledDocGroups / getPublicDocGroups.
+ */
+export async function getDocGroupsForVectorSearch(
+  courseName: string,
+): Promise<DocGroupsForVectorSearch> {
+  const rows = await fetchDocumentGroups(courseName)
+  const disabled_doc_groups = rows
+    .filter((r) => r.enabled === false)
+    .map((r) => r.name ?? '')
+  const public_doc_groups = rows.map((r) => ({
+    course_name: courseName,
+    name: r.name ?? '',
+    enabled: r.enabled ?? true,
+  }))
+  return { disabled_doc_groups, public_doc_groups }
+}
+
 export async function addDocumentsToDocGroup(
   courseName: string,
   doc: CourseDocument,

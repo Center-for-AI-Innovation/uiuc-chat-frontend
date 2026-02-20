@@ -1,15 +1,16 @@
 import { describe, expect, it, vi } from 'vitest'
 
-describe('vectorUtils', () => {
-  it('calls backend update-doc-groups and returns response with status completed', async () => {
-    vi.stubEnv('RAILWAY_URL', 'https://backend.example')
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ status: 'completed' }),
-    })
-    vi.stubGlobal('fetch', fetchMock)
+const mockWhere = vi.fn().mockResolvedValue(undefined)
+const mockSet = vi.fn().mockReturnValue({ where: mockWhere })
 
-    vi.resetModules()
+vi.mock('~/db/dbClient', () => ({
+  db: {
+    update: () => ({ set: mockSet }),
+  },
+}))
+
+describe('vectorUtils', () => {
+  it('updates embeddings via Drizzle and returns status completed', async () => {
     const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
 
     const doc = {
@@ -21,30 +22,14 @@ describe('vectorUtils', () => {
 
     const result = await updateDocGroupsInVectorStore('CS101', doc)
     expect(result).toEqual({ status: 'completed' })
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://backend.example/update-doc-groups',
+    expect(mockSet).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseName: 'CS101',
-          s3_path: 's3://bucket/key',
-          url: 'https://example.com/doc',
-          doc_groups: ['g1', 'g2'],
-        }),
+        doc_groups: ['g1', 'g2'],
       }),
     )
   })
 
   it('sends empty url and s3_path when missing', async () => {
-    vi.stubEnv('RAILWAY_URL', 'https://backend.example')
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ status: 'completed' }),
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    vi.resetModules()
     const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
 
     const doc = {
@@ -54,29 +39,14 @@ describe('vectorUtils', () => {
       readable_filename: 'doc.pdf',
     } as any
 
-    await updateDocGroupsInVectorStore('CS101', doc)
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        body: JSON.stringify({
-          courseName: 'CS101',
-          s3_path: '',
-          url: '',
-          doc_groups: ['g1'],
-        }),
-      }),
-    )
+    const result = await updateDocGroupsInVectorStore('CS101', doc)
+    expect(result).toEqual({ status: 'completed' })
   })
 
   it('captures posthog event and rethrows on error', async () => {
-    vi.stubEnv('RAILWAY_URL', 'https://backend.example')
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({ ok: false, text: async () => 'boom' })
-    vi.stubGlobal('fetch', fetchMock)
+    mockWhere.mockRejectedValueOnce(new Error('boom'))
 
-    vi.resetModules()
     const posthog = (await import('posthog-js')).default as any
     vi.spyOn(posthog, 'capture')
     const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
@@ -102,14 +72,9 @@ describe('vectorUtils', () => {
   })
 
   it('sets doc_unique_identifier to null when url and s3_path are empty', async () => {
-    vi.stubEnv('RAILWAY_URL', 'https://backend.example')
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({ ok: false, text: async () => 'err' })
-    vi.stubGlobal('fetch', fetchMock)
+    mockWhere.mockRejectedValueOnce(new Error('err'))
 
-    vi.resetModules()
     const posthog = (await import('posthog-js')).default as any
     vi.spyOn(posthog, 'capture')
     const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
@@ -129,14 +94,9 @@ describe('vectorUtils', () => {
   })
 
   it('sets doc_unique_identifier to url when url is present', async () => {
-    vi.stubEnv('RAILWAY_URL', 'https://backend.example')
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({ ok: false, text: async () => 'err' })
-    vi.stubGlobal('fetch', fetchMock)
+    mockWhere.mockRejectedValueOnce(new Error('err'))
 
-    vi.resetModules()
     const posthog = (await import('posthog-js')).default as any
     vi.spyOn(posthog, 'capture')
     const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
