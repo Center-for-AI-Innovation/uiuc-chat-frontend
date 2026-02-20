@@ -14,24 +14,22 @@ const folder: FolderWithConversation = {
 }
 
 describe('folder API helpers', () => {
-  it('fetchFolders returns [] on non-ok responses', async () => {
+  it('fetchFolders rejects on non-ok responses', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response('oops', { status: 500 }),
     )
 
-    await expect(fetchFolders('TEST101', 'user@example.com')).resolves.toEqual(
-      [],
+    await expect(fetchFolders('TEST101', 'user@example.com')).rejects.toThrow(
+      'Error fetching folders',
     )
   })
 
-  it('fetchFolders returns [] when fetch throws', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  it('fetchFolders rejects when fetch throws', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
 
-    await expect(fetchFolders('TEST101', 'user@example.com')).resolves.toEqual(
-      [],
+    await expect(fetchFolders('TEST101', 'user@example.com')).rejects.toThrow(
+      'boom',
     )
-    expect(errSpy).toHaveBeenCalled()
   })
 
   it('fetchFolders returns parsed folders on success', async () => {
@@ -62,16 +60,14 @@ describe('folder API helpers', () => {
     )
   })
 
-  it('saveFolderToServer logs errors when response is non-ok', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  it('saveFolderToServer rejects when response is non-ok', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response('no', { status: 500, statusText: 'Nope' }),
     )
 
     await expect(
       saveFolderToServer(folder, 'TEST101', 'user@example.com'),
-    ).resolves.toBeUndefined()
-    expect(errSpy).toHaveBeenCalled()
+    ).rejects.toThrow('Nope')
   })
 
   it('deleteFolderFromServer sends delete payload', async () => {
@@ -89,25 +85,21 @@ describe('folder API helpers', () => {
     )
   })
 
-  it('deleteFolderFromServer logs errors when fetch throws', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  it('deleteFolderFromServer rejects when fetch throws', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
 
     await expect(
       deleteFolderFromServer(folder, 'TEST101', 'user@example.com'),
-    ).resolves.toBeUndefined()
-    expect(errSpy).toHaveBeenCalled()
+    ).rejects.toThrow('boom')
   })
 
-  it('deleteFolderFromServer logs errors when response is non-ok', async () => {
-    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  it('deleteFolderFromServer rejects when response is non-ok', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response('no', { status: 500 }),
     )
 
     await expect(
       deleteFolderFromServer(folder, 'TEST101', 'user@example.com'),
-    ).resolves.toBeUndefined()
-    expect(errSpy).toHaveBeenCalled()
+    ).rejects.toThrow('Error deleting folder')
   })
 })
