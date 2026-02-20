@@ -18,7 +18,7 @@ const config = {
       sizeLimit: '100mb',
     },
   },
-  webpack(config) {
+  webpack(config, { isServer }) {
     // Merge existing experiments with the required ones
     config.experiments = {
       ...(config.experiments || {}),
@@ -34,6 +34,16 @@ const config = {
         /node_modules\/next\/dist\/build\/webpack\/loaders\/next-middleware-wasm-loader\.js/,
       type: 'webassembly/async',
     })
+
+    // Keep postgres (Node-only; uses tls, net, perf_hooks) out of client bundle. Server uses it via API routes.
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve?.fallback,
+        tls: false,
+        net: false,
+        perf_hooks: false,
+      }
+    }
 
     return config
   },
@@ -63,6 +73,8 @@ const config = {
   },
   experimental: {
     esmExternals: false, // To make certain packages work with the /pages router.
+    // Keep Node-only packages (postgres uses tls, perf_hooks) out of the bundle; required for API routes that use dbClient/vectorSearch.
+    serverComponentsExternalPackages: ['postgres'],
   },
   async headers() {
     return [

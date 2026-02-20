@@ -13,7 +13,7 @@ vi.mock('~/pages/api/authorization', () => ({
       h,
 }))
 
-vi.mock('~/pages/util/fetchContexts', () => ({
+vi.mock('~/server/fetchContextsForVectorSearch', () => ({
   fetchContextsViaDrizzleVectorSearch:
     hoisted.fetchContextsViaDrizzleVectorSearch,
 }))

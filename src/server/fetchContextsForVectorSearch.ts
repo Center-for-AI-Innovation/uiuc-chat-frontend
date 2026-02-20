@@ -3,7 +3,7 @@ import { vectorSearchWithDrizzle } from '~/db/vectorSearch'
 import { embedQuery } from '~/utils/embedQuery'
 import { getDocGroupsForVectorSearch } from '~/db/dbHelpers'
 
-/** Fetch query embedding (frontend) + doc groups from frontend DB, then run vector search (Drizzle/pgvector). */
+/** Fetch query embedding (frontend) + doc groups from frontend DB, then run vector search (Drizzle/pgvector). Server-only. */
 export async function fetchContextsViaDrizzleVectorSearch(
   course_name: string,
   search_query: string,

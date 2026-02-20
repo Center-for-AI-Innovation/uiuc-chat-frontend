@@ -1,7 +1,7 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
-import { fetchContextsViaDrizzleVectorSearch } from '~/pages/util/fetchContexts'
+import { fetchContextsViaDrizzleVectorSearch } from '~/server/fetchContextsForVectorSearch'
 
 export default withCourseAccessFromRequest('any')(handler)
 
