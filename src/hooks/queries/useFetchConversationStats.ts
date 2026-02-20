@@ -1,5 +1,6 @@
 // Query: Fetches conversation analytics (per-day, per-hour, per-weekday breakdowns and heatmap data).
 import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './keys'
 
 export interface ConversationStatsResponse {
   per_day: { [date: string]: number }
@@ -44,7 +45,7 @@ export function useFetchConversationStats({
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: ['conversationStats', courseName, fromDate, toDate],
+    queryKey: queryKeys.conversationStats(courseName, fromDate, toDate),
     queryFn: () => fetchConversationStats(courseName, fromDate, toDate),
     enabled: enabled && Boolean(courseName),
   })

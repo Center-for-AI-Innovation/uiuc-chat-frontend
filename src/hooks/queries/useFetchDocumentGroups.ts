@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { type DocumentGroup } from '~/types/courseMaterials'
+import { queryKeys } from './keys'
 
 export function useFetchDocumentGroups(course_name: string) {
   // USAGE:
@@ -15,7 +16,7 @@ export function useFetchDocumentGroups(course_name: string) {
   const userId = auth.user?.profile.sub
 
   return useQuery({
-    queryKey: ['documentGroups', course_name],
+    queryKey: queryKeys.documentGroups(course_name),
     queryFn: async () => {
       // try {
       const response = await fetch('/api/documentGroups', {

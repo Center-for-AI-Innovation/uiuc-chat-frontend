@@ -1,6 +1,7 @@
 // Mutation: Fetches relevant document contexts for a search query (used in non-chat search). Also exports the raw function.
 import { useMutation } from '@tanstack/react-query'
 import { fetchContexts } from '../__internal__/fetchContexts'
+import { mutationKeys } from './keys'
 
 export interface FetchContextsParams {
   course_name: string
@@ -13,7 +14,7 @@ export interface FetchContextsParams {
 
 export function useFetchContexts() {
   return useMutation({
-    mutationKey: ['fetchContexts'],
+    mutationKey: mutationKeys.fetchContexts(),
     mutationFn: (params: FetchContextsParams) => fetchContexts(params),
   })
 }

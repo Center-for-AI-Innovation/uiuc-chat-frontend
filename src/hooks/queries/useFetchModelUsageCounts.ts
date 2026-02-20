@@ -1,6 +1,7 @@
 // Query: Fetches LLM model usage counts for a project's analytics dashboard.
 import { useQuery } from '@tanstack/react-query'
 import { type ModelUsage } from '~/types/analytics'
+import { queryKeys } from './keys'
 
 async function fetchModelUsageCounts(
   courseName: string,
@@ -27,7 +28,7 @@ export function useFetchModelUsageCounts({
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: ['modelUsageCounts', courseName],
+    queryKey: queryKeys.modelUsageCounts(courseName),
     queryFn: () => fetchModelUsageCounts(courseName),
     enabled: enabled && Boolean(courseName),
   })

@@ -1,5 +1,6 @@
 // Query: Fetches the list of all available course names. Cached for 5 minutes.
 import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './keys'
 
 export interface UseFetchAllCourseNamesOptions {
   enabled?: boolean
@@ -24,7 +25,7 @@ export function useFetchAllCourseNames({
   enabled = true,
 }: UseFetchAllCourseNamesOptions = {}) {
   return useQuery({
-    queryKey: ['allCourseNames'],
+    queryKey: queryKeys.allCourseNames(),
     queryFn: fetchAllCourseNames,
     retry: 1,
     enabled,

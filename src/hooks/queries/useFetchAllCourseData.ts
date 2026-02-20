@@ -1,5 +1,6 @@
 // Query: Fetches all data for a course including distinct uploaded files.
 import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './keys'
 
 export interface AllCourseDataResponse {
   distinct_files: any
@@ -28,7 +29,7 @@ export function useFetchAllCourseData({
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: ['allCourseData', courseName],
+    queryKey: queryKeys.allCourseData(courseName),
     queryFn: () => fetchAllCourseData(courseName),
     enabled: enabled && Boolean(courseName),
   })

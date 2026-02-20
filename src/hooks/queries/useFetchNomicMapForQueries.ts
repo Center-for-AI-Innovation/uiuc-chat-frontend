@@ -1,6 +1,7 @@
 // Query: Fetches Nomic map data for visualizing conversation queries on a 2D embedding map.
 import { useQuery } from '@tanstack/react-query'
 import { type NomicMapData } from '~/types/analytics'
+import { queryKeys } from './keys'
 
 async function fetchNomicMapForQueries(
   courseName: string,
@@ -22,7 +23,7 @@ async function fetchNomicMapForQueries(
 
 export function useFetchNomicMapForQueries(courseName: string) {
   return useQuery({
-    queryKey: ['nomicMapForQueries', courseName],
+    queryKey: queryKeys.nomicMapForQueries(courseName),
     queryFn: () => fetchNomicMapForQueries(courseName),
     enabled: !!courseName,
   })

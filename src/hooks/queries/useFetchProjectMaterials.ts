@@ -1,6 +1,7 @@
 // Query: Fetches paginated project materials (documents) with filtering and sorting for the materials table.
 import { useQuery } from '@tanstack/react-query'
 import { type CourseDocument } from '~/types/courseMaterials'
+import { queryKeys } from './keys'
 
 export interface ProjectMaterialsResponse {
   final_docs?: CourseDocument[]
@@ -57,8 +58,7 @@ export function useFetchProjectMaterials({
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: [
-      'documents',
+    queryKey: queryKeys.projectMaterials(
       courseName,
       from,
       to,
@@ -66,7 +66,7 @@ export function useFetchProjectMaterials({
       filterValue,
       sortColumn,
       sortDirection,
-    ],
+    ),
     queryFn: () =>
       fetchProjectMaterials({
         courseName,

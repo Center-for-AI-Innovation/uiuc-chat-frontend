@@ -1,5 +1,6 @@
 // Query: Fetches project-level analytics (total conversations, messages, unique users, averages).
 import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './keys'
 
 export interface ProjectStatsResponse {
   total_conversations: number
@@ -35,7 +36,7 @@ export function useFetchProjectStats({
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: ['projectStats', courseName],
+    queryKey: queryKeys.projectStats(courseName),
     queryFn: () => fetchProjectStats(courseName),
     enabled: enabled && Boolean(courseName),
   })

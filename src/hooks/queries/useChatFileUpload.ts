@@ -1,5 +1,6 @@
 // Mutation: Uploads a file within a chat conversation for inline reference. Returns fileUploadId and chunks created.
 import { useMutation } from '@tanstack/react-query'
+import { mutationKeys } from './keys'
 
 export type ChatFileUploadRequest = {
   conversationId: string
@@ -38,7 +39,7 @@ async function chatFileUpload(
 
 export function useChatFileUpload() {
   return useMutation({
-    mutationKey: ['chatFileUpload'],
+    mutationKey: mutationKeys.chatFileUpload(),
     mutationFn: chatFileUpload,
   })
 }

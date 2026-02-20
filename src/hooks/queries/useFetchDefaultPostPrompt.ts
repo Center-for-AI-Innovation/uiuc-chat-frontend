@@ -1,5 +1,6 @@
 // Query: Fetches the default post-prompt text. Cached indefinitely (infinite staleTime).
 import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './keys'
 
 async function fetchDefaultPostPrompt(): Promise<string> {
   const response = await fetch('/api/getDefaultPostPrompt')
@@ -16,7 +17,7 @@ export function useFetchDefaultPostPrompt({
   enabled = true,
 }: { enabled?: boolean } = {}) {
   return useQuery({
-    queryKey: ['defaultPostPrompt'],
+    queryKey: queryKeys.defaultPostPrompt(),
     queryFn: fetchDefaultPostPrompt,
     staleTime: Infinity,
     enabled,

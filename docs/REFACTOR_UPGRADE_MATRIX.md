@@ -11,7 +11,7 @@ Last updated: 2026-02-20
 | A2-part-1 tests | Completed | Updated `src/utils/app/__tests__/folders.test.ts` to assert rejection behavior.                                                                                                             |
 | A2-part-2       | Completed | Updated `src/hooks/__internal__/conversation.ts` to throw on non-OK/failed fetch for conversation loaders while preserving valid empty-data semantics.                                      |
 | A2-part-2 tests | Completed | Updated `src/utils/app/__tests__/conversation.test.ts` to assert rejection behavior for non-OK response paths.                                                                              |
-| A3              | Pending   | Query key factory + key normalization not started yet.                                                                                                                                      |
+| A3              | Completed | Added `src/hooks/queries/keys.ts` and migrated query/mutation keys across hooks to shared factories while preserving existing key shapes and cache behavior.                                |
 | A4              | Pending   | Query-layer `any`/`unknown` cleanup not started yet.                                                                                                                                        |
 
 ## Track A - React Query Contract Stabilization (Do First)

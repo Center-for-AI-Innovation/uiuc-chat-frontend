@@ -5,11 +5,12 @@ import {
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
 import { callSetCourseMetadata } from '@/hooks/__internal__/setCourseMetadata'
+import { mutationKeys, queryKeys } from './keys'
 
 export function useUpdateCourseMetadata(courseName: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationKey: ['setCourseMetadata', courseName],
+    mutationKey: mutationKeys.setCourseMetadata(courseName),
     mutationFn: async (
       courseMetadata: CourseMetadata | CourseMetadataOptionalForUpsert,
     ) => {
@@ -20,10 +21,10 @@ export function useUpdateCourseMetadata(courseName: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['courseMetadata', courseName],
+        queryKey: queryKeys.courseMetadata(courseName),
       })
       queryClient.invalidateQueries({
-        queryKey: ['allCourseMetadata'],
+        queryKey: queryKeys.allCourseMetadata(),
       })
     },
     onError: (error) => {

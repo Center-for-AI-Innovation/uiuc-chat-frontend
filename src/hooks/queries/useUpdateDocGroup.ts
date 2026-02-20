@@ -2,6 +2,7 @@
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { type DocumentGroup } from '~/types/courseMaterials'
+import { queryKeys } from './keys'
 
 export function useUpdateDocGroup(
   course_name: string,
@@ -38,14 +39,13 @@ export function useUpdateDocGroup(
     // Optimistically update the cache
     onMutate: async ({ doc_group_obj, enabled }) => {
       await queryClient.cancelQueries({
-        queryKey: ['documentGroups', course_name],
+        queryKey: queryKeys.documentGroups(course_name),
       })
-      const previousDocumentGroups = queryClient.getQueryData([
-        'documentGroups',
-        course_name,
-      ])
+      const previousDocumentGroups = queryClient.getQueryData(
+        queryKeys.documentGroups(course_name),
+      )
       queryClient.setQueryData(
-        ['documentGroups', course_name],
+        queryKeys.documentGroups(course_name),
         (old: DocumentGroup[] | undefined) => {
           // Perform the optimistic update
           return old?.map((docGroup) => {
@@ -61,14 +61,14 @@ export function useUpdateDocGroup(
     onError: (err, variables, context) => {
       // Rollback on error
       queryClient.setQueryData(
-        ['documentGroups', course_name],
+        queryKeys.documentGroups(course_name),
         context?.previousDocumentGroups,
       )
     },
     onSettled: () => {
       // Refetch after mutation or error
       queryClient.invalidateQueries({
-        queryKey: ['documentGroups', course_name],
+        queryKey: queryKeys.documentGroups(course_name),
       })
     },
   })

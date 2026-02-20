@@ -3,6 +3,7 @@ import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { debounce } from 'lodash'
 import { useMemo, useRef } from 'react'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import { queryKeys } from './keys'
 
 export type PendingPromise = {
   resolve: (value: unknown) => void
@@ -57,14 +58,13 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
     onMutate: async (variables) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({
-        queryKey: ['projectLLMProviders', variables.projectName],
+        queryKey: queryKeys.projectLLMProviders(variables.projectName),
       })
 
       // Snapshot the previous value
-      const previousLLMProviders = queryClient.getQueryData([
-        'projectLLMProviders',
-        variables.projectName,
-      ])
+      const previousLLMProviders = queryClient.getQueryData(
+        queryKeys.projectLLMProviders(variables.projectName),
+      )
 
       // Return a context object with the snapshotted value
       return { previousLLMProviders }
@@ -72,7 +72,7 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
     onError: (_err, newData, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(
-        ['projectLLMProviders', newData.projectName],
+        queryKeys.projectLLMProviders(newData.projectName),
         context?.previousLLMProviders,
       )
     },
@@ -89,7 +89,7 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
       // })
       // Always invalidate the query after mutation settles(success or error)
       queryClient.invalidateQueries({
-        queryKey: ['projectLLMProviders', variables.projectName],
+        queryKey: queryKeys.projectLLMProviders(variables.projectName),
       })
     },
   })

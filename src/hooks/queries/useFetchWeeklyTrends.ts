@@ -1,6 +1,7 @@
 // Query: Fetches weekly conversation/usage trend data for a project's analytics dashboard.
 import { useQuery } from '@tanstack/react-query'
 import { type WeeklyTrend } from '~/types/analytics'
+import { queryKeys } from './keys'
 
 export type { WeeklyTrend }
 
@@ -30,7 +31,7 @@ export function useFetchWeeklyTrends({
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: ['weeklyTrends', courseName],
+    queryKey: queryKeys.weeklyTrends(courseName),
     queryFn: () => fetchWeeklyTrends(courseName),
     enabled: enabled && Boolean(courseName),
   })

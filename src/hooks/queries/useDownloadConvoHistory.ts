@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import downloadConversationHistory, {
   type DownloadConversationHistoryResult,
 } from '../__internal__/downloadConversationHistory'
+import { mutationKeys } from './keys'
 
 export type DownloadConvoHistoryRequest = {
   projectName: string
@@ -15,7 +16,7 @@ export function useDownloadConvoHistory() {
     Error,
     DownloadConvoHistoryRequest
   >({
-    mutationKey: ['downloadConvoHistory'],
+    mutationKey: mutationKeys.downloadConvoHistory(),
     mutationFn: ({ projectName }) =>
       downloadConversationHistory({ projectName, scope: 'user' }),
     onError: (error) => {

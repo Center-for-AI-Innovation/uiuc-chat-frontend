@@ -1,6 +1,7 @@
 // Query: Fetches metadata for all courses, returned as an object keyed by course name.
 import { useQuery } from '@tanstack/react-query'
 import { type CourseMetadata } from '~/types/courseMetadata'
+import { queryKeys } from './keys'
 
 async function fetchAllCourseMetadata(
   currUserEmail: string,
@@ -22,7 +23,7 @@ export function useFetchAllCourseMetadata({
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: ['allCourseMetadata', currUserEmail],
+    queryKey: queryKeys.allCourseMetadata(currUserEmail),
     queryFn: () => fetchAllCourseMetadata(currUserEmail),
     enabled: enabled && Boolean(currUserEmail),
   })

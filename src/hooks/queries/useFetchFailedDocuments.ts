@@ -1,6 +1,7 @@
 // Query: Fetches paginated failed documents with filtering/sorting. Includes recent failure count.
 import { useQuery } from '@tanstack/react-query'
 import { type FailedDocument } from '~/types/courseMaterials'
+import { queryKeys } from './keys'
 
 export type { FailedDocument }
 
@@ -60,8 +61,7 @@ export function useFetchFailedDocuments({
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: [
-      'failedDocuments',
+    queryKey: queryKeys.failedDocuments(
       courseName,
       from,
       to,
@@ -69,7 +69,7 @@ export function useFetchFailedDocuments({
       filterValue,
       sortColumn,
       sortDirection,
-    ],
+    ),
     queryFn: () =>
       fetchFailedDocuments({
         courseName,

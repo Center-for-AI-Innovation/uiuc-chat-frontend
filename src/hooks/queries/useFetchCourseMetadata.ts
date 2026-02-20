@@ -1,6 +1,7 @@
 // Query: Fetches metadata for a specific course by name (banner, description, settings, etc.).
 import { useQuery } from '@tanstack/react-query'
 import { fetchCourseMetadata } from '../__internal__/fetchCourseMetadata'
+import { queryKeys } from './keys'
 
 export interface FetchCourseMetadataVariables {
   courseName: string
@@ -16,7 +17,7 @@ export function useFetchCourseMetadata({
   enabled = true,
 }: UseFetchCourseMetadataOptions) {
   return useQuery({
-    queryKey: ['courseMetadata', courseName],
+    queryKey: queryKeys.courseMetadata(courseName),
     queryFn: () => fetchCourseMetadata({ courseName }),
     retry: 1,
     enabled: enabled && Boolean(courseName),

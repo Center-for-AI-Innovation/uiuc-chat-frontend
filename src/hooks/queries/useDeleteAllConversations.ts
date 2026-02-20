@@ -6,20 +6,17 @@ import {
 } from '@tanstack/react-query'
 import { type ConversationPage } from '~/types/chat'
 import { deleteAllConversationsFromServer } from '@/hooks/__internal__/conversation'
+import { mutationKeys, queryKeys } from './keys'
 
 export function useDeleteAllConversations(
   queryClient: QueryClient,
   user_email: string,
   course_name: string,
 ) {
-  const conversationHistoryKey = [
-    'conversationHistory',
-    course_name,
-    '',
-  ] as const
+  const conversationHistoryKey = queryKeys.conversationHistory(course_name, '')
 
   return useMutation({
-    mutationKey: ['deleteAllConversations', user_email, course_name],
+    mutationKey: mutationKeys.deleteAllConversations(user_email, course_name),
     mutationFn: async () =>
       deleteAllConversationsFromServer(course_name, user_email),
     onMutate: async () => {

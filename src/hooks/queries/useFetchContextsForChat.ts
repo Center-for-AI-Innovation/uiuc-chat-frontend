@@ -4,6 +4,7 @@ import {
   fetchContexts,
   fetchMQRContexts,
 } from '../__internal__/fetchContextsForChat'
+import { mutationKeys } from './keys'
 
 export interface FetchContextsForChatParams {
   course_name: string
@@ -25,7 +26,7 @@ export { fetchContexts, fetchMQRContexts }
 
 export function useFetchContextsForChatMutation() {
   return useMutation({
-    mutationKey: ['fetchContextsForChat'],
+    mutationKey: mutationKeys.fetchContextsForChat(),
     mutationFn: ({
       course_name,
       search_query,
@@ -45,7 +46,7 @@ export function useFetchContextsForChatMutation() {
 
 export function useFetchMQRContextsMutation() {
   return useMutation({
-    mutationKey: ['fetchMQRContexts'],
+    mutationKey: mutationKeys.fetchMQRContexts(),
     mutationFn: ({
       course_name,
       search_query,

@@ -1,6 +1,7 @@
 // Query: Fetches successfully ingested documents for a course.
 import { useQuery } from '@tanstack/react-query'
 import { type SuccessDoc } from '~/types/courseMaterials'
+import { queryKeys } from './keys'
 
 async function fetchSuccessDocs(courseName: string): Promise<SuccessDoc[]> {
   const response = await fetch(
@@ -17,7 +18,7 @@ async function fetchSuccessDocs(courseName: string): Promise<SuccessDoc[]> {
 
 export function useFetchSuccessDocs(courseName: string) {
   return useQuery({
-    queryKey: ['successDocs', courseName],
+    queryKey: queryKeys.successDocs(courseName),
     queryFn: () => fetchSuccessDocs(courseName),
     enabled: !!courseName,
   })

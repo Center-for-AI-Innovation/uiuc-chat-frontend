@@ -1,6 +1,7 @@
 // Query: Fetches documents currently being ingested/processed for a course.
 import { useQuery } from '@tanstack/react-query'
 import { type DocInProgress } from '~/types/courseMaterials'
+import { queryKeys } from './keys'
 
 export type { DocInProgress }
 
@@ -22,7 +23,7 @@ async function fetchDocsInProgress(
 
 export function useFetchDocsInProgress(courseName: string) {
   return useQuery({
-    queryKey: ['docsInProgress', courseName],
+    queryKey: queryKeys.docsInProgress(courseName),
     queryFn: () => fetchDocsInProgress(courseName),
     enabled: Boolean(courseName),
   })

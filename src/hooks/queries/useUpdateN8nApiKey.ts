@@ -1,9 +1,11 @@
 // Mutation: Upserts (creates or updates) the n8n API key for a course. Invalidates the cached key on success.
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { mutationKeys, queryKeys } from './keys'
 
 export function useUpdateN8nApiKey() {
   const queryClient = useQueryClient()
   return useMutation({
+    mutationKey: mutationKeys.updateN8nApiKey(),
     mutationFn: async ({
       course_name,
       n8n_api_key,
@@ -25,7 +27,7 @@ export function useUpdateN8nApiKey() {
     },
     onSettled: (_data, _error, { course_name }) => {
       queryClient.invalidateQueries({
-        queryKey: ['n8nApiKey', course_name],
+        queryKey: queryKeys.n8nApiKey(course_name),
       })
     },
   })

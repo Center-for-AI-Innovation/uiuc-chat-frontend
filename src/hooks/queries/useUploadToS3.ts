@@ -1,5 +1,6 @@
 // Mutation: Generates a presigned S3 POST URL and uploads a file to S3. Also exports the raw function.
 import { useMutation } from '@tanstack/react-query'
+import { mutationKeys } from './keys'
 
 export type UploadToS3Request = {
   file: File
@@ -56,7 +57,7 @@ export { uploadToS3 }
 
 export function useUploadToS3() {
   return useMutation({
-    mutationKey: ['uploadToS3'],
+    mutationKey: mutationKeys.uploadToS3(),
     mutationFn: uploadToS3,
   })
 }

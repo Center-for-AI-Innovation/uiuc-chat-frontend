@@ -1,12 +1,13 @@
 // Mutation: Exports a single conversation as a downloadable file. Also exports the raw fetch function.
 import { useMutation } from '@tanstack/react-query'
 import handleExport from '../__internal__/handleExport'
+import { mutationKeys } from './keys'
 
 export { handleExport }
 
 export function useExportConversationMutation() {
   return useMutation({
-    mutationKey: ['exportConversation'],
+    mutationKey: mutationKeys.exportConversation(),
     mutationFn: (course_name: string) => handleExport(course_name),
   })
 }

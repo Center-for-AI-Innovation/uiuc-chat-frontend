@@ -5,6 +5,7 @@ import {
   type CourseDocument,
   type DocumentGroup,
 } from '~/types/courseMaterials'
+import { queryKeys } from './keys'
 
 export function useAppendToDocGroup(
   course_name: string,
@@ -48,15 +49,16 @@ export function useAppendToDocGroup(
     // Optimistically update the cache
     onMutate: async ({ record, appendedGroup }) => {
       await queryClient.cancelQueries({
-        queryKey: ['documentGroups', course_name],
+        queryKey: queryKeys.documentGroups(course_name),
       })
-      await queryClient.cancelQueries({ queryKey: ['documents', course_name] })
-      const previousDocumentGroups = queryClient.getQueryData([
-        'documentGroups',
-        course_name,
-      ])
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.documents(course_name),
+      })
+      const previousDocumentGroups = queryClient.getQueryData(
+        queryKeys.documentGroups(course_name),
+      )
       queryClient.setQueryData(
-        ['documentGroups', course_name],
+        queryKeys.documentGroups(course_name),
         (old: DocumentGroup[] | undefined) => {
           console.log('old doc groups: ', old)
           // Perform the optimistic update
@@ -70,13 +72,11 @@ export function useAppendToDocGroup(
         },
       )
 
-      const previousDocuments = queryClient.getQueryData([
-        'documents',
-        course_name,
-        page,
-      ])
+      const previousDocuments = queryClient.getQueryData(
+        queryKeys.documents(course_name, page),
+      )
       queryClient.setQueryData(
-        ['documents', course_name, page],
+        queryKeys.documents(course_name, page),
         (
           old:
             | { final_docs: CourseDocument[]; total_count: number }
@@ -105,21 +105,23 @@ export function useAppendToDocGroup(
     onError: (err, variables, context) => {
       // Rollback on error
       queryClient.setQueryData(
-        ['documentGroups', course_name],
+        queryKeys.documentGroups(course_name),
         context?.previousDocumentGroups,
       )
 
       queryClient.setQueryData(
-        ['documents', course_name, page],
+        queryKeys.documents(course_name, page),
         context?.previousDocuments,
       )
     },
     onSettled: () => {
       // Refetch after mutation or error
       queryClient.invalidateQueries({
-        queryKey: ['documentGroups', course_name],
+        queryKey: queryKeys.documentGroups(course_name),
       })
-      queryClient.invalidateQueries({ queryKey: ['documents', course_name] })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.documents(course_name),
+      })
     },
   })
 }

@@ -1,6 +1,7 @@
 // Query + Mutation: Fetches presigned URLs for file downloads. Provides both declarative (useQuery) and imperative (useMutation) interfaces.
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { fetchPresignedUrl } from '@/hooks/__internal__/downloadPresignedUrl'
+import { queryKeys } from './keys'
 
 export type DownloadPresignedUrlRequest = {
   filePath: string
@@ -30,7 +31,7 @@ export function useDownloadPresignedUrlQuery(
   courseName?: string,
 ) {
   return useQuery({
-    queryKey: ['presignedUrl', 'download', filePath, courseName],
+    queryKey: queryKeys.presignedUrlDownload(filePath, courseName),
     enabled: Boolean(filePath),
     staleTime: 5 * 60 * 1000,
     queryFn: () => fetchPresignedUrl(filePath!, courseName),

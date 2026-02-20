@@ -1,5 +1,6 @@
 // Query: Fetches the total document count for a project/course.
 import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './keys'
 
 async function fetchProjectDocumentCount(courseName: string): Promise<number> {
   const response = await fetch(
@@ -16,7 +17,7 @@ async function fetchProjectDocumentCount(courseName: string): Promise<number> {
 
 export function useFetchProjectDocumentCount(courseName: string) {
   return useQuery({
-    queryKey: ['projectDocumentCount', courseName],
+    queryKey: queryKeys.projectDocumentCount(courseName),
     queryFn: () => fetchProjectDocumentCount(courseName),
     enabled: !!courseName,
   })

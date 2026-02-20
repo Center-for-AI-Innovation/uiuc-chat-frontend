@@ -1,5 +1,6 @@
 // Query: Fetches the n8n API key for a course. Also exports the raw fetch function.
 import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './keys'
 
 async function fetchN8nApiKey(courseName: string): Promise<string | undefined> {
   const response = await fetch('/api/UIUC-api/getN8Napikey', {
@@ -20,7 +21,7 @@ async function fetchN8nApiKey(courseName: string): Promise<string | undefined> {
 
 export function useFetchN8nApiKey(courseName: string) {
   return useQuery({
-    queryKey: ['n8nApiKey', courseName],
+    queryKey: queryKeys.n8nApiKey(courseName),
     queryFn: () => fetchN8nApiKey(courseName),
     enabled: Boolean(courseName),
   })

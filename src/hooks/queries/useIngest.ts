@@ -1,5 +1,6 @@
 // Mutation: Submits a file for ingestion into the project's knowledge base. Also exports the raw function.
 import { useMutation } from '@tanstack/react-query'
+import { mutationKeys } from './keys'
 
 export type IngestRequest = {
   uniqueFileName: string
@@ -31,7 +32,7 @@ async function ingest(body: IngestRequest): Promise<IngestResponse> {
 
 export function useIngest() {
   return useMutation({
-    mutationKey: ['ingest'],
+    mutationKey: mutationKeys.ingest(),
     mutationFn: ingest,
   })
 }
