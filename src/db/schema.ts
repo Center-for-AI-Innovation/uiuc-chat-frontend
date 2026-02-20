@@ -18,7 +18,7 @@ import {
   vector,
 } from 'drizzle-orm/pg-core'
 
-// Embeddings table (pgvector) — see init-vector.sql. Used for frontend vector search via Drizzle.
+// Embeddings table (pgvector) — see migrations 0006_pgvector_extension.sql, 0007_embeddings_table.sql. Used for frontend vector search via Drizzle.
 export const embeddings = pgTable('embeddings', {
   id: bigserial('id', { mode: 'number' }).primaryKey(),
   qdrant_id: uuid('qdrant_id').unique(),
