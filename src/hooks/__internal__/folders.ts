@@ -7,26 +7,24 @@ export async function fetchFolders(
   course_name: string,
   userEmail?: string,
 ): Promise<FolderWithConversation[]> {
-  let fetchedFolders = []
-  try {
-    const foldersResonse = await fetch(
-      `/api/folder?courseName=${course_name}`,
-      {
-        method: 'GET',
-        headers: createHeaders(userEmail),
-      },
-    )
+  const response = await fetch(`/api/folder?courseName=${course_name}`, {
+    method: 'GET',
+    headers: createHeaders(userEmail),
+  })
 
-    if (!foldersResonse.ok) {
-      throw new Error('Error fetching folders')
+  if (!response.ok) {
+    let errorMessage = 'Error fetching folders'
+    try {
+      const errorData = await response.json()
+      errorMessage = errorData.error || errorData.message || errorMessage
+    } catch {
+      errorMessage = response.statusText || errorMessage
     }
-    fetchedFolders = await foldersResonse.json()
-    // console.log('fetched folders ', fetchedFolders)
-  } catch (error) {
-    console.error('Error fetching folders:', error)
+    throw new Error(errorMessage)
   }
+
+  const fetchedFolders = (await response.json()) as FolderWithConversation[]
   return fetchedFolders
-  // dispatch({ field: 'folders', value: fetchedFolders })
 }
 
 export const saveFolderToServer = async (
@@ -34,19 +32,21 @@ export const saveFolderToServer = async (
   course_name: string,
   userEmail?: string,
 ) => {
-  try {
-    console.log('Saving conversation to server:', folder)
-    const response = await fetch('/api/folder', {
-      method: 'POST',
-      headers: createHeaders(userEmail),
-      body: JSON.stringify({ folder, courseName: course_name }),
-    })
+  const response = await fetch('/api/folder', {
+    method: 'POST',
+    headers: createHeaders(userEmail),
+    body: JSON.stringify({ folder, courseName: course_name }),
+  })
 
-    if (!response.ok) {
-      throw new Error(`Error saving folder: ` + response.statusText)
+  if (!response.ok) {
+    let errorMessage = 'Error saving folder'
+    try {
+      const errorData = await response.json()
+      errorMessage = errorData.error || errorData.message || errorMessage
+    } catch {
+      errorMessage = response.statusText || errorMessage
     }
-  } catch (error) {
-    console.error('Error saving folder:', error)
+    throw new Error(errorMessage)
   }
 }
 
@@ -55,20 +55,23 @@ export const deleteFolderFromServer = async (
   course_name: string,
   userEmail?: string,
 ) => {
-  try {
-    const response = await fetch('/api/folder', {
-      method: 'DELETE',
-      headers: createHeaders(userEmail),
-      body: JSON.stringify({
-        deletedFolderId: folder.id,
-        courseName: course_name,
-      }),
-    })
+  const response = await fetch('/api/folder', {
+    method: 'DELETE',
+    headers: createHeaders(userEmail),
+    body: JSON.stringify({
+      deletedFolderId: folder.id,
+      courseName: course_name,
+    }),
+  })
 
-    if (!response.ok) {
-      throw new Error('Error deleting folder')
+  if (!response.ok) {
+    let errorMessage = 'Error deleting folder'
+    try {
+      const errorData = await response.json()
+      errorMessage = errorData.error || errorData.message || errorMessage
+    } catch {
+      errorMessage = response.statusText || errorMessage
     }
-  } catch (error) {
-    console.error('Error deleting folder:', error)
+    throw new Error(errorMessage)
   }
 }
