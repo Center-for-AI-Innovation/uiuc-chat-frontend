@@ -1,5 +1,19 @@
 # Refactor + Upgrade Matrix (PR-by-PR)
 
+## Progress Tracker
+
+Last updated: 2026-02-20
+
+| Item            | Status    | Notes                                                                                                                                                                                       |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1              | Completed | Unified course/user conversation history download logic behind `src/hooks/__internal__/downloadConversationHistory.ts`, kept backward-compatible call signature, kept hook wrappers stable. |
+| A2-part-1       | Completed | Updated `src/hooks/__internal__/folders.ts` to throw on failed responses instead of swallowing errors.                                                                                      |
+| A2-part-1 tests | Completed | Updated `src/utils/app/__tests__/folders.test.ts` to assert rejection behavior.                                                                                                             |
+| A2-part-2       | Completed | Updated `src/hooks/__internal__/conversation.ts` to throw on non-OK/failed fetch for conversation loaders while preserving valid empty-data semantics.                                      |
+| A2-part-2 tests | Completed | Updated `src/utils/app/__tests__/conversation.test.ts` to assert rejection behavior for non-OK response paths.                                                                              |
+| A3              | Pending   | Query key factory + key normalization not started yet.                                                                                                                                      |
+| A4              | Pending   | Query-layer `any`/`unknown` cleanup not started yet.                                                                                                                                        |
+
 ## Track A - React Query Contract Stabilization (Do First)
 
 | PR  | Goal                                                   | Primary files                                                                                                                                                                                                                                                               | Key checks                                                                              | Rollback                                                                |
@@ -59,3 +73,16 @@ Run this minimal gate on every PR:
 ## Recommended Execution Order
 
 `A1 -> A2 -> A3 -> A4 -> B1 -> B2 -> B3 -> B4 -> C1 -> C2 -> C3 -> D1 -> D2 -> E1 -> E2 -> E3 -> E4`
+
+## Resume Checklist (Next Session)
+
+1. Start with A2-part-2: update `src/hooks/__internal__/conversation.ts` to throw on failed fetch/response paths (avoid silent fallback returns for true API errors).
+2. Update affected tests first:
+   - `src/hooks/__tests__/conversationQueries.test.tsx`
+   - any direct helper tests that assert previous fallback behavior.
+3. Run targeted tests:
+   - `npm run test -- src/hooks/__tests__/conversationQueries.test.tsx`
+   - `npm run test -- src/components/Chatbar/__tests__/Chatbar.test.tsx`
+4. Re-run baseline Track A checks:
+   - `npm run test -- src/hooks/__tests__/folderQueries.test.tsx src/utils/app/__tests__/folders.test.ts`
+5. After green tests, continue to A3 (query key factory in `src/hooks/queries/keys.ts`).

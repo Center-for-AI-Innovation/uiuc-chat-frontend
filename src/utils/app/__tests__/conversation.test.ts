@@ -578,13 +578,14 @@ describe('conversation utils', () => {
     ).toBe('a')
   })
 
-  it('fetchConversationHistory returns empty response when server returns non-ok', async () => {
+  it('fetchConversationHistory rejects when server returns non-ok', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response('no', { status: 500 }),
     )
 
-    const out = await fetchConversationHistory('', 'CS101', 0)
-    expect(out).toEqual({ conversations: [], nextCursor: null })
+    await expect(fetchConversationHistory('', 'CS101', 0)).rejects.toThrow(
+      'Error fetching conversation history',
+    )
   })
 
   it('fetchConversationHistory does not sync selectedConversation when not found', async () => {
@@ -634,11 +635,13 @@ describe('conversation utils', () => {
     })
   })
 
-  it('fetchLastConversation returns null when response is non-ok', async () => {
+  it('fetchLastConversation rejects when response is non-ok', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response('no', { status: 500 }),
     )
-    await expect(fetchLastConversation('CS101')).resolves.toBeNull()
+    await expect(fetchLastConversation('CS101')).rejects.toThrow(
+      'Error fetching last conversation',
+    )
   })
 
   it('saveConversations writes to localStorage', () => {
