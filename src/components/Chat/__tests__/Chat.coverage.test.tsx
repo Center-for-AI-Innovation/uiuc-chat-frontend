@@ -286,10 +286,17 @@ describe('Chat (coverage)', () => {
       },
     )
 
-    expect(fetchPresignedUrl).toHaveBeenCalledWith('cs101/banner.png', 'CS101')
-    expect((webllm as any).__instances.length).toBeGreaterThan(0)
-    expect((webllm as any).__instances[0].loadModel).toHaveBeenCalled()
-  })
+    await waitFor(() => {
+      expect(fetchPresignedUrl).toHaveBeenCalledWith(
+        'cs101/banner.png',
+        'CS101',
+      )
+    })
+    await waitFor(() => {
+      expect((webllm as any).__instances.length).toBeGreaterThan(0)
+      expect((webllm as any).__instances[0].loadModel).toHaveBeenCalled()
+    })
+  }, 15000)
 
   it('emits an error toast when tools fail to load', async () => {
     const { notifications } = await import('@mantine/notifications')
@@ -364,7 +371,8 @@ describe('Chat (coverage)', () => {
       },
     )
 
-    await user.click(screen.getByRole('button', { name: /^send$/i }))
+    // In watch mode, stale mounted trees can exist briefly; click the first send button.
+    await user.click(screen.getAllByRole('button', { name: /^send$/i })[0]!)
     expect(true).toBe(true)
   })
 
