@@ -87,6 +87,63 @@ describe('vectorUtils', () => {
         course_name: 'CS101',
         doc_readable_filename: 'doc.pdf',
         doc_groups: ['g1'],
+        doc_unique_identifier: 's3://bucket/key',
+      }),
+    )
+  })
+
+  it('reports doc_unique_identifier as doc.url when url is set and update fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    hoisted.mockWhere.mockRejectedValueOnce(new Error('db error'))
+
+    const posthog = (await import('posthog-js')).default as any
+    vi.spyOn(posthog, 'capture')
+
+    const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
+
+    const doc = {
+      url: 'https://example.com/page',
+      s3_path: 's3://bucket/key',
+      doc_groups: ['g1'],
+      readable_filename: 'doc.pdf',
+    } as any
+
+    await expect(updateDocGroupsInVectorStore('CS101', doc)).rejects.toThrow(
+      /db error/i,
+    )
+
+    expect(posthog.capture).toHaveBeenCalledWith(
+      'add_doc_group',
+      expect.objectContaining({
+        doc_unique_identifier: 'https://example.com/page',
+      }),
+    )
+  })
+
+  it('reports doc_unique_identifier as null when url and s3_path are empty and update fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    hoisted.mockWhere.mockRejectedValueOnce(new Error('db error'))
+
+    const posthog = (await import('posthog-js')).default as any
+    vi.spyOn(posthog, 'capture')
+
+    const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
+
+    const doc = {
+      url: '',
+      s3_path: '',
+      doc_groups: ['g1'],
+      readable_filename: 'doc.pdf',
+    } as any
+
+    await expect(updateDocGroupsInVectorStore('CS101', doc)).rejects.toThrow(
+      /db error/i,
+    )
+
+    expect(posthog.capture).toHaveBeenCalledWith(
+      'add_doc_group',
+      expect.objectContaining({
+        doc_unique_identifier: null,
       }),
     )
   })

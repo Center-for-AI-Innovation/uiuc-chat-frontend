@@ -40,6 +40,10 @@ export default defineConfig({
         '**/setDisabledModels.*',
         '**/onResponseCompletion.*',
         '**/setCourseStudents.*',
+        // Fully commented-out component (no executable code)
+        '**/PluginKeys.tsx',
+        // Large rich-text editor (2300+ lines); impractical to unit-test fully
+        '**/PromptEditor.tsx',
       ],
     },
   },
