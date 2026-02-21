@@ -9,7 +9,7 @@ const hoisted = vi.hoisted(() => ({
   fetchEnabledDocGroups: vi.fn(),
   removeDocGroup: vi.fn(),
   updateDocGroupStatus: vi.fn(),
-  addDocumentsToDocGroupQdrant: vi.fn(),
+  updateDocGroupsInVectorStore: vi.fn(),
   capture: vi.fn(),
 }))
 
@@ -29,8 +29,8 @@ vi.mock('~/db/dbHelpers', () => ({
   updateDocGroupStatus: hoisted.updateDocGroupStatus,
 }))
 
-vi.mock('~/utils/qdrantUtils', () => ({
-  addDocumentsToDocGroupQdrant: hoisted.addDocumentsToDocGroupQdrant,
+vi.mock('~/utils/vectorUtils', () => ({
+  updateDocGroupsInVectorStore: hoisted.updateDocGroupsInVectorStore,
 }))
 
 import handler from '~/pages/api/documentGroups'
@@ -44,7 +44,7 @@ describe('documentGroups API', () => {
 
   it('handles addDocumentsToDocGroup success', async () => {
     hoisted.addDocumentsToDocGroup.mockResolvedValueOnce(true)
-    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({
+    hoisted.updateDocGroupsInVectorStore.mockResolvedValueOnce({
       status: 'completed',
     })
 
@@ -74,9 +74,9 @@ describe('documentGroups API', () => {
     expect(res.json).toHaveBeenCalledWith({ success: true })
   })
 
-  it('rolls back SQL when Qdrant update fails in addDocumentsToDocGroup', async () => {
+  it('rolls back SQL when vector store update fails in addDocumentsToDocGroup', async () => {
     hoisted.addDocumentsToDocGroup.mockResolvedValueOnce(true)
-    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({
+    hoisted.updateDocGroupsInVectorStore.mockResolvedValueOnce({
       status: 'failed',
     })
 
@@ -129,7 +129,7 @@ describe('documentGroups API', () => {
 
   it('handles appendDocGroup and initializes doc_groups when missing', async () => {
     hoisted.addDocumentsToDocGroup.mockResolvedValueOnce(true)
-    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({
+    hoisted.updateDocGroupsInVectorStore.mockResolvedValueOnce({
       status: 'completed',
     })
 
@@ -158,9 +158,9 @@ describe('documentGroups API', () => {
     expect(res.status).toHaveBeenCalledWith(200)
   })
 
-  it('rolls back SQL when Qdrant update fails in appendDocGroup', async () => {
+  it('rolls back SQL when vector store update fails in appendDocGroup', async () => {
     hoisted.addDocumentsToDocGroup.mockResolvedValueOnce(true)
-    hoisted.addDocumentsToDocGroupQdrant.mockResolvedValueOnce({
+    hoisted.updateDocGroupsInVectorStore.mockResolvedValueOnce({
       status: 'failed',
     })
 
