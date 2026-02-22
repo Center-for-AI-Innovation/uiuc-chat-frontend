@@ -34,30 +34,25 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     // If this is a new message, ensure its timestamp is after the latest message
     if (!existing && latestMessage?.[0]?.created_at) {
       const latestTime = new Date(latestMessage[0].created_at).getTime()
-      dbMessage.created_at = new Date(latestTime + 1000).toISOString()
-      dbMessage.updated_at = dbMessage.created_at
+      dbMessage.created_at = new Date(latestTime + 1000)
+      dbMessage.updated_at = new Date(dbMessage.created_at)
     }
-
-    const dbNewMessage: NewMessages = {
-      ...dbMessage,
-      created_at: new Date(dbMessage.created_at),
-      updated_at: dbMessage.updated_at ? new Date(dbMessage.updated_at) : null,
+    if (typeof dbMessage.updated_at === 'undefined') {
+      dbMessage.updated_at = null as unknown as NewMessages['updated_at']
     }
 
     // If message exists, update it. If not, insert it.
     try {
       const result = await db
         .insert(messages)
-        .values([dbNewMessage])
+        .values([dbMessage])
         .onConflictDoUpdate({
           target: [messages.id],
           set: {
             content_text: dbMessage.content_text,
             role: dbMessage.role,
-            created_at: new Date(dbMessage.created_at),
-            updated_at: dbMessage.updated_at
-              ? new Date(dbMessage.updated_at)
-              : null,
+            created_at: dbMessage.created_at,
+            updated_at: dbMessage.updated_at ?? new Date(),
           },
         })
     } catch (error: any) {

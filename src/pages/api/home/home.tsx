@@ -45,6 +45,19 @@ import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
+const deriveAgentModeEnabled = (conversation?: Conversation): boolean => {
+  if (!conversation) return false
+  if (typeof conversation.agentModeEnabled === 'boolean') {
+    return conversation.agentModeEnabled
+  }
+
+  return (
+    conversation.messages?.some(
+      (msg) => Array.isArray(msg.agentEvents) && msg.agentEvents.length > 0,
+    ) ?? false
+  )
+}
+
 const Home = ({
   current_email,
   course_metadata,
@@ -174,6 +187,10 @@ const Home = ({
         field: 'selectedConversation',
         value: convo_with_valid_model,
       })
+      dispatch({
+        field: 'agentModeEnabled',
+        value: deriveAgentModeEnabled(convo_with_valid_model),
+      })
     }
   }, [llmProviders])
 
@@ -288,6 +305,10 @@ const Home = ({
       field: 'selectedConversation',
       value: conversation,
     })
+    dispatch({
+      field: 'agentModeEnabled',
+      value: deriveAgentModeEnabled(conversation),
+    })
 
     try {
       localStorage.setItem('selectedConversation', JSON.stringify(conversation))
@@ -315,6 +336,7 @@ const Home = ({
           projectName: conversation.projectName,
           createdAt: conversation.createdAt,
           updatedAt: conversation.updatedAt,
+          agentModeEnabled: conversation.agentModeEnabled,
         }
 
         try {
@@ -376,10 +398,15 @@ const Home = ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       linkParameters: newLinkParameters,
+      agentModeEnabled: false,
     }
 
     // Only update selectedConversation, don't add to conversations list yet
     dispatch({ field: 'selectedConversation', value: newConversation })
+    dispatch({
+      field: 'agentModeEnabled',
+      value: newConversation.agentModeEnabled ?? false,
+    })
     dispatch({ field: 'loading', value: false })
 
     try {
@@ -434,6 +461,7 @@ const Home = ({
           projectName: updatedConversation.projectName,
           createdAt: updatedConversation.createdAt,
           updatedAt: updatedConversation.updatedAt,
+          agentModeEnabled: updatedConversation.agentModeEnabled,
           // Don't include messages or contexts which are likely the largest parts
         }
 
@@ -457,6 +485,14 @@ const Home = ({
     }
 
     dispatch({ field: 'selectedConversation', value: updatedConversation })
+    if (data.key === 'agentModeEnabled') {
+      dispatch({ field: 'agentModeEnabled', value: data.value as boolean })
+    } else {
+      dispatch({
+        field: 'agentModeEnabled',
+        value: deriveAgentModeEnabled(updatedConversation),
+      })
+    }
 
     let updatedConversations
 
@@ -500,6 +536,10 @@ const Home = ({
 
     // Update state
     dispatch({ field: 'selectedConversation', value: updatedConversation })
+    dispatch({
+      field: 'agentModeEnabled',
+      value: deriveAgentModeEnabled(updatedConversation),
+    })
 
     // Update conversations list
     const updatedConversations = conversations.map((c) =>
@@ -626,6 +666,10 @@ const Home = ({
             dispatch({
               field: 'selectedConversation',
               value: cleanedSelectedConversation,
+            })
+            dispatch({
+              field: 'agentModeEnabled',
+              value: cleanedSelectedConversation.agentModeEnabled ?? false,
             })
           } else {
             handleNewConversation()

@@ -1554,3 +1554,39 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
     @apply bg-background text-foreground;
   }
 }
+
+.agent-thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.agent-thinking-dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 9999px;
+  background-color: currentColor;
+  opacity: 0.2;
+  animation: agent-thinking-dot 1.2s infinite ease-in-out both;
+}
+
+.agent-thinking-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.agent-thinking-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes agent-thinking-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
