@@ -61,7 +61,7 @@ const StepUpload = ({
         {/* step content - core step information */}
         <div className="step_content">
           {/* Import section */}
-          <Text fw={600} size="md" className="mb-2 mt-4 text-[--foreground]">
+          <Text fw={600} size="md" className="mb-3 mt-6 text-[--foreground]">
             Import from URLs & Platforms
           </Text>
           <SimpleGrid
@@ -100,7 +100,7 @@ const StepUpload = ({
           </SimpleGrid>
 
           {/* Upload section */}
-          <Text fw={600} size="md" className="mb-2 mt-8 text-[--foreground]">
+          <Text fw={600} size="md" className="mb-3 mt-6 text-[--foreground]">
             Upload Files
           </Text>
           <LargeDropzone

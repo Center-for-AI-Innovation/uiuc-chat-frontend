@@ -103,7 +103,7 @@ describe('BedrockProviderInput', () => {
 
     // Switch change triggers submit
     await user.click(
-      screen.getByRole('switch', { name: /Enable Bedrock provider/i }),
+      screen.getByRole('switch', { name: /Enable Amazon Bedrock provider/i }),
     )
     expect(onSubmit).toHaveBeenCalled()
   })

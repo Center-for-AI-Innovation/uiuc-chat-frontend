@@ -1,6 +1,7 @@
-import { Button } from '@mantine/core'
 import { IconMessage, IconSettings } from '@tabler/icons-react'
 import router from 'next/router'
+
+import { Button } from '@/components/shadcn/ui/button'
 
 const StepSuccess = ({ project_name }: { project_name: string }) => {
   return (
@@ -15,26 +16,24 @@ const StepSuccess = ({ project_name }: { project_name: string }) => {
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Button
-                size="md"
-                radius="sm"
-                classNames={componentClasses.buttonPrimary}
-                leftIcon={<IconMessage size={18} />}
+                variant="dashboard"
+                size="default"
                 onClick={() => {
                   router.push(`/${project_name}/chat`)
                 }}
               >
+                <IconMessage size={18} />
                 Start chatting now
               </Button>
 
               <Button
-                size="md"
-                radius="sm"
-                classNames={componentClasses.button}
-                leftIcon={<IconSettings size={18} />}
+                variant="outline"
+                size="default"
                 onClick={() => {
                   router.push(`/${project_name}/dashboard`)
                 }}
               >
+                <IconSettings size={18} />
                 Fine-tune in settings
               </Button>
             </div>
@@ -43,36 +42,6 @@ const StepSuccess = ({ project_name }: { project_name: string }) => {
       </div>
     </>
   )
-}
-
-const componentClasses = {
-  button: {
-    root: `
-      !text-[--foreground]
-      bg-transparent
-      border-[--foreground-faded]
-
-      hover:!text-[#13294B]
-      hover:bg-transparent
-      hover:border-[#13294B]
-
-      disabled:bg-transparent
-      disabled:border-[--button-disabled]
-      disabled:!text-[--button-disabled-text-color]
-    `,
-  },
-  buttonPrimary: {
-    root: `
-      !text-white
-      bg-[#13294B]
-
-      hover:!text-white
-      hover:bg-[#13294B]/90
-
-      disabled:bg-[#13294B]/50
-      disabled:!text-white/50
-    `,
-  },
 }
 
 export default StepSuccess

@@ -1,3 +1,8 @@
+/* -------------------------------------------------------------------------- */
+/*                           WARNING: DEPRECATED!!!                           */
+/* -------------------------------------------------------------------------- */
+// Use components/shadcn/ui/switch instead
+
 import React, { useState } from 'react'
 import { Switch, Tooltip, Text } from '@mantine/core'
 import { IconCheck, IconInfoCircle, IconX } from '@tabler/icons-react'
@@ -133,11 +138,6 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
         >
           <span
             className="ml-2 cursor-pointer transition-transform duration-200 ease-in-out"
-            style={
-              {
-                /*              transform: !disabled && isContainerHovered ? 'scale(1.1)' : 'scale(1)', */
-              }
-            }
             onClick={(e) => e.stopPropagation()}
           >
             <IconInfoCircle
