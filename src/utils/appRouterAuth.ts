@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { type AuthenticatedUser } from '~/middleware'
 import { type NextRequest, NextResponse } from 'next/server'
-import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
+import { getKeycloakBaseFromHost, getKeycloakIssuerBaseUrl } from '~/utils/authHelpers'
 import { verifyTokenAsync } from './keycloakClient'
 
 function getTokenFromCookies(req: NextRequest): string | null {
@@ -43,16 +43,17 @@ export function withAppRouterAuth(
         req.headers.get('x-forwarded-host') ?? req.headers.get('host')
       const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost
 
-      console.log('Host value:', hostValue)
 
       // Fallback to 'localhost' if undefined
       const hostname = (hostValue ?? 'localhost').split(':')[0]
       const keycloakBaseUrl = getKeycloakBaseFromHost(hostname)
+      const issuerBaseUrl = getKeycloakIssuerBaseUrl(hostname)
 
       // Verify JWT token using Keycloak's JWKS endpoint
       const decoded = (await verifyTokenAsync(
         token,
         keycloakBaseUrl,
+        issuerBaseUrl,
       )) as AuthenticatedUser
 
       // Add user to request object
