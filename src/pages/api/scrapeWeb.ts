@@ -1,7 +1,9 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import axios from 'axios'
+import { scrapeMetadataRun, db, messages } from '~/db/dbClient'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
+import { v4 as uuidv4 } from 'uuid'
 
 interface ScrapeRequestBody {
   url: string | null
@@ -54,6 +56,23 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 
   try {
+    // Write scrape parameters to database for reference later
+    const storageParams = {
+      id: uuidv4(),
+      course_name: courseName,
+      url: url,
+      max_urls: maxUrls,
+      scrape_strategy: scrapeStrategy,
+    }
+    const result = await db
+      .insert(scrapeMetadataRun)
+      .values(storageParams)
+      .onConflictDoUpdate({
+        target: scrapeMetadataRun.id,
+        set: storageParams,
+      })
+      .returning()
+
     const fullUrl = formatUrl(url)
     const postParams = {
       url: fullUrl,
@@ -62,6 +81,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       scrapeStrategy: scrapeStrategy,
       match: formatUrlAndMatchRegex(fullUrl).matchRegex,
       maxTokens: 2000000,
+      scrapeId: result && result[0] ? result[0].id : null,
     }
 
     const crawleeApiUrl = process.env.CRAWLEE_API_URL
