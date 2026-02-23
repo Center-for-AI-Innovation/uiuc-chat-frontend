@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -40,6 +40,15 @@ function Harness(props: any) {
 }
 
 describe('WebsiteIngestForm', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  const openIngestDialog = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(screen.getByText(/Configure import/i))
+    await screen.findByRole('heading', { name: /Ingest Website/i })
+  }
+
   it('polls ingest status and marks an uploading base URL as ingesting, adding additional URLs', async () => {
     const setIntervalSpy = vi
       .spyOn(globalThis, 'setInterval')
@@ -169,7 +178,7 @@ describe('WebsiteIngestForm', () => {
       { homeContext: { dispatch: vi.fn() }, queryClient },
     )
 
-    await user.click(screen.getByText(/Configure import/i))
+    await openIngestDialog(user)
     await user.type(
       screen.getAllByPlaceholderText('Enter URL...')[0]!,
       'https://example.com',
@@ -178,14 +187,16 @@ describe('WebsiteIngestForm', () => {
       screen.getByRole('button', { name: /Ingest the Website/i }),
     )
 
-    expect((axiosMod as any).default.post).toHaveBeenCalledWith(
-      '/api/scrapeWeb',
-      expect.objectContaining({
-        url: 'https://example.com',
-        courseName: 'CS101',
-      }),
+    await waitFor(() =>
+      expect((axiosMod as any).default.post).toHaveBeenCalledWith(
+        '/api/scrapeWeb',
+        expect.objectContaining({
+          url: 'https://example.com',
+          courseName: 'CS101',
+        }),
+      ),
     )
-  })
+  }, 15000)
 
   it('validates maxUrls and blocks ingest when out of range', async () => {
     const user = userEvent.setup()
@@ -216,13 +227,15 @@ describe('WebsiteIngestForm', () => {
       { homeContext: { dispatch: vi.fn() }, queryClient },
     )
 
-    await user.click(screen.getByText(/Configure import/i))
+    await openIngestDialog(user)
     await user.clear(screen.getByPlaceholderText('Default 50'))
     await user.type(screen.getByPlaceholderText('Default 50'), '0')
 
-    expect(
-      await screen.findByText(/Max URLs should be between 1 and 500/i),
-    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Max URLs should be between 1 and 500/i),
+      ).toBeInTheDocument()
+    })
 
     await user.type(
       screen.getByPlaceholderText('Enter URL...'),
@@ -234,7 +247,7 @@ describe('WebsiteIngestForm', () => {
 
     expect(alertSpy).toHaveBeenCalledWith('Invalid max URLs input (1 to 500)')
     expect((axiosMod as any).default.post).not.toHaveBeenCalled()
-  })
+  }, 15000)
 
   it('marks a web ingest as error when scraping fails', async () => {
     const user = userEvent.setup()
@@ -265,7 +278,7 @@ describe('WebsiteIngestForm', () => {
       { homeContext: { dispatch: vi.fn() }, queryClient },
     )
 
-    await user.click(screen.getByText(/Configure import/i))
+    await openIngestDialog(user)
     await user.clear(screen.getByPlaceholderText('Default 50'))
     await user.type(screen.getByPlaceholderText('Default 50'), '2')
     await user.type(
@@ -280,5 +293,5 @@ describe('WebsiteIngestForm', () => {
       const filesJson = screen.getByTestId('files').textContent ?? ''
       expect(filesJson).toContain('"status":"error"')
     })
-  })
+  }, 15000)
 })

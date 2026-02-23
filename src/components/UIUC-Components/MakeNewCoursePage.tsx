@@ -1,6 +1,7 @@
 import { useCreateProjectMutation } from '~/hooks/queries/useCreateProject'
 import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
+import { queryKeys } from '~/hooks/queries/keys'
 
 import Head from 'next/head'
 import React, { useMemo, useState } from 'react'
@@ -204,7 +205,7 @@ const MakeNewCoursePage = ({
         // Project name already exists - race condition caught by server
         // Refresh availability check so UI shows the name as taken
         queryClient.invalidateQueries({
-          queryKey: ['courseExists', project_name],
+          queryKey: queryKeys.courseExists(project_name),
         })
         notifications.show({
           title: 'Project name already taken',

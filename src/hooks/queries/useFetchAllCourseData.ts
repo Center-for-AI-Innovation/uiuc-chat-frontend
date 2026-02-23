@@ -2,15 +2,19 @@
 import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from './keys'
 
+type JsonPrimitive = string | number | boolean | null
+type JsonValue = JsonPrimitive | JsonObject | JsonValue[]
+type JsonObject = { [key: string]: JsonValue }
+
 export interface AllCourseDataResponse {
-  distinct_files: any
+  distinct_files: JsonObject[]
 }
 
 async function fetchAllCourseData(
   courseName: string,
 ): Promise<AllCourseDataResponse> {
   const response = await fetch(
-    `/api/UIUC-api/getAllCourseData?course_name=${courseName}`,
+    `/api/UIUC-api/getAllCourseData?course_name=${encodeURIComponent(courseName)}`,
   )
 
   if (!response.ok) {
@@ -18,7 +22,7 @@ async function fetchAllCourseData(
     throw new Error(`Error fetching course data: ${response.status}`)
   }
 
-  return response.json()
+  return (await response.json()) as AllCourseDataResponse
 }
 
 export function useFetchAllCourseData({

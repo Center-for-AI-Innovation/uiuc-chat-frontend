@@ -25,7 +25,7 @@ export const queryKeys = {
     ['projectLLMProviders', projectName] as const,
   n8nApiKey: (courseName: string) => ['n8nApiKey', courseName] as const,
   chatApiKey: (courseName: string) => ['chatApiKey', courseName] as const,
-  tools: (n8nApiKey: string) => ['tools', n8nApiKey] as const,
+  tools: (n8nApiKey?: string) => ['tools', n8nApiKey] as const,
   nomicMapForQueries: (courseName: string) =>
     ['nomicMapForQueries', courseName] as const,
   weeklyTrends: (courseName: string) => ['weeklyTrends', courseName] as const,

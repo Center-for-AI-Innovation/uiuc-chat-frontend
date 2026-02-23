@@ -5,9 +5,23 @@ import { useMemo, useRef } from 'react'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 import { queryKeys } from './keys'
 
+type UpdateProjectLLMProvidersVariables = {
+  projectName: string
+  llmProviders: AllLLMProviders
+}
+
+type UpdateProjectLLMProvidersResponse = {
+  success: boolean
+  error?: string
+}
+
+type UpdateProjectLLMProvidersContext = {
+  previousLLMProviders?: AllLLMProviders
+}
+
 export type PendingPromise = {
-  resolve: (value: unknown) => void
-  reject: (reason?: unknown) => void
+  resolve: (value: UpdateProjectLLMProvidersResponse) => void
+  reject: (reason?: Error) => void
 }
 
 export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
@@ -16,7 +30,7 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
   const debouncedApiCall = useMemo(
     () =>
       debounce(
-        (variables: { projectName: string; llmProviders: AllLLMProviders }) => {
+        (variables: UpdateProjectLLMProvidersVariables) => {
           const batch = pendingRef.current.splice(0)
 
           fetch('/api/UIUC-api/upsertLLMProviders', {
@@ -30,13 +44,17 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
               if (!response.ok) {
                 throw new Error('Failed to set LLM settings.')
               }
-              return response.json()
+              return response.json() as Promise<UpdateProjectLLMProvidersResponse>
             })
             .then((data) => {
               for (const p of batch) p.resolve(data)
             })
             .catch((error) => {
-              for (const p of batch) p.reject(error)
+              const normalizedError =
+                error instanceof Error
+                  ? error
+                  : new Error('Failed to set LLM settings.')
+              for (const p of batch) p.reject(normalizedError)
             })
         },
         1000,
@@ -46,14 +64,13 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
   )
 
   return useMutation({
-    mutationFn: async (variables: {
-      projectName: string
-      llmProviders: AllLLMProviders
-    }) => {
-      return new Promise<unknown>((resolve, reject) => {
-        pendingRef.current.push({ resolve, reject })
-        debouncedApiCall(variables)
-      })
+    mutationFn: async (variables: UpdateProjectLLMProvidersVariables) => {
+      return new Promise<UpdateProjectLLMProvidersResponse>(
+        (resolve, reject) => {
+          pendingRef.current.push({ resolve, reject })
+          debouncedApiCall(variables)
+        },
+      )
     },
     onMutate: async (variables) => {
       // Cancel any outgoing refetches
@@ -62,7 +79,7 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
       })
 
       // Snapshot the previous value
-      const previousLLMProviders = queryClient.getQueryData(
+      const previousLLMProviders = queryClient.getQueryData<AllLLMProviders>(
         queryKeys.projectLLMProviders(variables.projectName),
       )
 

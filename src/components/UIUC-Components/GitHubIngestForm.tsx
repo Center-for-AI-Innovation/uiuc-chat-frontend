@@ -1,5 +1,6 @@
 import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
 import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
+import { queryKeys } from '~/hooks/queries/keys'
 
 import React, { useEffect, useState } from 'react'
 import { Text, Card, Button, Input, createStyles } from '@mantine/core'
@@ -305,7 +306,7 @@ export default function GitHubIngestForm({
       })
 
       await queryClient.invalidateQueries({
-        queryKey: ['documents', project_name],
+        queryKey: queryKeys.documents(project_name),
       })
     }
 

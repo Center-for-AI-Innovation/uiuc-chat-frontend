@@ -1,5 +1,6 @@
 import { useUpdateProjectLLMProviders } from '@/hooks/queries/useUpdateProjectLLMProviders'
 import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
+import { queryKeys } from '@/hooks/queries/keys'
 
 import {
   ActionIcon,
@@ -565,7 +566,7 @@ export default function APIKeyInputForm({
         {
           onSuccess: (data, variables, context) => {
             queryClient.invalidateQueries({
-              queryKey: ['projectLLMProviders', projectName],
+              queryKey: queryKeys.projectLLMProviders(projectName),
             })
             showConfirmationToast({
               title: 'Updated LLM providers',

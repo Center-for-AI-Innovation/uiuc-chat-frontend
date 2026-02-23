@@ -1,5 +1,6 @@
 import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
 import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
+import { queryKeys } from '~/hooks/queries/keys'
 
 import React, { useEffect, useMemo, useState } from 'react'
 import {
@@ -316,7 +317,7 @@ export default function WebsiteIngestForm({
       })
 
       await queryClient.invalidateQueries({
-        queryKey: ['documents', project_name],
+        queryKey: queryKeys.documents(project_name),
       })
     }
 

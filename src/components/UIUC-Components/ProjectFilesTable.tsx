@@ -7,6 +7,7 @@ import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
 import { useDeleteFromDocGroup } from '@/hooks/queries/useDeleteFromDocGroup'
 import { useExportConversationMutation } from '~/hooks/queries/useExportConversation'
 import { useDownloadPresignedUrl } from '~/hooks/queries/useDownloadPresignedUrl'
+import { queryKeys } from '@/hooks/queries/keys'
 
 import {
   ActionIcon,
@@ -287,20 +288,20 @@ export function ProjectFilesTable({
     },
     onMutate: async (recordsToDelete) => {
       console.debug('in onMutate')
-      await queryClient.cancelQueries({ queryKey: ['documents', course_name] })
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.documents(course_name),
+      })
 
-      const previousDocuments = queryClient.getQueryData<CourseDocument[]>([
-        'documents',
-        course_name,
-      ])
+      const previousDocuments = queryClient.getQueryData<CourseDocument[]>(
+        queryKeys.documents(course_name),
+      )
 
-      const previousDocumentGroups = queryClient.getQueryData([
-        'documentGroups',
-        course_name,
-      ])
+      const previousDocumentGroups = queryClient.getQueryData(
+        queryKeys.documentGroups(course_name),
+      )
 
       queryClient.setQueryData<CourseDocument[]>(
-        ['documents', course_name],
+        queryKeys.documents(course_name),
         (old = []) => {
           return old.filter(
             (doc) =>
@@ -314,7 +315,7 @@ export function ProjectFilesTable({
       )
 
       queryClient.setQueryData<DocumentGroup[]>(
-        ['documentGroups', course_name],
+        queryKeys.documentGroups(course_name),
         (old = []) => {
           return old.map((doc_group) => {
             recordsToDelete.forEach((record) => {
@@ -333,14 +334,14 @@ export function ProjectFilesTable({
       console.debug('Error deleting documents:', err)
       if (context?.previousDocuments) {
         queryClient.setQueryData(
-          ['documents', course_name],
+          queryKeys.documents(course_name),
           context.previousDocuments,
         )
       }
 
       if (context?.previousDocumentGroups) {
         queryClient.setQueryData(
-          ['documentGroups', course_name],
+          queryKeys.documentGroups(course_name),
           context.previousDocumentGroups,
         )
       }
@@ -356,9 +357,11 @@ export function ProjectFilesTable({
       console.debug('sleeping for 500ms')
       await sleep(500)
       console.debug('Invalidating queries')
-      queryClient.invalidateQueries({ queryKey: ['documents', course_name] })
       queryClient.invalidateQueries({
-        queryKey: ['documentGroups', course_name],
+        queryKey: queryKeys.documents(course_name),
+      })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.documentGroups(course_name),
       })
     },
   })
