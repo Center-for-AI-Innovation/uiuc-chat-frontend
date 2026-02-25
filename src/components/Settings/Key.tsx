@@ -50,24 +50,28 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
       />
 
       <div className="flex w-[40px]">
-        <IconCheck
-          className="ml-auto min-w-[20px] text-neutral-400 hover:text-neutral-100"
-          size={18}
+        <button
+          className="ml-auto border-none bg-transparent p-0 text-neutral-400 hover:text-neutral-100"
+          aria-label="Confirm API key"
           onClick={(e) => {
             e.stopPropagation()
             handleUpdateKey(newKey)
           }}
-        />
+        >
+          <IconCheck size={18} />
+        </button>
 
-        <IconX
-          className="ml-auto min-w-[20px] text-neutral-400 hover:text-neutral-100"
-          size={18}
+        <button
+          className="ml-auto border-none bg-transparent p-0 text-neutral-400 hover:text-neutral-100"
+          aria-label="Cancel"
           onClick={(e) => {
             e.stopPropagation()
             setIsChanging(false)
             setNewKey(apiKey)
           }}
-        />
+        >
+          <IconX size={18} />
+        </button>
       </div>
     </div>
   ) : (
