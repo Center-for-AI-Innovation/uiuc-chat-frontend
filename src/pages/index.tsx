@@ -232,14 +232,14 @@ const Home: NextPage = () => {
                   ${montserrat_heading.variable} font-montserratHeading
                 `}
               >
-                <h2>
+                <h1>
                   Create a chatbot with{' '}
                   <span className="whitespace-nowrap">your content.</span>
-                  <p className="mt-4">
+                  <span className="mt-4 block">
                     Share it with{' '}
                     <span className="whitespace-nowrap">a click.</span>
-                  </p>
-                </h2>
+                  </span>
+                </h1>
               </div>
 
               <div className="mb-8 mt-4 text-sm text-[--foreground-faded]">
@@ -825,14 +825,14 @@ const Home: NextPage = () => {
 
         {/* second section below the blue banner */}
         <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
-          <h4
+          <h2
             className={`
             text-4xl font-extrabold tracking-tight
             ${montserrat_heading.variable} font-montserratHeading
           `}
           >
             About Us
-          </h4>
+          </h2>
           <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-3 md:gap-8">
             <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
