@@ -260,7 +260,13 @@ const Sidebar = <T,>({
           searchTerm={searchTerm}
           onSearch={handleSearchTerm}
         />
-        <div className="flex-grow overflow-auto" onScroll={onScroll}>
+        <div
+          className="flex-grow overflow-auto"
+          onScroll={onScroll}
+          tabIndex={0}
+          role="region"
+          aria-label="Conversation list"
+        >
           {folders?.length > 0 && (
             <div className="flex border-b border-[--dashboard-border] pb-2">
               {folderComponent}
