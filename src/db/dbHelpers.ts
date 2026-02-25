@@ -43,13 +43,17 @@ export async function fetchDocumentGroups(courseName: string) {
   }
 }
 
+function escapePostgresArrayElement(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
 export async function addDocumentsToDocGroup(
   courseName: string,
   doc: CourseDocument,
 ) {
   try {
     // Call the Postgres function directly using db.execute and sql
-    const groupArray = `{${doc.doc_groups?.map((v) => `"${v.replace(/"/g, '\\"')}"`).join(',') ?? ''}}`
+    const groupArray = `{${doc.doc_groups?.map((v) => `"${escapePostgresArrayElement(v)}"`).join(',') ?? ''}}`
     if (doc.url) {
       const result = await db.execute(sql`
         select add_document_to_group_url(
