@@ -11,13 +11,9 @@ vi.mock('@mantine/notifications', () => ({
   showNotification: vi.fn(),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchCourseMetadata: vi.fn(async () => ({ system_prompt: 'sys' })),
-  }
-})
+vi.mock('@/hooks/__internal__/fetchCourseMetadata', () => ({
+  fetchCourseMetadata: vi.fn(async () => ({ system_prompt: 'sys' })),
+}))
 
 vi.mock('../APIRequestBuilder', () => ({
   default: () => <div>APIRequestBuilder</div>,

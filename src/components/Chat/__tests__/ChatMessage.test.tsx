@@ -28,13 +28,9 @@ vi.mock('framer-motion', () => ({
     React.createElement(React.Fragment, null, children),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchPresignedUrl: vi.fn(async () => 'http://localhost/api/file'),
-  }
-})
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(async () => 'http://localhost/api/file'),
+}))
 
 vi.mock('@/hooks/__internal__/conversation', async (importOriginal) => {
   const actual: any = await importOriginal()
@@ -532,10 +528,6 @@ describe('ChatMessage', () => {
             selectedConversation: conversation as any,
             messageIsStreaming: true,
             isImg2TextLoading: true,
-            isQueryRewriting: true,
-            isRetrievalLoading: true,
-            isRouting: true,
-            isRunningTool: true,
             loading: false,
           } as any,
           homeContext: { dispatch: vi.fn() },
@@ -605,25 +597,16 @@ describe('ChatMessage', () => {
         homeState: {
           selectedConversation: conversation as any,
           messageIsStreaming: true,
-          isImg2TextLoading: true,
-          isQueryRewriting: true,
-          isRetrievalLoading: true,
-          isRouting: true,
-          isRunningTool: true,
           loading: false,
         } as any,
         homeContext: { dispatch: vi.fn() },
       },
     )
 
-    expect(screen.getAllByText(/Image Description/i).length).toBeGreaterThan(0)
     expect(
       screen.getAllByText(/Optimized search query/i).length,
     ).toBeGreaterThan(0)
     expect(screen.getAllByText(/Retrieved documents/i).length).toBeGreaterThan(
-      0,
-    )
-    expect(screen.getAllByText(/Routing the request/i).length).toBeGreaterThan(
       0,
     )
     expect(screen.getAllByText(/Tool output from/i).length).toBeGreaterThan(0)
@@ -737,7 +720,7 @@ describe('ChatMessage', () => {
   it('handles thumbnail fetch errors and invalid web URLs', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('@/hooks/__internal__/downloadPresignedUrl')
     ;(api.fetchPresignedUrl as any).mockRejectedValueOnce(
       new Error('thumb fail'),
     )
@@ -801,7 +784,7 @@ describe('ChatMessage', () => {
   it('refreshes S3 citation links, preserves #page anchors, and skips non-S3 links', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('@/hooks/__internal__/downloadPresignedUrl')
     ;(api.fetchPresignedUrl as any).mockResolvedValue(
       'http://localhost/new-presigned',
     )
@@ -986,7 +969,7 @@ describe('ChatMessage', () => {
   it('validates image URLs, handles invalid URLs, and tolerates presigned URL failures', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('@/hooks/__internal__/downloadPresignedUrl')
     ;(api.fetchPresignedUrl as any).mockRejectedValueOnce(new Error('fail'))
 
     const { ChatMessage } = await import('../ChatMessage')

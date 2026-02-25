@@ -2,6 +2,7 @@ import { type FC, useContext, useEffect, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 import { DEFAULT_TEMPERATURE } from '@/utils/app/const'
 import HomeContext from '~/pages/api/home/home.context'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { Title, Slider } from '@mantine/core' // Import Slider from @mantine/core
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useMediaQuery } from '@mantine/hooks'
@@ -47,8 +48,13 @@ export const TemperatureSlider: FC<Props> = ({
   onChangeTemperature,
 }) => {
   const {
-    state: { conversations, llmProviders, selectedConversation },
+    state: { conversations, selectedConversation },
   } = useContext(HomeContext)
+  const { data: llmProvidersData } = useFetchLLMProviders({
+    projectName: selectedConversation?.projectName || '',
+    enabled: Boolean(selectedConversation?.projectName),
+  })
+  const llmProviders = llmProvidersData ?? ({} as AllLLMProviders)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const lastConversation = conversations[conversations.length - 1]
 

@@ -1,5 +1,8 @@
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
+import { useFetchAllCourseData } from '~/hooks/queries/useFetchAllCourseData'
+
 import { type NextPage } from 'next'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { Montserrat } from 'next/font/google'
 import { useRouter } from 'next/router'
 
@@ -24,10 +27,6 @@ const ToolsPage: NextPage = () => {
   const router = useRouter()
   const auth = useAuth()
 
-  const [courseData, setCourseData] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
-
   const getCurrentPageName = () => {
     const raw = router.query.course_name
     return typeof raw === 'string'
@@ -38,60 +37,45 @@ const ToolsPage: NextPage = () => {
   }
   const courseName = getCurrentPageName() as string
 
+  const {
+    data: courseExists,
+    isLoading: isCheckingExists,
+    isError: isExistsError,
+  } = useFetchCourseExists({
+    courseName,
+    enabled: router.isReady && !auth.isLoading && Boolean(courseName),
+  })
+
+  const {
+    data: courseDataResponse,
+    isLoading: isLoadingCourseData,
+    isError: isCourseDataError,
+  } = useFetchAllCourseData({
+    courseName,
+    enabled: courseExists === true && !isCheckingExists && !isExistsError,
+  })
+
   useEffect(() => {
-    if (!router.isReady || auth.isLoading) return
-
-    const fetchCourseData = async () => {
-      setIsLoading(true)
-      try {
-        const exsitResponse = await fetch(
-          `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
-        )
-        if (!exsitResponse.ok) {
-          const s = exsitResponse.status
-          if (s === 401 || s === 403 || s === 404)
-            setErrorType(s as 401 | 403 | 404)
-          return
-        }
-
-        const data = await exsitResponse.json()
-        if (!data) {
-          setErrorType(404)
-          return
-        } else {
-          const dataResponse = await fetch(
-            `/api/UIUC-api/getAllCourseData?course_name=${courseName}`,
-          )
-          if (!dataResponse.ok) {
-            const s = dataResponse.status
-            if (s === 401 || s === 403 || s === 404)
-              setErrorType(s as 401 | 403 | 404)
-            return
-          }
-          const data = await dataResponse.json()
-          const courseData = data.distinct_files
-          setCourseData(courseData)
-        }
-      } catch (error) {
-        console.error(error)
-
-        const errorWithStatus = error as Error & { status?: number }
-        const status = errorWithStatus.status
-        if (status === 401 || status === 403 || status === 404) {
-          setErrorType(status as 401 | 403 | 404)
-        }
-      } finally {
-        setIsLoading(false)
-      }
-
+    if (courseDataResponse) {
       posthog.capture('tool_page_visited', {
         course_name: courseName,
       })
     }
-    fetchCourseData()
-  }, [router.isReady, auth.isLoading, courseName])
+  }, [courseDataResponse, courseName])
 
-  if (auth.isLoading || isLoading || courseName === undefined) {
+  const errorType: 401 | 403 | 404 | null =
+    isExistsError || (courseExists !== undefined && !courseExists)
+      ? 404
+      : isCourseDataError
+        ? 404
+        : null
+
+  if (
+    auth.isLoading ||
+    isCheckingExists ||
+    isLoadingCourseData ||
+    courseName === undefined
+  ) {
     return <LoadingPlaceholderForAdminPages />
   }
 

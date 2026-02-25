@@ -1,6 +1,8 @@
+// Mutation: Routes a chat message to the appropriate LLM endpoint for response generation.
 import { useMutation } from '@tanstack/react-query'
 
 import { type ChatBody } from '~/types/chat'
+import { mutationKeys } from './keys'
 
 async function routeChat(body: ChatBody): Promise<Response> {
   const response = await fetch('/api/allNewRoutingChat', {
@@ -28,7 +30,7 @@ async function routeChat(body: ChatBody): Promise<Response> {
 
 export function useRouteChat() {
   return useMutation({
-    mutationKey: ['routeChat'],
+    mutationKey: mutationKeys.routeChat(),
     mutationFn: routeChat,
   })
 }

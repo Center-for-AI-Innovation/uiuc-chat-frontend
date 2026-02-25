@@ -40,6 +40,30 @@ vi.mock('@/hooks/queries/useDeleteMessages', () => ({
   useDeleteMessages: () => ({ mutate: vi.fn(async () => ({})) }),
 }))
 
+vi.mock('@/hooks/queries/useFetchLLMProviders', () => ({
+  useFetchLLMProviders: () => ({
+    data: {
+      [ProviderNames.OpenAI]: {
+        provider: ProviderNames.OpenAI,
+        enabled: true,
+        models: [
+          {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            tokenLimit: 128000,
+            enabled: true,
+            default: true,
+            provider: ProviderNames.OpenAI,
+          },
+        ],
+      },
+    },
+    refetch: vi.fn(async () => ({ data: {} })),
+    error: null,
+    isError: false,
+  }),
+}))
+
 vi.mock('@/hooks/queries/useFetchEnabledDocGroups', () => ({
   useFetchEnabledDocGroups: () => ({
     data: [{ id: 'DocGroup-all', name: 'All Documents', checked: true }],

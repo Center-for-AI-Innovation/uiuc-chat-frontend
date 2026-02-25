@@ -1,5 +1,8 @@
 'use client'
 
+import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
+import { useUpdateDocGroup } from '@/hooks/queries/useUpdateDocGroup'
+
 import {
   TextInput,
   Text,
@@ -12,8 +15,6 @@ import { IconHelp, IconSearch } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { createGlobalStyle } from 'styled-components'
 
-import { useFetchDocumentGroups } from '@/hooks/queries/useFetchDocumentGroups'
-import { useUpdateDocGroup } from '@/hooks/queries/useUpdateDocGroup'
 import { useQueryClient } from '@tanstack/react-query'
 
 const GlobalStyle = createGlobalStyle`
@@ -81,16 +82,16 @@ const GlobalStyle = createGlobalStyle`
 
 export function DocGroupsTable({ course_name }: { course_name: string }) {
   const queryClient = useQueryClient()
-  const [documentGroupSearch, setDocumentGroupSearch] = useState('')
 
   const updateDocGroup = useUpdateDocGroup(course_name, queryClient)
-
   const {
     data: documentGroups,
     isLoading: isLoadingDocumentGroups,
     isError: isErrorDocumentGroups,
     refetch: refetchDocumentGroups,
   } = useFetchDocumentGroups(course_name)
+
+  const [documentGroupSearch, setDocumentGroupSearch] = useState('')
 
   // Logic to filter doc_groups based on the search query
   const filteredDocumentGroups = useMemo(() => {

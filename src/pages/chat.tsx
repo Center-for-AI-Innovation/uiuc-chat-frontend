@@ -1,5 +1,7 @@
 // This is uiuc.chat/chat - useful to everyone as a free alternative to ChatGPT.com and Claude.ai.
 
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import { montserrat_heading } from 'fonts'
 import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
@@ -10,12 +12,9 @@ import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackgro
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import Home from '~/pages/api/home/home'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 const ChatPage: NextPage = () => {
-  const [metadata, setMetadata] = useState<CourseMetadata | null>()
-  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const auth = useAuth()
   const email = auth.user?.profile.email
@@ -23,7 +22,6 @@ const ChatPage: NextPage = () => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
   const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
-  const course_metadata = metadata
   const getCurrentPageName = () => {
     const raw = router.query.course_name
     return typeof raw === 'string'
@@ -34,46 +32,31 @@ const ChatPage: NextPage = () => {
   }
   const courseName = getCurrentPageName() as string
 
+  // Use React Query hook to fetch course metadata for 'chat' course
+  const {
+    data: metadata,
+    isLoading,
+    error: courseMetadataError,
+  } = useFetchCourseMetadata({
+    courseName: 'chat',
+    enabled: router.isReady,
+  })
+
+  const course_metadata = metadata
+
+  // Handle course metadata error states
   useEffect(() => {
-    if (!router.isReady) return
-    const fetchCourseData = async () => {
-      try {
-        const local_metadata: CourseMetadata = (await fetchCourseMetadata(
-          'chat',
-        )) as CourseMetadata
-
-        if (local_metadata === null) {
-          setErrorType(404)
-          return
-        }
-
-        if (local_metadata && local_metadata.is_private) {
-          local_metadata.is_private = JSON.parse(
-            local_metadata.is_private as unknown as string,
-          )
-        }
-        setMetadata(local_metadata)
-      } catch (error) {
-        console.error(error)
-
-        const errorWithStatus = error as Error & { status?: number }
-        const status = errorWithStatus.status
-        if (status === 401 || status === 403 || status === 404) {
-          setErrorType(status as 401 | 403 | 404)
-        }
+    if (courseMetadataError) {
+      console.error(courseMetadataError)
+      const errorWithStatus = courseMetadataError as Error & { status?: number }
+      const status = errorWithStatus.status
+      if (status === 401 || status === 403 || status === 404) {
+        setErrorType(status as 401 | 403 | 404)
       }
+    } else if (!isLoading && !metadata && router.isReady) {
+      setErrorType(404)
     }
-    fetchCourseData()
-  }, [router.isReady])
-
-  useEffect(() => {
-    if (!router.isReady) return
-    if (!metadata) return
-    if (metadata == null) return
-
-    // Everything is loaded
-    setIsLoading(false)
-  }, [router.isReady, metadata])
+  }, [courseMetadataError, isLoading, metadata, router.isReady])
 
   useEffect(() => {
     if (auth.isLoading) return

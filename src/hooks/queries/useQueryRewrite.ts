@@ -1,6 +1,8 @@
+// Mutation: Rewrites a user query for improved search/retrieval before sending to the LLM.
 import { useMutation } from '@tanstack/react-query'
 
 import { type ChatBody } from '~/types/chat'
+import { mutationKeys } from './keys'
 
 async function runQueryRewrite(body: ChatBody): Promise<Response> {
   const response = await fetch('/api/queryRewrite', {
@@ -28,7 +30,7 @@ async function runQueryRewrite(body: ChatBody): Promise<Response> {
 
 export function useQueryRewrite() {
   return useMutation({
-    mutationKey: ['queryRewrite'],
+    mutationKey: mutationKeys.queryRewrite(),
     mutationFn: runQueryRewrite,
   })
 }

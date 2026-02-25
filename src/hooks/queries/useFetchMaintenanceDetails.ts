@@ -1,10 +1,12 @@
+// Query: Fetches maintenance mode details (title, body text). Cached for 30s, no refetch on focus.
 import { useQuery } from '@tanstack/react-query'
+import { queryKeys } from './keys'
 
-interface UseFetchMaintenanceDetailsOptions {
+export interface UseFetchMaintenanceDetailsOptions {
   enabled?: boolean
 }
 
-interface MaintenanceDetailsResponse {
+export interface MaintenanceDetailsResponse {
   isMaintenanceMode: boolean
   maintenanceBodyText: string
   maintenanceTitleText: string
@@ -25,7 +27,7 @@ export function useFetchMaintenanceDetails({
   enabled = true,
 }: UseFetchMaintenanceDetailsOptions = {}) {
   return useQuery({
-    queryKey: ['maintenanceDetails'],
+    queryKey: queryKeys.maintenanceDetails(),
     queryFn: fetchMaintenanceDetails,
     retry: 1,
     enabled,

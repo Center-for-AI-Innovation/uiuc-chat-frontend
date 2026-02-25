@@ -61,7 +61,6 @@ const SourcesSidebar = ({
       // Set up an interval to keep checking and hiding the elements
       // This ensures they stay hidden even if the DOM updates
       const intervalId = setInterval(hideElements, 100)
-
       return () => {
         clearInterval(intervalId)
         // Show the icons in the navbar
@@ -82,6 +81,7 @@ const SourcesSidebar = ({
 
         // Remove the maintain-margin class after a short delay
         setTimeout(() => {
+          if (typeof document === 'undefined') return
           const mainContent = document.querySelector('.overflow-wrap')
           if (mainContent) {
             mainContent.classList.remove('maintain-margin')

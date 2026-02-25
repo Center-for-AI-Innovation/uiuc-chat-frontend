@@ -1,9 +1,11 @@
+// Mutation: Removes a document from a document group and updates cached doc counts.
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import {
   type CourseDocument,
   type DocumentGroup,
 } from '~/types/courseMaterials'
+import { queryKeys } from './keys'
 
 export function useDeleteFromDocGroup(
   course_name: string,
@@ -46,15 +48,16 @@ export function useDeleteFromDocGroup(
     // Optimistically update the cache
     onMutate: async ({ record, removedGroup }) => {
       await queryClient.cancelQueries({
-        queryKey: ['documentGroups', course_name],
+        queryKey: queryKeys.documentGroups(course_name),
       })
-      await queryClient.cancelQueries({ queryKey: ['documents', course_name] })
-      const previousDocumentGroups = queryClient.getQueryData([
-        'documentGroups',
-        course_name,
-      ])
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.documents(course_name),
+      })
+      const previousDocumentGroups = queryClient.getQueryData(
+        queryKeys.documentGroups(course_name),
+      )
       queryClient.setQueryData(
-        ['documentGroups', course_name],
+        queryKeys.documentGroups(course_name),
         (old: DocumentGroup[] | undefined) => {
           // Perform the optimistic update
           return old?.map((docGroup) => {
@@ -66,13 +69,11 @@ export function useDeleteFromDocGroup(
         },
       )
 
-      const previousDocuments = queryClient.getQueryData([
-        'documents',
-        course_name,
-        page,
-      ])
+      const previousDocuments = queryClient.getQueryData(
+        queryKeys.documents(course_name, page),
+      )
       queryClient.setQueryData(
-        ['documents', course_name, page],
+        queryKeys.documents(course_name, page),
         (
           old:
             | { final_docs: CourseDocument[]; total_count: number }
@@ -102,20 +103,22 @@ export function useDeleteFromDocGroup(
     onError: (err, variables, context) => {
       // Rollback on error
       queryClient.setQueryData(
-        ['documentGroups', course_name],
+        queryKeys.documentGroups(course_name),
         context?.previousDocumentGroups,
       )
       queryClient.setQueryData(
-        ['documents', course_name, page],
+        queryKeys.documents(course_name, page),
         context?.previousDocuments,
       )
     },
     onSettled: () => {
       // Refetch after mutation or error
       queryClient.invalidateQueries({
-        queryKey: ['documentGroups', course_name],
+        queryKey: queryKeys.documentGroups(course_name),
       })
-      queryClient.invalidateQueries({ queryKey: ['documents', course_name] })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.documents(course_name),
+      })
     },
   })
 }

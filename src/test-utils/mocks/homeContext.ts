@@ -15,13 +15,8 @@ export function makeHomeContext(
     handleSelectConversation: () => undefined,
     handleUpdateConversation: () => undefined,
     handleFeedbackUpdate: () => undefined,
-    setIsImg2TextLoading: () => undefined,
-    setIsRouting: () => undefined,
-    setIsRetrievalLoading: () => undefined,
     handleUpdateDocumentGroups: () => undefined,
     handleUpdateTools: () => undefined,
-    setIsQueryRewriting: () => undefined,
-    setQueryRewriteResult: () => undefined,
     ...overrides,
   }
 }

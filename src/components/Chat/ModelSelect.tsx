@@ -10,6 +10,7 @@ import {
 import { forwardRef, useContext, useEffect, useState } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import HomeContext from '~/pages/api/home/home.context'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { Group, Select, Title, Text, ActionIcon } from '@mantine/core'
 import Link from 'next/link'
@@ -488,10 +489,15 @@ const ModelDropdown: React.FC<
 export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
   ({ chat_ui, props }, ref) => {
     const {
-      state: { selectedConversation, llmProviders, defaultModelId },
+      state: { selectedConversation, defaultModelId },
       handleUpdateConversation,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
+    const { data: llmProvidersData } = useFetchLLMProviders({
+      projectName: selectedConversation?.projectName || '',
+      enabled: Boolean(selectedConversation?.projectName),
+    })
+    const llmProviders = llmProvidersData ?? ({} as AllLLMProviders)
     const isSmallScreen = useMediaQuery('(max-width: 960px)')
     const defaultModel = selectBestModel(llmProviders).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)

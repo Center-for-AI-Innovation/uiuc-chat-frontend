@@ -1,12 +1,14 @@
+// Query: Fetches available LLM providers and their models for a project.
 import { useQuery } from '@tanstack/react-query'
-
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import { queryKeys } from './keys'
 
-interface FetchLLMProvidersVariables {
+export interface FetchLLMProvidersVariables {
   projectName: string
 }
 
-interface UseFetchLLMProvidersOptions extends FetchLLMProvidersVariables {
+export interface UseFetchLLMProvidersOptions
+  extends FetchLLMProvidersVariables {
   enabled?: boolean
 }
 
@@ -40,7 +42,7 @@ export function useFetchLLMProviders({
   enabled = true,
 }: UseFetchLLMProvidersOptions) {
   return useQuery({
-    queryKey: ['projectLLMProviders', projectName],
+    queryKey: queryKeys.projectLLMProviders(projectName),
     queryFn: () => fetchLLMProviders({ projectName }),
     retry: 1,
     enabled: enabled && Boolean(projectName),

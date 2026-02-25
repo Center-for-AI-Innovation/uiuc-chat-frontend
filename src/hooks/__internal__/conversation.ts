@@ -19,66 +19,69 @@ export async function fetchConversationHistory(
   pageParam: number,
   userEmail?: string,
 ): Promise<ConversationPage> {
-  let finalResponse: ConversationPage = {
-    conversations: [],
-    nextCursor: null,
+  const response = await fetch(
+    `/api/conversation?searchTerm=${searchTerm}&courseName=${courseName}&pageParam=${pageParam}`,
+    {
+      method: 'GET',
+      headers: createHeaders(userEmail),
+    },
+  )
+
+  if (!response.ok) {
+    let errorMessage = 'Error fetching conversation history'
+    try {
+      const errorData = await response.json()
+      errorMessage = errorData.error || errorData.message || errorMessage
+    } catch {
+      errorMessage = response.statusText || errorMessage
+    }
+    throw new Error(errorMessage)
   }
-  try {
-    const response = await fetch(
-      `/api/conversation?searchTerm=${searchTerm}&courseName=${courseName}&pageParam=${pageParam}`,
-      {
-        method: 'GET',
-        headers: createHeaders(userEmail),
-      },
-    )
 
-    if (!response.ok) {
-      throw new Error('Error fetching conversation history')
-    }
+  const { conversations, nextCursor } = (await response.json()) as {
+    conversations: unknown
+    nextCursor: unknown
+  }
 
-    const { conversations, nextCursor } = (await response.json()) as {
-      conversations: unknown
-      nextCursor: unknown
-    }
+  const getCreatedAtMs = (m: unknown) => {
+    if (!m || typeof m !== 'object') return 0
+    const createdAt = (m as Record<string, unknown>).created_at
+    if (typeof createdAt !== 'string') return 0
+    const ms = new Date(createdAt).getTime()
+    return Number.isFinite(ms) ? ms : 0
+  }
 
-    const getCreatedAtMs = (m: unknown) => {
-      if (!m || typeof m !== 'object') return 0
-      const createdAt = (m as Record<string, unknown>).created_at
-      if (typeof createdAt !== 'string') return 0
-      const ms = new Date(createdAt).getTime()
-      return Number.isFinite(ms) ? ms : 0
-    }
-
-    // Clean the conversations and ensure they're properly structured
-    const cleanedConversations = (
-      Array.isArray(conversations) ? conversations : []
-    ).map((conversation) => {
-      if (conversation && typeof conversation === 'object') {
-        const maybeMessages = (conversation as Record<string, unknown>).messages
-        if (Array.isArray(maybeMessages)) {
-          maybeMessages.sort((a, b) => getCreatedAtMs(a) - getCreatedAtMs(b))
-        }
+  // Clean the conversations and ensure they're properly structured
+  const cleanedConversations = (
+    Array.isArray(conversations) ? conversations : []
+  ).map((conversation) => {
+    if (conversation && typeof conversation === 'object') {
+      const maybeMessages = (conversation as Record<string, unknown>).messages
+      if (Array.isArray(maybeMessages)) {
+        maybeMessages.sort((a, b) => getCreatedAtMs(a) - getCreatedAtMs(b))
       }
-      return conversation
-    })
+    }
+    return conversation
+  })
 
-    finalResponse = cleanConversationHistory(cleanedConversations)
-    const parsedNextCursor = (() => {
-      if (typeof nextCursor === 'number') {
-        return Number.isFinite(nextCursor) ? nextCursor : null
-      }
-      if (typeof nextCursor === 'string') {
-        const n = Number(nextCursor)
-        return Number.isFinite(n) ? n : null
-      }
-      return null
-    })()
+  const finalResponse = cleanConversationHistory(cleanedConversations)
+  const parsedNextCursor = (() => {
+    if (typeof nextCursor === 'number') {
+      return Number.isFinite(nextCursor) ? nextCursor : null
+    }
+    if (typeof nextCursor === 'string') {
+      const n = Number(nextCursor)
+      return Number.isFinite(n) ? n : null
+    }
+    return null
+  })()
 
-    finalResponse.nextCursor = parsedNextCursor
+  finalResponse.nextCursor = parsedNextCursor
 
-    // Sync with local storage
-    const selectedConversation = localStorage.getItem('selectedConversation')
-    if (selectedConversation && finalResponse?.conversations?.length > 0) {
+  // Best-effort local sync; should never fail the main data fetch.
+  const selectedConversation = localStorage.getItem('selectedConversation')
+  if (selectedConversation && finalResponse?.conversations?.length > 0) {
+    try {
       const parsed = JSON.parse(selectedConversation)
       const serverConversation = finalResponse.conversations.find(
         (c) => c.id === parsed.id,
@@ -89,13 +92,14 @@ export async function fetchConversationHistory(
           JSON.stringify(serverConversation),
         )
       }
+    } catch (error) {
+      console.warn(
+        'Failed to sync selectedConversation from localStorage',
+        error,
+      )
     }
-  } catch (error) {
-    console.error(
-      'utils/app/conversation.ts - Error fetching conversation history:',
-      error,
-    )
   }
+
   return finalResponse
 }
 
@@ -103,30 +107,34 @@ export async function fetchLastConversation(
   courseName: string,
   userEmail?: string,
 ): Promise<Conversation | null> {
-  try {
-    // Grab the first page; server already orders by updated_at DESC in your SQL,
-    const res = await fetch(
-      `/api/conversation?searchTerm=&courseName=${encodeURIComponent(courseName)}&pageParam=0`,
-      {
-        method: 'GET',
-        headers: createHeaders(userEmail),
-      },
-    )
+  // Grab the first page; server already orders by updated_at DESC in your SQL,
+  const res = await fetch(
+    `/api/conversation?searchTerm=&courseName=${encodeURIComponent(courseName)}&pageParam=0`,
+    {
+      method: 'GET',
+      headers: createHeaders(userEmail),
+    },
+  )
 
-    if (!res.ok) throw new Error('Error fetching last conversation')
-
-    const { conversations } = await res.json()
-
-    if (!Array.isArray(conversations) || conversations.length === 0) {
-      return null
+  if (!res.ok) {
+    let errorMessage = 'Error fetching last conversation'
+    try {
+      const errorData = await res.json()
+      errorMessage = errorData.error || errorData.message || errorMessage
+    } catch {
+      errorMessage = res.statusText || errorMessage
     }
+    throw new Error(errorMessage)
+  }
 
-    // Pick the most recent conversation
-    return conversations[0] ?? null
-  } catch (err) {
-    console.error('Error fetching last conversation:', err)
+  const { conversations } = await res.json()
+
+  if (!Array.isArray(conversations) || conversations.length === 0) {
     return null
   }
+
+  // Pick the most recent conversation
+  return conversations[0] ?? null
 }
 
 export const deleteConversationFromServer = async (
@@ -515,17 +523,18 @@ export function reconstructConversation(
   return cloned
 }
 
-export async function logConversationToServer(
-  conversation: Conversation,
-  course_name: string,
-) {
+export type LogConversationPayload =
+  | { course_name: string; delta: SaveConversationDelta }
+  | { course_name: string; conversation: Conversation }
+
+export async function logConversationToServer(payload: LogConversationPayload) {
   try {
     const response = await fetch('/api/UIUC-api/logConversation', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ course_name, conversation }),
+      body: JSON.stringify(payload),
     })
 
     if (!response.ok) {

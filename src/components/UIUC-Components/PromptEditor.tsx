@@ -1,6 +1,10 @@
 // PromptEditor.tsx - Shared component for prompt editing
 // Used by both prompt.tsx page and StepPrompt wizard step
 'use client'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+import { useFetchLLMProviders } from '~/hooks/queries/useFetchLLMProviders'
+
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Button,
@@ -46,7 +50,6 @@ import CustomSwitch from '~/components/Switches/CustomSwitch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { callSetCourseMetadata, fetchCourseMetadata } from '~/utils/apiUtils'
 import {
   DEFAULT_SYSTEM_PROMPT,
   DOCUMENT_FOCUS_PROMPT,
@@ -67,6 +70,8 @@ import {
 import { type AnthropicModel } from '~/utils/modelProviders/types/anthropic'
 import { LoadingSpinner } from './LoadingSpinner'
 import { useQueryClient } from '@tanstack/react-query'
+import { useFetchDefaultPostPrompt } from '@/hooks/queries/useFetchDefaultPostPrompt'
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
 
 interface PromptEditorProps {
   project_name: string
@@ -240,8 +245,24 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const queryClient = useQueryClient()
   const isSmallScreen = useMediaQuery('(max-width: 1280px)')
 
+  const { data: llmProviders = null, isLoading: isLoadingLLMProviders } =
+    useFetchLLMProviders({
+      projectName: project_name,
+      enabled: !!project_name,
+    })
+  const { data: defaultPostPrompt, refetch: refetchDefaultPostPrompt } =
+    useFetchDefaultPostPrompt()
+  const { mutateAsync: routeChatAsync } = useRouteChat()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useUpdateCourseMetadata(project_name)
+  // Fetch course metadata using hook
+  const { data: fetchedMetadata, isLoading: isLoadingMetadata } =
+    useFetchCourseMetadata({
+      courseName: project_name,
+      enabled: Boolean(project_name),
+    })
+
   // State
-  const [isLoading, setIsLoading] = useState(true)
   const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
     null,
   )
@@ -251,7 +272,6 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const [opened, { close, open }] = useDisclosure(false)
   const [resetModalOpened, { close: closeResetModal, open: openResetModal }] =
     useDisclosure(false)
-  const [llmProviders, setLLMProviders] = useState<AllLLMProviders | null>(null)
   const [
     linkGeneratorOpened,
     { open: openLinkGenerator, close: closeLinkGenerator },
@@ -324,65 +344,26 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         )
     : []
 
-  // Fetch course metadata and providers on mount
+  // Update local state when metadata is fetched
   useEffect(() => {
-    const fetchData = async () => {
-      if (!project_name) return
-
-      try {
-        // Check React Query cache first
-        const cachedMetadata = queryClient.getQueryData([
-          'courseMetadata',
-          project_name,
-        ]) as CourseMetadata | undefined
-
-        let metadata: CourseMetadata | null = null
-        if (cachedMetadata) {
-          metadata = cachedMetadata
-        } else {
-          metadata = await fetchCourseMetadata(project_name)
-          if (metadata) {
-            queryClient.setQueryData(['courseMetadata', project_name], metadata)
-          }
-        }
-
-        if (metadata) {
-          setCourseMetadata(metadata)
-          setBaseSystemPrompt(
-            metadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
-          )
-          setGuidedLearning(metadata.guidedLearning || false)
-          setDocumentsOnly(metadata.documentsOnly || false)
-          setSystemPromptOnly(metadata.systemPromptOnly || false)
-          setVectorSearchRewrite(!metadata.vector_search_rewrite_disabled)
-          courseMetadataRef.current = metadata
-          initialSwitchStateRef.current = {
-            guidedLearning: metadata.guidedLearning || false,
-            documentsOnly: metadata.documentsOnly || false,
-            systemPromptOnly: metadata.systemPromptOnly || false,
-            vectorSearchRewrite: !metadata.vector_search_rewrite_disabled,
-          }
-        }
-
-        // Fetch LLM providers
-        const response = await fetch('/api/models', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectName: project_name }),
-        })
-        if (response.ok) {
-          const providers = await response.json()
-          setLLMProviders(providers)
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error)
-      } finally {
-        setIsLoading(false)
+    if (fetchedMetadata) {
+      setCourseMetadata(fetchedMetadata)
+      setBaseSystemPrompt(
+        fetchedMetadata.system_prompt ?? DEFAULT_SYSTEM_PROMPT ?? '',
+      )
+      setGuidedLearning(fetchedMetadata.guidedLearning || false)
+      setDocumentsOnly(fetchedMetadata.documentsOnly || false)
+      setSystemPromptOnly(fetchedMetadata.systemPromptOnly || false)
+      setVectorSearchRewrite(!fetchedMetadata.vector_search_rewrite_disabled)
+      courseMetadataRef.current = fetchedMetadata
+      initialSwitchStateRef.current = {
+        guidedLearning: fetchedMetadata.guidedLearning || false,
+        documentsOnly: fetchedMetadata.documentsOnly || false,
+        systemPromptOnly: fetchedMetadata.systemPromptOnly || false,
+        vectorSearchRewrite: !fetchedMetadata.vector_search_rewrite_disabled,
       }
     }
-
-    fetchData()
-  }, [project_name, queryClient])
+  }, [fetchedMetadata])
 
   // Set default model when providers load
   useEffect(() => {
@@ -410,7 +391,6 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const handleSystemPromptSubmit = async (
     newSystemPrompt: string | undefined,
   ) => {
-    let success = false
     if (courseMetadata && project_name) {
       const updatedCourseMetadata = {
         ...courseMetadata,
@@ -419,17 +399,17 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         documentsOnly,
         systemPromptOnly,
       }
-      success = await callSetCourseMetadata(project_name, updatedCourseMetadata)
-      if (success) {
+      try {
+        await setCourseMetadataAsync(updatedCourseMetadata)
         setCourseMetadata(updatedCourseMetadata)
+        showToastOnPromptUpdate(theme)
+        return
+      } catch {
+        // fall through to error handling
       }
     }
-    if (!success) {
-      console.log('Error updating course metadata')
-      showToastOnPromptUpdate(theme, true)
-    } else {
-      showToastOnPromptUpdate(theme)
-    }
+    console.log('Error updating course metadata')
+    showToastOnPromptUpdate(theme, true)
   }
 
   // Reset system prompt
@@ -442,24 +422,21 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         documentsOnly: false,
         systemPromptOnly: false,
       }
-      const success = await callSetCourseMetadata(
-        project_name,
-        updatedCourseMetadata,
-      )
-      if (!success) {
-        alert('Error resetting system prompt')
-        showToastOnPromptUpdate(theme, true, true)
-      } else {
+      try {
+        await setCourseMetadataAsync(updatedCourseMetadata)
         setBaseSystemPrompt(DEFAULT_SYSTEM_PROMPT ?? '')
         setCourseMetadata(updatedCourseMetadata)
         setGuidedLearning(false)
         setDocumentsOnly(false)
         setSystemPromptOnly(false)
         showToastOnPromptUpdate(theme, false, true)
+        return
+      } catch {
+        // fall through to error handling
       }
-    } else {
-      alert('Error resetting system prompt')
     }
+    alert('Error resetting system prompt')
+    showToastOnPromptUpdate(theme, true, true)
   }
 
   // Update system prompt with toggle changes
@@ -521,11 +498,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     } as CourseMetadata
 
     try {
-      const success = await callSetCourseMetadata(project_name, updatedMetadata)
-      if (!success) {
-        showPromptToast(theme, 'Error', 'Failed to update settings', true)
-        return
-      }
+      await setCourseMetadataAsync(updatedMetadata)
 
       setCourseMetadata(updatedMetadata)
       initialSwitchStateRef.current = currentSwitchState
@@ -620,17 +593,17 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
 
   const handleCopyDefaultPrompt = async () => {
     try {
-      const response = await fetch('/api/getDefaultPostPrompt')
-      if (!response.ok) {
-        const errorMessage = `Failed to fetch default prompt: ${response.status} ${response.statusText}`
-        console.error(errorMessage)
-        throw new Error(errorMessage)
+      let prompt = defaultPostPrompt
+      if (!prompt) {
+        const result = await refetchDefaultPostPrompt()
+        prompt = result.data
       }
-      const data = await response.json()
-      const defaultPostPrompt = data.prompt
+      if (!prompt) {
+        throw new Error('Failed to fetch default prompt')
+      }
 
       navigator.clipboard
-        .writeText(defaultPostPrompt)
+        .writeText(prompt)
         .then(() => {
           showPromptToast(
             theme,
@@ -815,24 +788,7 @@ CRITICAL: The optimized prompt must:
         key: '',
       }
 
-      const response = await fetch('/api/allNewRoutingChat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(chatBody),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        showPromptToast(
-          theme,
-          'Error',
-          errorData.error || 'Failed to optimize prompt',
-          true,
-        )
-        return
-      }
+      const response = await routeChatAsync(chatBody)
 
       const reader = response.body?.getReader()
       if (!reader) {
@@ -878,7 +834,7 @@ CRITICAL: The optimized prompt must:
     }
   }
 
-  if (isLoading) {
+  if (isLoadingLLMProviders || isLoadingMetadata) {
     return (
       <div className="flex items-center justify-center p-8">
         <Text className="text-[--foreground-faded]">Loading...</Text>

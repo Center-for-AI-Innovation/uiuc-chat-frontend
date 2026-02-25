@@ -1,3 +1,7 @@
+import { useFetchDocsInProgress } from '~/hooks/queries/useFetchDocsInProgress'
+import { useFetchSuccessDocs } from '~/hooks/queries/useFetchSuccessDocs'
+import { queryKeys } from '~/hooks/queries/keys'
+
 import React, { useEffect, useState } from 'react'
 import { Text, Card, Button, Input, createStyles } from '@mantine/core'
 import {
@@ -115,6 +119,10 @@ export default function GitHubIngestForm({
       },
     },
   }))
+  const { refetch: refetchSuccessDocs } = useFetchSuccessDocs(project_name)
+  const { refetch: refetchDocsInProgress } =
+    useFetchDocsInProgress(project_name)
+
   const [isUrlUpdated, setIsUrlUpdated] = useState(false)
   const [isUrlValid, setIsUrlValid] = useState(false)
   const [url, setUrl] = useState('')
@@ -190,14 +198,9 @@ export default function GitHubIngestForm({
 
   useEffect(() => {
     const checkIngestStatus = async () => {
-      const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${project_name}`,
-      )
-      const data = await response.json()
-      const docsResponse = await fetch(
-        `/api/materialsTable/successDocs?course_name=${project_name}`,
-      )
-      const docsData = await docsResponse.json()
+      const { data } = await refetchDocsInProgress()
+      const { data: successDocs } = await refetchSuccessDocs()
+      const docsData = { documents: successDocs }
 
       // Helper function to organize docs by base URL
       const organizeDocsByBaseUrl = (
@@ -303,7 +306,7 @@ export default function GitHubIngestForm({
       })
 
       await queryClient.invalidateQueries({
-        queryKey: ['documents', project_name],
+        queryKey: queryKeys.documents(project_name),
       })
     }
 

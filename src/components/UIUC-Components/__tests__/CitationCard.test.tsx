@@ -5,13 +5,9 @@ import userEvent from '@testing-library/user-event'
 
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchPresignedUrl: vi.fn(async () => 'http://localhost/presigned'),
-  }
-})
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(async () => 'http://localhost/presigned'),
+}))
 
 describe('CitationCard', () => {
   it('opens a PDF URL with an effective page number', async () => {
@@ -41,7 +37,7 @@ describe('CitationCard', () => {
       .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => {})
 
-    const apiUtils = await import('~/utils/apiUtils')
+    const apiUtils = await import('@/hooks/__internal__/downloadPresignedUrl')
     ;(apiUtils as any).fetchPresignedUrl.mockResolvedValueOnce(
       'http://localhost/file',
     )

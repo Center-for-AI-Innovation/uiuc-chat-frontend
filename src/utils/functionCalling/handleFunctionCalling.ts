@@ -15,6 +15,7 @@ import {
   type AnySupportedModel,
   ProviderNames,
 } from '~/utils/modelProviders/LLMProvider'
+import { queryKeys } from '~/hooks/queries/keys'
 
 export async function handleFunctionCall(
   message: Message,
@@ -689,7 +690,7 @@ export const useFetchAllWorkflows = (
   // Note: api_key can still be 'undefined' here... but we'll fetch it inside fetchTools
 
   return useQuery({
-    queryKey: ['tools', api_key],
+    queryKey: queryKeys.tools(api_key),
     queryFn: async (): Promise<UIUCTool[]> =>
       fetchTools(course_name!, api_key!, limit, pagination, full_details),
   })

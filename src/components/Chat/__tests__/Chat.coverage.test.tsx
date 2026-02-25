@@ -1,5 +1,5 @@
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -13,6 +13,10 @@ declare global {
   var __TEST_WORKFLOWS_ERROR__: boolean | undefined
   // eslint-disable-next-line no-var
   var __TEST_WORKFLOWS_DATA__: any[] | undefined
+  // eslint-disable-next-line no-var
+  var __TEST_LLM_PROVIDERS__: any | undefined
+  // eslint-disable-next-line no-var
+  var __TEST_LLM_ERROR__: boolean | undefined
 }
 
 vi.mock('@mantine/notifications', () => ({
@@ -38,6 +42,40 @@ vi.mock('@/hooks/queries/useUpdateConversation', () => ({
 
 vi.mock('@/hooks/queries/useDeleteMessages', () => ({
   useDeleteMessages: () => ({ mutate: vi.fn(async () => ({})) }),
+}))
+
+vi.mock('@/hooks/queries/useFetchLLMProviders', () => ({
+  useFetchLLMProviders: () => {
+    const data = globalThis.__TEST_LLM_PROVIDERS__ ?? {
+      OpenAI: {
+        provider: 'OpenAI',
+        enabled: true,
+        models: [
+          {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            enabled: true,
+            default: true,
+            provider: 'OpenAI',
+          },
+        ],
+      },
+    }
+
+    return {
+      data: globalThis.__TEST_LLM_ERROR__ ? undefined : data,
+      refetch: vi.fn(async () => {
+        if (globalThis.__TEST_LLM_ERROR__) {
+          throw new Error('Failed to fetch LLM providers')
+        }
+        return { data }
+      }),
+      error: globalThis.__TEST_LLM_ERROR__
+        ? new Error('Failed to fetch LLM providers')
+        : null,
+      isError: Boolean(globalThis.__TEST_LLM_ERROR__),
+    }
+  },
 }))
 
 vi.mock('@/hooks/queries/useFetchEnabledDocGroups', () => ({
@@ -69,13 +107,9 @@ vi.mock('~/utils/functionCalling/handleFunctionCalling', () => ({
   handleToolCall: vi.fn(async () => undefined),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchPresignedUrl: vi.fn(async () => 'http://localhost/api/file'),
-  }
-})
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(async () => 'http://localhost/api/file'),
+}))
 
 vi.mock('~/utils/streamProcessing', async (importOriginal) => {
   const actual: any = await importOriginal()
@@ -97,6 +131,20 @@ vi.mock('../MemoizedChatMessage', () => ({
     React.createElement(
       React.Fragment,
       null,
+      React.createElement(
+        'button',
+        {
+          type: 'button',
+          onClick: async () =>
+            await props.onFeedback?.(
+              props.message,
+              false,
+              'Incorrect',
+              'Needs correction',
+            ),
+        },
+        'feedback-message',
+      ),
       React.createElement(
         'button',
         {
@@ -252,6 +300,11 @@ vi.mock('~/utils/modelProviders/WebLLM', () => {
 })
 
 describe('Chat (coverage)', () => {
+  afterEach(() => {
+    globalThis.__TEST_LLM_PROVIDERS__ = undefined
+    globalThis.__TEST_LLM_ERROR__ = undefined
+  })
+
   it('loads banner image and attempts to load a WebLLM model', async () => {
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
 
@@ -263,7 +316,6 @@ describe('Chat (coverage)', () => {
 
     const { Chat } = await import('../Chat')
     const webllm = await import('~/utils/modelProviders/WebLLM')
-    const { fetchPresignedUrl } = await import('~/utils/apiUtils')
 
     renderWithProviders(
       <Chat
@@ -288,10 +340,11 @@ describe('Chat (coverage)', () => {
       },
     )
 
-    expect(fetchPresignedUrl).toHaveBeenCalledWith('cs101/banner.png', 'CS101')
-    expect((webllm as any).__instances.length).toBeGreaterThan(0)
-    expect((webllm as any).__instances[0].loadModel).toHaveBeenCalled()
-  })
+    await waitFor(() => {
+      expect((webllm as any).__instances.length).toBeGreaterThan(0)
+      expect((webllm as any).__instances[0].loadModel).toHaveBeenCalled()
+    })
+  }, 15000)
 
   it('emits an error toast when tools fail to load', async () => {
     const { notifications } = await import('@mantine/notifications')
@@ -366,7 +419,8 @@ describe('Chat (coverage)', () => {
       },
     )
 
-    await user.click(screen.getByRole('button', { name: /^send$/i }))
+    // In watch mode, stale mounted trees can exist briefly; click the first send button.
+    await user.click(screen.getAllByRole('button', { name: /^send$/i })[0]!)
     expect(true).toBe(true)
   })
 
@@ -425,9 +479,14 @@ describe('Chat (coverage)', () => {
       },
     )
 
-    await user.click(
-      screen.getAllByRole('button', { name: /edit-message/i })[0],
-    )
+    const [firstEditButton] = screen.getAllByRole('button', {
+      name: /edit-message/i,
+    })
+    expect(firstEditButton).toBeDefined()
+    if (!firstEditButton) {
+      throw new Error('Expected at least one edit button')
+    }
+    await user.click(firstEditButton)
     expect(true).toBe(true)
   })
 
@@ -521,12 +580,8 @@ describe('Chat (coverage)', () => {
     const { notifications } = await import('@mantine/notifications')
     ;(notifications as any).show.mockClear()
 
+    globalThis.__TEST_LLM_ERROR__ = true
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
-    server.use(
-      http.post('*/api/models', async () => {
-        return new HttpResponse(null, { status: 500 })
-      }),
-    )
 
     const conversation = makeConversation({
       id: 'conv-1',
@@ -997,18 +1052,14 @@ describe('Chat (coverage)', () => {
     )
   })
 
-  it('logs an error when /api/models returns null providers', async () => {
+  it('logs an error when LLM provider refetch fails', async () => {
     const user = userEvent.setup()
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {})
 
+    globalThis.__TEST_LLM_ERROR__ = true
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
-    server.use(
-      http.post('*/api/models', async () => {
-        return HttpResponse.json(null)
-      }),
-    )
 
     const conversation = makeConversation({
       id: 'conv-1',
@@ -1279,5 +1330,203 @@ describe('Chat (coverage)', () => {
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
     await waitFor(() => expect(console.warn).toHaveBeenCalled())
+  })
+
+  it('handles feedback save with localStorage quota fallback and rollback on log failure', async () => {
+    const user = userEvent.setup()
+    const { notifications } = await import('@mantine/notifications')
+    ;(notifications as any).show.mockClear()
+
+    const dispatch = vi.fn()
+    const handleFeedbackUpdate = vi.fn()
+
+    globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
+    server.use(
+      http.post('*/api/UIUC-api/logConversation', async () =>
+        HttpResponse.error(),
+      ),
+    )
+
+    const conversation = makeConversation({
+      id: 'conv-1',
+      messages: [
+        makeMessage({ id: 'u0', role: 'user', content: 'previous' }),
+        makeMessage({
+          id: 'a0',
+          role: 'assistant',
+          content: 'assistant answer',
+        }),
+      ],
+      model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
+    })
+
+    localStorage.setItem('selectedConversation', JSON.stringify(conversation))
+
+    let threwQuotaOnce = false
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key === 'selectedConversation' && !threwQuotaOnce) {
+        threwQuotaOnce = true
+        throw new DOMException('Quota exceeded', 'QuotaExceededError')
+      }
+      return undefined
+    })
+
+    const { Chat } = await import('../Chat')
+    renderWithProviders(
+      <Chat
+        stopConversationRef={{ current: false }}
+        courseMetadata={{ openai_api_key: 'k' } as any}
+        courseName="CS101"
+        currentEmail="me@example.com"
+        documentCount={0}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          conversations: [conversation as any],
+          loading: false,
+          messageIsStreaming: false,
+          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+          apiKey: 'k',
+        } as any,
+        homeContext: {
+          dispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate,
+        },
+      },
+    )
+
+    await user.click(
+      screen.getAllByRole('button', { name: /feedback-message/i })[0]!,
+    )
+
+    await waitFor(() => expect(handleFeedbackUpdate).toHaveBeenCalled())
+    await waitFor(() => expect(dispatch).toHaveBeenCalled())
+    await waitFor(() =>
+      expect((notifications as any).show).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'error-notification-reused' }),
+      ),
+    )
+  })
+
+  it('persists feedback successfully and logs the updated conversation', async () => {
+    const user = userEvent.setup()
+    const dispatch = vi.fn()
+    const handleFeedbackUpdate = vi.fn()
+
+    globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
+    server.use(
+      http.post('*/api/UIUC-api/logConversation', async () =>
+        HttpResponse.json({ ok: true }),
+      ),
+    )
+
+    const conversation = makeConversation({
+      id: 'conv-1',
+      messages: [
+        makeMessage({ id: 'u0', role: 'user', content: 'previous' }),
+        makeMessage({
+          id: 'a0',
+          role: 'assistant',
+          content: 'assistant answer',
+        }),
+      ],
+      model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
+    })
+
+    localStorage.setItem('selectedConversation', JSON.stringify(conversation))
+
+    const { Chat } = await import('../Chat')
+    renderWithProviders(
+      <Chat
+        stopConversationRef={{ current: false }}
+        courseMetadata={{ openai_api_key: 'k' } as any}
+        courseName="CS101"
+        currentEmail="me@example.com"
+        documentCount={0}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          conversations: [conversation as any],
+          loading: false,
+          messageIsStreaming: false,
+          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+          apiKey: 'k',
+        } as any,
+        homeContext: {
+          dispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate,
+        },
+      },
+    )
+
+    const feedbackButtons = screen.getAllByRole('button', {
+      name: /feedback-message/i,
+    })
+    await user.click(feedbackButtons[feedbackButtons.length - 1]!)
+
+    await waitFor(() => expect(handleFeedbackUpdate).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(dispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ field: 'selectedConversation', value: null }),
+      ),
+    )
+    const saved = localStorage.getItem('selectedConversation')
+    expect(saved).toContain('Incorrect')
+    expect(saved).toContain('Needs correction')
+  })
+
+  it('renders welcome statements and handles example click on non-chat pages', async () => {
+    const user = userEvent.setup()
+    globalThis.__TEST_ROUTER__ = { asPath: '/CS101/dashboard' }
+
+    const conversation = makeConversation({
+      id: 'conv-1',
+      messages: [],
+      model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
+    })
+
+    const { Chat } = await import('../Chat')
+    renderWithProviders(
+      <Chat
+        stopConversationRef={{ current: false }}
+        courseMetadata={
+          {
+            course_intro_message: 'Welcome to class: https://example.com/docs',
+            example_questions: ['How do I solve problem 1?'],
+            openai_api_key: 'k',
+          } as any
+        }
+        courseName="CS101"
+        currentEmail="me@example.com"
+        documentCount={0}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          conversations: [conversation as any],
+          loading: false,
+          messageIsStreaming: false,
+          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+          apiKey: 'k',
+        } as any,
+        homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn() },
+      },
+    )
+
+    expect(
+      await screen.findByText(
+        /Start a conversation below or try these examples/i,
+      ),
+    ).toBeInTheDocument()
+    await user.click(screen.getByText(/How do I solve problem 1\\?/i))
+    expect(screen.getByText(/Welcome to class:/i)).toBeInTheDocument()
   })
 })

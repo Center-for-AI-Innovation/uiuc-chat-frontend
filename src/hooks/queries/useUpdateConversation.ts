@@ -1,3 +1,4 @@
+// Mutation: Updates a conversation (rename, move to folder) with optimistic cache updates and rollback.
 import {
   type InfiniteData,
   type QueryClient,
@@ -6,6 +7,7 @@ import {
 import type { Message, Conversation, ConversationPage } from '~/types/chat'
 import { type FolderWithConversation } from '~/types/folder'
 import { saveConversationToServer } from '@/hooks/__internal__/conversation'
+import { mutationKeys, queryKeys } from './keys'
 
 export function useUpdateConversation(
   user_email: string,
@@ -14,15 +16,18 @@ export function useUpdateConversation(
 ) {
   // console.log('useUpdateConversation with user_email: ', user_email)
   return useMutation({
-    mutationKey: ['updateConversation', user_email, course_name],
+    mutationKey: mutationKeys.updateConversation(user_email, course_name),
     mutationFn: async (vars: {
       conversation: Conversation
       message: Message | null
     }) =>
       saveConversationToServer(vars.conversation, course_name, vars.message),
     onMutate: async ({ conversation: updatedConversation }) => {
-      const conversationHistoryKey = ['conversationHistory', course_name, '']
-      const foldersKey = ['folders', course_name]
+      const conversationHistoryKey = queryKeys.conversationHistory(
+        course_name,
+        '',
+      )
+      const foldersKey = queryKeys.folders(course_name)
 
       const previousConversationHistory = queryClient.getQueryData<
         InfiniteData<ConversationPage>
@@ -75,12 +80,12 @@ export function useUpdateConversation(
       // An error happened!
       // Rollback the optimistic update
       queryClient.setQueryData(
-        ['conversationHistory', course_name, ''],
+        queryKeys.conversationHistory(course_name, ''),
         context?.previousConversationHistory,
       )
       if (context?.previousFolders) {
         queryClient.setQueryData(
-          ['folders', course_name],
+          queryKeys.folders(course_name),
           context.previousFolders,
         )
       }
@@ -100,12 +105,12 @@ export function useUpdateConversation(
       // The mutation is done!
       // Do something here, like closing a modal
       queryClient.invalidateQueries({
-        queryKey: ['conversationHistory', course_name, ''],
+        queryKey: queryKeys.conversationHistory(course_name, ''),
       })
 
       if (context?.previousFolders) {
         queryClient.invalidateQueries({
-          queryKey: ['folders', course_name],
+          queryKey: queryKeys.folders(course_name),
         })
       }
     },

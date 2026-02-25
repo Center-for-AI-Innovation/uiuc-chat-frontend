@@ -1,3 +1,7 @@
+import { useUpdateProjectLLMProviders } from '@/hooks/queries/useUpdateProjectLLMProviders'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
+import { queryKeys } from '@/hooks/queries/keys'
+
 import {
   ActionIcon,
   Button,
@@ -23,8 +27,6 @@ import { getModelLogo } from '~/components/Chat/ModelSelect'
 import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
-import { useUpdateProjectLLMProviders } from '@/hooks/queries/useUpdateProjectLLMProviders'
-import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import {
   LLM_PROVIDER_ORDER,
   type AllLLMProviders,
@@ -425,12 +427,6 @@ export default function APIKeyInputForm({
 } = {}) {
   const routerProjectName = GetCurrentPageName()
   const projectName = projectNameProp || routerProjectName
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    getInitialCollapsedState(),
-  )
-
-  // Get responsive card width classes based on sidebar state
-  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   // ------------ <TANSTACK QUERIES> ------------
   const queryClient = useQueryClient()
@@ -441,6 +437,14 @@ export default function APIKeyInputForm({
     error: errorLLMProviders,
     // enabled: !!projectName // Only run the query when projectName is available
   } = useFetchLLMProviders({ projectName })
+  const mutation = useUpdateProjectLLMProviders(queryClient)
+
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    getInitialCollapsedState(),
+  )
+
+  // Get responsive card width classes based on sidebar state
+  const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
   useEffect(() => {
     if (llmProviders) {
@@ -459,8 +463,6 @@ export default function APIKeyInputForm({
       })
     }
   }, [isErrorLLMProviders])
-
-  const mutation = useUpdateProjectLLMProviders(queryClient)
 
   const setDefaultModelAndUpdateProviders = (
     newDefaultModel: AnySupportedModel & { provider: ProviderNames },
@@ -564,7 +566,7 @@ export default function APIKeyInputForm({
         {
           onSuccess: (data, variables, context) => {
             queryClient.invalidateQueries({
-              queryKey: ['projectLLMProviders', projectName],
+              queryKey: queryKeys.projectLLMProviders(projectName),
             })
             showConfirmationToast({
               title: 'Updated LLM providers',

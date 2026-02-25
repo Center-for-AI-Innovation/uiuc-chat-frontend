@@ -1,11 +1,27 @@
+// Mutation: Updates a project's LLM provider configuration with debouncing (1s debounce, 10s max wait) and optimistic cache updates.
 import { type QueryClient, useMutation } from '@tanstack/react-query'
 import { debounce } from 'lodash'
 import { useMemo, useRef } from 'react'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
+import { queryKeys } from './keys'
 
-type PendingPromise = {
-  resolve: (value: unknown) => void
-  reject: (reason?: unknown) => void
+type UpdateProjectLLMProvidersVariables = {
+  projectName: string
+  llmProviders: AllLLMProviders
+}
+
+type UpdateProjectLLMProvidersResponse = {
+  success: boolean
+  error?: string
+}
+
+type UpdateProjectLLMProvidersContext = {
+  previousLLMProviders?: AllLLMProviders
+}
+
+export type PendingPromise = {
+  resolve: (value: UpdateProjectLLMProvidersResponse) => void
+  reject: (reason?: Error) => void
 }
 
 export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
@@ -14,7 +30,7 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
   const debouncedApiCall = useMemo(
     () =>
       debounce(
-        (variables: { projectName: string; llmProviders: AllLLMProviders }) => {
+        (variables: UpdateProjectLLMProvidersVariables) => {
           const batch = pendingRef.current.splice(0)
 
           fetch('/api/UIUC-api/upsertLLMProviders', {
@@ -28,13 +44,17 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
               if (!response.ok) {
                 throw new Error('Failed to set LLM settings.')
               }
-              return response.json()
+              return response.json() as Promise<UpdateProjectLLMProvidersResponse>
             })
             .then((data) => {
               for (const p of batch) p.resolve(data)
             })
             .catch((error) => {
-              for (const p of batch) p.reject(error)
+              const normalizedError =
+                error instanceof Error
+                  ? error
+                  : new Error('Failed to set LLM settings.')
+              for (const p of batch) p.reject(normalizedError)
             })
         },
         1000,
@@ -44,26 +64,24 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
   )
 
   return useMutation({
-    mutationFn: async (variables: {
-      projectName: string
-      llmProviders: AllLLMProviders
-    }) => {
-      return new Promise<unknown>((resolve, reject) => {
-        pendingRef.current.push({ resolve, reject })
-        debouncedApiCall(variables)
-      })
+    mutationFn: async (variables: UpdateProjectLLMProvidersVariables) => {
+      return new Promise<UpdateProjectLLMProvidersResponse>(
+        (resolve, reject) => {
+          pendingRef.current.push({ resolve, reject })
+          debouncedApiCall(variables)
+        },
+      )
     },
     onMutate: async (variables) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({
-        queryKey: ['projectLLMProviders', variables.projectName],
+        queryKey: queryKeys.projectLLMProviders(variables.projectName),
       })
 
       // Snapshot the previous value
-      const previousLLMProviders = queryClient.getQueryData([
-        'projectLLMProviders',
-        variables.projectName,
-      ])
+      const previousLLMProviders = queryClient.getQueryData<AllLLMProviders>(
+        queryKeys.projectLLMProviders(variables.projectName),
+      )
 
       // Return a context object with the snapshotted value
       return { previousLLMProviders }
@@ -71,7 +89,7 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
     onError: (_err, newData, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(
-        ['projectLLMProviders', newData.projectName],
+        queryKeys.projectLLMProviders(newData.projectName),
         context?.previousLLMProviders,
       )
     },
@@ -88,7 +106,7 @@ export function useUpdateProjectLLMProviders(queryClient: QueryClient) {
       // })
       // Always invalidate the query after mutation settles(success or error)
       queryClient.invalidateQueries({
-        queryKey: ['projectLLMProviders', variables.projectName],
+        queryKey: queryKeys.projectLLMProviders(variables.projectName),
       })
     },
   })

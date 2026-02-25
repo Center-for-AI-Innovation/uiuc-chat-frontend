@@ -16,32 +16,40 @@ vi.mock('~/utils/toastUtils', () => ({
   showInfoToast: vi.fn(),
 }))
 
-vi.mock('../VariableModal', () => ({
-  VariableModal: ({ onSubmit, onClose }: any) => (
-    <div>
-      <button type="button" onClick={() => onSubmit()}>
-        variable-submit
-      </button>
-      <button type="button" onClick={onClose}>
-        variable-close
-      </button>
-    </div>
-  ),
+vi.mock('@/hooks/queries/useFetchLLMProviders', () => ({
+  useFetchLLMProviders: () => ({
+    data: {
+      OpenAI: {
+        provider: 'OpenAI',
+        enabled: true,
+        apiKey: 'sk-test',
+        models: [{ id: 'm1', name: 'Model 1', enabled: true, default: true }],
+      },
+    },
+  }),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
+vi.mock('~/hooks/queries/useUploadToS3', async () => {
+  const { useMutation } = await import('@tanstack/react-query')
+  const mockUploadToS3 = vi.fn(async ({ file }: any) => {
+    if (!file) return undefined
+    return `cs101/${file.name}`
+  })
   return {
-    ...actual,
-    uploadToS3: vi.fn(async (file: File | null) => {
-      if (!file) return undefined
-      return `cs101/${file.name}`
-    }),
-    fetchPresignedUrl: vi.fn(async () => {
-      return 'https://s3.amazonaws.com/bucket/file?X-Amz-Signature=abc&X-Amz-Date=20000101T000000Z&X-Amz-Expires=60'
-    }),
+    uploadToS3: mockUploadToS3,
+    useUploadToS3: () =>
+      useMutation({
+        mutationKey: ['uploadToS3'],
+        mutationFn: mockUploadToS3,
+      }),
   }
 })
+
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(async () => {
+    return 'https://s3.amazonaws.com/bucket/file?X-Amz-Signature=abc&X-Amz-Date=20000101T000000Z&X-Amz-Expires=60'
+  }),
+}))
 
 describe('ChatInput', () => {
   afterEach(() => {
@@ -51,15 +59,6 @@ describe('ChatInput', () => {
   it('toggles model settings when clicking the model label', async () => {
     const user = userEvent.setup()
     const dispatch = vi.fn()
-
-    const llmProviders = {
-      OpenAI: {
-        provider: 'OpenAI',
-        enabled: true,
-        apiKey: 'sk-test',
-        models: [{ id: 'm1', name: 'Model 1', enabled: true, default: true }],
-      },
-    }
 
     renderWithProviders(
       <ChatInput
@@ -75,10 +74,8 @@ describe('ChatInput', () => {
       />,
       {
         homeState: {
-          llmProviders,
           showModelSettings: false,
           messageIsStreaming: false,
-          prompts: [],
         } as any,
         homeContext: { dispatch },
       },
@@ -113,7 +110,6 @@ describe('ChatInput', () => {
         homeState: {
           selectedConversation: { model: { tokenLimit: 5 } },
           messageIsStreaming: false,
-          prompts: [],
         } as any,
         homeContext: { dispatch: vi.fn() },
       },
@@ -152,7 +148,6 @@ describe('ChatInput', () => {
       {
         homeState: {
           messageIsStreaming: false,
-          prompts: [],
         } as any,
         homeContext: { dispatch: vi.fn() },
       },
@@ -221,7 +216,7 @@ describe('ChatInput', () => {
         courseName="CS101"
       />,
       {
-        homeState: { messageIsStreaming: true, prompts: [] } as any,
+        homeState: { messageIsStreaming: true } as any,
         homeContext: { dispatch: vi.fn() },
       },
     )
@@ -230,94 +225,6 @@ describe('ChatInput', () => {
     expect(stopConversationRef.current).toBe(true)
     timeoutCallback?.()
     expect(stopConversationRef.current).toBe(false)
-  })
-
-  it('shows prompt list and selects a prompt via keyboard', async () => {
-    const user = userEvent.setup()
-
-    const prompts = [{ id: 'p1', name: 'TestPrompt', content: 'Hello world' }]
-    renderWithProviders(
-      <ChatInput
-        onSend={vi.fn()}
-        onScrollDownClick={vi.fn()}
-        stopConversationRef={{ current: false }}
-        textareaRef={{ current: null }}
-        showScrollDownButton={false}
-        inputContent=""
-        setInputContent={vi.fn()}
-        user_id="u1"
-        courseName="CS101"
-      />,
-      {
-        homeState: { messageIsStreaming: false, prompts } as any,
-        homeContext: { dispatch: vi.fn() },
-      },
-    )
-
-    const input = screen.getByPlaceholderText('Message Illinois Chat')
-    await user.type(input, '/t')
-    expect(screen.getByText(/TestPrompt/i)).toBeInTheDocument()
-
-    await user.keyboard('{Enter}')
-    expect(screen.queryByText(/TestPrompt/i)).not.toBeInTheDocument()
-  }, 20000)
-
-  it('submits a variable prompt and shows a server error toast when /api/allNewRoutingChat fails', async () => {
-    const user = userEvent.setup()
-    const { showErrorToast } = await import('~/utils/toastUtils')
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ error: 'Bad request' }), {
-        status: 400,
-        headers: { 'content-type': 'application/json' },
-      }),
-    )
-
-    const prompts = [{ id: 'p1', name: 'VarPrompt', content: 'Hello {{name}}' }]
-
-    renderWithProviders(
-      <ChatInput
-        onSend={vi.fn()}
-        onScrollDownClick={vi.fn()}
-        stopConversationRef={{ current: false }}
-        textareaRef={{ current: null }}
-        showScrollDownButton={false}
-        inputContent=""
-        setInputContent={vi.fn()}
-        user_id="u1"
-        courseName="CS101"
-      />,
-      {
-        homeState: {
-          selectedConversation: {
-            id: 'c1',
-            name: 'Test',
-            messages: [],
-            model: {
-              id: 'gpt-4o-mini',
-              name: 'GPT-4o mini',
-              tokenLimit: 128000,
-              enabled: true,
-            },
-            prompt: 'p',
-            temperature: 0.3,
-            folderId: null,
-          } as any,
-          messageIsStreaming: false,
-          prompts,
-        } as any,
-        homeContext: { dispatch: vi.fn() },
-      },
-    )
-
-    const input = screen.getByPlaceholderText('Message Illinois Chat')
-    await user.type(input, '/v')
-    await user.keyboard('{Enter}')
-
-    await user.click(screen.getByRole('button', { name: /variable-submit/i }))
-    await waitFor(() =>
-      expect(showErrorToast).toHaveBeenCalledWith('Bad request'),
-    )
   })
 
   it('uploads an image and sends a structured message', async () => {
@@ -342,7 +249,6 @@ describe('ChatInput', () => {
         homeState: {
           selectedConversation: undefined,
           messageIsStreaming: false,
-          prompts: [],
         } as any,
         homeContext: { dispatch: vi.fn() },
       },
@@ -409,7 +315,6 @@ describe('ChatInput', () => {
         homeState: {
           selectedConversation: undefined,
           messageIsStreaming: false,
-          prompts: [],
         } as any,
         homeContext: { dispatch: vi.fn() },
       },
@@ -568,7 +473,7 @@ describe('ChatInput', () => {
     const user = userEvent.setup()
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('@/hooks/__internal__/downloadPresignedUrl')
     ;(api.fetchPresignedUrl as any).mockResolvedValueOnce(undefined)
 
     const { container } = renderWithProviders(
@@ -600,7 +505,7 @@ describe('ChatInput', () => {
   it('marks image uploads as failed when uploadToS3 returns no key', async () => {
     const user = userEvent.setup()
 
-    const api = await import('~/utils/apiUtils')
+    const api = await import('~/hooks/queries/useUploadToS3')
     ;(api.uploadToS3 as any).mockResolvedValueOnce(undefined)
 
     const { container } = renderWithProviders(
@@ -627,38 +532,6 @@ describe('ChatInput', () => {
     )
 
     expect(await screen.findByText(/Upload failed/i)).toBeInTheDocument()
-  }, 20000)
-
-  it('hides the prompt list on outside clicks', async () => {
-    const user = userEvent.setup()
-
-    const prompts = [{ id: 'p1', name: 'TestPrompt', content: 'Hello world' }]
-    renderWithProviders(
-      <ChatInput
-        onSend={vi.fn()}
-        onScrollDownClick={vi.fn()}
-        stopConversationRef={{ current: false }}
-        textareaRef={{ current: null }}
-        showScrollDownButton={false}
-        inputContent=""
-        setInputContent={vi.fn()}
-        user_id="u1"
-        courseName="CS101"
-      />,
-      {
-        homeState: { messageIsStreaming: false, prompts } as any,
-        homeContext: { dispatch: vi.fn() },
-      },
-    )
-
-    const input = screen.getByPlaceholderText('Message Illinois Chat')
-    await user.type(input, '/t')
-    expect(screen.getByText(/TestPrompt/i)).toBeInTheDocument()
-
-    await user.click(document.body)
-    await waitFor(() =>
-      expect(screen.queryByText(/TestPrompt/i)).not.toBeInTheDocument(),
-    )
   }, 20000)
 
   it('returns empty contexts when /api/getContexts responds with an object', async () => {
@@ -690,7 +563,6 @@ describe('ChatInput', () => {
         homeState: {
           selectedConversation: undefined,
           messageIsStreaming: false,
-          prompts: [],
         } as any,
         homeContext: { dispatch: vi.fn() },
       },
@@ -743,7 +615,7 @@ describe('ChatInput', () => {
           courseName="CS101"
         />,
         {
-          homeState: { messageIsStreaming: false, prompts: [] } as any,
+          homeState: { messageIsStreaming: false } as any,
           homeContext: { dispatch: vi.fn() },
         },
       )
@@ -754,76 +626,6 @@ describe('ChatInput', () => {
     } finally {
       if (uaDesc) Object.defineProperty(window.navigator, 'userAgent', uaDesc)
     }
-  })
-
-  it('handles prompt list navigation keys (arrows/tab/escape)', async () => {
-    const user = userEvent.setup()
-    const prompts = [
-      { id: 'p1', name: 'One', content: 'one' },
-      { id: 'p2', name: 'Two', content: 'two' },
-    ]
-
-    renderWithProviders(
-      <ChatInput
-        onSend={vi.fn()}
-        onScrollDownClick={vi.fn()}
-        stopConversationRef={{ current: false }}
-        textareaRef={{ current: null }}
-        showScrollDownButton={false}
-        inputContent=""
-        setInputContent={vi.fn()}
-        user_id="u1"
-        courseName="CS101"
-      />,
-      {
-        homeState: { messageIsStreaming: false, prompts } as any,
-        homeContext: { dispatch: vi.fn() },
-      },
-    )
-
-    const textarea = screen.getByPlaceholderText('Message Illinois Chat')
-    await user.type(textarea, '/')
-    expect(screen.getByText(/One/i)).toBeInTheDocument()
-
-    fireEvent.keyDown(textarea, { key: 'ArrowDown' })
-    fireEvent.keyDown(textarea, { key: 'ArrowUp' })
-    fireEvent.keyDown(textarea, { key: 'Tab' })
-    fireEvent.keyDown(textarea, { key: 'x' })
-    fireEvent.keyDown(textarea, { key: 'Escape' })
-
-    await waitFor(() =>
-      expect(screen.queryByText(/One/i)).not.toBeInTheDocument(),
-    )
-  })
-
-  it('toggles and closes the plugin select via keyboard', async () => {
-    renderWithProviders(
-      <ChatInput
-        onSend={vi.fn()}
-        onScrollDownClick={vi.fn()}
-        stopConversationRef={{ current: false }}
-        textareaRef={{ current: null }}
-        showScrollDownButton={false}
-        inputContent=""
-        setInputContent={vi.fn()}
-        user_id="u1"
-        courseName="CS101"
-      />,
-      {
-        homeState: { messageIsStreaming: false, prompts: [] } as any,
-        homeContext: { dispatch: vi.fn() },
-      },
-    )
-
-    const textarea = screen.getByPlaceholderText('Message Illinois Chat')
-    fireEvent.keyDown(textarea, { key: '/', metaKey: true })
-
-    const combo = await screen.findByRole('combobox')
-    fireEvent.keyDown(combo, { key: 'Escape' })
-
-    await waitFor(() =>
-      expect(screen.queryByRole('combobox')).not.toBeInTheDocument(),
-    )
   })
 
   it('shows a regenerate button when the last message is a user message', async () => {
@@ -850,7 +652,6 @@ describe('ChatInput', () => {
             messages: [{ id: 'u1', role: 'user', content: 'Q' }],
           } as any,
           messageIsStreaming: false,
-          prompts: [],
         } as any,
         homeContext: { dispatch: vi.fn() },
       },
@@ -879,7 +680,7 @@ describe('ChatInput', () => {
         courseName="CS101"
       />,
       {
-        homeState: { messageIsStreaming: false, prompts: [] } as any,
+        homeState: { messageIsStreaming: false } as any,
         homeContext: { dispatch: vi.fn() },
       },
     )

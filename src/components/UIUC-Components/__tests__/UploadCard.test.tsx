@@ -52,12 +52,20 @@ vi.mock('../ShareSettingsModal', () => ({
   },
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
+vi.mock('@/hooks/__internal__/setCourseMetadata', () => ({
+  callSetCourseMetadata: vi.fn(async () => true),
+}))
+
+vi.mock('~/hooks/queries/useUploadToS3', async () => {
+  const { useMutation } = await import('@tanstack/react-query')
+  const mockUploadToS3 = vi.fn(async () => 'cs101/logo.png')
   return {
-    ...actual,
-    callSetCourseMetadata: vi.fn(async () => true),
-    uploadToS3: vi.fn(async () => 'cs101/logo.png'),
+    uploadToS3: mockUploadToS3,
+    useUploadToS3: () =>
+      useMutation({
+        mutationKey: ['uploadToS3'],
+        mutationFn: mockUploadToS3,
+      }),
   }
 })
 
@@ -66,7 +74,10 @@ describe('UploadCard', () => {
     const user = userEvent.setup()
 
     const { UploadCard } = await import('../UploadCard')
-    const apiUtils = await import('~/utils/apiUtils')
+    const setCourseMetadataModule = await import(
+      '@/hooks/__internal__/setCourseMetadata'
+    )
+    const uploadModule = await import('~/hooks/queries/useUploadToS3')
 
     renderWithProviders(
       <UploadCard
@@ -103,7 +114,9 @@ describe('UploadCard', () => {
     )
     await user.click(screen.getByRole('button', { name: /^Update$/i }))
     await waitFor(() =>
-      expect((apiUtils as any).callSetCourseMetadata).toHaveBeenCalled(),
+      expect(
+        (setCourseMetadataModule as any).callSetCourseMetadata,
+      ).toHaveBeenCalled(),
     )
 
     await user.type(
@@ -112,7 +125,9 @@ describe('UploadCard', () => {
     )
     await user.click(screen.getByRole('button', { name: /^Submit$/i }))
     await waitFor(() =>
-      expect((apiUtils as any).callSetCourseMetadata).toHaveBeenCalled(),
+      expect(
+        (setCourseMetadataModule as any).callSetCourseMetadata,
+      ).toHaveBeenCalled(),
     )
 
     const fileInput = document.querySelector(
@@ -123,15 +138,21 @@ describe('UploadCard', () => {
       fileInput,
       new File(['x'], 'logo.png', { type: 'image/png' }),
     )
-    await waitFor(() => expect((apiUtils as any).uploadToS3).toHaveBeenCalled())
+    await waitFor(() =>
+      expect((uploadModule as any).uploadToS3).toHaveBeenCalled(),
+    )
   })
 
   it('handles failed metadata upserts gracefully', async () => {
     const user = userEvent.setup()
     vi.spyOn(console, 'log').mockImplementation(() => {})
 
-    const apiUtils = await import('~/utils/apiUtils')
-    ;(apiUtils as any).callSetCourseMetadata.mockResolvedValueOnce(false)
+    const setCourseMetadataModule = await import(
+      '@/hooks/__internal__/setCourseMetadata'
+    )
+    ;(
+      setCourseMetadataModule as any
+    ).callSetCourseMetadata.mockResolvedValueOnce(false)
 
     const { UploadCard } = await import('../UploadCard')
 
@@ -159,7 +180,9 @@ describe('UploadCard', () => {
     await user.click(screen.getByRole('button', { name: /^Update$/i }))
 
     await waitFor(() =>
-      expect((apiUtils as any).callSetCourseMetadata).toHaveBeenCalled(),
+      expect(
+        (setCourseMetadataModule as any).callSetCourseMetadata,
+      ).toHaveBeenCalled(),
     )
     expect(console.log).toHaveBeenCalled()
   })

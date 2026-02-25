@@ -13,7 +13,7 @@ vi.mock('@mantine/notifications', () => ({
   showNotification: vi.fn(),
 }))
 
-vi.mock('~/pages/util/downloadConversationHistory', () => ({
+vi.mock('~/hooks/__internal__/downloadConversationHistory', () => ({
   __esModule: true,
   default: vi.fn(async () => ({ message: 'ok' })),
 }))
@@ -183,14 +183,12 @@ describe('MakeQueryAnalysisPage', () => {
 
     await user.click(screen.getByText(/Download Conversation History/i))
     const downloadConversationHistory = (
-      await import('~/pages/util/downloadConversationHistory')
+      await import('~/hooks/__internal__/downloadConversationHistory')
     ).default as any
     await waitFor(() => expect(downloadConversationHistory).toHaveBeenCalled())
   })
 
-  it('logs an error when course metadata fetch fails', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
+  it('shows a loading spinner when course metadata fetch fails', async () => {
     globalThis.__TEST_ROUTER__ = {
       asPath: '/CS101/analysis',
       replace: vi.fn(),
@@ -211,7 +209,15 @@ describe('MakeQueryAnalysisPage', () => {
 
     renderWithProviders(<MakeQueryAnalysisPage course_name="CS101" />)
 
-    await waitFor(() => expect(console.error).toHaveBeenCalled())
+    // When metadata fetch fails, courseMetadata is null so the component
+    // stays on the loading spinner indefinitely.
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toBeInTheDocument()
+    })
+    // Ensure we never navigate past the loading state to the main content.
+    expect(
+      screen.queryByText(/Conversation Visualizations/i),
+    ).not.toBeInTheDocument()
   })
 
   it('shows the empty-state when there is no conversation data for the selected range', async () => {

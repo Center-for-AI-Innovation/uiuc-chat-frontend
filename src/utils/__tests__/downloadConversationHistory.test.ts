@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { downloadConversationHistory } from '../downloadConversationHistory'
+import downloadConversationHistory from '~/hooks/__internal__/downloadConversationHistory'
 
 describe('downloadConversationHistory', () => {
   it('returns server error message for non-ok responses', async () => {

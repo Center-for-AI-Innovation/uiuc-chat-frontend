@@ -4,9 +4,9 @@ import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
 import type { CourseMetadata } from '~/types/courseMetadata'
 
-vi.mock('@/services/errorService', () => ({
+vi.mock('@/services/useFriendlyErrorMessages', () => ({
   default: () => ({
-    getModelsError: () => ({ title: 'err', message: 'err' }),
+    getModelLoadError: () => ({ title: 'err', message: 'err' }),
   }),
 }))
 
@@ -70,11 +70,6 @@ vi.mock('@/components/Chat/Chat', async () => {
       data: { key: string; value: unknown },
     ) => void
     handleSelectConversation: (conversation: unknown) => void
-    setIsRouting: (v: boolean) => void
-    setIsRetrievalLoading: (v: boolean) => void
-    setIsImg2TextLoading: (v: boolean) => void
-    setIsQueryRewriting: (v: boolean) => void
-    setQueryRewriteResult: (v: string) => void
     handleUpdateDocumentGroups: (id: string) => void
     handleUpdateTools: (id: string) => void
   }
@@ -95,11 +90,6 @@ vi.mock('@/components/Chat/Chat', async () => {
           { key: 'name', value: 'Renamed' },
         )
         ctx.handleSelectConversation({ ...convo, messages: [msg] })
-        ctx.setIsRouting(true)
-        ctx.setIsRetrievalLoading(true)
-        ctx.setIsImg2TextLoading(true)
-        ctx.setIsQueryRewriting(true)
-        ctx.setQueryRewriteResult('result')
         ctx.handleUpdateDocumentGroups('dg')
         ctx.handleUpdateTools('tool')
       }, [ctx?.state?.selectedConversation?.id])
@@ -121,7 +111,11 @@ describe('pages/api/home/home (shared Home component)', () => {
       .spyOn(globalThis, 'fetch')
       .mockImplementation(async (input: RequestInfo | URL) => {
         const url =
-          typeof input === 'string' ? input : (input?.url ?? String(input))
+          typeof input === 'string'
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : input.url
 
         if (String(url).includes('/api/models')) {
           return new Response(
@@ -201,7 +195,7 @@ describe('pages/api/home/home (shared Home component)', () => {
     let selectedConversationWrites = 0
     const setItemSpy = vi
       .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(function (key: string, value: string) {
+      .mockImplementation(function (this: Storage, key: string, value: string) {
         if (key === 'selectedConversation') {
           selectedConversationWrites += 1
           if (selectedConversationWrites === 2) {
@@ -255,7 +249,7 @@ describe('pages/api/home/home (shared Home component)', () => {
     const originalSetItem = Storage.prototype.setItem
     const setItemSpy = vi
       .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(function (key: string, value: string) {
+      .mockImplementation(function (this: Storage, key: string, value: string) {
         if (key === 'selectedConversation') {
           throw new DOMException('quota', 'QuotaExceededError')
         }

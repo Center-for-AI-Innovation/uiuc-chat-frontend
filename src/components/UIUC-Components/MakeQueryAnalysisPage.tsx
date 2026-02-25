@@ -1,3 +1,10 @@
+import { useDownloadConversationHistoryMutation } from '~/hooks/queries/useDownloadConversationHistory'
+import { useFetchConversationStats } from '~/hooks/queries/useFetchConversationStats'
+import { useFetchModelUsageCounts } from '~/hooks/queries/useFetchModelUsageCounts'
+import { useFetchProjectStats } from '~/hooks/queries/useFetchProjectStats'
+import { useFetchWeeklyTrends } from '~/hooks/queries/useFetchWeeklyTrends'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
+
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import Head from 'next/head'
 // import { DropzoneS3Upload } from '~/components/UIUC-Components/Upload_S3'
@@ -38,8 +45,6 @@ import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
 import { GRID_CONFIGS, useResponsiveGrid } from '~/utils/responsiveGrid'
-import downloadConversationHistory from '../../pages/util/downloadConversationHistory'
-import { getProjectStats } from '../../pages/api/UIUC-api/getProjectStats'
 import ConversationsHeatmapByHourChart from './ConversationsHeatmapByHourChart'
 import ConversationsPerDayChart from './ConversationsPerDayChart'
 import ConversationsPerDayOfWeekChart from './ConversationsPerDayOfWeekChart'
@@ -89,19 +94,6 @@ export const GetCurrentPageName = () => {
   return useRouter().asPath.slice(1).split('/')[0] as string
 }
 
-interface ModelUsage {
-  model_name: string
-  count: number
-  percentage: number
-}
-
-interface ConversationStats {
-  per_day: { [date: string]: number }
-  per_hour: { [hour: string]: number }
-  per_weekday: { [day: string]: number }
-  heatmap: { [day: string]: { [hour: string]: number } }
-}
-
 interface CourseStats {
   total_conversations: number
   total_users: number
@@ -109,13 +101,6 @@ interface CourseStats {
   avg_conversations_per_user: number
   avg_messages_per_user: number
   avg_messages_per_conversation: number
-}
-
-interface WeeklyTrend {
-  current_week_value: number
-  metric_name: string
-  percentage_change: number
-  previous_week_value: number
 }
 
 const formatPercentageChange = (value: number | null | undefined) => {
@@ -126,14 +111,32 @@ const formatPercentageChange = (value: number | null | undefined) => {
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const { classes, theme } = useStyles()
   const auth = useAuth()
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
+  const router = useRouter()
+
+  // React Query hooks
+  const { data: courseMetadata, isLoading: isCourseMetadataLoading } =
+    useFetchCourseMetadata({
+      courseName: course_name,
+      enabled: Boolean(course_name),
+    })
+  const downloadConversationHistoryMutation =
+    useDownloadConversationHistoryMutation()
+  const { data: projectStatsData } = useFetchProjectStats({
+    courseName: course_name,
+  })
+  const { data: weeklyTrends = [] } = useFetchWeeklyTrends({
+    courseName: course_name,
+  })
+  const {
+    data: modelUsageData = [],
+    isFetching: modelUsageLoading,
+    error: modelUsageErrorObj,
+  } = useFetchModelUsageCounts({ courseName: course_name })
+
   const [currentEmail, setCurrentEmail] = useState('')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
-  const router = useRouter()
 
   // Get responsive grid classes based on sidebar state
   const statsGridClasses = useResponsiveGrid(
@@ -149,64 +152,33 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
 
   const [isLoading, setIsLoading] = useState(false)
 
-  const [conversationStats, setConversationStats] =
-    useState<ConversationStats | null>(null)
-  const [statsLoading, setStatsLoading] = useState(true)
-  const [statsError, setStatsError] = useState<string | null>(null)
+  const courseStats: CourseStats | null = projectStatsData
+    ? {
+        total_conversations: projectStatsData.total_conversations,
+        total_messages: projectStatsData.total_messages,
+        total_users: projectStatsData.unique_users,
+        avg_conversations_per_user: projectStatsData.avg_conversations_per_user,
+        avg_messages_per_user: projectStatsData.avg_messages_per_user,
+        avg_messages_per_conversation:
+          projectStatsData.avg_messages_per_conversation,
+      }
+    : null
 
-  const [courseStatsLoading, setCourseStatsLoading] = useState(true)
-  const [courseStats, setCourseStats] = useState<CourseStats | null>(null)
-  const [courseStatsError, setCourseStatsError] = useState<string | null>(null)
-
-  // Update the state to use an array of WeeklyTrend
-  const [weeklyTrends, setWeeklyTrends] = useState<WeeklyTrend[]>([])
-  const [trendsLoading, setTrendsLoading] = useState(true)
-  const [trendsError, setTrendsError] = useState<string | null>(null)
-
-  const [modelUsageData, setModelUsageData] = useState<ModelUsage[]>([])
-  const [modelUsageLoading, setModelUsageLoading] = useState(true)
-  const [modelUsageError, setModelUsageError] = useState<string | null>(null)
+  const modelUsageError = modelUsageErrorObj
+    ? 'Failed to load model usage data'
+    : null
 
   const [dateRangeType, setDateRangeType] = useState<string>('last_month')
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     null,
     null,
   ])
-  const [totalCount, setTotalCount] = useState<number>(0)
-
-  // Separate state for filtered conversation stats
-  const [filteredConversationStats, setFilteredConversationStats] =
-    useState<ConversationStats | null>(null)
-  const [filteredStatsLoading, setFilteredStatsLoading] = useState(true)
-  const [filteredStatsError, setFilteredStatsError] = useState<string | null>(
-    null,
-  )
-
-  // TODO: remove this hook... we should already have this from the /materials props???
+  // Set current email when auth is ready
   useEffect(() => {
-    const fetchData = async () => {
-      setCurrentEmail(auth.user?.profile.email as string)
-
-      try {
-        const metadata: CourseMetadata = (await fetchCourseMetadata(
-          currentPageName,
-        )) as CourseMetadata
-
-        if (metadata && metadata.is_private) {
-          metadata.is_private = JSON.parse(
-            metadata.is_private as unknown as string,
-          )
-        }
-        setCourseMetadata(metadata)
-      } catch (error) {
-        console.error(error)
-      }
+    if (!auth.isLoading && auth.user?.profile.email) {
+      setCurrentEmail(auth.user.profile.email)
     }
-
-    fetchData()
-  }, [currentPageName, !auth.isLoading, auth.user])
-
-  const [hasConversationData, setHasConversationData] = useState<boolean>(true)
+  }, [auth.isLoading, auth.user?.profile.email])
 
   const getDateRange = () => {
     const today = new Date()
@@ -246,152 +218,36 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     }
   }
 
-  useEffect(() => {
-    const fetchFilteredConversationStats = async () => {
-      try {
-        const { from_date, to_date } = getDateRange()
+  const { from_date, to_date } = getDateRange()
+  const isCustomWithoutFullRange =
+    dateRangeType === 'custom' && (!dateRange[0] || !dateRange[1])
 
-        if (dateRangeType === 'custom' && (!dateRange[0] || !dateRange[1])) {
-          setHasConversationData(false)
-          return
-        }
+  const {
+    data: filteredConversationStats,
+    isFetching: filteredStatsLoading,
+    error: filteredStatsErrorObj,
+  } = useFetchConversationStats({
+    courseName: course_name,
+    fromDate: from_date,
+    toDate: to_date,
+    enabled: !isCustomWithoutFullRange,
+  })
 
-        // TODO: Change this to a fetch request
-        const response = await fetch('/api/UIUC-api/getConversationStats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name, from_date, to_date }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          setFilteredConversationStats(data)
-          setTotalCount(data.total_count || 0)
-          setHasConversationData(Object.keys(data.per_day).length > 0)
-        }
-      } catch (error) {
-        console.error('Error fetching filtered conversation stats:', error)
-        setFilteredStatsError('Failed to fetch conversation statistics')
-        setHasConversationData(false)
-      } finally {
-        setFilteredStatsLoading(false)
-      }
-    }
-
-    fetchFilteredConversationStats()
-  }, [course_name, dateRangeType, dateRange])
-
-  useEffect(() => {
-    const fetchAllTimeConversationStats = async () => {
-      try {
-        const response = await fetch('/api/UIUC-api/getConversationStats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          setConversationStats(data)
-        }
-      } catch (error) {
-        console.error('Error fetching all-time conversation stats:', error)
-        setStatsError('Failed to fetch conversation statistics')
-      } finally {
-        setStatsLoading(false)
-      }
-    }
-
-    fetchAllTimeConversationStats()
-  }, [course_name])
-
-  useEffect(() => {
-    const fetchCourseStats = async () => {
-      setCourseStatsLoading(true)
-      setCourseStatsError(null)
-      try {
-        const response = await fetch('/api/UIUC-api/getProjectStats', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name, project_name: course_name }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          const mappedData = {
-            total_conversations: data.total_conversations,
-            total_messages: data.total_messages,
-            total_users: data.unique_users,
-            avg_conversations_per_user: data.avg_conversations_per_user,
-            avg_messages_per_user: data.avg_messages_per_user,
-            avg_messages_per_conversation: data.avg_messages_per_conversation,
-          }
-          setCourseStats(mappedData)
-        } else {
-          throw new Error('Failed to fetch course stats')
-        }
-      } catch (error) {
-        setCourseStatsError('Failed to load stats')
-      } finally {
-        setCourseStatsLoading(false)
-      }
-    }
-
-    fetchCourseStats()
-  }, [course_name])
-
-  useEffect(() => {
-    const fetchWeeklyTrends = async () => {
-      setTrendsLoading(true)
-      setTrendsError(null)
-      try {
-        const response = await fetch('/api/UIUC-api/getWeeklyTrends', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name, project_name: course_name }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          setWeeklyTrends(data)
-        } else {
-          throw new Error('Failed to fetch weekly trends')
-        }
-      } catch (error) {
-        setTrendsError('Failed to load trends')
-      } finally {
-        setTrendsLoading(false)
-      }
-    }
-
-    fetchWeeklyTrends()
-  }, [course_name])
-
-  useEffect(() => {
-    const fetchModelUsage = async () => {
-      setModelUsageLoading(true)
-      setModelUsageError(null)
-      try {
-        const response = await fetch('/api/UIUC-api/getModelUsageCounts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ course_name, project_name: course_name }),
-        })
-        if (response.status === 200) {
-          const data = await response.json()
-          setModelUsageData(data)
-        } else {
-          throw new Error('Failed to fetch model usage data')
-        }
-      } catch (error) {
-        setModelUsageError('Failed to load model usage data')
-      } finally {
-        setModelUsageLoading(false)
-      }
-    }
-
-    fetchModelUsage()
-  }, [course_name])
+  const filteredStatsError = filteredStatsErrorObj
+    ? 'Failed to fetch conversation statistics'
+    : null
+  const totalCount = filteredConversationStats?.total_count ?? 0
+  const hasConversationData = isCustomWithoutFullRange
+    ? false
+    : filteredStatsErrorObj
+      ? false
+      : filteredConversationStats
+        ? Object.keys(filteredConversationStats.per_day ?? {}).length > 0
+        : true
 
   const [view, setView] = useState('hour')
 
-  if (auth.isLoading || !courseMetadata) {
+  if (auth.isLoading || isCourseMetadataLoading || !courseMetadata) {
     return <LoadingSpinner />
   }
 
@@ -413,7 +269,8 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const handleDownload = async (courseName: string) => {
     setIsLoading(true)
     try {
-      const result = await downloadConversationHistory(courseName)
+      const result =
+        await downloadConversationHistoryMutation.mutateAsync(courseName)
       showToastOnUpdate(theme, false, false, result.message)
     } finally {
       setIsLoading(false)
@@ -1182,40 +1039,6 @@ import GlobalFooter from './GlobalFooter'
 
 import Link from 'next/link'
 import NomicDocumentMap from './NomicDocumentsMap'
-
-async function fetchCourseMetadata(course_name: string) {
-  try {
-    const response = await fetch(
-      `/api/UIUC-api/getCourseMetadata?course_name=${course_name}`,
-    )
-    if (response.ok) {
-      const data = await response.json()
-      if (data.success === false) {
-        throw new Error(
-          data.message || 'An error occurred while fetching course metadata',
-        )
-      }
-      // Parse is_private field from string to boolean
-      if (
-        data.course_metadata &&
-        typeof data.course_metadata.is_private === 'string'
-      ) {
-        data.course_metadata.is_private =
-          data.course_metadata.is_private.toLowerCase() === 'true'
-      }
-      return data.course_metadata
-    } else {
-      throw new Error(
-        `Error fetching course metadata: ${
-          response.statusText || response.status
-        }`,
-      )
-    }
-  } catch (error) {
-    console.error('Error fetching course metadata:', error)
-    throw error
-  }
-}
 
 const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
   return (

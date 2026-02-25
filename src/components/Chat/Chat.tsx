@@ -1,4 +1,15 @@
 // src/components/Chat/Chat.tsx
+import { useFetchEnabledDocGroups } from '@/hooks/queries/useFetchEnabledDocGroups'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
+import { useDeleteMessages } from '@/hooks/queries/useDeleteMessages'
+import { useImageDescription } from '@/hooks/queries/useImageDescription'
+import { useLogConversation } from '@/hooks/queries/useLogConversation'
+import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
+import { useRouteTools } from '@/hooks/queries/useRouteTools'
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+import { queryKeys } from '@/hooks/queries/keys'
+
 import { Button, Text } from '@mantine/core'
 import {
   IconAlertCircle,
@@ -12,6 +23,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -23,13 +35,11 @@ import {
   type Message,
   type UIUCTool,
 } from '@/types/chat'
-import { type Plugin } from '@/types/plugin'
 import posthog from 'posthog-js'
 import { v4 as uuidv4 } from 'uuid'
 
 import HomeContext from '~/pages/api/home/home.context'
 
-import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { ChatInput } from './ChatInput'
 import { ChatLoader } from './ChatLoader'
 import { ErrorMessageDiv } from './ErrorMessageDiv'
@@ -57,19 +67,11 @@ import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
-import { useFetchEnabledDocGroups } from '@/hooks/queries/useFetchEnabledDocGroups'
-import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
-import { useDeleteMessages } from '@/hooks/queries/useDeleteMessages'
-import { useLogConversation } from '@/hooks/queries/useLogConversation'
-import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
-import { useRouteChat } from '@/hooks/queries/useRouteChat'
-import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 
 import {
-  handleFunctionCall,
   handleToolCall,
   useFetchAllWorkflows,
 } from '~/utils/functionCalling/handleFunctionCalling'
@@ -81,11 +83,12 @@ import ChatUI, {
 import {
   State,
   getOpenAIKey,
-  handleContextSearch,
-  handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
+import { useFetchContextsForChatMutation } from '~/hooks/queries/useFetchContextsForChat'
+import { type ContextWithMetadata } from '@/types/chat'
 import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
+import useFriendlyErrorMessages from '@/services/useFriendlyErrorMessages'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -107,20 +110,80 @@ export const Chat = memo(
     documentCount,
   }: Props) => {
     const { t } = useTranslation('chat')
+    const { getModelLoadError } = useFriendlyErrorMessages()
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
-    const { refetch: refetchLLMProviders } = useFetchLLMProviders({
-      projectName: courseName,
-    })
-    const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
-    const { mutateAsync: routeChatAsync } = useRouteChat()
-    // const
-    const [bannerUrl, setBannerUrl] = useState<string | null>(null)
     const getCurrentPageName = () => {
       // /CS-125/dashboard --> CS-125
       return router.asPath.slice(1).split('/')[0] as string
     }
+
+    // React Query hooks
+    const {
+      data: fetchedLLMProviders,
+      refetch: refetchLLMProviders,
+      error: llmProvidersError,
+      isError: hasLLMProvidersError,
+    } = useFetchLLMProviders({
+      projectName: courseName,
+    })
+    const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
+    const { mutateAsync: routeChatAsync } = useRouteChat()
+    const { mutateAsync: runImageDescriptionAsync } = useImageDescription()
+    const { mutateAsync: runRouteToolsAsync } = useRouteTools()
+    const logConversationMutation = useLogConversation(getCurrentPageName())
+    const {
+      data: documentGroupsHook,
+      isSuccess: isSuccessDocumentGroups,
+      // isError: isErrorDocumentGroups,
+    } = useFetchEnabledDocGroups(getCurrentPageName())
+    const {
+      data: toolsHook,
+      isSuccess: isSuccessTools,
+      isError: isErrorTools,
+      error: toolLoadingError,
+    } = useFetchAllWorkflows(getCurrentPageName())
+    const updateConversationMutation = useUpdateConversation(
+      currentEmail,
+      queryClient,
+      courseName,
+    )
+    const deleteMessagesMutation = useDeleteMessages(currentEmail, courseName)
+    const { mutateAsync: fetchContextsMutateAsync } =
+      useFetchContextsForChatMutation()
+
+    const permission = get_user_permission(courseMetadata, auth)
+
+    const {
+      state: {
+        selectedConversation,
+        conversations,
+        apiKey,
+        messageIsStreaming,
+        loading,
+        showModelSettings,
+        documentGroups,
+        tools,
+      },
+      handleUpdateConversation,
+      handleFeedbackUpdate,
+      dispatch: homeDispatch,
+    } = useContext(HomeContext)
+    const llmProviders = useMemo(
+      () =>
+        fetchedLLMProviders ??
+        queryClient.getQueryData<AllLLMProviders>(
+          queryKeys.projectLLMProviders(courseName),
+        ) ??
+        ({} as AllLLMProviders),
+      [courseName, fetchedLLMProviders, queryClient],
+    )
+    const modelError = hasLLMProvidersError
+      ? getModelLoadError(llmProvidersError)
+      : null
+
+    // const
     const [chat_ui] = useState(new ChatUI(new MLCEngine()))
 
     const [inputContent, setInputContent] = useState<string>('')
@@ -128,58 +191,6 @@ export const Chat = memo(
     const [enabledDocumentGroups, setEnabledDocumentGroups] = useState<
       string[]
     >(['All Documents']) // Default to 'All Documents' so retrieval can work immediately
-    const [enabledTools, setEnabledTools] = useState<string[]>([])
-
-    const logConversationMutation = useLogConversation(getCurrentPageName())
-
-    const {
-      data: documentGroupsHook,
-      isSuccess: isSuccessDocumentGroups,
-      // isError: isErrorDocumentGroups,
-    } = useFetchEnabledDocGroups(getCurrentPageName())
-
-    const {
-      data: toolsHook,
-      isSuccess: isSuccessTools,
-      isLoading: isLoadingTools,
-      isError: isErrorTools,
-      error: toolLoadingError,
-    } = useFetchAllWorkflows(getCurrentPageName())
-
-    const permission = get_user_permission(courseMetadata, auth)
-
-    useEffect(() => {
-      if (
-        courseMetadata?.banner_image_s3 &&
-        courseMetadata.banner_image_s3 !== ''
-      ) {
-        fetchPresignedUrl(courseMetadata.banner_image_s3, courseName).then(
-          (url) => {
-            setBannerUrl(url)
-          },
-        )
-      }
-    }, [courseMetadata])
-
-    const {
-      state: {
-        selectedConversation,
-        conversations,
-        apiKey,
-        pluginKeys,
-        messageIsStreaming,
-        modelError,
-        loading,
-        showModelSettings,
-        documentGroups,
-        tools,
-        llmProviders,
-        selectedModel,
-      },
-      handleUpdateConversation,
-      handleFeedbackUpdate,
-      dispatch: homeDispatch,
-    } = useContext(HomeContext)
 
     useEffect(() => {
       const loadModel = async () => {
@@ -206,7 +217,6 @@ export const Chat = memo(
       }
     }, [selectedConversation?.model?.id, chat_ui])
 
-    const [currentMessage, setCurrentMessage] = useState<Message>()
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true)
     const [showScrollDownButton, setShowScrollDownButton] =
       useState<boolean>(false)
@@ -215,13 +225,6 @@ export const Chat = memo(
     const chatContainerRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const editedMessageIdRef = useRef<string | undefined>(undefined)
-    const updateConversationMutation = useUpdateConversation(
-      currentEmail,
-      queryClient,
-      courseName,
-    )
-
-    const deleteMessagesMutation = useDeleteMessages(currentEmail, courseName)
 
     // Document Groups
     useEffect(() => {
@@ -268,12 +271,6 @@ export const Chat = memo(
       }
     }, [toolsHook, isSuccessTools])
 
-    useEffect(() => {
-      setEnabledTools(
-        tools.filter((action) => action.enabled).map((action) => action.name),
-      )
-    }, [tools])
-
     const onMessageReceived = async (
       conversation: Conversation,
       message: Message,
@@ -281,32 +278,21 @@ export const Chat = memo(
     ) => {
       // Log conversation to database
       try {
-        const response = await fetch(`/api/UIUC-api/logConversation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(
-            createLogConversationPayload(
-              getCurrentPageName(),
-              conversation,
-              message,
-              earliestEditedMessageId,
-            ),
+        await logConversationMutation.mutateAsync(
+          createLogConversationPayload(
+            getCurrentPageName(),
+            conversation,
+            message,
+            earliestEditedMessageId,
           ),
-        })
-        // const data = await response.json()
-        // return data.success
+        )
       } catch (error) {
         console.error('Error setting course data:', error)
       }
     }
 
     const resetMessageStates = () => {
-      homeDispatch({ field: 'isRouting', value: undefined })
-      homeDispatch({ field: 'isRunningTool', value: undefined })
-      homeDispatch({ field: 'isImg2TextLoading', value: undefined })
-      homeDispatch({ field: 'isRetrievalLoading', value: undefined })
+      // No-op: intermediate states are now derived from React Query mutation status
     }
 
     // THIS IS WHERE MESSAGES ARE SENT.
@@ -317,13 +303,11 @@ export const Chat = memo(
         // messages after the edited message will be deleted
         deleteCount = 0,
 
-        plugin: Plugin | null = null,
         tools: UIUCTool[],
         documentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
         const startOfHandleSend = performance.now()
-        setCurrentMessage(message)
         resetMessageStates()
 
         // Check if llmProviders is null and fetch it if needed
@@ -475,17 +459,16 @@ export const Chat = memo(
           )
 
           if (imageContent.length > 0) {
-            homeDispatch({ field: 'isImg2TextLoading', value: true })
             try {
               const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
-                await handleImageContent(
+                await runImageDescriptionAsync({
                   message,
                   courseName,
                   updatedConversation,
                   searchQuery,
                   llmProviders,
                   controller,
-                )
+                })
               searchQuery = newSearchQuery
               imgDesc = newImgDesc
               imageUrls = imageContent.map(
@@ -496,8 +479,6 @@ export const Chat = memo(
                 'Error in chat.tsx running handleImageContent():',
                 error,
               )
-            } finally {
-              homeDispatch({ field: 'isImg2TextLoading', value: false })
             }
           }
         }
@@ -532,8 +513,6 @@ export const Chat = memo(
 
         // Skip vector search entirely if there are no documents AND no conversation files AND no file upload contexts
         if (!hasAnyDocuments) {
-          homeDispatch({ field: 'wasQueryRewritten', value: false })
-          homeDispatch({ field: 'queryRewriteText', value: null })
           message.wasQueryRewritten = undefined
           message.queryRewriteText = undefined
           // FIXED: Don't clear contexts if this is a file upload message with contexts
@@ -553,12 +532,9 @@ export const Chat = memo(
               'Query rewrite skipped: disabled for course, first message, or no documents',
             )
             rewrittenQuery = searchQuery
-            homeDispatch({ field: 'wasQueryRewritten', value: false })
-            homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
           } else {
-            homeDispatch({ field: 'isQueryRewriting', value: true })
             try {
               // TODO: add toggle to turn queryRewrite on and off on materials page
               const QUERY_REWRITE_PROMPT = `You are a vector database query optimizer that improves search queries for semantic vector retrieval.
@@ -801,8 +777,6 @@ export const Chat = memo(
 
               if (typeof rewrittenQuery !== 'string') {
                 rewrittenQuery = searchQuery
-                homeDispatch({ field: 'wasQueryRewritten', value: false })
-                homeDispatch({ field: 'queryRewriteText', value: null })
                 message.wasQueryRewritten = false
                 message.queryRewriteText = undefined
               } else {
@@ -823,67 +797,58 @@ export const Chat = memo(
                     'Query rewrite not required or invalid format, using original query',
                   )
                   rewrittenQuery = searchQuery
-                  homeDispatch({ field: 'wasQueryRewritten', value: false })
-                  homeDispatch({ field: 'queryRewriteText', value: null })
                   message.wasQueryRewritten = false
                   message.queryRewriteText = undefined
                 } else {
                   // Use the extracted query
                   rewrittenQuery = extractedQuery
                   // console.log('Using rewritten query:', rewrittenQuery)
-                  homeDispatch({ field: 'wasQueryRewritten', value: true })
-                  homeDispatch({
-                    field: 'queryRewriteText',
-                    value: rewrittenQuery,
-                  })
                   message.wasQueryRewritten = true
                   message.queryRewriteText = rewrittenQuery
                 }
               }
             } catch (error) {
               console.error('Error in query rewriting:', error)
-              homeDispatch({ field: 'wasQueryRewritten', value: false })
-              homeDispatch({ field: 'queryRewriteText', value: null })
               message.wasQueryRewritten = false
               message.queryRewriteText = undefined
-            } finally {
-              homeDispatch({ field: 'isQueryRewriting', value: false })
             }
           }
 
-          homeDispatch({ field: 'isRetrievalLoading', value: true })
-
-          // Use enhanced query for context search
-          await handleContextSearch(
-            message,
-            courseName,
-            selectedConversation,
-            rewrittenQuery,
-            enabledDocumentGroups,
-          )
-
-          homeDispatch({ field: 'isRetrievalLoading', value: false })
+          // Context retrieval via React Query mutation
+          if (
+            courseName !== 'gpt4' &&
+            !(
+              message.contexts &&
+              Array.isArray(message.contexts) &&
+              message.contexts.length > 0
+            )
+          ) {
+            const contexts = await fetchContextsMutateAsync({
+              course_name: courseName,
+              search_query: rewrittenQuery,
+              token_limit: selectedConversation.model.tokenLimit,
+              doc_groups: enabledDocumentGroups,
+              conversation_id: '',
+            })
+            message.contexts = contexts as ContextWithMetadata[]
+          }
         }
 
         // Action 3: Tool Execution
         if (tools.length > 0) {
           try {
-            homeDispatch({ field: 'isRouting', value: true })
             // Check if any tools need to be run
-            const uiucToolsToRun = await handleFunctionCall(
+            const uiucToolsToRun = await runRouteToolsAsync({
               message,
               tools,
               imageUrls,
               imgDesc,
               updatedConversation,
-              getOpenAIKey(llmProviders, courseMetadata, apiKey),
+              openAIKey: getOpenAIKey(llmProviders, courseMetadata, apiKey),
               courseName,
-              undefined,
               llmProviders,
-            )
-            homeDispatch({ field: 'isRouting', value: false })
+            })
             if (uiucToolsToRun.length > 0) {
-              homeDispatch({ field: 'isRunningTool', value: true })
               // Run the tools
               await handleToolCall(
                 uiucToolsToRun,
@@ -891,15 +856,11 @@ export const Chat = memo(
                 courseName,
               )
             }
-
-            homeDispatch({ field: 'isRunningTool', value: false })
           } catch (error) {
             console.error(
               'Error in chat.tsx running handleFunctionCall():',
               error,
             )
-          } finally {
-            homeDispatch({ field: 'isRunningTool', value: false })
           }
         }
 
@@ -1028,9 +989,7 @@ export const Chat = memo(
 
         let data
         // Only create a stream reader when we actually plan to consume the body as a stream.
-        // Plugin responses are handled via `response.json()` below, which is incompatible with
-        // `getReader()` (it locks the body and makes it unusable for JSON parsing).
-        if (!plugin && response instanceof Response) {
+        if (response instanceof Response) {
           data = response.body
           if (!data) {
             homeDispatch({ field: 'loading', value: false })
@@ -1040,301 +999,241 @@ export const Chat = memo(
           reader = data.getReader()
         }
 
-        if (!plugin) {
-          homeDispatch({ field: 'loading', value: false })
+        homeDispatch({ field: 'loading', value: false })
 
-          if (startOfCallToLLM) {
-            // Calculate TTFT (Time To First Token)
-            const ttft = performance.now() - startOfCallToLLM
-            const fromSendToLLMResponse = performance.now() - startOfHandleSend
-            // LLM Starts responding
-            posthog.capture('ttft', {
-              course_name: finalChatBody.course_name,
-              model: finalChatBody.model,
-              llmRequestToFirstToken: Math.round(ttft), // Round to whole number of milliseconds
-              fromSendToLLMResponse: Math.round(fromSendToLLMResponse),
-            })
-          }
+        if (startOfCallToLLM) {
+          // Calculate TTFT (Time To First Token)
+          const ttft = performance.now() - startOfCallToLLM
+          const fromSendToLLMResponse = performance.now() - startOfHandleSend
+          // LLM Starts responding
+          posthog.capture('ttft', {
+            course_name: finalChatBody.course_name,
+            model: finalChatBody.model,
+            llmRequestToFirstToken: Math.round(ttft), // Round to whole number of milliseconds
+            fromSendToLLMResponse: Math.round(fromSendToLLMResponse),
+          })
+        }
 
-          const decoder = new TextDecoder()
-          let done = false
-          let isFirst = true
-          let text = ''
-          let chunkValue
-          let finalAssistantRespose = ''
-          const citationLinkCache = new Map<number, string>()
-          const stateMachineContext = { state: State.Normal, buffer: '' }
-          try {
-            // Action 6: Stream the LLM response, based on model provider.
-            while (!done) {
-              if (stopConversationRef.current === true) {
-                controller.abort()
-                done = true
-                break
-              }
-              if (response && 'next' in response) {
-                // Run WebLLM models
-                const iterator = (
-                  response as AsyncIterable<webllm.ChatCompletionChunk>
-                )[Symbol.asyncIterator]()
-                const result = await iterator.next()
-                done = result.done ?? false
-                if (
-                  done ||
-                  result.value == undefined ||
-                  result.value.choices[0]?.delta.content == undefined
-                ) {
-                  // exit early
-                  continue
-                }
-                chunkValue = result.value.choices[0]?.delta.content
-                text += chunkValue
-              } else {
-                // OpenAI models & Vercel AI SDK models
-                const { value, done: doneReading } = await reader!.read()
-                done = doneReading
-                chunkValue = decoder.decode(value)
-                text += chunkValue
-              }
-
-              if (isFirst) {
-                // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
-                isFirst = false
-                const updatedMessages: Message[] = [
-                  ...updatedConversation.messages,
-                  {
-                    id: uuidv4(),
-                    role: 'assistant',
-                    content: chunkValue,
-                    feedback: message.feedback,
-                    wasQueryRewritten: message.wasQueryRewritten,
-                    queryRewriteText: message.queryRewriteText,
-                  },
-                ]
-
-                // console.log('updatedMessages with queryRewrite info:', updatedMessages)
-
-                finalAssistantRespose += chunkValue
-                updatedConversation = {
-                  ...updatedConversation,
-                  messages: updatedMessages,
-                }
-                homeDispatch({
-                  field: 'selectedConversation',
-                  value: updatedConversation,
-                })
-              } else {
-                if (updatedConversation.messages?.length > 0) {
-                  const lastMessageIndex =
-                    updatedConversation.messages?.length - 1
-                  const lastMessage =
-                    updatedConversation.messages[lastMessageIndex]
-                  const lastUserMessage =
-                    updatedConversation.messages[lastMessageIndex - 1]
-                  if (
-                    lastMessage &&
-                    lastUserMessage &&
-                    lastUserMessage.contexts
-                  ) {
-                    // Handle citations via state machine
-                    finalAssistantRespose += await processChunkWithStateMachine(
-                      chunkValue,
-                      lastUserMessage,
-                      stateMachineContext,
-                      citationLinkCache,
-                      getCurrentPageName(),
-                    )
-
-                    // Update the last message with the new content
-                    // TODO(BG): why use map?
-                    const updatedMessages = updatedConversation.messages?.map(
-                      (msg, index) =>
-                        index === lastMessageIndex
-                          ? { ...msg, content: finalAssistantRespose }
-                          : msg,
-                    )
-
-                    // Update the conversation with the new messages
-                    updatedConversation = {
-                      ...updatedConversation,
-                      messages: updatedMessages,
-                    }
-
-                    // Dispatch the updated conversation
-                    homeDispatch({
-                      field: 'selectedConversation',
-                      value: updatedConversation,
-                    })
-                  }
-                }
-              }
+        const decoder = new TextDecoder()
+        let done = false
+        let isFirst = true
+        let text = ''
+        let chunkValue
+        let finalAssistantRespose = ''
+        const citationLinkCache = new Map<number, string>()
+        const stateMachineContext = { state: State.Normal, buffer: '' }
+        try {
+          // Action 6: Stream the LLM response, based on model provider.
+          while (!done) {
+            if (stopConversationRef.current === true) {
+              controller.abort()
+              done = true
+              break
             }
-          } catch (error) {
-            console.error('Error reading from stream:', error)
-            homeDispatch({ field: 'loading', value: false })
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-            return
-          }
+            if (response && 'next' in response) {
+              // Run WebLLM models
+              const iterator = (
+                response as AsyncIterable<webllm.ChatCompletionChunk>
+              )[Symbol.asyncIterator]()
+              const result = await iterator.next()
+              done = result.done ?? false
+              if (
+                done ||
+                result.value == undefined ||
+                result.value.choices[0]?.delta.content == undefined
+              ) {
+                // exit early
+                continue
+              }
+              chunkValue = result.value.choices[0]?.delta.content
+              text += chunkValue
+            } else {
+              // OpenAI models & Vercel AI SDK models
+              const { value, done: doneReading } = await reader!.read()
+              done = doneReading
+              chunkValue = decoder.decode(value)
+              text += chunkValue
+            }
 
-          // TODO(BG): i don't think this code is reachable
-          if (!done) {
-            throw new Error('LLM response stream ended before it was done.')
-          }
+            if (isFirst) {
+              // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
+              isFirst = false
+              const updatedMessages: Message[] = [
+                ...updatedConversation.messages,
+                {
+                  id: uuidv4(),
+                  role: 'assistant',
+                  content: chunkValue,
+                  feedback: message.feedback,
+                  wasQueryRewritten: message.wasQueryRewritten,
+                  queryRewriteText: message.queryRewriteText,
+                },
+              ]
 
-          homeDispatch({ field: 'messageIsStreaming', value: false })
+              // console.log('updatedMessages with queryRewrite info:', updatedMessages)
 
-          try {
-            // This is after the response is done streaming
-            console.debug(
-              'updatedConversation after streaming:',
-              updatedConversation,
-            )
-            handleUpdateConversation(updatedConversation, {
-              key: 'messages',
-              value: updatedConversation.messages,
-            })
-            // Here, we want to persist the full streamed assistant message, not the initial user message.
-            // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
-            const streamedAssistantMessage =
-              updatedConversation.messages?.[
-                updatedConversation.messages.length - 1
-              ] ?? message
-
-            if (streamedAssistantMessage.role === 'assistant') {
-              await updateConversationMutation.mutateAsync({
-                conversation: updatedConversation,
-                message: streamedAssistantMessage,
+              finalAssistantRespose += chunkValue
+              updatedConversation = {
+                ...updatedConversation,
+                messages: updatedMessages,
+              }
+              homeDispatch({
+                field: 'selectedConversation',
+                value: updatedConversation,
               })
             } else {
-              // Fallback: do not trigger mutation if it's not an assistant message
-              console.warn(
-                'Attempted to persist a non-assistant message after stream:',
-                streamedAssistantMessage,
-              )
+              if (updatedConversation.messages?.length > 0) {
+                const lastMessageIndex =
+                  updatedConversation.messages?.length - 1
+                const lastMessage =
+                  updatedConversation.messages[lastMessageIndex]
+                const lastUserMessage =
+                  updatedConversation.messages[lastMessageIndex - 1]
+                if (
+                  lastMessage &&
+                  lastUserMessage &&
+                  lastUserMessage.contexts
+                ) {
+                  // Handle citations via state machine
+                  finalAssistantRespose += await processChunkWithStateMachine(
+                    chunkValue,
+                    lastUserMessage,
+                    stateMachineContext,
+                    citationLinkCache,
+                    getCurrentPageName(),
+                  )
+
+                  // Update the last message with the new content
+                  // TODO(BG): why use map?
+                  const updatedMessages = updatedConversation.messages?.map(
+                    (msg, index) =>
+                      index === lastMessageIndex
+                        ? { ...msg, content: finalAssistantRespose }
+                        : msg,
+                  )
+
+                  // Update the conversation with the new messages
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedMessages,
+                  }
+
+                  // Dispatch the updated conversation
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+                }
+              }
             }
-            console.debug(
-              'updatedConversation after mutation:',
+          }
+        } catch (error) {
+          console.error('Error reading from stream:', error)
+          homeDispatch({ field: 'loading', value: false })
+          homeDispatch({ field: 'messageIsStreaming', value: false })
+          return
+        }
+
+        // TODO(BG): i don't think this code is reachable
+        if (!done) {
+          throw new Error('LLM response stream ended before it was done.')
+        }
+
+        homeDispatch({ field: 'messageIsStreaming', value: false })
+
+        try {
+          // This is after the response is done streaming
+          console.debug(
+            'updatedConversation after streaming:',
+            updatedConversation,
+          )
+          handleUpdateConversation(updatedConversation, {
+            key: 'messages',
+            value: updatedConversation.messages,
+          })
+          // Here, we want to persist the full streamed assistant message, not the initial user message.
+          // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
+          const streamedAssistantMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? message
+
+          if (streamedAssistantMessage.role === 'assistant') {
+            await updateConversationMutation.mutateAsync({
+              conversation: updatedConversation,
+              message: streamedAssistantMessage,
+            })
+          } else {
+            // Fallback: do not trigger mutation if it's not an assistant message
+            console.warn(
+              'Attempted to persist a non-assistant message after stream:',
+              streamedAssistantMessage,
+            )
+          }
+          console.debug(
+            'updatedConversation after mutation:',
+            updatedConversation,
+          )
+
+          if (streamedAssistantMessage) {
+            onMessageReceived(
               updatedConversation,
+              streamedAssistantMessage,
+              editedMessageIdRef.current,
             )
-
-            if (streamedAssistantMessage) {
-              onMessageReceived(
-                updatedConversation,
-                streamedAssistantMessage,
-                editedMessageIdRef.current,
-              )
-              // Clear the ref after logging
-              editedMessageIdRef.current = undefined
-            }
-
-            // } else {
-            //   onMessageReceived(updatedConversation)
-            // }
-
-            // Save the conversation to the server
-
-            // await saveConversationToServer(updatedConversation).catch(
-            //   (error) => {
-            //     console.error(
-            //       'Error saving updated conversation to server:',
-            //       error,
-            //     )
-            //   },
-            // )
-
-            // const updatedConversations: Conversation[] = conversations.map(
-            //   (conversation) => {
-            //     if (conversation.id === selectedConversation.id) {
-            //       return updatedConversation
-            //     }
-            //     return conversation
-            //   },
-            // )
-            // if (updatedConversations.length === 0) {
-            //   updatedConversations.push(updatedConversation)
-            // }
-            // homeDispatch({
-            //   field: 'conversations',
-            //   value: updatedConversations,
-            // })
-            // console.log('updatedConversations: ', updatedConversations)
-            // saveConversations(updatedConversations)
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-          } catch (error) {
-            console.error('An error occurred: ', error)
-            controller.abort()
+            // Clear the ref after logging
+            editedMessageIdRef.current = undefined
           }
 
-          // BG: what does plugin do?
-        } else {
-          if (response instanceof Response) {
-            const { answer } = await response.json()
-            const updatedMessages: Message[] = [
-              ...updatedConversation.messages,
-              {
-                id: uuidv4(),
-                role: 'assistant',
-                content: answer,
-                contexts: message.contexts,
-                feedback: message.feedback,
-                wasQueryRewritten: message.wasQueryRewritten,
-                queryRewriteText: message.queryRewriteText,
-              },
-            ]
-            updatedConversation = {
-              ...updatedConversation,
-              messages: updatedMessages,
-            }
-            homeDispatch({
-              field: 'selectedConversation',
-              value: updatedConversation,
-            })
-            // This is after the response is done streaming for plugins
+          // } else {
+          //   onMessageReceived(updatedConversation)
+          // }
 
-            // handleUpdateConversation(updatedConversation, {
-            //   key: 'messages',
-            //   value: updatedMessages,
-            // })
+          // Save the conversation to the server
 
-            // await saveConversationToServer(updatedConversation).catch(
-            //   (error) => {
-            //     console.error(
-            //       'Error saving updated conversation to server:',
-            //       error,
-            //     )
-            //   },
-            // )
-            // Do we need this?
-            // saveConversation(updatedConversation)
-            const updatedConversations: Conversation[] = conversations.map(
-              (conversation) =>
-                conversation.id === selectedConversation.id
-                  ? updatedConversation
-                  : conversation,
-            )
-            if (updatedConversations.length === 0) {
-              updatedConversations.push(updatedConversation)
-            }
-            homeDispatch({
-              field: 'conversations',
-              value: updatedConversations,
-            })
-            // saveConversations(updatedConversations)
-            homeDispatch({ field: 'loading', value: false })
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-          }
+          // await saveConversationToServer(updatedConversation).catch(
+          //   (error) => {
+          //     console.error(
+          //       'Error saving updated conversation to server:',
+          //       error,
+          //     )
+          //   },
+          // )
+
+          // const updatedConversations: Conversation[] = conversations.map(
+          //   (conversation) => {
+          //     if (conversation.id === selectedConversation.id) {
+          //       return updatedConversation
+          //     }
+          //     return conversation
+          //   },
+          // )
+          // if (updatedConversations.length === 0) {
+          //   updatedConversations.push(updatedConversation)
+          // }
+          // homeDispatch({
+          //   field: 'conversations',
+          //   value: updatedConversations,
+          // })
+          // console.log('updatedConversations: ', updatedConversations)
+          // saveConversations(updatedConversations)
+          homeDispatch({ field: 'messageIsStreaming', value: false })
+        } catch (error) {
+          console.error('An error occurred: ', error)
+          controller.abort()
         }
       },
       [
         apiKey,
         conversations,
-        pluginKeys,
         selectedConversation,
         stopConversationRef,
         chat_ui,
         refetchLLMProviders,
         routeChatAsync,
+        runImageDescriptionAsync,
         runQueryRewriteAsync,
+        runRouteToolsAsync,
       ],
     )
 
@@ -1361,11 +1260,6 @@ export const Chat = memo(
           const tempConversation = {
             ...selectedConversation,
             messages: selectedConversation.messages.slice(0, targetIndex + 1),
-          }
-
-          // If there's a model selected in the context, use that instead of the conversation's model
-          if (selectedModel) {
-            tempConversation.model = selectedModel
           }
 
           // Determine if we need to delete one or two messages
@@ -1435,10 +1329,6 @@ export const Chat = memo(
           // This ensures buildPrompt can find the last user input
           modifiedConversation.messages.push(userMessageToRegenerate)
 
-          // Reset query rewriting state in the global context
-          homeDispatch({ field: 'wasQueryRewritten', value: undefined })
-          homeDispatch({ field: 'queryRewriteText', value: undefined })
-
           // IMPORTANT: Update the selected conversation with the modified one BEFORE proceeding with handleSend
           // This ensures that the query rewriting process uses the correct conversation state
           homeDispatch({
@@ -1467,7 +1357,6 @@ export const Chat = memo(
           handleSend(
             userMessageToRegenerate,
             messagesToDeleteCount,
-            null,
             tools,
             enabledDocumentGroups,
             llmProviders,
@@ -1497,7 +1386,6 @@ export const Chat = memo(
         llmProviders,
         tools,
         enabledDocumentGroups,
-        selectedModel,
         homeDispatch,
         deleteMessagesMutation,
         apiKey,
@@ -1937,19 +1825,13 @@ export const Chat = memo(
               updatedConversation.messages.length - 1
             ] ?? null
           if (latestAssistantMessage) {
-            await fetch('/api/UIUC-api/logConversation', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(
-                createLogConversationPayload(
-                  getCurrentPageName(),
-                  updatedConversation,
-                  latestAssistantMessage,
-                ),
+            await logConversationMutation.mutateAsync(
+              createLogConversationPayload(
+                getCurrentPageName(),
+                updatedConversation,
+                latestAssistantMessage,
               ),
-            })
+            )
           }
         } catch (error) {
           homeDispatch({
@@ -2046,7 +1928,6 @@ export const Chat = memo(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
                                     index,
-                                  null,
                                   tools,
                                   enabledDocumentGroups,
                                   llmProviders,
@@ -2078,11 +1959,10 @@ export const Chat = memo(
               <ChatInput
                 stopConversationRef={stopConversationRef}
                 textareaRef={textareaRef}
-                onSend={(message, plugin) =>
+                onSend={(message) =>
                   handleSend(
                     message,
                     0,
-                    plugin,
                     tools,
                     enabledDocumentGroups,
                     llmProviders,

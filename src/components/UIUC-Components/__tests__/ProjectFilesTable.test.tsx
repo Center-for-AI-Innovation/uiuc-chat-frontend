@@ -50,6 +50,12 @@ vi.mock('mantine-datatable', () => ({
         </button>
         <button
           type="button"
+          onClick={() => props.onSelectedRecordsChange?.([])}
+        >
+          clear-selection
+        </button>
+        <button
+          type="button"
           onClick={() =>
             props.onSelectedRecordsChange?.(
               Array.from({ length: 101 }).map((_, i) => ({ id: i + 1 })),
@@ -133,15 +139,11 @@ vi.mock('@/hooks/queries/useDeleteFromDocGroup', () => ({
   }),
 }))
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return {
-    ...actual,
-    fetchPresignedUrl: vi.fn(async () => 'http://localhost/presigned'),
-  }
-})
+vi.mock('@/hooks/__internal__/downloadPresignedUrl', () => ({
+  fetchPresignedUrl: vi.fn(async () => 'http://localhost/presigned'),
+}))
 
-vi.mock('~/pages/util/handleExport', () => ({
+vi.mock('~/hooks/__internal__/handleExport', () => ({
   default: vi.fn(async () => ({ message: 'export started' })),
 }))
 
@@ -168,7 +170,7 @@ describe('ProjectFilesTable', () => {
                 id: 1,
                 course_name: 'CS101',
                 readable_filename: `file1-${filterKey}-${filterValue}-${sortDir}.txt`,
-                url: '',
+                url: 'https://example.com/doc',
                 s3_path: 'cs101/file1.txt',
                 base_url: 'http://base',
                 created_at: new Date('2024-01-01T00:00:00.000Z').toISOString(),
@@ -241,6 +243,10 @@ describe('ProjectFilesTable', () => {
       screen.getByRole('button', { name: /Add Document to Groups/i }),
     )
     await user.click(screen.getByRole('button', { name: /set-groups-bulk/i }))
+    await user.click(screen.getByRole('button', { name: /clear-selection/i }))
+    expect(
+      screen.queryByRole('button', { name: /Add Document to Groups/i }),
+    ).not.toBeInTheDocument()
 
     // Delete action opens modal.
     await user.click(screen.getByRole('button', { name: /Delete document/i }))
@@ -255,11 +261,13 @@ describe('ProjectFilesTable', () => {
       expect((axiosMod as any).default.delete).toHaveBeenCalled(),
     )
 
-    // Export modal is wired and openable.
+    // Export modal is wired and confirm action is callable.
     await user.click(screen.getByRole('button', { name: /^Export$/ }))
     expect(
       await screen.findByText(/export all the documents and embeddings/i),
     ).toBeInTheDocument()
+    const exportButtons = screen.getAllByRole('button', { name: /^Export$/ })
+    await user.click(exportButtons[exportButtons.length - 1]!)
   }, 20_000)
 
   it('shows a toast when attempting to delete more than 100 selected records', async () => {
@@ -426,5 +434,43 @@ describe('ProjectFilesTable', () => {
         /Ah! We hit a wall when fetching your documents/i,
       ),
     ).toBeInTheDocument()
+  })
+
+  it('switches between Success and Failed tabs via tab buttons', async () => {
+    const user = userEvent.setup()
+    const onTabChange = vi.fn()
+
+    server.use(
+      http.get('*/api/materialsTable/fetchProjectMaterials*', async () => {
+        return HttpResponse.json({ final_docs: [], total_count: 0 })
+      }),
+      http.get('*/api/materialsTable/fetchFailedDocuments*', async () => {
+        return HttpResponse.json({
+          final_docs: [],
+          total_count: 0,
+          recent_fail_count: 2,
+        })
+      }),
+    )
+
+    globalThis.__TEST_ROUTER__ = { asPath: '/CS101/dashboard' }
+    const { ProjectFilesTable } = await import('../ProjectFilesTable')
+
+    renderWithProviders(
+      <ProjectFilesTable
+        course_name="CS101"
+        tabValue="success"
+        onTabChange={onTabChange}
+        setFailedCount={vi.fn()}
+        failedCount={2}
+      />,
+      { homeContext: { dispatch: vi.fn() } },
+    )
+
+    await user.click(await screen.findByRole('button', { name: /Failed/i }))
+    await user.click(screen.getByRole('button', { name: /Success/i }))
+
+    expect(onTabChange).toHaveBeenCalledWith('failed')
+    expect(onTabChange).toHaveBeenCalledWith('success')
   })
 })

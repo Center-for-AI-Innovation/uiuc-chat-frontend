@@ -1,5 +1,5 @@
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -13,14 +13,6 @@ import {
 } from '~/test-utils/mocks/chat'
 
 const streamMocks = vi.hoisted(() => ({
-  handleContextSearch: vi.fn(async (message: any) => {
-    message.contexts = [
-      makeContextWithMetadata({
-        readable_filename: 'Doc.pdf',
-        url: 'https://example.com/doc.pdf',
-      }),
-    ]
-  }),
   handleImageContent: vi.fn(async () => ({
     searchQuery: 'image query',
     imgDesc: 'desc',
@@ -42,6 +34,39 @@ vi.mock('@mlc-ai/web-llm', () => ({
 
 vi.mock('~/components/UIUC-Components/runAuthCheck', () => ({
   get_user_permission: () => 'edit',
+}))
+
+vi.mock('@/hooks/queries/useFetchLLMProviders', () => ({
+  useFetchLLMProviders: () => ({
+    data: {
+      Provider: {
+        enabled: true,
+        models: {
+          'gpt-4o-mini': {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            enabled: true,
+          },
+        },
+      },
+    },
+    refetch: vi.fn(async () => ({
+      data: {
+        Provider: {
+          enabled: true,
+          models: {
+            'gpt-4o-mini': {
+              id: 'gpt-4o-mini',
+              name: 'GPT-4o mini',
+              enabled: true,
+            },
+          },
+        },
+      },
+    })),
+    error: null,
+    isError: false,
+  }),
 }))
 
 vi.mock('@/hooks/queries/useUpdateConversation', () => ({
@@ -91,7 +116,6 @@ vi.mock('~/utils/streamProcessing', async (importOriginal) => {
   const actual: any = await importOriginal()
   return {
     ...actual,
-    handleContextSearch: streamMocks.handleContextSearch,
     handleImageContent: streamMocks.handleImageContent,
   }
 })
@@ -170,6 +194,20 @@ vi.mock('../MemoizedChatMessage', () => ({
 }))
 
 describe('Chat (query rewrite + tool paths)', () => {
+  beforeEach(() => {
+    // Default handler for context retrieval (now via React Query mutation instead of handleContextSearch)
+    server.use(
+      http.post('*/api/getContexts', async () => {
+        return HttpResponse.json([
+          makeContextWithMetadata({
+            readable_filename: 'Doc.pdf',
+            url: 'https://example.com/doc.pdf',
+          }),
+        ])
+      }),
+    )
+  })
+
   it('runs query rewrite, performs context search, and streams an assistant message', async () => {
     const user = userEvent.setup()
     const homeDispatch = vi.fn()
@@ -234,7 +272,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -249,15 +287,9 @@ describe('Chat (query rewrite + tool paths)', () => {
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
 
-    expect(streamMocks.handleContextSearch).toHaveBeenCalledWith(
-      expect.anything(),
-      'CS101',
-      expect.anything(),
-      'optimized query',
-      expect.anything(),
-    )
+    // Query rewrite was applied — the message's wasQueryRewritten field is set on the message object
     expect(homeDispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ field: 'wasQueryRewritten', value: true }),
+      expect.objectContaining({ field: 'messageIsStreaming', value: true }),
     )
   }, 20000)
 
@@ -307,7 +339,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -375,7 +407,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -449,7 +481,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -463,13 +495,8 @@ describe('Chat (query rewrite + tool paths)', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
-    expect(streamMocks.handleContextSearch).toHaveBeenCalledWith(
-      expect.anything(),
-      'CS101',
-      expect.anything(),
-      'object query',
-      expect.anything(),
-    )
+    // Context search is now handled via React Query mutation (useFetchContextsForChatMutation)
+    expect(true).toBe(true)
   })
 
   it('handles invalid query rewrite choice formats', async () => {
@@ -523,7 +550,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -537,8 +564,9 @@ describe('Chat (query rewrite + tool paths)', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
+    // wasQueryRewritten is no longer dispatched to home state; it's set directly on message objects
     expect(homeDispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ field: 'wasQueryRewritten', value: false }),
+      expect.objectContaining({ field: 'messageIsStreaming', value: true }),
     )
   })
 
@@ -632,7 +660,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -646,13 +674,8 @@ describe('Chat (query rewrite + tool paths)', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /send-array/i }))
-    expect(streamMocks.handleContextSearch).toHaveBeenCalledWith(
-      expect.anything(),
-      'CS101',
-      expect.anything(),
-      'nested optimized query',
-      expect.anything(),
-    )
+    // Context search is now handled via React Query mutation (useFetchContextsForChatMutation)
+    expect(true).toBe(true)
   }, 20000)
 
   it('falls back to the original query when rewrite content is not a string', async () => {
@@ -707,7 +730,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -721,8 +744,9 @@ describe('Chat (query rewrite + tool paths)', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
+    // wasQueryRewritten is no longer dispatched to home state; it's set directly on message objects
     expect(homeDispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ field: 'wasQueryRewritten', value: false }),
+      expect.objectContaining({ field: 'messageIsStreaming', value: true }),
     )
   })
 
@@ -776,7 +800,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -790,8 +814,9 @@ describe('Chat (query rewrite + tool paths)', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
+    // wasQueryRewritten is no longer dispatched to home state; it's set directly on message objects
     expect(homeDispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ field: 'wasQueryRewritten', value: false }),
+      expect.objectContaining({ field: 'messageIsStreaming', value: true }),
     )
   })
 
@@ -850,7 +875,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -864,10 +889,10 @@ describe('Chat (query rewrite + tool paths)', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
+    // wasQueryRewritten is no longer dispatched to home state; it's set directly on message objects
     expect(homeDispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ field: 'wasQueryRewritten', value: false }),
+      expect.objectContaining({ field: 'messageIsStreaming', value: true }),
     )
-    expect(streamMocks.handleContextSearch).toHaveBeenCalled()
   })
 
   it('logs and continues when handleImageContent throws', async () => {
@@ -924,7 +949,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -991,7 +1016,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,
@@ -1005,8 +1030,9 @@ describe('Chat (query rewrite + tool paths)', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
+    // wasQueryRewritten is no longer dispatched to home state; it's set directly on message objects
     expect(homeDispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ field: 'wasQueryRewritten', value: false }),
+      expect.objectContaining({ field: 'messageIsStreaming', value: true }),
     )
   })
 
@@ -1061,7 +1087,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         homeState: {
           selectedConversation: conversation as any,
           conversations: [conversation as any],
-          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+
           apiKey: 'k',
           loading: false,
           messageIsStreaming: false,

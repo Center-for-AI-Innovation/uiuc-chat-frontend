@@ -5,7 +5,9 @@ import { describe, expect, it, vi } from 'vitest'
 describe('fetchContextsFromBackend / server-side fetchContexts (node)', () => {
   it('fetchContextsFromBackend posts to backend and returns JSON', async () => {
     vi.stubEnv('RAILWAY_URL', 'https://backend.example/')
-    const { fetchContextsFromBackend } = await import('../fetchContexts')
+    const { default: fetchContextsFromBackend } = await import(
+      '~/hooks/__internal__/fetchContextsFromBackend'
+    )
 
     const data = [{ id: 1, text: 'ctx' }] as any
     const fetchSpy = vi
@@ -25,7 +27,9 @@ describe('fetchContextsFromBackend / server-side fetchContexts (node)', () => {
 
   it('fetchContextsFromBackend throws on non-ok response', async () => {
     vi.stubEnv('RAILWAY_URL', 'https://backend.example')
-    const { fetchContextsFromBackend } = await import('../fetchContexts')
+    const { default: fetchContextsFromBackend } = await import(
+      '~/hooks/__internal__/fetchContextsFromBackend'
+    )
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response('nope', { status: 500 }),
@@ -38,7 +42,9 @@ describe('fetchContextsFromBackend / server-side fetchContexts (node)', () => {
 
   it('fetchContexts uses backend path on the server and returns [] on errors', async () => {
     vi.stubEnv('RAILWAY_URL', 'https://backend.example')
-    const { fetchContexts } = await import('../fetchContexts')
+    const { fetchContexts } = await import(
+      '~/hooks/__internal__/fetchContextsForChat'
+    )
 
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))

@@ -1,6 +1,7 @@
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
+import { renderWithProviders } from '~/test-utils/renderWithProviders'
 import userEvent from '@testing-library/user-event'
 
 import type { FileUpload } from '../UploadNotification'
@@ -27,6 +28,14 @@ vi.mock('@mantine/dropzone', () => {
         >
           trigger-drop
         </button>
+        <button
+          type="button"
+          onClick={() =>
+            onDrop?.([new File(['audio'], 'song.mp3', { type: 'audio/mpeg' })])
+          }
+        >
+          trigger-audio-drop
+        </button>
         <div data-testid="dropzone-loading">{String(!!loading)}</div>
         {children}
       </div>
@@ -46,10 +55,9 @@ vi.mock('@mantine/dropzone', () => {
   return { Dropzone }
 })
 
-vi.mock('~/utils/apiUtils', async (importOriginal) => {
-  const actual: any = await importOriginal()
-  return { ...actual, callSetCourseMetadata: vi.fn(async () => ({})) }
-})
+vi.mock('@/hooks/__internal__/setCourseMetadata', () => ({
+  callSetCourseMetadata: vi.fn(async () => true),
+}))
 
 vi.mock('uuid', () => ({ v4: () => 'uuid-1' }))
 
@@ -61,7 +69,7 @@ describe('LargeDropzone', () => {
   it('shows the disabled state message', async () => {
     const { default: LargeDropzone } = await import('../LargeDropzone')
 
-    render(
+    renderWithProviders(
       <LargeDropzone
         courseName="CS101"
         current_user_email="me@example.com"
@@ -81,7 +89,9 @@ describe('LargeDropzone', () => {
   it('uploads + ingests files for a new course and redirects to dashboard', async () => {
     const user = userEvent.setup()
     const { default: LargeDropzone } = await import('../LargeDropzone')
-    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+    const { callSetCourseMetadata } = await import(
+      '@/hooks/__internal__/setCourseMetadata'
+    )
 
     const push = vi.fn(async () => {})
     const reload = vi.fn()
@@ -149,7 +159,7 @@ describe('LargeDropzone', () => {
       },
     )
 
-    render(
+    renderWithProviders(
       <LargeDropzone
         courseName="CS101"
         current_user_email="me@example.com"
@@ -173,4 +183,135 @@ describe('LargeDropzone', () => {
     expect(uploads.length).toBeGreaterThan(0)
     expect(uploads[0].status).toMatch(/uploading|ingesting|complete/)
   }, 20000)
+
+  it('rejects audio/video uploads before ingestion starts', async () => {
+    const user = userEvent.setup()
+    const { default: LargeDropzone } = await import('../LargeDropzone')
+    const alertSpy = vi.spyOn(globalThis, 'alert').mockImplementation(() => {})
+
+    renderWithProviders(
+      <LargeDropzone
+        courseName="CS101"
+        current_user_email="me@example.com"
+        courseMetadata={{} as any}
+        is_new_course={false}
+        setUploadFiles={vi.fn() as any}
+        auth={{ isAuthenticated: true } as any}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole('button', { name: /trigger-audio-drop/i }),
+    )
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Audio and video files are not supported at this time.',
+    )
+  })
+
+  it('marks upload status as error when upload/ingest fails', async () => {
+    const user = userEvent.setup()
+    const { default: LargeDropzone } = await import('../LargeDropzone')
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    let uploads: FileUpload[] = []
+    const setUploadFiles = vi.fn((updater: any) => {
+      uploads = typeof updater === 'function' ? updater(uploads) : updater
+    })
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
+      const url = String(input?.url ?? input)
+      if (url.includes('/api/UIUC-api/uploadToS3')) {
+        return new Response(JSON.stringify({ error: 'upload failed' }), {
+          status: 500,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    })
+
+    renderWithProviders(
+      <LargeDropzone
+        courseName="CS101"
+        current_user_email="me@example.com"
+        courseMetadata={{} as any}
+        is_new_course={false}
+        setUploadFiles={setUploadFiles as any}
+        auth={{ isAuthenticated: true } as any}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /trigger-drop/i }))
+    await waitFor(() => expect(uploads.length).toBeGreaterThan(0))
+    await waitFor(() =>
+      expect(uploads.some((f) => f.status === 'error')).toBe(true),
+    )
+  })
+
+  it('polling transitions uploading/ingesting files to complete or error', async () => {
+    const { default: LargeDropzone } = await import('../LargeDropzone')
+
+    let uploads: FileUpload[] = [
+      { name: 'file-a.pdf', status: 'uploading', type: 'document' },
+      { name: 'file-b.pdf', status: 'ingesting', type: 'document' },
+    ]
+    const setUploadFiles = vi.fn((updater: any) => {
+      uploads = typeof updater === 'function' ? updater(uploads) : updater
+    })
+
+    let intervalCallback: (() => Promise<void>) | undefined
+    vi.spyOn(globalThis, 'setInterval').mockImplementation(((cb: any) => {
+      intervalCallback = cb
+      return 321 as any
+    }) as any)
+    vi.spyOn(globalThis, 'clearInterval').mockImplementation(
+      () => undefined as any,
+    )
+
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
+      const url = String(input?.url ?? input)
+      if (url.includes('/api/materialsTable/docsInProgress')) {
+        return new Response(JSON.stringify({ documents: [] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+      if (url.includes('/api/materialsTable/successDocs')) {
+        return new Response(
+          JSON.stringify({ documents: [{ readable_filename: 'file-a.pdf' }] }),
+          {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          },
+        )
+      }
+      return new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    })
+
+    renderWithProviders(
+      <LargeDropzone
+        courseName="CS101"
+        current_user_email="me@example.com"
+        courseMetadata={{} as any}
+        is_new_course={false}
+        setUploadFiles={setUploadFiles as any}
+        auth={{ isAuthenticated: true } as any}
+      />,
+    )
+
+    expect(intervalCallback).toBeDefined()
+    if (intervalCallback) {
+      await intervalCallback()
+    }
+
+    expect(uploads.find((f) => f.name === 'file-a.pdf')?.status).toBe(
+      'complete',
+    )
+    expect(uploads.find((f) => f.name === 'file-b.pdf')?.status).toBe('error')
+  })
 })

@@ -18,7 +18,6 @@ export const FancyRetrieval = () => {
       selectedConversation,
       defaultModelId,
       // showModelSettings,
-      prompts,
     },
     handleUpdateConversation,
     // dispatch: homeDispatch,

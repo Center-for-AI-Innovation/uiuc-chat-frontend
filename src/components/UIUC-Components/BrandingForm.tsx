@@ -1,3 +1,6 @@
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+import { useUploadToS3 } from '~/hooks/queries/useUploadToS3'
+
 import { useEffect, useState } from 'react'
 
 import { Button, FileInput, Textarea } from '@mantine/core'
@@ -12,7 +15,6 @@ import {
   type CourseMetadata,
   type CourseMetadataOptionalForUpsert,
 } from '~/types/courseMetadata'
-import { callSetCourseMetadata, uploadToS3 } from '~/utils/apiUtils'
 
 const BrandingForm = ({
   project_name,
@@ -22,6 +24,9 @@ const BrandingForm = ({
   user_id: string
 }) => {
   const queryClient = useQueryClient()
+  const uploadToS3Mutation = useUploadToS3()
+  const { mutateAsync: setCourseMetadataAsync } =
+    useUpdateCourseMetadata(project_name)
   const [introMessage, setIntroMessage] = useState('')
   const [isIntroMessageUpdated, setIsIntroMessageUpdated] = useState(false)
   const [metadata, setMetadata] = useState<CourseMetadata | null>(null)
@@ -58,15 +63,16 @@ const BrandingForm = ({
     if (logo) {
       console.log('Uploading to s3')
 
-      const banner_s3_image = await uploadToS3(
-        logo ?? null,
+      const banner_s3_image = await uploadToS3Mutation.mutateAsync({
+        file: logo,
+        uniqueFileName: `${crypto.randomUUID()}.${logo.name.split('.').pop()}`,
+        courseName: project_name,
         user_id,
-        project_name,
-      )
+      })
 
       if (banner_s3_image && metadata) {
         metadata.banner_image_s3 = banner_s3_image
-        await callSetCourseMetadata(project_name, metadata)
+        await setCourseMetadataAsync(metadata)
       }
     }
   }
@@ -116,17 +122,12 @@ const BrandingForm = ({
                   metadata.course_intro_message = introMessage
                   // Update the courseMetadata object
 
-                  const resp = await callSetCourseMetadata(
-                    project_name,
-                    metadata,
-                  )
-
-                  if (!resp) {
+                  await setCourseMetadataAsync(metadata).catch(() => {
                     console.log(
                       'Error upserting course metadata for course: ',
                       project_name,
                     )
-                  }
+                  })
                 }
               }}
             >
@@ -146,17 +147,12 @@ const BrandingForm = ({
                     metadata.course_intro_message = introMessage
                     // Update the courseMetadata object
 
-                    const resp = await callSetCourseMetadata(
-                      project_name,
-                      metadata,
-                    )
-
-                    if (!resp) {
+                    await setCourseMetadataAsync(metadata).catch(() => {
                       console.log(
                         'Error upserting course metadata for course: ',
                         project_name,
                       )
-                    }
+                    })
                   }
                 }}
               >

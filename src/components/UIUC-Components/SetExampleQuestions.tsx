@@ -1,7 +1,8 @@
+import { useUpdateCourseMetadata } from '@/hooks/queries/useUpdateCourseMetadata'
+
 import { TextInput, Button, Box } from '@mantine/core'
 import { useState, useEffect } from 'react'
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
-import { callSetCourseMetadata } from '~/utils/apiUtils'
 
 export default function SetExampleQuestions({
   course_name,
@@ -10,6 +11,8 @@ export default function SetExampleQuestions({
   course_name: string
   course_metadata: CourseMetadataOptionalForUpsert
 }) {
+  const { mutateAsync: setCourseMetadataAsync } =
+    useUpdateCourseMetadata(course_name)
   const example_questions = course_metadata?.example_questions || ['']
   const [inputList, setInputList] = useState(
     example_questions.length > 0 ? example_questions : [''],
@@ -58,7 +61,7 @@ export default function SetExampleQuestions({
       example_questions: example_questions,
     } as CourseMetadataOptionalForUpsert
 
-    await callSetCourseMetadata(course_name, new_course_metadata)
+    await setCourseMetadataAsync(new_course_metadata)
     // console.log("FINISHED SETTING THE EXAMPLE QUESTIONS")
   }
 

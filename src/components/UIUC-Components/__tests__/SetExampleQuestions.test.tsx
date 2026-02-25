@@ -6,8 +6,8 @@ import userEvent from '@testing-library/user-event'
 import SetExampleQuestions from '../SetExampleQuestions'
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
 
-vi.mock('~/utils/apiUtils', () => ({
-  callSetCourseMetadata: vi.fn(async () => undefined),
+vi.mock('@/hooks/__internal__/setCourseMetadata', () => ({
+  callSetCourseMetadata: vi.fn(async () => true),
 }))
 
 describe('SetExampleQuestions', () => {
@@ -48,7 +48,9 @@ describe('SetExampleQuestions', () => {
   it('submits filtered questions via callSetCourseMetadata', async () => {
     const user = userEvent.setup()
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
-    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+    const { callSetCourseMetadata } = await import(
+      '@/hooks/__internal__/setCourseMetadata'
+    )
 
     renderWithProviders(
       <SetExampleQuestions
@@ -84,7 +86,9 @@ describe('SetExampleQuestions', () => {
 
   it('alerts and does not submit when course_name is empty', async () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {})
-    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+    const { callSetCourseMetadata } = await import(
+      '@/hooks/__internal__/setCourseMetadata'
+    )
 
     renderWithProviders(
       <SetExampleQuestions

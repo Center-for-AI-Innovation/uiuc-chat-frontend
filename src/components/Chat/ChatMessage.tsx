@@ -1,4 +1,11 @@
 // ChatMessage.tsx
+import {
+  useDownloadPresignedUrl,
+  useDownloadPresignedUrlQuery,
+} from '~/hooks/queries/useDownloadPresignedUrl'
+import { useLogConversation } from '@/hooks/queries/useLogConversation'
+import { mutationKeys } from '@/hooks/queries/keys'
+
 import React, {
   memo,
   useContext,
@@ -31,7 +38,6 @@ import {
 } from '@/types/chat'
 import { useTranslation } from 'next-i18next'
 import HomeContext from '~/pages/api/home/home.context'
-import { fetchPresignedUrl } from '~/utils/apiUtils'
 import { CodeBlock } from '../Markdown/CodeBlock'
 import { MemoizedReactMarkdown } from '../Markdown/MemoizedReactMarkdown'
 import { generateSecureKey } from '~/utils/cryptoRandom'
@@ -40,6 +46,7 @@ import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
 import { ImagePreview } from './ImagePreview'
 import MessageActions from './MessageActions'
 import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
+import { useMutationState } from '@tanstack/react-query'
 
 import {
   saveConversationToServer,
@@ -211,20 +218,10 @@ const FilePreviewModal: React.FC<{
   )
 
   const {
-    state: {
-      selectedConversation,
-      messageIsStreaming,
-      isImg2TextLoading,
-      isRouting,
-      isRunningTool,
-      isRetrievalLoading,
-      isQueryRewriting,
-      loading,
-    },
+    state: { selectedConversation, messageIsStreaming, loading },
     dispatch: homeDispatch,
   } = useContext(HomeContext)
 
-  const [actualFileUrl, setActualFileUrl] = useState<string>('')
   const [textContent, setTextContent] = useState<string>('')
 
   // Handle PDFs and Office documents that can be displayed in iframes
@@ -235,14 +232,11 @@ const FilePreviewModal: React.FC<{
     fileType?.includes('text') ||
     fileName.toLowerCase().match(/\.(txt|md|html|xml|csv|py|srt|vtt)$/i)
 
-  useEffect(() => {
-    if (fileUrl && isOpen) {
-      // Convert S3 key to presigned URL
-      fetchPresignedUrl(fileUrl, courseName).then((url) => {
-        setActualFileUrl(url || '')
-      })
-    }
-  }, [fileUrl, isOpen, courseName])
+  const { data: presignedUrlData } = useDownloadPresignedUrlQuery(
+    isOpen ? fileUrl : undefined,
+    courseName,
+  )
+  const actualFileUrl = presignedUrlData || ''
 
   // Load text content for text files
   useEffect(() => {
@@ -453,22 +447,44 @@ export const ChatMessage = memo(
     courseName,
   }: Props) => {
     const { t } = useTranslation('chat')
+    const logConversationMutation = useLogConversation(courseName)
+    const { mutateAsync: downloadPresignedUrl } = useDownloadPresignedUrl()
     const { activeSidebarMessageId, setActiveSidebarMessageId } =
       useReactContext(SourcesSidebarContext)
 
     const {
-      state: {
-        selectedConversation,
-        messageIsStreaming,
-        isImg2TextLoading,
-        isRouting,
-        isRunningTool,
-        isRetrievalLoading,
-        isQueryRewriting,
-        loading,
-      },
+      state: { selectedConversation, messageIsStreaming, loading },
       dispatch: homeDispatch,
     } = useContext(HomeContext)
+
+    const isQueryRewriting =
+      useMutationState({
+        filters: {
+          mutationKey: mutationKeys.queryRewrite(),
+          status: 'pending',
+        },
+      }).length > 0
+    const isRouting =
+      useMutationState({
+        filters: {
+          mutationKey: mutationKeys.routeTools(),
+          status: 'pending',
+        },
+      }).length > 0
+    const isRetrievalLoading =
+      useMutationState({
+        filters: {
+          mutationKey: mutationKeys.fetchContextsForChat(),
+          status: 'pending',
+        },
+      }).length > 0
+    const isImg2TextLoading =
+      useMutationState({
+        filters: {
+          mutationKey: mutationKeys.imageDescription(),
+          status: 'pending',
+        },
+      }).length > 0
 
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [isTyping, setIsTyping] = useState<boolean>(false)
@@ -663,7 +679,7 @@ export const ChatMessage = memo(
       ) {
         fetchUrl()
       }
-    }, [message.content, messageIndex, isRunningTool])
+    }, [message.content, messageIndex, isRouting])
 
     const toggleEditing = () => {
       if (!isEditing) {
@@ -745,21 +761,17 @@ export const ChatMessage = memo(
         })
 
         if (latestMessage) {
-          fetch('/api/UIUC-api/logConversation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(
+          logConversationMutation
+            .mutateAsync(
               createLogConversationPayload(
                 courseName,
                 updatedConversation,
                 latestMessage,
               ),
-            ),
-          }).catch((error) => {
-            console.error('Error logging conversation delta:', error)
-          })
+            )
+            .catch((error) => {
+              console.error('Error logging conversation delta:', error)
+            })
         }
       }
       setIsEditing(false)
@@ -810,10 +822,10 @@ export const ChatMessage = memo(
       courseName: string,
     ): Promise<string> {
       try {
-        const presignedUrl = await fetchPresignedUrl(
-          uploadedImageUrl,
+        const presignedUrl = await downloadPresignedUrl({
+          filePath: uploadedImageUrl,
           courseName,
-        )
+        })
         return presignedUrl as string
       } catch (error) {
         console.error(
@@ -986,10 +998,10 @@ export const ChatMessage = memo(
                 '-pg1-thumb.png',
               )
               try {
-                const presignedUrl = await fetchPresignedUrl(
-                  thumbnailPath,
+                const presignedUrl = await downloadPresignedUrl({
+                  filePath: thumbnailPath,
                   courseName,
-                )
+                })
                 return presignedUrl as string
               } catch (e) {
                 console.error('Failed to fetch thumbnail:', e)
@@ -1163,7 +1175,10 @@ export const ChatMessage = memo(
       courseName: string,
     ): Promise<string> {
       const s3path = extractPathFromUrl(originalLink)
-      return (await fetchPresignedUrl(s3path, courseName)) as string
+      return (await downloadPresignedUrl({
+        filePath: s3path,
+        courseName,
+      })) as string
     }
 
     // Modify the useEffect for refreshing S3 links
@@ -1629,12 +1644,11 @@ export const ChatMessage = memo(
         // For non-previewable files, trigger direct download
         if (fileUrl) {
           try {
-            const presignedUrl = await fetchPresignedUrl(
-              fileUrl,
+            const presignedUrl = await downloadPresignedUrl({
+              filePath: fileUrl,
               courseName,
-              undefined,
               fileName,
-            )
+            })
             if (presignedUrl) {
               const link = document.createElement('a')
               link.href = presignedUrl
@@ -1960,7 +1974,7 @@ export const ChatMessage = memo(
                             )}
 
                           {/* Tool input arguments state for last message */}
-                          {isRouting === false &&
+                          {!isRouting &&
                             message.tools &&
                             (messageIndex ===
                               (selectedConversation?.messages.length ?? 0) -

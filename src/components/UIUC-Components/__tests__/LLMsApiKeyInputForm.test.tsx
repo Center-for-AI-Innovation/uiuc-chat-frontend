@@ -62,7 +62,11 @@ vi.mock('../GlobalFooter', () => ({
   default: () => <div data-testid="footer" />,
 }))
 
-import LLMsApiKeyInputForm from '../api-inputs/LLMsApiKeyInputForm'
+import LLMsApiKeyInputForm, {
+  APIKeyInput,
+  findDefaultModel,
+  showConfirmationToast,
+} from '../api-inputs/LLMsApiKeyInputForm'
 
 describe('LLMsApiKeyInputForm', () => {
   const makeProviders = (overrides: Record<string, unknown> = {}) => ({
@@ -191,5 +195,129 @@ describe('LLMsApiKeyInputForm', () => {
 
     renderWithProviders((<LLMsApiKeyInputForm course_name="CS101" />) as any)
     await waitFor(() => expect((notifications as any).show).toHaveBeenCalled())
+  })
+
+  it('renders embedded mode without full page chrome', async () => {
+    globalThis.__TEST_ROUTER__ = { asPath: '/ignored', isReady: true }
+    globalThis.__TEST_AUTH__ = {
+      isLoading: false,
+      isAuthenticated: true,
+      user: { profile: { email: 'owner@example.com' } },
+    }
+
+    mocks.query.data = makeProviders({
+      OpenAI: {
+        provider: 'OpenAI',
+        enabled: true,
+        apiKey: 'sk-test',
+        models: [
+          {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            enabled: true,
+            default: true,
+          },
+        ],
+      },
+    })
+    mocks.query.isError = false
+
+    renderWithProviders(
+      (<LLMsApiKeyInputForm projectName="CS101" isEmbedded />) as any,
+    )
+
+    expect(await screen.findByText(/Closed source LLMs/i)).toBeInTheDocument()
+    expect(screen.queryByTestId('footer')).not.toBeInTheDocument()
+  })
+
+  it('APIKeyInput handles enter submit, clear, and save', async () => {
+    const user = userEvent.setup()
+    const handleSubmit = vi.fn()
+    const handleChange = vi.fn()
+
+    const field: any = {
+      state: {
+        value: 'sk-123',
+        meta: {
+          isTouched: true,
+          errors: ['invalid key'],
+          isValidating: true,
+        },
+      },
+      handleChange,
+      form: { handleSubmit },
+    }
+
+    renderWithProviders(
+      (<APIKeyInput field={field} placeholder="OpenAI API Key" />) as any,
+    )
+
+    const input = screen.getByLabelText('OpenAI API Key')
+    await user.type(input, '{enter}')
+    expect(handleSubmit).toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: /Clear/i }))
+    expect(handleChange).toHaveBeenCalledWith('')
+    expect(handleSubmit).toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: /^Save$/i }))
+    expect(handleSubmit).toHaveBeenCalled()
+    expect(screen.getByText(/invalid key/i)).toBeInTheDocument()
+    expect(screen.getByText(/Validating/i)).toBeInTheDocument()
+  })
+
+  it('findDefaultModel returns the first default model and handles no-default case', () => {
+    const providersWithDefault: any = makeProviders({
+      OpenAI: {
+        provider: 'OpenAI',
+        enabled: true,
+        apiKey: 'sk',
+        models: [
+          { id: 'a', name: 'A', enabled: true, default: false },
+          { id: 'b', name: 'B', enabled: true, default: true },
+        ],
+      },
+    })
+    const defaultModel = findDefaultModel(providersWithDefault)
+    expect(defaultModel?.id).toBe('b')
+    expect(defaultModel?.provider).toBe('OpenAI')
+
+    const providersNoDefault: any = makeProviders({
+      OpenAI: {
+        provider: 'OpenAI',
+        enabled: true,
+        apiKey: 'sk',
+        models: [{ id: 'a', name: 'A', enabled: true, default: false }],
+      },
+    })
+    expect(findDefaultModel(providersNoDefault)).toBeUndefined()
+  })
+
+  it('showConfirmationToast emits success and error styles', async () => {
+    const { notifications } = await import('@mantine/notifications')
+    ;(notifications as any).show.mockClear()
+
+    showConfirmationToast({
+      title: 'Updated LLM providers',
+      message: 'Success message',
+    })
+    showConfirmationToast({
+      title: 'Error updating LLM providers',
+      message: 'Failure message',
+      isError: true,
+    })
+
+    expect((notifications as any).show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: 'green',
+        title: 'Updated LLM providers',
+      }),
+    )
+    expect((notifications as any).show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: 'red',
+        title: 'Error updating LLM providers',
+      }),
+    )
   })
 })

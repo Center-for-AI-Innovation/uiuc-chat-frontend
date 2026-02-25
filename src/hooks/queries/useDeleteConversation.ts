@@ -1,3 +1,4 @@
+// Mutation: Deletes a single conversation with optimistic cache removal and rollback on error.
 import {
   type InfiniteData,
   type QueryClient,
@@ -5,6 +6,7 @@ import {
 } from '@tanstack/react-query'
 import { type Conversation, type ConversationPage } from '~/types/chat'
 import { deleteConversationFromServer } from '@/hooks/__internal__/conversation'
+import { mutationKeys, queryKeys } from './keys'
 
 export function useDeleteConversation(
   user_email: string,
@@ -13,14 +15,13 @@ export function useDeleteConversation(
   search_term: string,
 ) {
   const normalizedSearchTerm = search_term || ''
-  const conversationHistoryKey = [
-    'conversationHistory',
+  const conversationHistoryKey = queryKeys.conversationHistory(
     course_name,
     normalizedSearchTerm,
-  ] as const
+  )
 
   return useMutation({
-    mutationKey: ['deleteConversation', user_email, course_name],
+    mutationKey: mutationKeys.deleteConversation(user_email, course_name),
     mutationFn: async (deleteConversation: Conversation) =>
       deleteConversationFromServer(
         deleteConversation.id,

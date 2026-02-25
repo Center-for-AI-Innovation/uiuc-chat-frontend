@@ -41,7 +41,6 @@ const useStyles = createStyles((theme) => ({
 
 interface ModelParamsProps {
   selectedConversation: any // Replace 'any' with the appropriate type
-  prompts: any // Replace 'any' with the appropriate type
   handleUpdateConversation: (
     conversation: any,
     update: { key: string; value: any },
@@ -51,7 +50,6 @@ interface ModelParamsProps {
 
 export const ModelParams = ({
   selectedConversation,
-  prompts,
   handleUpdateConversation,
   t,
 }: ModelParamsProps) => {

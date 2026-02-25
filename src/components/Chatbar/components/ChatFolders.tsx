@@ -1,3 +1,6 @@
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
+
 import { useContext } from 'react'
 
 import {
@@ -11,7 +14,6 @@ import Folder from '@/components/Folder'
 
 import { ConversationComponent } from './Conversation'
 import { useQueryClient } from '@tanstack/react-query'
-import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
 
 interface Props {
   searchTerm: string
@@ -25,9 +27,11 @@ export const ChatFolders = ({
   courseName,
 }: Props) => {
   const {
-    state: { folders, conversations },
+    state: { conversations },
     handleUpdateConversation,
   } = useContext(HomeContext)
+  const { data: foldersData } = useFetchFolders(currentEmail, courseName)
+  const folders = foldersData ?? []
   const queryClient = useQueryClient()
   const updateConversationMutation = useUpdateConversation(
     currentEmail as string,
