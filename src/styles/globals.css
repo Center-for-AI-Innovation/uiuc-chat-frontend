@@ -337,6 +337,15 @@
   animation: icon_scrolling 20s linear 0s infinite;
 }
 
+/* Global focus-visible styles for keyboard accessibility */
+*:focus-visible {
+  outline: 3px solid var(--illinois-orange);
+  outline-offset: 2px;
+}
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* use existing formulas dark/light as described above as much as possible and only change the primary colors as needed */
 .dark {
   --foreground: var(--illinois-white);
