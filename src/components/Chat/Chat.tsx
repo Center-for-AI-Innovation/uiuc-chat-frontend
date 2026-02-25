@@ -522,7 +522,6 @@ export const Chat = memo(
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
           } else {
-            homeDispatch({ field: 'isQueryRewriting', value: true })
             try {
               // TODO: add toggle to turn queryRewrite on and off on materials page
               const QUERY_REWRITE_PROMPT = `You are a vector database query optimizer that improves search queries for semantic vector retrieval.
@@ -810,8 +809,6 @@ export const Chat = memo(
               homeDispatch({ field: 'queryRewriteText', value: null })
               message.wasQueryRewritten = false
               message.queryRewriteText = undefined
-            } finally {
-              homeDispatch({ field: 'isQueryRewriting', value: false })
             }
           }
 

@@ -109,9 +109,6 @@ const Home = ({
   // States
   const [isInitialSetupDone, setIsInitialSetupDone] = useState(false)
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  // Add these two new state setters
-  const [isQueryRewriting, setIsQueryRewriting] = useState<boolean>(false)
-  const [queryRewriteResult, setQueryRewriteResult] = useState<string>('')
 
   const stopConversationRef = useRef<boolean>(false)
 
@@ -665,8 +662,6 @@ const Home = ({
           setIsRetrievalLoading,
           handleUpdateDocumentGroups,
           handleUpdateTools,
-          setIsQueryRewriting,
-          setQueryRewriteResult,
         }}
       >
         <Head>

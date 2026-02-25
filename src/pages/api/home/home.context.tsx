@@ -2,7 +2,7 @@ import { type Dispatch, createContext } from 'react'
 
 import { type ActionType } from '@/hooks/useCreateReducer'
 
-import { Action, type Conversation } from '@/types/chat'
+import { type Conversation } from '@/types/chat'
 import { type KeyValuePair } from '~/types/KeyValuePair'
 import { type FolderType } from '@/types/folder'
 
@@ -28,8 +28,6 @@ export interface HomeContextProps {
   setIsRetrievalLoading: (isRetrievalLoading: boolean) => void
   handleUpdateDocumentGroups: (id: string) => void
   handleUpdateTools: (id: string) => void
-  setIsQueryRewriting: (isQueryRewriting: boolean) => void
-  setQueryRewriteResult: (queryText: string) => void
 }
 
 const HomeContext = createContext<HomeContextProps>(undefined!)

@@ -73,8 +73,6 @@ vi.mock('@/components/Chat/Chat', async () => {
     setIsRouting: (v: boolean) => void
     setIsRetrievalLoading: (v: boolean) => void
     setIsImg2TextLoading: (v: boolean) => void
-    setIsQueryRewriting: (v: boolean) => void
-    setQueryRewriteResult: (v: string) => void
     handleUpdateDocumentGroups: (id: string) => void
     handleUpdateTools: (id: string) => void
   }
@@ -98,8 +96,6 @@ vi.mock('@/components/Chat/Chat', async () => {
         ctx.setIsRouting(true)
         ctx.setIsRetrievalLoading(true)
         ctx.setIsImg2TextLoading(true)
-        ctx.setIsQueryRewriting(true)
-        ctx.setQueryRewriteResult('result')
         ctx.handleUpdateDocumentGroups('dg')
         ctx.handleUpdateTools('tool')
       }, [ctx?.state?.selectedConversation?.id])

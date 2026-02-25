@@ -20,8 +20,6 @@ export function makeHomeContext(
     setIsRetrievalLoading: () => undefined,
     handleUpdateDocumentGroups: () => undefined,
     handleUpdateTools: () => undefined,
-    setIsQueryRewriting: () => undefined,
-    setQueryRewriteResult: () => undefined,
     ...overrides,
   }
 }

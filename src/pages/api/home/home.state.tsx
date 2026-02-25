@@ -42,7 +42,6 @@ export interface HomeInitialState {
   isRouting: boolean | undefined //TODO(BG): can be removed react query dup
   isRunningTool: boolean | undefined //TODO(BG): can be removed react query dup
   isRetrievalLoading: boolean | undefined //TODO(BG): can be removed react query dup
-  isQueryRewriting: boolean | undefined //TODO(BG): can be removed react query dup
   wasQueryRewritten: boolean | undefined //TODO(BG): can be removed not used anywhere
   queryRewriteText: string | undefined //TODO(BG): can be removed not used anywhere
   documentGroups: Action[]
@@ -78,7 +77,6 @@ export const initialState: HomeInitialState = {
   isRouting: undefined,
   isRunningTool: undefined,
   isRetrievalLoading: undefined,
-  isQueryRewriting: undefined,
   wasQueryRewritten: undefined,
   queryRewriteText: undefined,
   isImg2TextLoading: false,

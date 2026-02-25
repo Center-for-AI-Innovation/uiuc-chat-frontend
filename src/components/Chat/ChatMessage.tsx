@@ -4,6 +4,7 @@ import {
   useDownloadPresignedUrlQuery,
 } from '~/hooks/queries/useDownloadPresignedUrl'
 import { useLogConversation } from '@/hooks/queries/useLogConversation'
+import { mutationKeys } from '@/hooks/queries/keys'
 
 import React, {
   memo,
@@ -45,6 +46,7 @@ import SourcesSidebar from '../UIUC-Components/SourcesSidebar'
 import { ImagePreview } from './ImagePreview'
 import MessageActions from './MessageActions'
 import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
+import { useMutationState } from '@tanstack/react-query'
 
 import {
   saveConversationToServer,
@@ -223,7 +225,6 @@ const FilePreviewModal: React.FC<{
       isRouting,
       isRunningTool,
       isRetrievalLoading,
-      isQueryRewriting,
       loading,
     },
     dispatch: homeDispatch,
@@ -467,11 +468,18 @@ export const ChatMessage = memo(
         isRouting,
         isRunningTool,
         isRetrievalLoading,
-        isQueryRewriting,
         loading,
       },
       dispatch: homeDispatch,
     } = useContext(HomeContext)
+
+    const isQueryRewriting =
+      useMutationState({
+        filters: {
+          mutationKey: mutationKeys.queryRewrite(),
+          status: 'pending',
+        },
+      }).length > 0
 
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [isTyping, setIsTyping] = useState<boolean>(false)
