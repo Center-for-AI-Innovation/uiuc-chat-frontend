@@ -1,5 +1,4 @@
 // src/components/Chat/Chat.tsx
-import { useDownloadPresignedUrlQuery } from '~/hooks/queries/useDownloadPresignedUrl'
 import { useFetchEnabledDocGroups } from '@/hooks/queries/useFetchEnabledDocGroups'
 import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { useDeleteMessages } from '@/hooks/queries/useDeleteMessages'
@@ -32,7 +31,6 @@ import {
   type Message,
   type UIUCTool,
 } from '@/types/chat'
-import { type Plugin } from '@/types/plugin'
 import posthog from 'posthog-js'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -115,7 +113,6 @@ export const Chat = memo(
       // /CS-125/dashboard --> CS-125
       return router.asPath.slice(1).split('/')[0] as string
     }
-    const bannerS3Path = courseMetadata?.banner_image_s3 || undefined
 
     // React Query hooks
     const { refetch: refetchLLMProviders } = useFetchLLMProviders({
@@ -123,10 +120,6 @@ export const Chat = memo(
     })
     const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
     const { mutateAsync: routeChatAsync } = useRouteChat()
-    const { data: bannerUrl } = useDownloadPresignedUrlQuery(
-      bannerS3Path,
-      courseName,
-    )
     const logConversationMutation = useLogConversation(getCurrentPageName())
     const {
       data: documentGroupsHook,
@@ -136,7 +129,6 @@ export const Chat = memo(
     const {
       data: toolsHook,
       isSuccess: isSuccessTools,
-      isLoading: isLoadingTools,
       isError: isErrorTools,
       error: toolLoadingError,
     } = useFetchAllWorkflows(getCurrentPageName())
@@ -154,7 +146,6 @@ export const Chat = memo(
         selectedConversation,
         conversations,
         apiKey,
-        pluginKeys,
         messageIsStreaming,
         modelError,
         loading,
@@ -177,7 +168,6 @@ export const Chat = memo(
     const [enabledDocumentGroups, setEnabledDocumentGroups] = useState<
       string[]
     >(['All Documents']) // Default to 'All Documents' so retrieval can work immediately
-    const [enabledTools, setEnabledTools] = useState<string[]>([])
 
     useEffect(() => {
       const loadModel = async () => {
@@ -204,7 +194,6 @@ export const Chat = memo(
       }
     }, [selectedConversation?.model?.id, chat_ui])
 
-    const [currentMessage, setCurrentMessage] = useState<Message>()
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true)
     const [showScrollDownButton, setShowScrollDownButton] =
       useState<boolean>(false)
@@ -259,12 +248,6 @@ export const Chat = memo(
       }
     }, [toolsHook, isSuccessTools])
 
-    useEffect(() => {
-      setEnabledTools(
-        tools.filter((action) => action.enabled).map((action) => action.name),
-      )
-    }, [tools])
-
     const onMessageReceived = async (
       conversation: Conversation,
       message: Message,
@@ -300,13 +283,11 @@ export const Chat = memo(
         // messages after the edited message will be deleted
         deleteCount = 0,
 
-        plugin: Plugin | null = null,
         tools: UIUCTool[],
         documentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
         const startOfHandleSend = performance.now()
-        setCurrentMessage(message)
         resetMessageStates()
 
         // Check if llmProviders is null and fetch it if needed
@@ -1011,9 +992,7 @@ export const Chat = memo(
 
         let data
         // Only create a stream reader when we actually plan to consume the body as a stream.
-        // Plugin responses are handled via `response.json()` below, which is incompatible with
-        // `getReader()` (it locks the body and makes it unusable for JSON parsing).
-        if (!plugin && response instanceof Response) {
+        if (response instanceof Response) {
           data = response.body
           if (!data) {
             homeDispatch({ field: 'loading', value: false })
@@ -1023,295 +1002,233 @@ export const Chat = memo(
           reader = data.getReader()
         }
 
-        if (!plugin) {
-          homeDispatch({ field: 'loading', value: false })
+        homeDispatch({ field: 'loading', value: false })
 
-          if (startOfCallToLLM) {
-            // Calculate TTFT (Time To First Token)
-            const ttft = performance.now() - startOfCallToLLM
-            const fromSendToLLMResponse = performance.now() - startOfHandleSend
-            // LLM Starts responding
-            posthog.capture('ttft', {
-              course_name: finalChatBody.course_name,
-              model: finalChatBody.model,
-              llmRequestToFirstToken: Math.round(ttft), // Round to whole number of milliseconds
-              fromSendToLLMResponse: Math.round(fromSendToLLMResponse),
-            })
-          }
+        if (startOfCallToLLM) {
+          // Calculate TTFT (Time To First Token)
+          const ttft = performance.now() - startOfCallToLLM
+          const fromSendToLLMResponse = performance.now() - startOfHandleSend
+          // LLM Starts responding
+          posthog.capture('ttft', {
+            course_name: finalChatBody.course_name,
+            model: finalChatBody.model,
+            llmRequestToFirstToken: Math.round(ttft), // Round to whole number of milliseconds
+            fromSendToLLMResponse: Math.round(fromSendToLLMResponse),
+          })
+        }
 
-          const decoder = new TextDecoder()
-          let done = false
-          let isFirst = true
-          let text = ''
-          let chunkValue
-          let finalAssistantRespose = ''
-          const citationLinkCache = new Map<number, string>()
-          const stateMachineContext = { state: State.Normal, buffer: '' }
-          try {
-            // Action 6: Stream the LLM response, based on model provider.
-            while (!done) {
-              if (stopConversationRef.current === true) {
-                controller.abort()
-                done = true
-                break
-              }
-              if (response && 'next' in response) {
-                // Run WebLLM models
-                const iterator = (
-                  response as AsyncIterable<webllm.ChatCompletionChunk>
-                )[Symbol.asyncIterator]()
-                const result = await iterator.next()
-                done = result.done ?? false
-                if (
-                  done ||
-                  result.value == undefined ||
-                  result.value.choices[0]?.delta.content == undefined
-                ) {
-                  // exit early
-                  continue
-                }
-                chunkValue = result.value.choices[0]?.delta.content
-                text += chunkValue
-              } else {
-                // OpenAI models & Vercel AI SDK models
-                const { value, done: doneReading } = await reader!.read()
-                done = doneReading
-                chunkValue = decoder.decode(value)
-                text += chunkValue
-              }
-
-              if (isFirst) {
-                // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
-                isFirst = false
-                const updatedMessages: Message[] = [
-                  ...updatedConversation.messages,
-                  {
-                    id: uuidv4(),
-                    role: 'assistant',
-                    content: chunkValue,
-                    feedback: message.feedback,
-                    wasQueryRewritten: message.wasQueryRewritten,
-                    queryRewriteText: message.queryRewriteText,
-                  },
-                ]
-
-                // console.log('updatedMessages with queryRewrite info:', updatedMessages)
-
-                finalAssistantRespose += chunkValue
-                updatedConversation = {
-                  ...updatedConversation,
-                  messages: updatedMessages,
-                }
-                homeDispatch({
-                  field: 'selectedConversation',
-                  value: updatedConversation,
-                })
-              } else {
-                if (updatedConversation.messages?.length > 0) {
-                  const lastMessageIndex =
-                    updatedConversation.messages?.length - 1
-                  const lastMessage =
-                    updatedConversation.messages[lastMessageIndex]
-                  const lastUserMessage =
-                    updatedConversation.messages[lastMessageIndex - 1]
-                  if (
-                    lastMessage &&
-                    lastUserMessage &&
-                    lastUserMessage.contexts
-                  ) {
-                    // Handle citations via state machine
-                    finalAssistantRespose += await processChunkWithStateMachine(
-                      chunkValue,
-                      lastUserMessage,
-                      stateMachineContext,
-                      citationLinkCache,
-                      getCurrentPageName(),
-                    )
-
-                    // Update the last message with the new content
-                    // TODO(BG): why use map?
-                    const updatedMessages = updatedConversation.messages?.map(
-                      (msg, index) =>
-                        index === lastMessageIndex
-                          ? { ...msg, content: finalAssistantRespose }
-                          : msg,
-                    )
-
-                    // Update the conversation with the new messages
-                    updatedConversation = {
-                      ...updatedConversation,
-                      messages: updatedMessages,
-                    }
-
-                    // Dispatch the updated conversation
-                    homeDispatch({
-                      field: 'selectedConversation',
-                      value: updatedConversation,
-                    })
-                  }
-                }
-              }
+        const decoder = new TextDecoder()
+        let done = false
+        let isFirst = true
+        let text = ''
+        let chunkValue
+        let finalAssistantRespose = ''
+        const citationLinkCache = new Map<number, string>()
+        const stateMachineContext = { state: State.Normal, buffer: '' }
+        try {
+          // Action 6: Stream the LLM response, based on model provider.
+          while (!done) {
+            if (stopConversationRef.current === true) {
+              controller.abort()
+              done = true
+              break
             }
-          } catch (error) {
-            console.error('Error reading from stream:', error)
-            homeDispatch({ field: 'loading', value: false })
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-            return
-          }
+            if (response && 'next' in response) {
+              // Run WebLLM models
+              const iterator = (
+                response as AsyncIterable<webllm.ChatCompletionChunk>
+              )[Symbol.asyncIterator]()
+              const result = await iterator.next()
+              done = result.done ?? false
+              if (
+                done ||
+                result.value == undefined ||
+                result.value.choices[0]?.delta.content == undefined
+              ) {
+                // exit early
+                continue
+              }
+              chunkValue = result.value.choices[0]?.delta.content
+              text += chunkValue
+            } else {
+              // OpenAI models & Vercel AI SDK models
+              const { value, done: doneReading } = await reader!.read()
+              done = doneReading
+              chunkValue = decoder.decode(value)
+              text += chunkValue
+            }
 
-          // TODO(BG): i don't think this code is reachable
-          if (!done) {
-            throw new Error('LLM response stream ended before it was done.')
-          }
+            if (isFirst) {
+              // isFirst refers to the first chunk of data received from the API (happens once for each new message from API)
+              isFirst = false
+              const updatedMessages: Message[] = [
+                ...updatedConversation.messages,
+                {
+                  id: uuidv4(),
+                  role: 'assistant',
+                  content: chunkValue,
+                  feedback: message.feedback,
+                  wasQueryRewritten: message.wasQueryRewritten,
+                  queryRewriteText: message.queryRewriteText,
+                },
+              ]
 
-          homeDispatch({ field: 'messageIsStreaming', value: false })
+              // console.log('updatedMessages with queryRewrite info:', updatedMessages)
 
-          try {
-            // This is after the response is done streaming
-            console.debug(
-              'updatedConversation after streaming:',
-              updatedConversation,
-            )
-            handleUpdateConversation(updatedConversation, {
-              key: 'messages',
-              value: updatedConversation.messages,
-            })
-            // Here, we want to persist the full streamed assistant message, not the initial user message.
-            // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
-            const streamedAssistantMessage =
-              updatedConversation.messages?.[
-                updatedConversation.messages.length - 1
-              ] ?? message
-
-            if (streamedAssistantMessage.role === 'assistant') {
-              await updateConversationMutation.mutateAsync({
-                conversation: updatedConversation,
-                message: streamedAssistantMessage,
+              finalAssistantRespose += chunkValue
+              updatedConversation = {
+                ...updatedConversation,
+                messages: updatedMessages,
+              }
+              homeDispatch({
+                field: 'selectedConversation',
+                value: updatedConversation,
               })
             } else {
-              // Fallback: do not trigger mutation if it's not an assistant message
-              console.warn(
-                'Attempted to persist a non-assistant message after stream:',
-                streamedAssistantMessage,
-              )
+              if (updatedConversation.messages?.length > 0) {
+                const lastMessageIndex =
+                  updatedConversation.messages?.length - 1
+                const lastMessage =
+                  updatedConversation.messages[lastMessageIndex]
+                const lastUserMessage =
+                  updatedConversation.messages[lastMessageIndex - 1]
+                if (
+                  lastMessage &&
+                  lastUserMessage &&
+                  lastUserMessage.contexts
+                ) {
+                  // Handle citations via state machine
+                  finalAssistantRespose += await processChunkWithStateMachine(
+                    chunkValue,
+                    lastUserMessage,
+                    stateMachineContext,
+                    citationLinkCache,
+                    getCurrentPageName(),
+                  )
+
+                  // Update the last message with the new content
+                  // TODO(BG): why use map?
+                  const updatedMessages = updatedConversation.messages?.map(
+                    (msg, index) =>
+                      index === lastMessageIndex
+                        ? { ...msg, content: finalAssistantRespose }
+                        : msg,
+                  )
+
+                  // Update the conversation with the new messages
+                  updatedConversation = {
+                    ...updatedConversation,
+                    messages: updatedMessages,
+                  }
+
+                  // Dispatch the updated conversation
+                  homeDispatch({
+                    field: 'selectedConversation',
+                    value: updatedConversation,
+                  })
+                }
+              }
             }
-            console.debug(
-              'updatedConversation after mutation:',
+          }
+        } catch (error) {
+          console.error('Error reading from stream:', error)
+          homeDispatch({ field: 'loading', value: false })
+          homeDispatch({ field: 'messageIsStreaming', value: false })
+          return
+        }
+
+        // TODO(BG): i don't think this code is reachable
+        if (!done) {
+          throw new Error('LLM response stream ended before it was done.')
+        }
+
+        homeDispatch({ field: 'messageIsStreaming', value: false })
+
+        try {
+          // This is after the response is done streaming
+          console.debug(
+            'updatedConversation after streaming:',
+            updatedConversation,
+          )
+          handleUpdateConversation(updatedConversation, {
+            key: 'messages',
+            value: updatedConversation.messages,
+          })
+          // Here, we want to persist the full streamed assistant message, not the initial user message.
+          // Retrieve the last message in updatedConversation.messages, which contains the streamed LLM response.
+          const streamedAssistantMessage =
+            updatedConversation.messages?.[
+              updatedConversation.messages.length - 1
+            ] ?? message
+
+          if (streamedAssistantMessage.role === 'assistant') {
+            await updateConversationMutation.mutateAsync({
+              conversation: updatedConversation,
+              message: streamedAssistantMessage,
+            })
+          } else {
+            // Fallback: do not trigger mutation if it's not an assistant message
+            console.warn(
+              'Attempted to persist a non-assistant message after stream:',
+              streamedAssistantMessage,
+            )
+          }
+          console.debug(
+            'updatedConversation after mutation:',
+            updatedConversation,
+          )
+
+          if (streamedAssistantMessage) {
+            onMessageReceived(
               updatedConversation,
+              streamedAssistantMessage,
+              editedMessageIdRef.current,
             )
-
-            if (streamedAssistantMessage) {
-              onMessageReceived(
-                updatedConversation,
-                streamedAssistantMessage,
-                editedMessageIdRef.current,
-              )
-              // Clear the ref after logging
-              editedMessageIdRef.current = undefined
-            }
-
-            // } else {
-            //   onMessageReceived(updatedConversation)
-            // }
-
-            // Save the conversation to the server
-
-            // await saveConversationToServer(updatedConversation).catch(
-            //   (error) => {
-            //     console.error(
-            //       'Error saving updated conversation to server:',
-            //       error,
-            //     )
-            //   },
-            // )
-
-            // const updatedConversations: Conversation[] = conversations.map(
-            //   (conversation) => {
-            //     if (conversation.id === selectedConversation.id) {
-            //       return updatedConversation
-            //     }
-            //     return conversation
-            //   },
-            // )
-            // if (updatedConversations.length === 0) {
-            //   updatedConversations.push(updatedConversation)
-            // }
-            // homeDispatch({
-            //   field: 'conversations',
-            //   value: updatedConversations,
-            // })
-            // console.log('updatedConversations: ', updatedConversations)
-            // saveConversations(updatedConversations)
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-          } catch (error) {
-            console.error('An error occurred: ', error)
-            controller.abort()
+            // Clear the ref after logging
+            editedMessageIdRef.current = undefined
           }
 
-          // BG: what does plugin do?
-        } else {
-          if (response instanceof Response) {
-            const { answer } = await response.json()
-            const updatedMessages: Message[] = [
-              ...updatedConversation.messages,
-              {
-                id: uuidv4(),
-                role: 'assistant',
-                content: answer,
-                contexts: message.contexts,
-                feedback: message.feedback,
-                wasQueryRewritten: message.wasQueryRewritten,
-                queryRewriteText: message.queryRewriteText,
-              },
-            ]
-            updatedConversation = {
-              ...updatedConversation,
-              messages: updatedMessages,
-            }
-            homeDispatch({
-              field: 'selectedConversation',
-              value: updatedConversation,
-            })
-            // This is after the response is done streaming for plugins
+          // } else {
+          //   onMessageReceived(updatedConversation)
+          // }
 
-            // handleUpdateConversation(updatedConversation, {
-            //   key: 'messages',
-            //   value: updatedMessages,
-            // })
+          // Save the conversation to the server
 
-            // await saveConversationToServer(updatedConversation).catch(
-            //   (error) => {
-            //     console.error(
-            //       'Error saving updated conversation to server:',
-            //       error,
-            //     )
-            //   },
-            // )
-            // Do we need this?
-            // saveConversation(updatedConversation)
-            const updatedConversations: Conversation[] = conversations.map(
-              (conversation) =>
-                conversation.id === selectedConversation.id
-                  ? updatedConversation
-                  : conversation,
-            )
-            if (updatedConversations.length === 0) {
-              updatedConversations.push(updatedConversation)
-            }
-            homeDispatch({
-              field: 'conversations',
-              value: updatedConversations,
-            })
-            // saveConversations(updatedConversations)
-            homeDispatch({ field: 'loading', value: false })
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-          }
+          // await saveConversationToServer(updatedConversation).catch(
+          //   (error) => {
+          //     console.error(
+          //       'Error saving updated conversation to server:',
+          //       error,
+          //     )
+          //   },
+          // )
+
+          // const updatedConversations: Conversation[] = conversations.map(
+          //   (conversation) => {
+          //     if (conversation.id === selectedConversation.id) {
+          //       return updatedConversation
+          //     }
+          //     return conversation
+          //   },
+          // )
+          // if (updatedConversations.length === 0) {
+          //   updatedConversations.push(updatedConversation)
+          // }
+          // homeDispatch({
+          //   field: 'conversations',
+          //   value: updatedConversations,
+          // })
+          // console.log('updatedConversations: ', updatedConversations)
+          // saveConversations(updatedConversations)
+          homeDispatch({ field: 'messageIsStreaming', value: false })
+        } catch (error) {
+          console.error('An error occurred: ', error)
+          controller.abort()
         }
       },
       [
         apiKey,
         conversations,
-        pluginKeys,
         selectedConversation,
         stopConversationRef,
         chat_ui,
@@ -1450,7 +1367,6 @@ export const Chat = memo(
           handleSend(
             userMessageToRegenerate,
             messagesToDeleteCount,
-            null,
             tools,
             enabledDocumentGroups,
             llmProviders,
@@ -2023,7 +1939,6 @@ export const Chat = memo(
                                   editedMessage,
                                   selectedConversation?.messages?.length -
                                     index,
-                                  null,
                                   tools,
                                   enabledDocumentGroups,
                                   llmProviders,
@@ -2055,11 +1970,10 @@ export const Chat = memo(
               <ChatInput
                 stopConversationRef={stopConversationRef}
                 textareaRef={textareaRef}
-                onSend={(message, plugin) =>
+                onSend={(message) =>
                   handleSend(
                     message,
                     0,
-                    plugin,
                     tools,
                     enabledDocumentGroups,
                     llmProviders,

@@ -10,7 +10,6 @@ import {
   type FolderWithConversation,
 } from '@/types/folder'
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
-import { type PluginKey } from '@/types/plugin'
 import { type Prompt } from '@/types/prompt'
 import {
   type AnySupportedModel,
@@ -19,7 +18,6 @@ import {
 
 export interface HomeInitialState {
   apiKey: string
-  pluginKeys: PluginKey[] //TODO(BG): can be removed since the value is never set
   loading: boolean
   messageIsStreaming: boolean
   modelError: ErrorMessage | null //TODO(BG): can be replaced by React Query Hook
@@ -58,7 +56,6 @@ export interface HomeInitialState {
 export const initialState: HomeInitialState = {
   apiKey: '',
   loading: false,
-  pluginKeys: [],
   messageIsStreaming: false,
   modelError: null,
   llmProviders: {} as AllLLMProviders,

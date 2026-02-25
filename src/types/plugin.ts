@@ -1,7 +1,4 @@
-export interface KeyValuePair {
-  key: string
-  value: any
-}
+import { KeyValuePair } from './KeyValuePair'
 
 export interface Plugin {
   id: PluginID

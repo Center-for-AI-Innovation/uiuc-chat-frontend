@@ -1,19 +1,12 @@
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
 
-import {
-  type Content,
-  type Message,
-  type MessageType,
-  type Conversation,
-} from '@/types/chat'
-import { type Plugin } from '@/types/plugin'
+import { type Content, type Message, type MessageType } from '@/types/chat'
 import { Text } from '@mantine/core'
 import {
   IconArrowDown,
   IconPlayerStop,
   IconRepeat,
   IconSend,
-  IconX,
   IconPaperclip,
 } from '@tabler/icons-react'
 import { useTranslation } from 'next-i18next'
@@ -28,12 +21,11 @@ import { v4 as uuidv4 } from 'uuid'
 
 import HomeContext from '~/pages/api/home/home.context'
 
-import { PluginSelect } from './PluginSelect'
 import { PromptList } from './PromptList'
 import { VariableModal } from './VariableModal'
 import { FileUploadPreview } from './FileUploadPreview'
 
-import { Tooltip, useMantineTheme } from '@mantine/core'
+import { useMantineTheme } from '@mantine/core'
 import { showErrorToast, showWarningToast } from '~/utils/toastUtils'
 
 import React from 'react'
@@ -48,18 +40,14 @@ import { usePromptAutocomplete } from '~/hooks/usePromptAutocomplete'
 import { useTextareaAutosize } from '~/hooks/useTextareaAutosize'
 import { useChatInputFocus } from '~/hooks/useChatInputFocus'
 import { UserSettings } from '~/components/Chat/UserSettings'
-import {
-  selectBestModel,
-  VisionCapableModels,
-} from '~/utils/modelProviders/LLMProvider'
-import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
+import { selectBestModel } from '~/utils/modelProviders/LLMProvider'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { type ChatBody, ContextWithMetadata } from '~/types/chat'
 import { ALLOWED_FILE_EXTENSIONS, isImageFile } from '~/utils/fileUploadUtils'
 
 interface Props {
-  onSend: (message: Message, plugin: Plugin | null) => Promise<void>
+  onSend: (message: Message) => Promise<void>
   onScrollDownClick: () => void
   stopConversationRef: MutableRefObject<boolean>
   textareaRef: MutableRefObject<HTMLTextAreaElement | null>
@@ -124,18 +112,15 @@ export const ChatInput = ({
     closeModal,
     variables,
     handlePromptKeyDown,
-    handlePromptSelect,
     onTextChange,
   } = usePromptAutocomplete({ prompts, content, setContent })
   const [isTyping, setIsTyping] = useState<boolean>(false)
-  const [showPluginSelect, setShowPluginSelect] = useState(false)
-  const [plugin, setPlugin] = useState<Plugin | null>(null)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
   const { resetHeight } = useTextareaAutosize({ textareaRef, content })
-  const { isFocused, handleFocus, handleBlur } = useChatInputFocus({
+  const { handleFocus, handleBlur } = useChatInputFocus({
     textareaRef,
     chatInputParentContainerRef,
     chatInputContainerRef,
@@ -262,10 +247,9 @@ export const ChatInput = ({
     resetHeight()
 
     // Send the message
-    onSend(messageForChat, plugin)
+    onSend(messageForChat)
 
     // Reset states
-    setPlugin(null)
     clearFileUploads()
   }
 
@@ -289,9 +273,6 @@ export const ChatInput = ({
     if (e.key === 'Enter' && !isTyping && !isMobile() && !e.shiftKey) {
       e.preventDefault()
       handleSend()
-    } else if (e.key === '/' && e.metaKey) {
-      e.preventDefault()
-      setShowPluginSelect(!showPluginSelect)
     }
   }
 
@@ -455,32 +436,6 @@ export const ChatInput = ({
                 )}
               </button>
             </div>
-
-            {showPluginSelect && (
-              <div
-                className="absolute bottom-14 left-0 rounded bg-white dark:bg-[#15162c]"
-                style={{ pointerEvents: 'auto' }}
-              >
-                <PluginSelect
-                  plugin={plugin}
-                  onKeyDown={(e: any) => {
-                    if (e.key === 'Escape') {
-                      e.preventDefault()
-                      setShowPluginSelect(false)
-                      textareaRef.current?.focus()
-                    }
-                  }}
-                  onPluginChange={(plugin: Plugin) => {
-                    setPlugin(plugin)
-                    setShowPluginSelect(false)
-
-                    if (textareaRef && textareaRef.current) {
-                      textareaRef.current.focus()
-                    }
-                  }}
-                />
-              </div>
-            )}
 
             {showScrollDownButton && (
               <div className="absolute bottom-2 right-10 lg:-right-10 lg:bottom-0">
