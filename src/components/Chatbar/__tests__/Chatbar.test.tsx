@@ -308,46 +308,6 @@ describe('Chatbar', () => {
     )
   })
 
-  it('updates the OpenAI API key via ChatbarSettings', async () => {
-    const user = userEvent.setup()
-    const dispatch = vi.fn()
-
-    renderWithProviders(
-      <Chatbar
-        current_email="owner@example.com"
-        courseName="CS101"
-        courseMetadata={null}
-      />,
-      {
-        homeContext: {
-          dispatch,
-          handleNewConversation: vi.fn(),
-          handleCreateFolder: vi.fn(),
-          handleUpdateConversation: vi.fn(),
-        } as any,
-        homeState: {
-          showChatbar: true,
-          apiKey: '',
-          serverSideApiKeyIsSet: false,
-          conversations: [],
-          folders: [],
-        } as any,
-      },
-    )
-
-    await user.click(
-      await screen.findByRole('button', { name: /OpenAI API Key/i }),
-    )
-    const input = screen.getByPlaceholderText(/API Key/i)
-    await user.type(input, ' test-key {Enter}')
-
-    expect(dispatch).toHaveBeenCalledWith({
-      field: 'apiKey',
-      value: 'test-key',
-    })
-    expect(localStorage.getItem('apiKey')).toBe('test-key')
-  })
-
   it('loads more conversations when scrolling near the bottom', async () => {
     const dispatch = vi.fn()
     mocks.hasNextPageConversationHistory = true

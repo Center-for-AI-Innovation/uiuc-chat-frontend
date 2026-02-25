@@ -98,14 +98,6 @@ export const Chatbar = ({
 
   const [isExporting, setIsExporting] = useState<boolean>(false)
 
-  const handleApiKeyChange = useCallback(
-    (apiKey: string) => {
-      homeDispatch({ field: 'apiKey', value: apiKey })
-      localStorage.setItem('apiKey', apiKey)
-    },
-    [homeDispatch],
-  )
-
   const [convoMigrationLoading, setConvoMigrationLoading] =
     useState<boolean>(false)
 
@@ -324,7 +316,6 @@ export const Chatbar = ({
         handleDeleteConversation,
         handleClearConversations,
         handleExportData,
-        handleApiKeyChange,
         isExporting,
       }}
     >

@@ -30,7 +30,6 @@ describe('ConversationComponent', () => {
             handleDeleteConversation,
             handleClearConversations: vi.fn(),
             handleExportData: vi.fn(),
-            handleApiKeyChange: vi.fn(),
             isExporting: false,
           } as any
         }
