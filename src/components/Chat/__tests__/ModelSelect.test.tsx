@@ -159,4 +159,52 @@ describe('ModelSelect', () => {
 
     expect(screen.getByText(/downloaded/i)).toBeInTheDocument()
   })
+
+  it('renders recommended and large-vram warning badges for specific models', async () => {
+    const { ModelItem } = await import('../ModelSelect')
+
+    renderWithProviders(
+      <ModelItem
+        label="Llama 3.1 8b Instruct"
+        downloadSize="100MB"
+        modelId="rec-1"
+        selectedModelId="rec-1"
+        modelType={ProviderNames.WebLLM}
+        vram_required_MB={1024}
+        chat_ui={{} as any}
+        loadingModelId={null}
+        setLoadingModelId={() => {}}
+      />,
+      {
+        homeState: {
+          webLLMModelIdLoading: { id: 'rec-1', isLoading: false },
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(screen.getByText(/recommended/i)).toBeInTheDocument()
+
+    renderWithProviders(
+      <ModelItem
+        label="Llama 3.1 70b Instruct"
+        downloadSize="100MB"
+        modelId="warn-1"
+        selectedModelId="warn-1"
+        modelType={ProviderNames.WebLLM}
+        vram_required_MB={1024}
+        chat_ui={{} as any}
+        loadingModelId={null}
+        setLoadingModelId={() => {}}
+      />,
+      {
+        homeState: {
+          webLLMModelIdLoading: { id: 'warn-1', isLoading: false },
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(screen.getByText(/requires large vRAM GPU/i)).toBeInTheDocument()
+  })
 })

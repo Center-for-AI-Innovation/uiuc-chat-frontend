@@ -135,6 +135,20 @@ vi.mock('../MemoizedChatMessage', () => ({
         'button',
         {
           type: 'button',
+          onClick: async () =>
+            await props.onFeedback?.(
+              props.message,
+              false,
+              'Incorrect',
+              'Needs correction',
+            ),
+        },
+        'feedback-message',
+      ),
+      React.createElement(
+        'button',
+        {
+          type: 'button',
           onClick: () =>
             props.onEdit?.({
               ...props.message,
@@ -465,9 +479,14 @@ describe('Chat (coverage)', () => {
       },
     )
 
-    await user.click(
-      screen.getAllByRole('button', { name: /edit-message/i })[0],
-    )
+    const [firstEditButton] = screen.getAllByRole('button', {
+      name: /edit-message/i,
+    })
+    expect(firstEditButton).toBeDefined()
+    if (!firstEditButton) {
+      throw new Error('Expected at least one edit button')
+    }
+    await user.click(firstEditButton)
     expect(true).toBe(true)
   })
 
@@ -1311,5 +1330,203 @@ describe('Chat (coverage)', () => {
 
     await user.click(screen.getByRole('button', { name: /^send$/i }))
     await waitFor(() => expect(console.warn).toHaveBeenCalled())
+  })
+
+  it('handles feedback save with localStorage quota fallback and rollback on log failure', async () => {
+    const user = userEvent.setup()
+    const { notifications } = await import('@mantine/notifications')
+    ;(notifications as any).show.mockClear()
+
+    const dispatch = vi.fn()
+    const handleFeedbackUpdate = vi.fn()
+
+    globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
+    server.use(
+      http.post('*/api/UIUC-api/logConversation', async () =>
+        HttpResponse.error(),
+      ),
+    )
+
+    const conversation = makeConversation({
+      id: 'conv-1',
+      messages: [
+        makeMessage({ id: 'u0', role: 'user', content: 'previous' }),
+        makeMessage({
+          id: 'a0',
+          role: 'assistant',
+          content: 'assistant answer',
+        }),
+      ],
+      model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
+    })
+
+    localStorage.setItem('selectedConversation', JSON.stringify(conversation))
+
+    let threwQuotaOnce = false
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key === 'selectedConversation' && !threwQuotaOnce) {
+        threwQuotaOnce = true
+        throw new DOMException('Quota exceeded', 'QuotaExceededError')
+      }
+      return undefined
+    })
+
+    const { Chat } = await import('../Chat')
+    renderWithProviders(
+      <Chat
+        stopConversationRef={{ current: false }}
+        courseMetadata={{ openai_api_key: 'k' } as any}
+        courseName="CS101"
+        currentEmail="me@example.com"
+        documentCount={0}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          conversations: [conversation as any],
+          loading: false,
+          messageIsStreaming: false,
+          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+          apiKey: 'k',
+        } as any,
+        homeContext: {
+          dispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate,
+        },
+      },
+    )
+
+    await user.click(
+      screen.getAllByRole('button', { name: /feedback-message/i })[0]!,
+    )
+
+    await waitFor(() => expect(handleFeedbackUpdate).toHaveBeenCalled())
+    await waitFor(() => expect(dispatch).toHaveBeenCalled())
+    await waitFor(() =>
+      expect((notifications as any).show).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'error-notification-reused' }),
+      ),
+    )
+  })
+
+  it('persists feedback successfully and logs the updated conversation', async () => {
+    const user = userEvent.setup()
+    const dispatch = vi.fn()
+    const handleFeedbackUpdate = vi.fn()
+
+    globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
+    server.use(
+      http.post('*/api/UIUC-api/logConversation', async () =>
+        HttpResponse.json({ ok: true }),
+      ),
+    )
+
+    const conversation = makeConversation({
+      id: 'conv-1',
+      messages: [
+        makeMessage({ id: 'u0', role: 'user', content: 'previous' }),
+        makeMessage({
+          id: 'a0',
+          role: 'assistant',
+          content: 'assistant answer',
+        }),
+      ],
+      model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
+    })
+
+    localStorage.setItem('selectedConversation', JSON.stringify(conversation))
+
+    const { Chat } = await import('../Chat')
+    renderWithProviders(
+      <Chat
+        stopConversationRef={{ current: false }}
+        courseMetadata={{ openai_api_key: 'k' } as any}
+        courseName="CS101"
+        currentEmail="me@example.com"
+        documentCount={0}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          conversations: [conversation as any],
+          loading: false,
+          messageIsStreaming: false,
+          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+          apiKey: 'k',
+        } as any,
+        homeContext: {
+          dispatch,
+          handleUpdateConversation: vi.fn(),
+          handleFeedbackUpdate,
+        },
+      },
+    )
+
+    const feedbackButtons = screen.getAllByRole('button', {
+      name: /feedback-message/i,
+    })
+    await user.click(feedbackButtons[feedbackButtons.length - 1]!)
+
+    await waitFor(() => expect(handleFeedbackUpdate).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(dispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ field: 'selectedConversation', value: null }),
+      ),
+    )
+    const saved = localStorage.getItem('selectedConversation')
+    expect(saved).toContain('Incorrect')
+    expect(saved).toContain('Needs correction')
+  })
+
+  it('renders welcome statements and handles example click on non-chat pages', async () => {
+    const user = userEvent.setup()
+    globalThis.__TEST_ROUTER__ = { asPath: '/CS101/dashboard' }
+
+    const conversation = makeConversation({
+      id: 'conv-1',
+      messages: [],
+      model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' } as any,
+    })
+
+    const { Chat } = await import('../Chat')
+    renderWithProviders(
+      <Chat
+        stopConversationRef={{ current: false }}
+        courseMetadata={
+          {
+            course_intro_message: 'Welcome to class: https://example.com/docs',
+            example_questions: ['How do I solve problem 1?'],
+            openai_api_key: 'k',
+          } as any
+        }
+        courseName="CS101"
+        currentEmail="me@example.com"
+        documentCount={0}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          conversations: [conversation as any],
+          loading: false,
+          messageIsStreaming: false,
+          llmProviders: { Provider: { enabled: true, models: [] } } as any,
+          apiKey: 'k',
+        } as any,
+        homeContext: { dispatch: vi.fn(), handleUpdateConversation: vi.fn() },
+      },
+    )
+
+    expect(
+      await screen.findByText(
+        /Start a conversation below or try these examples/i,
+      ),
+    ).toBeInTheDocument()
+    await user.click(screen.getByText(/How do I solve problem 1\\?/i))
+    expect(screen.getByText(/Welcome to class:/i)).toBeInTheDocument()
   })
 })
