@@ -467,11 +467,6 @@ const Home = ({
 
   // Other context actions --------------------------------------------
 
-  // Image to Text
-  const setIsImg2TextLoading = (isImg2TextLoading: boolean) => {
-    dispatch({ field: 'isImg2TextLoading', value: isImg2TextLoading })
-  }
-
   // Routing
   const setIsRouting = (isRouting: boolean) => {
     dispatch({ field: 'isRouting', value: isRouting })
@@ -636,7 +631,6 @@ const Home = ({
           handleSelectConversation,
           handleUpdateConversation,
           handleFeedbackUpdate,
-          setIsImg2TextLoading,
           setIsRouting,
           // setRoutingResponse,
           // setIsRunningTool,

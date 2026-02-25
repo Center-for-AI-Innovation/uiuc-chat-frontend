@@ -30,7 +30,6 @@ export interface HomeInitialState {
   serverSidePluginKeysSet: boolean //TODO(BG): maybe removed since the value only used in two places?
   cooldown: number //TODO(BG): can be removed since the value is never used
   showModelSettings: boolean
-  isImg2TextLoading: boolean //TODO(BG): can be removed react query dup
   isRouting: boolean | undefined //TODO(BG): can be removed react query dup
   isRunningTool: boolean | undefined //TODO(BG): can be removed react query dup
   isRetrievalLoading: boolean | undefined //TODO(BG): can be removed react query dup
@@ -68,7 +67,6 @@ export const initialState: HomeInitialState = {
   isRetrievalLoading: undefined,
   wasQueryRewritten: undefined,
   queryRewriteText: undefined,
-  isImg2TextLoading: false,
   documentGroups: [],
   tools: [],
   webLLMModelIdLoading: { id: undefined, isLoading: undefined },

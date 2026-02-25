@@ -2,6 +2,7 @@
 import { useFetchEnabledDocGroups } from '@/hooks/queries/useFetchEnabledDocGroups'
 import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { useDeleteMessages } from '@/hooks/queries/useDeleteMessages'
+import { useImageDescription } from '@/hooks/queries/useImageDescription'
 import { useLogConversation } from '@/hooks/queries/useLogConversation'
 import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
@@ -83,7 +84,6 @@ import {
   State,
   getOpenAIKey,
   handleContextSearch,
-  handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
 import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
@@ -129,6 +129,7 @@ export const Chat = memo(
     })
     const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
     const { mutateAsync: routeChatAsync } = useRouteChat()
+    const { mutateAsync: runImageDescriptionAsync } = useImageDescription()
     const logConversationMutation = useLogConversation(getCurrentPageName())
     const {
       data: documentGroupsHook,
@@ -289,7 +290,6 @@ export const Chat = memo(
     const resetMessageStates = () => {
       homeDispatch({ field: 'isRouting', value: undefined })
       homeDispatch({ field: 'isRunningTool', value: undefined })
-      homeDispatch({ field: 'isImg2TextLoading', value: undefined })
       homeDispatch({ field: 'isRetrievalLoading', value: undefined })
     }
 
@@ -457,17 +457,16 @@ export const Chat = memo(
           )
 
           if (imageContent.length > 0) {
-            homeDispatch({ field: 'isImg2TextLoading', value: true })
             try {
               const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
-                await handleImageContent(
+                await runImageDescriptionAsync({
                   message,
                   courseName,
                   updatedConversation,
                   searchQuery,
                   llmProviders,
                   controller,
-                )
+                })
               searchQuery = newSearchQuery
               imgDesc = newImgDesc
               imageUrls = imageContent.map(
@@ -478,8 +477,6 @@ export const Chat = memo(
                 'Error in chat.tsx running handleImageContent():',
                 error,
               )
-            } finally {
-              homeDispatch({ field: 'isImg2TextLoading', value: false })
             }
           }
         }
@@ -1249,6 +1246,7 @@ export const Chat = memo(
         chat_ui,
         refetchLLMProviders,
         routeChatAsync,
+        runImageDescriptionAsync,
         runQueryRewriteAsync,
       ],
     )

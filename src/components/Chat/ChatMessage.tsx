@@ -221,7 +221,6 @@ const FilePreviewModal: React.FC<{
     state: {
       selectedConversation,
       messageIsStreaming,
-      isImg2TextLoading,
       isRouting,
       isRunningTool,
       isRetrievalLoading,
@@ -464,7 +463,6 @@ export const ChatMessage = memo(
       state: {
         selectedConversation,
         messageIsStreaming,
-        isImg2TextLoading,
         isRouting,
         isRunningTool,
         isRetrievalLoading,
@@ -477,6 +475,13 @@ export const ChatMessage = memo(
       useMutationState({
         filters: {
           mutationKey: mutationKeys.queryRewrite(),
+          status: 'pending',
+        },
+      }).length > 0
+    const isImg2TextLoading =
+      useMutationState({
+        filters: {
+          mutationKey: mutationKeys.imageDescription(),
           status: 'pending',
         },
       }).length > 0

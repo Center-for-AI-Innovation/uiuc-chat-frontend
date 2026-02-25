@@ -21,7 +21,6 @@ export interface HomeContextProps {
     data: KeyValuePair,
   ) => void
   handleFeedbackUpdate: (conversation: Conversation, data: KeyValuePair) => void
-  setIsImg2TextLoading: (isImg2TextLoading: boolean) => void
   setIsRouting: (isRouting: boolean) => void
   // setRoutingResponse: (routingResponse: RoutingResponse) => void
   // setRunningTool: (isRunningTool: boolean) => void

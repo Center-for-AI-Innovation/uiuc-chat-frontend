@@ -163,6 +163,7 @@ export const mutationKeys = {
   downloadConvoHistory: () => ['downloadConvoHistory'] as const,
   downloadConversationHistory: () => ['downloadConversationHistory'] as const,
   exportConversation: () => ['exportConversation'] as const,
+  imageDescription: () => ['imageDescription'] as const,
   logConversation: (courseName: string) =>
     ['logConversation', courseName] as const,
   queryRewrite: () => ['queryRewrite'] as const,

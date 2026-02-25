@@ -72,7 +72,6 @@ vi.mock('@/components/Chat/Chat', async () => {
     handleSelectConversation: (conversation: unknown) => void
     setIsRouting: (v: boolean) => void
     setIsRetrievalLoading: (v: boolean) => void
-    setIsImg2TextLoading: (v: boolean) => void
     handleUpdateDocumentGroups: (id: string) => void
     handleUpdateTools: (id: string) => void
   }
@@ -95,7 +94,6 @@ vi.mock('@/components/Chat/Chat', async () => {
         ctx.handleSelectConversation({ ...convo, messages: [msg] })
         ctx.setIsRouting(true)
         ctx.setIsRetrievalLoading(true)
-        ctx.setIsImg2TextLoading(true)
         ctx.handleUpdateDocumentGroups('dg')
         ctx.handleUpdateTools('tool')
       }, [ctx?.state?.selectedConversation?.id])
