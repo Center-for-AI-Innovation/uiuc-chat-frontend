@@ -46,6 +46,7 @@ export const Key: FC<Props> = ({ apiKey, onApiKeyChange }) => {
         onChange={(e) => setNewKey(e.target.value)}
         onKeyDown={handleEnterDown}
         placeholder={t('API Key') || 'API Key'}
+        aria-label="API Key"
       />
 
       <div className="flex w-[40px]">

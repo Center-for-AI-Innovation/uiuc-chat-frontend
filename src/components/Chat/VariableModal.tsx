@@ -113,6 +113,7 @@ export const VariableModal: FC<Props> = ({
               className="mt-1 w-full rounded-lg border border-neutral-500 px-4 py-2 text-neutral-900 shadow focus:outline-none dark:border-neutral-800 dark:border-opacity-50 dark:bg-[#40414F] dark:text-neutral-100"
               style={{ resize: 'none' }}
               placeholder={`Enter a value for ${variable.key}...`}
+              aria-label={variable.key}
               value={variable.value}
               onChange={(e) => handleChange(index, e.target.value)}
               rows={3}
