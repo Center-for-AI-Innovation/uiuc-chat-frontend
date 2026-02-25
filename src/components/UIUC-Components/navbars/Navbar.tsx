@@ -275,7 +275,6 @@ function NavigationContent({
           >
             {items.map((item, index) => (
               <Link
-                role="button"
                 tabIndex={0}
                 key={index}
                 href={item.link}
@@ -300,7 +299,6 @@ function NavigationContent({
         <div className={classes.links}>
           {items.map((item, index) => (
             <Link
-              role="button"
               tabIndex={0}
               key={index}
               href={item.link}
@@ -316,7 +314,6 @@ function NavigationContent({
       </Container>
 
       <Burger
-        role="button"
         tabIndex={0}
         aria-label="Toggle Menu"
         opened={opened}
