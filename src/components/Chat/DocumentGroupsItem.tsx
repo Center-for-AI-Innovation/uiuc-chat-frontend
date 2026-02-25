@@ -90,6 +90,7 @@ export const DocumentGroupsItem = ({}) => {
 
             {/* unable to use this until v7 of mantine since we can't control the hover color              highlightOnHover */}
             <Table
+              aria-label="Document groups configuration"
               variant="striped"
               className="text-[--modal-text]"
               style={{
