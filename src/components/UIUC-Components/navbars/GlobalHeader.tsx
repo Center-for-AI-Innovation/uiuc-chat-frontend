@@ -430,8 +430,15 @@ export function LandingPageHeader({
               role="button"
               tabIndex={0}
               aria-label="Toggle Menu"
+              aria-expanded={isMenuOpen}
               className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
               onClick={(e) => toggleMenu(e)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  toggleMenu(e as unknown as React.MouseEvent)
+                }
+              }}
               ref={menuButtonRef as React.RefObject<HTMLDivElement>}
             >
               <Menu2 size={24} strokeWidth={2} color="var(--illinois-orange)" />
