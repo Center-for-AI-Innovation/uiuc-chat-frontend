@@ -316,6 +316,7 @@ function NavigationContent({
       <Burger
         tabIndex={0}
         aria-label="Toggle Menu"
+        aria-expanded={opened}
         opened={opened}
         onClick={onToggle}
         className={classes.burger}
