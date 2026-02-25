@@ -10,13 +10,11 @@ import {
 } from '@/types/folder'
 import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 import { type Prompt } from '@/types/prompt'
-import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
 export interface HomeInitialState {
   apiKey: string
   loading: boolean
   messageIsStreaming: boolean
-  llmProviders: AllLLMProviders //TODO(BG): can be replaced by React Query Hook
   folders: FolderWithConversation[] //TODO(BG): can be removed since the value is never set (even through createFolderFunction)
   conversations: Conversation[]
   selectedConversation: Conversation | undefined
@@ -50,7 +48,6 @@ export const initialState: HomeInitialState = {
   apiKey: '',
   loading: false,
   messageIsStreaming: false,
-  llmProviders: {} as AllLLMProviders,
   folders: [],
   conversations: [],
   selectedConversation: undefined,

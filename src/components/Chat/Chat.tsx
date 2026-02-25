@@ -6,6 +6,7 @@ import { useLogConversation } from '@/hooks/queries/useLogConversation'
 import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
 import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+import { queryKeys } from '@/hooks/queries/keys'
 
 import { Button, Text } from '@mantine/core'
 import {
@@ -20,6 +21,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -118,6 +120,7 @@ export const Chat = memo(
 
     // React Query hooks
     const {
+      data: fetchedLLMProviders,
       refetch: refetchLLMProviders,
       error: llmProvidersError,
       isError: hasLLMProvidersError,
@@ -157,12 +160,20 @@ export const Chat = memo(
         showModelSettings,
         documentGroups,
         tools,
-        llmProviders,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
+    const llmProviders = useMemo(
+      () =>
+        fetchedLLMProviders ??
+        queryClient.getQueryData<AllLLMProviders>(
+          queryKeys.projectLLMProviders(courseName),
+        ) ??
+        ({} as AllLLMProviders),
+      [courseName, fetchedLLMProviders, queryClient],
+    )
     const modelError = hasLLMProvidersError
       ? getModelLoadError(llmProvidersError)
       : null

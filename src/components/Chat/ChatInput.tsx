@@ -1,4 +1,5 @@
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 
 import { type Content, type Message, type MessageType } from '@/types/chat'
 import { Text } from '@mantine/core'
@@ -40,7 +41,10 @@ import { usePromptAutocomplete } from '~/hooks/usePromptAutocomplete'
 import { useTextareaAutosize } from '~/hooks/useTextareaAutosize'
 import { useChatInputFocus } from '~/hooks/useChatInputFocus'
 import { UserSettings } from '~/components/Chat/UserSettings'
-import { selectBestModel } from '~/utils/modelProviders/LLMProvider'
+import {
+  type AllLLMProviders,
+  selectBestModel,
+} from '~/utils/modelProviders/LLMProvider'
 import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { type ChatBody, ContextWithMetadata } from '~/types/chat'
@@ -81,7 +85,6 @@ export const ChatInput = ({
       messageIsStreaming,
       prompts,
       showModelSettings,
-      llmProviders,
     },
 
     dispatch: homeDispatch,
@@ -89,6 +92,10 @@ export const ChatInput = ({
 
   // React Query hooks
   const { mutateAsync: routeChatAsync } = useRouteChat()
+  const { data: llmProvidersData } = useFetchLLMProviders({
+    projectName: courseName,
+  })
+  const llmProviders = llmProvidersData ?? ({} as AllLLMProviders)
 
   const {
     fileUploads,

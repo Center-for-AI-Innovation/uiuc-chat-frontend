@@ -36,6 +36,7 @@ import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackgro
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
+  type AllLLMProviders,
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
@@ -96,6 +97,7 @@ const Home = ({
     projectName: course_name,
     enabled: !!course_metadata,
   })
+  const llmProviders = fetchedLLMProviders ?? ({} as AllLLMProviders)
   const updateConversationMutation = useUpdateConversation(
     current_email as string,
     queryClient,
@@ -121,7 +123,6 @@ const Home = ({
       folders,
       conversations,
       selectedConversation,
-      llmProviders,
       documentGroups,
       tools,
     },
@@ -186,12 +187,6 @@ const Home = ({
 
     setIsLoading(false)
   }, [course_metadata, apiKey])
-
-  useEffect(() => {
-    if (fetchedLLMProviders) {
-      dispatch({ field: 'llmProviders', value: fetchedLLMProviders })
-    }
-  }, [fetchedLLMProviders])
 
   useEffect(() => {
     if (isFoldersFetched && !isLoadingFolders) {
