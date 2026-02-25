@@ -158,7 +158,6 @@ export const Chat = memo(
         documentGroups,
         tools,
         llmProviders,
-        selectedModel,
       },
       handleUpdateConversation,
       handleFeedbackUpdate,
@@ -1268,11 +1267,6 @@ export const Chat = memo(
             messages: selectedConversation.messages.slice(0, targetIndex + 1),
           }
 
-          // If there's a model selected in the context, use that instead of the conversation's model
-          if (selectedModel) {
-            tempConversation.model = selectedModel
-          }
-
           // Determine if we need to delete one or two messages
           // If the target message is from the user, we delete one message (just the user message)
           // If the target message is from the assistant, we delete two messages (the assistant message and the user message before it)
@@ -1401,7 +1395,6 @@ export const Chat = memo(
         llmProviders,
         tools,
         enabledDocumentGroups,
-        selectedModel,
         homeDispatch,
         deleteMessagesMutation,
         apiKey,
