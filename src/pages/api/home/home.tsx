@@ -692,7 +692,7 @@ const Home = ({
         }}
       >
         <Head>
-          <title>UIUC.chat</title>
+          <title>Illinois Chat</title>
           <meta name="description" content="ChatGPT but better." />
           <meta
             name="viewport"
