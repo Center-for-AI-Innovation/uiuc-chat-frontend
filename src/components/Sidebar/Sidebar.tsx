@@ -210,7 +210,14 @@ const Sidebar = <T,>({
 
             <div className="min-w-0 grow">
               {/* Name */}
-              <div className="line-clamp-3 max-w-full break-words text-[15px] font-bold leading-[125%] md:text-[16px]">
+              <div
+                className="line-clamp-3 max-w-full break-words text-[15px] font-bold leading-[125%] md:text-[16px]"
+                title={
+                  courseName === 'chat'
+                    ? 'Illinois flagship chatbot'
+                    : (courseName || '').replace(/-/g, ' ')
+                }
+              >
                 {courseName === 'chat'
                   ? 'Illinois flagship chatbot'
                   : (() => {
