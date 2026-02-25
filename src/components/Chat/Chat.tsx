@@ -1278,9 +1278,9 @@ export const Chat = memo(
                       // Save final conversation state to localStorage
                       saveToLocalStorage()
 
-                      // Update conversation in query client cache
+                      // Refresh conversation history queries used by Chatbar/sidebar.
                       queryClient.invalidateQueries({
-                        queryKey: ['conversations'],
+                        queryKey: ['conversationHistory', courseName],
                       })
                     },
 
