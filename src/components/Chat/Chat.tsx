@@ -2010,7 +2010,12 @@ export const Chat = memo(
               </div>
             ) : null}
 
-            <div className="relative max-w-full flex-1 overflow-y-auto overflow-x-hidden pb-32">
+            <div
+              className="relative max-w-full flex-1 overflow-y-auto overflow-x-hidden pb-32"
+              tabIndex={0}
+              role="region"
+              aria-label="Chat messages"
+            >
               {modelError ? (
                 <ErrorMessageDiv error={modelError} />
               ) : (
