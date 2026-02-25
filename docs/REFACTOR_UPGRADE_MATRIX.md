@@ -12,7 +12,8 @@ Last updated: 2026-02-20
 | A2-part-2       | Completed | Updated `src/hooks/__internal__/conversation.ts` to throw on non-OK/failed fetch for conversation loaders while preserving valid empty-data semantics.                                      |
 | A2-part-2 tests | Completed | Updated `src/utils/app/__tests__/conversation.test.ts` to assert rejection behavior for non-OK response paths.                                                                              |
 | A3              | Completed | Added `src/hooks/queries/keys.ts` and migrated query/mutation keys across hooks to shared factories while preserving existing key shapes and cache behavior.                                |
-| A4              | Pending   | Query-layer `any`/`unknown` cleanup not started yet.                                                                                                                                        |
+| A4              | Completed | Removed `any`/`unknown` hotspots in `useFetchAllCourseData.ts` and `useUpdateProjectLLMProviders.ts` with concrete response/context typing; verified with targeted hook tests.              |
+| A3.5            | Completed | Normalized remaining inline runtime `queryKey` usage outside hooks (UI components + workflow query utility) to `queryKeys`; only comments/tests retain inline key literals.                 |
 
 ## Track A - React Query Contract Stabilization (Do First)
 
@@ -76,13 +77,9 @@ Run this minimal gate on every PR:
 
 ## Resume Checklist (Next Session)
 
-1. Start with A2-part-2: update `src/hooks/__internal__/conversation.ts` to throw on failed fetch/response paths (avoid silent fallback returns for true API errors).
-2. Update affected tests first:
-   - `src/hooks/__tests__/conversationQueries.test.tsx`
-   - any direct helper tests that assert previous fallback behavior.
-3. Run targeted tests:
-   - `npm run test -- src/hooks/__tests__/conversationQueries.test.tsx`
-   - `npm run test -- src/components/Chatbar/__tests__/Chatbar.test.tsx`
-4. Re-run baseline Track A checks:
-   - `npm run test -- src/hooks/__tests__/folderQueries.test.tsx src/utils/app/__tests__/folders.test.ts`
-5. After green tests, continue to A3 (query key factory in `src/hooks/queries/keys.ts`).
+1. Track A is complete (`A1` through `A4`).
+2. Optional consistency pass: normalize remaining inline `queryKey` usages outside hooks (UI components/tests/utils) to `queryKeys`.
+3. If skipping optional pass, begin Track B:
+   - `B1`: Next + React baseline upgrade in isolated branch.
+4. Suggested pre-B1 baseline gate:
+   - `npm run test -- src/hooks/__tests__/conversationQueries.test.tsx src/hooks/__tests__/folderQueries.test.tsx src/hooks/__tests__/useProjectAPIKeys.test.tsx`
