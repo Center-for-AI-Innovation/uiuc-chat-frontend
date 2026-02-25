@@ -64,7 +64,7 @@ appConfig.useIndexedDBCache = false
 
 export const UserSettings = () => {
   const {
-    state: { selectedConversation, prompts, showModelSettings },
+    state: { selectedConversation, showModelSettings },
     handleUpdateConversation,
     dispatch: homeDispatch,
   } = useContext(HomeContext)
@@ -164,7 +164,6 @@ export const UserSettings = () => {
                 />
                 <ModelParams
                   selectedConversation={selectedConversation}
-                  prompts={prompts}
                   handleUpdateConversation={handleUpdateConversation}
                   t={t}
                 />

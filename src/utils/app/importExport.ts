@@ -8,7 +8,6 @@ import {
   SupportedExportFormats,
 } from '@/types/export'
 import { FolderInterface } from '@/types/folder'
-import { Prompt } from '@/types/prompt'
 
 import { cleanConversationHistory } from './clean'
 
@@ -74,7 +73,6 @@ function currentDate() {
 export const exportData = () => {
   let history = localStorage.getItem('conversationHistory')
   let folders = localStorage.getItem('folders')
-  let prompts = localStorage.getItem('prompts')
 
   if (history) {
     history = JSON.parse(history)
@@ -84,15 +82,11 @@ export const exportData = () => {
     folders = JSON.parse(folders)
   }
 
-  if (prompts) {
-    prompts = JSON.parse(prompts)
-  }
-
   const data = {
     version: 4,
     history: history || [],
     folders: folders || [],
-    prompts: prompts || [],
+    prompts: [],
   } as LatestExportFormat
 
   const blob = new Blob([JSON.stringify(data, null, 2)], {

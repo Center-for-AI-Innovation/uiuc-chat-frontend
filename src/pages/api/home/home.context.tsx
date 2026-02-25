@@ -21,9 +21,6 @@ export interface HomeContextProps {
     data: KeyValuePair,
   ) => void
   handleFeedbackUpdate: (conversation: Conversation, data: KeyValuePair) => void
-  // setRoutingResponse: (routingResponse: RoutingResponse) => void
-  // setRunningTool: (isRunningTool: boolean) => void
-  setIsRetrievalLoading: (isRetrievalLoading: boolean) => void
   handleUpdateDocumentGroups: (id: string) => void
   handleUpdateTools: (id: string) => void
 }

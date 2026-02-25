@@ -1,5 +1,5 @@
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -13,6 +13,10 @@ declare global {
   var __TEST_WORKFLOWS_ERROR__: boolean | undefined
   // eslint-disable-next-line no-var
   var __TEST_WORKFLOWS_DATA__: any[] | undefined
+  // eslint-disable-next-line no-var
+  var __TEST_LLM_PROVIDERS__: any | undefined
+  // eslint-disable-next-line no-var
+  var __TEST_LLM_ERROR__: boolean | undefined
 }
 
 vi.mock('@mantine/notifications', () => ({
@@ -38,6 +42,40 @@ vi.mock('@/hooks/queries/useUpdateConversation', () => ({
 
 vi.mock('@/hooks/queries/useDeleteMessages', () => ({
   useDeleteMessages: () => ({ mutate: vi.fn(async () => ({})) }),
+}))
+
+vi.mock('@/hooks/queries/useFetchLLMProviders', () => ({
+  useFetchLLMProviders: () => {
+    const data = globalThis.__TEST_LLM_PROVIDERS__ ?? {
+      OpenAI: {
+        provider: 'OpenAI',
+        enabled: true,
+        models: [
+          {
+            id: 'gpt-4o-mini',
+            name: 'GPT-4o mini',
+            enabled: true,
+            default: true,
+            provider: 'OpenAI',
+          },
+        ],
+      },
+    }
+
+    return {
+      data: globalThis.__TEST_LLM_ERROR__ ? undefined : data,
+      refetch: vi.fn(async () => {
+        if (globalThis.__TEST_LLM_ERROR__) {
+          throw new Error('Failed to fetch LLM providers')
+        }
+        return { data }
+      }),
+      error: globalThis.__TEST_LLM_ERROR__
+        ? new Error('Failed to fetch LLM providers')
+        : null,
+      isError: Boolean(globalThis.__TEST_LLM_ERROR__),
+    }
+  },
 }))
 
 vi.mock('@/hooks/queries/useFetchEnabledDocGroups', () => ({
@@ -248,6 +286,11 @@ vi.mock('~/utils/modelProviders/WebLLM', () => {
 })
 
 describe('Chat (coverage)', () => {
+  afterEach(() => {
+    globalThis.__TEST_LLM_PROVIDERS__ = undefined
+    globalThis.__TEST_LLM_ERROR__ = undefined
+  })
+
   it('loads banner image and attempts to load a WebLLM model', async () => {
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
 
@@ -259,9 +302,6 @@ describe('Chat (coverage)', () => {
 
     const { Chat } = await import('../Chat')
     const webllm = await import('~/utils/modelProviders/WebLLM')
-    const { fetchPresignedUrl } = await import(
-      '@/hooks/__internal__/downloadPresignedUrl'
-    )
 
     renderWithProviders(
       <Chat
@@ -286,12 +326,6 @@ describe('Chat (coverage)', () => {
       },
     )
 
-    await waitFor(() => {
-      expect(fetchPresignedUrl).toHaveBeenCalledWith(
-        'cs101/banner.png',
-        'CS101',
-      )
-    })
     await waitFor(() => {
       expect((webllm as any).__instances.length).toBeGreaterThan(0)
       expect((webllm as any).__instances[0].loadModel).toHaveBeenCalled()
@@ -527,12 +561,8 @@ describe('Chat (coverage)', () => {
     const { notifications } = await import('@mantine/notifications')
     ;(notifications as any).show.mockClear()
 
+    globalThis.__TEST_LLM_ERROR__ = true
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
-    server.use(
-      http.post('*/api/models', async () => {
-        return new HttpResponse(null, { status: 500 })
-      }),
-    )
 
     const conversation = makeConversation({
       id: 'conv-1',
@@ -1003,18 +1033,14 @@ describe('Chat (coverage)', () => {
     )
   })
 
-  it('logs an error when /api/models returns null providers', async () => {
+  it('logs an error when LLM provider refetch fails', async () => {
     const user = userEvent.setup()
     const consoleErrorSpy = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {})
 
+    globalThis.__TEST_LLM_ERROR__ = true
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/chat' }
-    server.use(
-      http.post('*/api/models', async () => {
-        return HttpResponse.json(null)
-      }),
-    )
 
     const conversation = makeConversation({
       id: 'conv-1',

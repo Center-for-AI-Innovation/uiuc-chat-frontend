@@ -22,8 +22,6 @@ import { v4 as uuidv4 } from 'uuid'
 
 import HomeContext from '~/pages/api/home/home.context'
 
-import { PromptList } from './PromptList'
-import { VariableModal } from './VariableModal'
 import { FileUploadPreview } from './FileUploadPreview'
 
 import { useMantineTheme } from '@mantine/core'
@@ -37,7 +35,6 @@ import { useMediaQuery } from '@mantine/hooks'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
 import { useFileUpload } from '~/hooks/useFileUpload'
-import { usePromptAutocomplete } from '~/hooks/usePromptAutocomplete'
 import { useTextareaAutosize } from '~/hooks/useTextareaAutosize'
 import { useChatInputFocus } from '~/hooks/useChatInputFocus'
 import { UserSettings } from '~/components/Chat/UserSettings'
@@ -80,12 +77,7 @@ export const ChatInput = ({
   const { t } = useTranslation('chat')
 
   const {
-    state: {
-      selectedConversation,
-      messageIsStreaming,
-      prompts,
-      showModelSettings,
-    },
+    state: { selectedConversation, messageIsStreaming, showModelSettings },
 
     dispatch: homeDispatch,
   } = useContext(HomeContext)
@@ -108,19 +100,6 @@ export const ChatInput = ({
 
   const [content, setContent] = useState<string>(() => inputContent)
 
-  const {
-    showPromptList,
-    filteredPrompts,
-    activePromptIndex,
-    setActivePromptIndex,
-    promptListRef,
-    handleInitModal,
-    isModalVisible,
-    closeModal,
-    variables,
-    handlePromptKeyDown,
-    onTextChange,
-  } = usePromptAutocomplete({ prompts, content, setContent })
   const [isTyping, setIsTyping] = useState<boolean>(false)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
@@ -160,7 +139,6 @@ export const ChatInput = ({
     }
 
     setContent(value)
-    onTextChange(value)
   }
 
   const handleSend = async () => {
@@ -276,7 +254,6 @@ export const ChatInput = ({
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (handlePromptKeyDown(e)) return
     if (e.key === 'Enter' && !isTyping && !isMobile() && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -455,32 +432,6 @@ export const ChatInput = ({
                 >
                   <IconArrowDown size={18} />
                 </button>
-              </div>
-            )}
-
-            {showPromptList && filteredPrompts.length > 0 && (
-              <div
-                className="absolute bottom-12 w-full"
-                style={{ pointerEvents: 'auto' }}
-              >
-                <PromptList
-                  activePromptIndex={activePromptIndex}
-                  prompts={filteredPrompts}
-                  onSelect={handleInitModal}
-                  onMouseOver={setActivePromptIndex}
-                  promptListRef={promptListRef}
-                />
-              </div>
-            )}
-
-            {isModalVisible && filteredPrompts[activePromptIndex] && (
-              <div style={{ pointerEvents: 'auto' }}>
-                <VariableModal
-                  prompt={filteredPrompts[activePromptIndex]}
-                  variables={variables}
-                  onSubmit={handleSubmit}
-                  onClose={closeModal}
-                />
               </div>
             )}
           </div>

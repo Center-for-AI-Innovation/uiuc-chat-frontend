@@ -62,6 +62,10 @@ vi.mock('@/hooks/__internal__/conversation', () => ({
   saveConversationToServer: mocks.saveConversationToServer,
 }))
 
+vi.mock('@/hooks/queries/useFetchFolders', () => ({
+  useFetchFolders: () => ({ data: [], isLoading: false, isFetched: true }),
+}))
+
 describe('Chatbar', () => {
   it('renders a loading shell when missing email or courseName', () => {
     renderWithProviders(
@@ -99,7 +103,7 @@ describe('Chatbar', () => {
           handleNewConversation: vi.fn(),
           handleUpdateConversation: vi.fn(),
         } as any,
-        homeState: { showChatbar: true, conversations: [], folders: [] } as any,
+        homeState: { showChatbar: true, conversations: [] } as any,
       },
     )
 
@@ -327,7 +331,7 @@ describe('Chatbar', () => {
           handleCreateFolder: vi.fn(),
           handleUpdateConversation: vi.fn(),
         } as any,
-        homeState: { showChatbar: true, conversations: [], folders: [] } as any,
+        homeState: { showChatbar: true, conversations: [] } as any,
       },
     )
 

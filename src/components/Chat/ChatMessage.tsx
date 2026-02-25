@@ -218,13 +218,7 @@ const FilePreviewModal: React.FC<{
   )
 
   const {
-    state: {
-      selectedConversation,
-      messageIsStreaming,
-      isRunningTool,
-      isRetrievalLoading,
-      loading,
-    },
+    state: { selectedConversation, messageIsStreaming, loading },
     dispatch: homeDispatch,
   } = useContext(HomeContext)
 
@@ -459,13 +453,7 @@ export const ChatMessage = memo(
       useReactContext(SourcesSidebarContext)
 
     const {
-      state: {
-        selectedConversation,
-        messageIsStreaming,
-        isRunningTool,
-        isRetrievalLoading,
-        loading,
-      },
+      state: { selectedConversation, messageIsStreaming, loading },
       dispatch: homeDispatch,
     } = useContext(HomeContext)
 
@@ -480,6 +468,13 @@ export const ChatMessage = memo(
       useMutationState({
         filters: {
           mutationKey: mutationKeys.routeTools(),
+          status: 'pending',
+        },
+      }).length > 0
+    const isRetrievalLoading =
+      useMutationState({
+        filters: {
+          mutationKey: mutationKeys.fetchContextsForChat(),
           status: 'pending',
         },
       }).length > 0
@@ -684,7 +679,7 @@ export const ChatMessage = memo(
       ) {
         fetchUrl()
       }
-    }, [message.content, messageIndex, isRunningTool])
+    }, [message.content, messageIndex, isRouting])
 
     const toggleEditing = () => {
       if (!isEditing) {

@@ -83,9 +83,10 @@ import ChatUI, {
 import {
   State,
   getOpenAIKey,
-  handleContextSearch,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
+import { useFetchContextsForChatMutation } from '~/hooks/queries/useFetchContextsForChat'
+import { type ContextWithMetadata } from '@/types/chat'
 import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
 import useFriendlyErrorMessages from '@/services/useFriendlyErrorMessages'
 
@@ -149,6 +150,8 @@ export const Chat = memo(
       courseName,
     )
     const deleteMessagesMutation = useDeleteMessages(currentEmail, courseName)
+    const { mutateAsync: fetchContextsMutateAsync } =
+      useFetchContextsForChatMutation()
 
     const permission = get_user_permission(courseMetadata, auth)
 
@@ -289,8 +292,7 @@ export const Chat = memo(
     }
 
     const resetMessageStates = () => {
-      homeDispatch({ field: 'isRunningTool', value: undefined })
-      homeDispatch({ field: 'isRetrievalLoading', value: undefined })
+      // No-op: intermediate states are now derived from React Query mutation status
     }
 
     // THIS IS WHERE MESSAGES ARE SENT.
@@ -511,8 +513,6 @@ export const Chat = memo(
 
         // Skip vector search entirely if there are no documents AND no conversation files AND no file upload contexts
         if (!hasAnyDocuments) {
-          homeDispatch({ field: 'wasQueryRewritten', value: false })
-          homeDispatch({ field: 'queryRewriteText', value: null })
           message.wasQueryRewritten = undefined
           message.queryRewriteText = undefined
           // FIXED: Don't clear contexts if this is a file upload message with contexts
@@ -532,8 +532,6 @@ export const Chat = memo(
               'Query rewrite skipped: disabled for course, first message, or no documents',
             )
             rewrittenQuery = searchQuery
-            homeDispatch({ field: 'wasQueryRewritten', value: false })
-            homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
           } else {
@@ -779,8 +777,6 @@ export const Chat = memo(
 
               if (typeof rewrittenQuery !== 'string') {
                 rewrittenQuery = searchQuery
-                homeDispatch({ field: 'wasQueryRewritten', value: false })
-                homeDispatch({ field: 'queryRewriteText', value: null })
                 message.wasQueryRewritten = false
                 message.queryRewriteText = undefined
               } else {
@@ -801,44 +797,41 @@ export const Chat = memo(
                     'Query rewrite not required or invalid format, using original query',
                   )
                   rewrittenQuery = searchQuery
-                  homeDispatch({ field: 'wasQueryRewritten', value: false })
-                  homeDispatch({ field: 'queryRewriteText', value: null })
                   message.wasQueryRewritten = false
                   message.queryRewriteText = undefined
                 } else {
                   // Use the extracted query
                   rewrittenQuery = extractedQuery
                   // console.log('Using rewritten query:', rewrittenQuery)
-                  homeDispatch({ field: 'wasQueryRewritten', value: true })
-                  homeDispatch({
-                    field: 'queryRewriteText',
-                    value: rewrittenQuery,
-                  })
                   message.wasQueryRewritten = true
                   message.queryRewriteText = rewrittenQuery
                 }
               }
             } catch (error) {
               console.error('Error in query rewriting:', error)
-              homeDispatch({ field: 'wasQueryRewritten', value: false })
-              homeDispatch({ field: 'queryRewriteText', value: null })
               message.wasQueryRewritten = false
               message.queryRewriteText = undefined
             }
           }
 
-          homeDispatch({ field: 'isRetrievalLoading', value: true })
-
-          // Use enhanced query for context search
-          await handleContextSearch(
-            message,
-            courseName,
-            selectedConversation,
-            rewrittenQuery,
-            enabledDocumentGroups,
-          )
-
-          homeDispatch({ field: 'isRetrievalLoading', value: false })
+          // Context retrieval via React Query mutation
+          if (
+            courseName !== 'gpt4' &&
+            !(
+              message.contexts &&
+              Array.isArray(message.contexts) &&
+              message.contexts.length > 0
+            )
+          ) {
+            const contexts = await fetchContextsMutateAsync({
+              course_name: courseName,
+              search_query: rewrittenQuery,
+              token_limit: selectedConversation.model.tokenLimit,
+              doc_groups: enabledDocumentGroups,
+              conversation_id: '',
+            })
+            message.contexts = contexts as ContextWithMetadata[]
+          }
         }
 
         // Action 3: Tool Execution
@@ -856,7 +849,6 @@ export const Chat = memo(
               llmProviders,
             })
             if (uiucToolsToRun.length > 0) {
-              homeDispatch({ field: 'isRunningTool', value: true })
               // Run the tools
               await handleToolCall(
                 uiucToolsToRun,
@@ -864,15 +856,11 @@ export const Chat = memo(
                 courseName,
               )
             }
-
-            homeDispatch({ field: 'isRunningTool', value: false })
           } catch (error) {
             console.error(
               'Error in chat.tsx running handleFunctionCall():',
               error,
             )
-          } finally {
-            homeDispatch({ field: 'isRunningTool', value: false })
           }
         }
 
@@ -1340,10 +1328,6 @@ export const Chat = memo(
           // CRITICAL: Ensure the modified conversation ends with the user message we want to regenerate
           // This ensures buildPrompt can find the last user input
           modifiedConversation.messages.push(userMessageToRegenerate)
-
-          // Reset query rewriting state in the global context
-          homeDispatch({ field: 'wasQueryRewritten', value: undefined })
-          homeDispatch({ field: 'queryRewriteText', value: undefined })
 
           // IMPORTANT: Update the selected conversation with the modified one BEFORE proceeding with handleSend
           // This ensures that the query rewriting process uses the correct conversation state

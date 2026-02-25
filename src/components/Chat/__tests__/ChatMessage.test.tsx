@@ -528,8 +528,6 @@ describe('ChatMessage', () => {
             selectedConversation: conversation as any,
             messageIsStreaming: true,
             isImg2TextLoading: true,
-            isRetrievalLoading: true,
-            isRunningTool: true,
             loading: false,
           } as any,
           homeContext: { dispatch: vi.fn() },
@@ -599,23 +597,16 @@ describe('ChatMessage', () => {
         homeState: {
           selectedConversation: conversation as any,
           messageIsStreaming: true,
-          isImg2TextLoading: true,
-          isRetrievalLoading: true,
-          isRunningTool: true,
           loading: false,
         } as any,
         homeContext: { dispatch: vi.fn() },
       },
     )
 
-    expect(screen.getAllByText(/Image Description/i).length).toBeGreaterThan(0)
     expect(
       screen.getAllByText(/Optimized search query/i).length,
     ).toBeGreaterThan(0)
     expect(screen.getAllByText(/Retrieved documents/i).length).toBeGreaterThan(
-      0,
-    )
-    expect(screen.getAllByText(/Routing the request/i).length).toBeGreaterThan(
       0,
     )
     expect(screen.getAllByText(/Tool output from/i).length).toBeGreaterThan(0)

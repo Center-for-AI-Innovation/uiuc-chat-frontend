@@ -1,4 +1,5 @@
 import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
+import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
 
 import { useContext } from 'react'
 
@@ -26,9 +27,11 @@ export const ChatFolders = ({
   courseName,
 }: Props) => {
   const {
-    state: { folders, conversations },
+    state: { conversations },
     handleUpdateConversation,
   } = useContext(HomeContext)
+  const { data: foldersData } = useFetchFolders(currentEmail, courseName)
+  const folders = foldersData ?? []
   const queryClient = useQueryClient()
   const updateConversationMutation = useUpdateConversation(
     currentEmail as string,

@@ -1,6 +1,7 @@
 import { useDeleteAllConversations } from '@/hooks/queries/useDeleteAllConversations'
 import { useDeleteConversation } from '@/hooks/queries/useDeleteConversation'
 import { useFetchConversationHistory } from '@/hooks/queries/useFetchConversationHistory'
+import { useFetchFolders } from '@/hooks/queries/useFetchFolders'
 import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
 import { useDownloadConvoHistory } from '@/hooks/queries/useDownloadConvoHistory'
 
@@ -44,12 +45,17 @@ export const Chatbar = ({
   })
 
   const {
-    state: { conversations, showChatbar, defaultModelId, folders },
+    state: { conversations, showChatbar, defaultModelId },
     dispatch: homeDispatch,
     handleCreateFolder,
     handleNewConversation,
     handleUpdateConversation,
   } = useContext(HomeContext)
+
+  const { data: foldersData } = useFetchFolders(
+    current_email as string,
+    courseName as string,
+  )
 
   const {
     state: { searchTerm, filteredConversations },
@@ -372,7 +378,7 @@ export const Chatbar = ({
             courseName={courseName}
           />
         }
-        folders={folders}
+        folders={foldersData ?? []}
         items={conversations}
         searchTerm={searchTerm}
         handleSearchTerm={(searchTerm: string) =>

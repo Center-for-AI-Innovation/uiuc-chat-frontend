@@ -70,7 +70,6 @@ vi.mock('@/components/Chat/Chat', async () => {
       data: { key: string; value: unknown },
     ) => void
     handleSelectConversation: (conversation: unknown) => void
-    setIsRetrievalLoading: (v: boolean) => void
     handleUpdateDocumentGroups: (id: string) => void
     handleUpdateTools: (id: string) => void
   }
@@ -91,7 +90,6 @@ vi.mock('@/components/Chat/Chat', async () => {
           { key: 'name', value: 'Renamed' },
         )
         ctx.handleSelectConversation({ ...convo, messages: [msg] })
-        ctx.setIsRetrievalLoading(true)
         ctx.handleUpdateDocumentGroups('dg')
         ctx.handleUpdateTools('tool')
       }, [ctx?.state?.selectedConversation?.id])
@@ -113,7 +111,11 @@ describe('pages/api/home/home (shared Home component)', () => {
       .spyOn(globalThis, 'fetch')
       .mockImplementation(async (input: RequestInfo | URL) => {
         const url =
-          typeof input === 'string' ? input : (input?.url ?? String(input))
+          typeof input === 'string'
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : input.url
 
         if (String(url).includes('/api/models')) {
           return new Response(
@@ -193,7 +195,7 @@ describe('pages/api/home/home (shared Home component)', () => {
     let selectedConversationWrites = 0
     const setItemSpy = vi
       .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(function (key: string, value: string) {
+      .mockImplementation(function (this: Storage, key: string, value: string) {
         if (key === 'selectedConversation') {
           selectedConversationWrites += 1
           if (selectedConversationWrites === 2) {
@@ -247,7 +249,7 @@ describe('pages/api/home/home (shared Home component)', () => {
     const originalSetItem = Storage.prototype.setItem
     const setItemSpy = vi
       .spyOn(Storage.prototype, 'setItem')
-      .mockImplementation(function (key: string, value: string) {
+      .mockImplementation(function (this: Storage, key: string, value: string) {
         if (key === 'selectedConversation') {
           throw new DOMException('quota', 'QuotaExceededError')
         }

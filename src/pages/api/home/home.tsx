@@ -82,11 +82,10 @@ const Home = ({
     queryClient,
     course_name,
   )
-  const {
-    data: foldersData,
-    isFetched: isFoldersFetched,
-    isLoading: isLoadingFolders,
-  } = useFetchFolders(current_email as string, course_name as string)
+  const { data: foldersData } = useFetchFolders(
+    current_email as string,
+    course_name as string,
+  )
   // fetch last conversation to get the temperature
   const {
     data: lastConversation,
@@ -110,8 +109,6 @@ const Home = ({
 
   const stopConversationRef = useRef<boolean>(false)
 
-  const serverSidePluginKeysSet = true
-
   // Context with initial state
   const contextValue = useCreateReducer<HomeInitialState>({
     initialState,
@@ -120,7 +117,6 @@ const Home = ({
   const {
     state: {
       apiKey,
-      folders,
       conversations,
       selectedConversation,
       documentGroups,
@@ -188,14 +184,6 @@ const Home = ({
     setIsLoading(false)
   }, [course_metadata, apiKey])
 
-  useEffect(() => {
-    if (isFoldersFetched && !isLoadingFolders) {
-      // console.log('foldersData: ', foldersData)
-      dispatch({ field: 'folders', value: foldersData })
-      // localStorage.setItem('folders', JSON.stringify(foldersData))
-    }
-  }, [foldersData])
-
   // FOLDER OPERATIONS  --------------------------------------------
   const handleCreateFolder = (name: string, type: FolderType) => {
     if (current_email == undefined) {
@@ -217,7 +205,7 @@ const Home = ({
       console.error('current_email is undefined')
       return
     }
-    const deletedFolder = folders.find(
+    const deletedFolder = (foldersData ?? []).find(
       (f) => f.id === folderId,
     ) as FolderWithConversation
 
@@ -230,7 +218,7 @@ const Home = ({
       return
     }
 
-    const updatedFolder = folders.find(
+    const updatedFolder = (foldersData ?? []).find(
       (f) => f.id === folderId,
     ) as FolderWithConversation
     updatedFolder.name = name
@@ -467,11 +455,6 @@ const Home = ({
 
   // Other context actions --------------------------------------------
 
-  // Retrieval
-  const setIsRetrievalLoading = (isRetrievalLoading: boolean) => {
-    dispatch({ field: 'isRetrievalLoading', value: isRetrievalLoading })
-  }
-
   // Update actions for a prompt
   const handleUpdateDocumentGroups = (id: string) => {
     documentGroups.map((documentGroup) =>
@@ -523,16 +506,6 @@ const Home = ({
       dispatch({ field: 'showChatbar', value: false })
     }
   }, [selectedConversation])
-
-  useEffect(() => {
-    // defaultModelId &&
-    //   dispatch({ field: 'defaultModelId', value: defaultModelId })
-    serverSidePluginKeysSet &&
-      dispatch({
-        field: 'serverSidePluginKeysSet',
-        value: serverSidePluginKeysSet,
-      })
-  }, [serverSidePluginKeysSet]) // defaultModelId,
 
   // ON LOAD --------------------------------------------
 
@@ -626,9 +599,6 @@ const Home = ({
           handleSelectConversation,
           handleUpdateConversation,
           handleFeedbackUpdate,
-          // setRoutingResponse,
-          // setIsRunningTool,
-          setIsRetrievalLoading,
           handleUpdateDocumentGroups,
           handleUpdateTools,
         }}
