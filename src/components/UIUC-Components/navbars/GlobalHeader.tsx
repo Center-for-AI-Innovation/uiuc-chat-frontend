@@ -242,12 +242,7 @@ export function LandingPageHeader({
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           {forGeneralPurposeNotLandingpage === false && (
             <>
-              <Link
-                href="/new"
-                className={classes.link}
-                role="button"
-                tabIndex={0}
-              >
+              <Link href="/new" className={classes.link} tabIndex={0}>
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconSparkles
                     size={20}
@@ -262,7 +257,6 @@ export function LandingPageHeader({
                 </span>
               </Link>
               <Link
-                role="button"
                 tabIndex={0}
                 href="https://docs.uiuc.chat/"
                 className={classes.link}
@@ -327,7 +321,6 @@ export function LandingPageHeader({
             <>
               {showDocsInNav && (
                 <Link
-                  role="button"
                   tabIndex={0}
                   href="https://docs.uiuc.chat/"
                   className={classes.link}
@@ -355,7 +348,6 @@ export function LandingPageHeader({
 
               {showNewsInNav && (
                 <Link
-                  role="button"
                   tabIndex={0}
                   href="http://news.uiuc.chat/"
                   target="_blank"
@@ -381,12 +373,7 @@ export function LandingPageHeader({
               )}
 
               {showMyChatbotsInNav && (
-                <Link
-                  href="/chatbots"
-                  className={classes.link}
-                  role="button"
-                  tabIndex={0}
-                >
+                <Link href="/chatbots" className={classes.link} tabIndex={0}>
                   <span className="flex items-center">
                     <IconHome
                       size={18}
@@ -407,12 +394,7 @@ export function LandingPageHeader({
               )}
 
               {showNewProjectInNav && (
-                <Link
-                  href="/new"
-                  className={classes.link}
-                  role="button"
-                  tabIndex={0}
-                >
+                <Link href="/new" className={classes.link} tabIndex={0}>
                   <span className="flex items-center">
                     <IconSparkles
                       size={18}
@@ -477,7 +459,6 @@ export function LandingPageHeader({
                   {/* Show Docs in dropdown whenever not visible in main nav */}
                   {!showDocsInNav && (
                     <Link
-                      role="button"
                       tabIndex={0}
                       href="https://docs.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
@@ -506,7 +487,6 @@ export function LandingPageHeader({
 
                   {/* {!showNewsInNav && (
                     <Link
-                      role="button"
                       tabIndex={0}
                       href="http://news.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
@@ -536,7 +516,6 @@ export function LandingPageHeader({
                   {/* Show My Chatbots in dropdown whenever not visible in main nav */}
                   {!showMyChatbotsInNav && (
                     <Link
-                      role="button"
                       tabIndex={0}
                       href="/chatbots"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
@@ -563,7 +542,6 @@ export function LandingPageHeader({
 
                   {!showNewProjectInNav && (
                     <Link
-                      role="button"
                       tabIndex={0}
                       href="/new"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
