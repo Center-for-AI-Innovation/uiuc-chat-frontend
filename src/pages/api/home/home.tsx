@@ -14,8 +14,6 @@ import Head from 'next/head'
 
 import { useCreateReducer } from '@/hooks/useCreateReducer'
 
-import useErrorService from '@/services/errorService'
-
 import { cleanSelectedConversation } from '@/utils/app/clean'
 import { DEFAULT_SYSTEM_PROMPT } from '@/utils/app/const'
 
@@ -64,7 +62,6 @@ const Home = ({
 }) => {
   // Hooks
   const { t } = useTranslation('chat')
-  const { getModelsError } = useErrorService()
   const queryClient = useQueryClient()
   // const queryCache = queryClient.getQueryCache()
 
@@ -95,11 +92,10 @@ const Home = ({
     isFetched: isLastConversationFetched,
     isLoading: isLastConversationLoading,
   } = useFetchLastConversation(course_name, current_email)
-  const { data: fetchedLLMProviders, error: llmProvidersError } =
-    useFetchLLMProviders({
-      projectName: course_name,
-      enabled: !!course_metadata,
-    })
+  const { data: fetchedLLMProviders } = useFetchLLMProviders({
+    projectName: course_name,
+    enabled: !!course_metadata,
+  })
   const updateConversationMutation = useUpdateConversation(
     current_email as string,
     queryClient,
@@ -195,17 +191,7 @@ const Home = ({
     if (fetchedLLMProviders) {
       dispatch({ field: 'llmProviders', value: fetchedLLMProviders })
     }
-    if (llmProvidersError) {
-      console.error(
-        'Error fetching models user has access to: ',
-        llmProvidersError,
-      )
-      dispatch({
-        field: 'modelError',
-        value: getModelsError(llmProvidersError),
-      })
-    }
-  }, [fetchedLLMProviders, llmProvidersError])
+  }, [fetchedLLMProviders])
 
   useEffect(() => {
     if (isFoldersFetched && !isLoadingFolders) {

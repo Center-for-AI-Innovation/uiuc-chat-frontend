@@ -4,7 +4,6 @@ import {
   type Message,
   type UIUCTool,
 } from '@/types/chat'
-import { type ErrorMessage } from '@/types/error'
 import {
   type FolderInterface,
   type FolderWithConversation,
@@ -20,7 +19,6 @@ export interface HomeInitialState {
   apiKey: string
   loading: boolean
   messageIsStreaming: boolean
-  modelError: ErrorMessage | null //TODO(BG): can be replaced by React Query Hook
   llmProviders: AllLLMProviders //TODO(BG): can be replaced by React Query Hook
   selectedModel: AnySupportedModel | null //TODO(BG): can be removed since the value is never set
   folders: FolderWithConversation[] //TODO(BG): can be removed since the value is never set (even through createFolderFunction)
@@ -56,7 +54,6 @@ export const initialState: HomeInitialState = {
   apiKey: '',
   loading: false,
   messageIsStreaming: false,
-  modelError: null,
   llmProviders: {} as AllLLMProviders,
   selectedModel: null,
   folders: [],

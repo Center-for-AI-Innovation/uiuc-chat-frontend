@@ -4,9 +4,9 @@ import { cleanup, fireEvent, screen } from '@testing-library/react'
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
 import type { CourseMetadata } from '~/types/courseMetadata'
 
-vi.mock('@/services/errorService', () => ({
+vi.mock('@/services/useFriendlyErrorMessages', () => ({
   default: () => ({
-    getModelsError: () => ({ title: 'err', message: 'err' }),
+    getModelLoadError: () => ({ title: 'err', message: 'err' }),
   }),
 }))
 

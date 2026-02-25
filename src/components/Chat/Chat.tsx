@@ -85,6 +85,7 @@ import {
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
 import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
+import useFriendlyErrorMessages from '@/services/useFriendlyErrorMessages'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -106,6 +107,7 @@ export const Chat = memo(
     documentCount,
   }: Props) => {
     const { t } = useTranslation('chat')
+    const { getModelLoadError } = useFriendlyErrorMessages()
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
@@ -115,7 +117,11 @@ export const Chat = memo(
     }
 
     // React Query hooks
-    const { refetch: refetchLLMProviders } = useFetchLLMProviders({
+    const {
+      refetch: refetchLLMProviders,
+      error: llmProvidersError,
+      isError: hasLLMProvidersError,
+    } = useFetchLLMProviders({
       projectName: courseName,
     })
     const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
@@ -147,7 +153,6 @@ export const Chat = memo(
         conversations,
         apiKey,
         messageIsStreaming,
-        modelError,
         loading,
         showModelSettings,
         documentGroups,
@@ -159,6 +164,9 @@ export const Chat = memo(
       handleFeedbackUpdate,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
+    const modelError = hasLLMProvidersError
+      ? getModelLoadError(llmProvidersError)
+      : null
 
     // const
     const [chat_ui] = useState(new ChatUI(new MLCEngine()))
