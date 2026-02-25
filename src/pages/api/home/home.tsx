@@ -467,11 +467,6 @@ const Home = ({
 
   // Other context actions --------------------------------------------
 
-  // Routing
-  const setIsRouting = (isRouting: boolean) => {
-    dispatch({ field: 'isRouting', value: isRouting })
-  }
-
   // Retrieval
   const setIsRetrievalLoading = (isRetrievalLoading: boolean) => {
     dispatch({ field: 'isRetrievalLoading', value: isRetrievalLoading })
@@ -631,7 +626,6 @@ const Home = ({
           handleSelectConversation,
           handleUpdateConversation,
           handleFeedbackUpdate,
-          setIsRouting,
           // setRoutingResponse,
           // setIsRunningTool,
           setIsRetrievalLoading,

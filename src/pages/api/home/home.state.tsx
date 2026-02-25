@@ -30,7 +30,6 @@ export interface HomeInitialState {
   serverSidePluginKeysSet: boolean //TODO(BG): maybe removed since the value only used in two places?
   cooldown: number //TODO(BG): can be removed since the value is never used
   showModelSettings: boolean
-  isRouting: boolean | undefined //TODO(BG): can be removed react query dup
   isRunningTool: boolean | undefined //TODO(BG): can be removed react query dup
   isRetrievalLoading: boolean | undefined //TODO(BG): can be removed react query dup
   wasQueryRewritten: boolean | undefined //TODO(BG): can be removed not used anywhere
@@ -62,7 +61,6 @@ export const initialState: HomeInitialState = {
   serverSidePluginKeysSet: false,
   cooldown: 0,
   showModelSettings: false,
-  isRouting: undefined,
   isRunningTool: undefined,
   isRetrievalLoading: undefined,
   wasQueryRewritten: undefined,

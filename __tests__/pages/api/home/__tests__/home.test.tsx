@@ -70,7 +70,6 @@ vi.mock('@/components/Chat/Chat', async () => {
       data: { key: string; value: unknown },
     ) => void
     handleSelectConversation: (conversation: unknown) => void
-    setIsRouting: (v: boolean) => void
     setIsRetrievalLoading: (v: boolean) => void
     handleUpdateDocumentGroups: (id: string) => void
     handleUpdateTools: (id: string) => void
@@ -92,7 +91,6 @@ vi.mock('@/components/Chat/Chat', async () => {
           { key: 'name', value: 'Renamed' },
         )
         ctx.handleSelectConversation({ ...convo, messages: [msg] })
-        ctx.setIsRouting(true)
         ctx.setIsRetrievalLoading(true)
         ctx.handleUpdateDocumentGroups('dg')
         ctx.handleUpdateTools('tool')

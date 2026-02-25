@@ -15,7 +15,6 @@ export function makeHomeContext(
     handleSelectConversation: () => undefined,
     handleUpdateConversation: () => undefined,
     handleFeedbackUpdate: () => undefined,
-    setIsRouting: () => undefined,
     setIsRetrievalLoading: () => undefined,
     handleUpdateDocumentGroups: () => undefined,
     handleUpdateTools: () => undefined,

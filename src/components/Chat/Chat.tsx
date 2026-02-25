@@ -6,6 +6,7 @@ import { useImageDescription } from '@/hooks/queries/useImageDescription'
 import { useLogConversation } from '@/hooks/queries/useLogConversation'
 import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
+import { useRouteTools } from '@/hooks/queries/useRouteTools'
 import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
 import { queryKeys } from '@/hooks/queries/keys'
 
@@ -71,7 +72,6 @@ import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 
 import {
-  handleFunctionCall,
   handleToolCall,
   useFetchAllWorkflows,
 } from '~/utils/functionCalling/handleFunctionCalling'
@@ -130,6 +130,7 @@ export const Chat = memo(
     const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
     const { mutateAsync: routeChatAsync } = useRouteChat()
     const { mutateAsync: runImageDescriptionAsync } = useImageDescription()
+    const { mutateAsync: runRouteToolsAsync } = useRouteTools()
     const logConversationMutation = useLogConversation(getCurrentPageName())
     const {
       data: documentGroupsHook,
@@ -288,7 +289,6 @@ export const Chat = memo(
     }
 
     const resetMessageStates = () => {
-      homeDispatch({ field: 'isRouting', value: undefined })
       homeDispatch({ field: 'isRunningTool', value: undefined })
       homeDispatch({ field: 'isRetrievalLoading', value: undefined })
     }
@@ -844,20 +844,17 @@ export const Chat = memo(
         // Action 3: Tool Execution
         if (tools.length > 0) {
           try {
-            homeDispatch({ field: 'isRouting', value: true })
             // Check if any tools need to be run
-            const uiucToolsToRun = await handleFunctionCall(
+            const uiucToolsToRun = await runRouteToolsAsync({
               message,
               tools,
               imageUrls,
               imgDesc,
               updatedConversation,
-              getOpenAIKey(llmProviders, courseMetadata, apiKey),
+              openAIKey: getOpenAIKey(llmProviders, courseMetadata, apiKey),
               courseName,
-              undefined,
               llmProviders,
-            )
-            homeDispatch({ field: 'isRouting', value: false })
+            })
             if (uiucToolsToRun.length > 0) {
               homeDispatch({ field: 'isRunningTool', value: true })
               // Run the tools
@@ -1248,6 +1245,7 @@ export const Chat = memo(
         routeChatAsync,
         runImageDescriptionAsync,
         runQueryRewriteAsync,
+        runRouteToolsAsync,
       ],
     )
 

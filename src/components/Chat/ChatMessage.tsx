@@ -221,7 +221,6 @@ const FilePreviewModal: React.FC<{
     state: {
       selectedConversation,
       messageIsStreaming,
-      isRouting,
       isRunningTool,
       isRetrievalLoading,
       loading,
@@ -463,7 +462,6 @@ export const ChatMessage = memo(
       state: {
         selectedConversation,
         messageIsStreaming,
-        isRouting,
         isRunningTool,
         isRetrievalLoading,
         loading,
@@ -475,6 +473,13 @@ export const ChatMessage = memo(
       useMutationState({
         filters: {
           mutationKey: mutationKeys.queryRewrite(),
+          status: 'pending',
+        },
+      }).length > 0
+    const isRouting =
+      useMutationState({
+        filters: {
+          mutationKey: mutationKeys.routeTools(),
           status: 'pending',
         },
       }).length > 0
@@ -1974,7 +1979,7 @@ export const ChatMessage = memo(
                             )}
 
                           {/* Tool input arguments state for last message */}
-                          {isRouting === false &&
+                          {!isRouting &&
                             message.tools &&
                             (messageIndex ===
                               (selectedConversation?.messages.length ?? 0) -

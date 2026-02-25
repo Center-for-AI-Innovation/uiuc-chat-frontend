@@ -167,6 +167,7 @@ export const mutationKeys = {
   logConversation: (courseName: string) =>
     ['logConversation', courseName] as const,
   queryRewrite: () => ['queryRewrite'] as const,
+  routeTools: () => ['routeTools'] as const,
   routeChat: () => ['routeChat'] as const,
 
   /* -------------------------------------------------------------------------- */
