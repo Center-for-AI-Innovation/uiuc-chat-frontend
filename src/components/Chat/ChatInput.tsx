@@ -1048,6 +1048,8 @@ export const ChatInput = ({
                               }}
                               fill="currentColor"
                               viewBox="0 0 20 20"
+                              role="img"
+                              aria-label="Completed"
                             >
                               <path
                                 fillRule="evenodd"
@@ -1078,6 +1080,8 @@ export const ChatInput = ({
                               }}
                               fill="currentColor"
                               viewBox="0 0 20 20"
+                              role="img"
+                              aria-label="Error"
                             >
                               <path
                                 fillRule="evenodd"
