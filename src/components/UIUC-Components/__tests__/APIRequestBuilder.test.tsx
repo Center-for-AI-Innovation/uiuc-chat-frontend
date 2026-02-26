@@ -35,4 +35,19 @@ describe('APIRequestBuilder', () => {
       '/api/chat-api/chat',
     )
   })
+
+  it('escapes multi-line system prompt as \\n in generated snippet so JSON is valid', async () => {
+    const multiLinePrompt = 'line1\nline2'
+    renderWithProviders(
+      <APIRequestBuilder
+        course_name="CS101"
+        apiKey="test-key"
+        courseMetadata={{ system_prompt: multiLinePrompt }}
+      />,
+    )
+    const snippet = await screen.findByDisplayValue(/curl -X POST/i)
+    const value = String((snippet as HTMLTextAreaElement).value)
+    // Snippet must contain escaped newline (backslash + n), not a literal newline that would break JSON/shell
+    expect(value).toContain('line1\\nline2')
+  })
 })

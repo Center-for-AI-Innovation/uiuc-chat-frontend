@@ -92,6 +92,9 @@ export default function APIRequestBuilder({
     setTimeout(() => setCopiedCodeSnippet(false), 2000)
   }
 
+  /** Escape string for safe embedding inside JSON string value (newlines → \\n, quotes escaped). */
+  const escapeForJson = (s: string) => JSON.stringify(s).slice(1, -1)
+
   const baseUrl = process.env.VERCEL_URL || window.location.origin
 
   const codeSnippets = {
@@ -102,11 +105,11 @@ export default function APIRequestBuilder({
     "messages": [
       {
         "role": "system",
-        "content": "${systemPrompt}"
+        "content": "${escapeForJson(systemPrompt)}"
       },
       {
         "role": "user",
-        "content": "${userQuery}"
+        "content": "${escapeForJson(userQuery)}"
       }
     ],
     "api_key": "${apiKey || 'YOUR-API-KEY'}",
@@ -126,11 +129,11 @@ data = {
   "messages": [
     {
       "role": "system",
-      "content": "${systemPrompt}"
+      "content": "${escapeForJson(systemPrompt)}"
     },
     {
       "role": "user",
-      "content": "${userQuery}"
+      "content": "${escapeForJson(userQuery)}"
     }
   ],
   "api_key": "${apiKey || 'YOUR-API-KEY'}",
@@ -157,11 +160,11 @@ print(response.json().get('message'))
   "messages": [
     {
       "role": "system",
-      "content": "${systemPrompt}"
+      "content": "${escapeForJson(systemPrompt)}"
     },
     {
       "role": "user",
-      "content": "${userQuery}"
+      "content": "${escapeForJson(userQuery)}"
     }
   ],
   "api_key": "${apiKey || 'YOUR-API-KEY'}",

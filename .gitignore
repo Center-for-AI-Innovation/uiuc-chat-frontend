@@ -50,3 +50,6 @@ tests_output/
 
 # IDE
 .idea
+
+# Cursor workspace files
+*.code-workspace
