@@ -65,6 +65,10 @@ import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
+import { useLogConversation } from '@/hooks/queries/useLogConversation'
+import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
 import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
 import { useFetchEnabledDocGroups } from '~/hooks/queries/useFetchEnabledDocGroups'
 import { useDeleteMessages } from '~/hooks/queries/useDeleteMessages'
@@ -90,7 +94,7 @@ import {
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
 import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
-import { runAgentStream } from '~/hooks/useAgentStream'
+import { useRunAgent } from '@/hooks/queries/useRunAgent'
 import {
   type AgentRunRequest,
   type ClientUIUCTool,
@@ -125,6 +129,12 @@ export const Chat = memo(
     const auth = useAuth()
     const router = useRouter()
     const queryClient = useQueryClient()
+    const { refetch: refetchLLMProviders } = useFetchLLMProviders({
+      projectName: courseName,
+    })
+    const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
+    const { mutateAsync: routeChatAsync } = useRouteChat()
+    const { mutateAsync: runAgentAsync, abort: abortAgent } = useRunAgent()
     // const
     const [bannerUrl, setBannerUrl] = useState<string | null>(null)
     const getCurrentPageName = () => {
@@ -139,6 +149,8 @@ export const Chat = memo(
       string[]
     >(['All Documents']) // Default to 'All Documents' so retrieval can work immediately
     const [enabledTools, setEnabledTools] = useState<string[]>([])
+
+    const logConversationMutation = useLogConversation(getCurrentPageName())
 
     const {
       data: documentGroupsHook,
@@ -340,26 +352,13 @@ export const Chat = memo(
         // This happens when the user hits send before the LLM providers have loaded
         if (!llmProviders || Object.keys(llmProviders).length === 0) {
           try {
-            const response = await fetch('/api/models', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                projectName: courseName,
-              }),
+            const refetchResult = await refetchLLMProviders({
+              throwOnError: true,
             })
-
-            if (!response.ok) {
-              throw new Error('Failed to fetch LLM providers')
-            }
-
-            const data = await response.json()
-            llmProviders = data
-
-            if (!llmProviders) {
+            if (!refetchResult.data) {
               throw new Error('No LLM providers returned from API')
             }
+            llmProviders = refetchResult.data
           } catch (error) {
             console.error('Error fetching LLM providers:', error)
             errorToast({
@@ -780,13 +779,8 @@ export const Chat = memo(
                 } else {
                   // Direct call to routeModelRequest instead of going through the API route
                   try {
-                    rewriteResponse = await fetch('/api/queryRewrite', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify(queryRewriteBody),
-                    })
+                    rewriteResponse =
+                      await runQueryRewriteAsync(queryRewriteBody)
                   } catch (error) {
                     console.error(
                       'Error calling query rewrite endpoint:',
@@ -1103,213 +1097,235 @@ export const Chat = memo(
                   model_id: selectedConversation.model.id,
                 })
 
-                await runAgentStream(
-                  agentRequest,
-                  {
-                    onInitializing: (
-                      messageId,
-                      conversationId,
-                      assistantId,
-                    ) => {
-                      assistantMessageId = assistantId
+                const stopWatcher = setInterval(() => {
+                  if (stopConversationRef.current) {
+                    abortAgent()
+                  }
+                }, 50)
 
-                      // Create initial "Initializing" event for immediate UI feedback
-                      const initEvent: AgentEvent = {
-                        id: 'agent-initializing',
-                        stepNumber: 0,
-                        type: 'initializing',
-                        status: 'running',
-                        title: 'Initializing agent...',
-                        createdAt: new Date().toISOString(),
-                      }
-                      message.agentEvents = [initEvent]
-                      syncAgentMessage()
-                      homeDispatch({
-                        field: 'selectedConversation',
-                        value: updatedConversation,
-                      })
-                    },
+                try {
+                  await runAgentAsync({
+                    request: agentRequest,
+                    callbacks: {
+                      onInitializing: (
+                        messageId,
+                        conversationId,
+                        assistantId,
+                      ) => {
+                        assistantMessageId = assistantId
 
-                    onAgentEventsUpdate: (agentEvents, messageId) => {
-                      // Update the user message with agent events - this drives the agent timeline UI
-                      message.agentEvents = agentEvents
-                      syncAgentMessage()
-                      // Save to localStorage so timeline state persists across page refreshes
-                      saveToLocalStorage()
-                    },
+                        // Create initial "Initializing" event for immediate UI feedback
+                        const initEvent: AgentEvent = {
+                          id: 'agent-initializing',
+                          stepNumber: 0,
+                          type: 'initializing',
+                          status: 'running',
+                          title: 'Initializing agent...',
+                          createdAt: new Date().toISOString(),
+                        }
+                        message.agentEvents = [initEvent]
+                        syncAgentMessage()
+                        homeDispatch({
+                          field: 'selectedConversation',
+                          value: updatedConversation,
+                        })
+                      },
 
-                    onToolsUpdate: (clientTools, messageId) => {
-                      // Update tools on the message (lightweight version without full contexts)
-                      message.tools = clientTools.map(
-                        (ct): UIUCTool => ({
-                          id: ct.id,
-                          invocationId: ct.invocationId,
-                          name: ct.name,
-                          readableName: ct.readableName,
-                          description: ct.description,
-                          aiGeneratedArgumentValues:
-                            ct.aiGeneratedArgumentValues,
-                          output: ct.output
-                            ? {
-                                text: ct.output.text,
-                                imageUrls: ct.output.imageUrls,
-                              }
-                            : undefined,
-                          error: ct.error,
-                        }),
-                      )
-                      syncAgentMessage()
-                    },
+                      onAgentEventsUpdate: (agentEvents, messageId) => {
+                        // Update the user message with agent events - this drives the agent timeline UI
+                        message.agentEvents = agentEvents
+                        syncAgentMessage()
+                        // Save to localStorage so timeline state persists across page refreshes
+                        saveToLocalStorage()
+                      },
 
-                    onContextsMetadata: (
-                      messageId,
-                      contextsMetadata,
-                      totalContexts,
-                    ) => {
-                      // Create lightweight context objects for citation processing
-                      // These have the metadata needed for citations but not full text
-                      message.contexts = contextsMetadata.map((meta, idx) => ({
-                        id: idx,
-                        text: '', // Not needed for citation links, just metadata
-                        readable_filename: meta.readable_filename,
-                        course_name: courseName,
-                        'course_name ': courseName,
-                        s3_path: meta.s3_path,
-                        pagenumber: String(meta.pagenumber || ''),
-                        url: meta.url || '',
-                        base_url: meta.base_url || '',
-                      }))
-                      syncAgentMessage()
-                    },
+                      onToolsUpdate: (clientTools, messageId) => {
+                        // Update tools on the message (lightweight version without full contexts)
+                        message.tools = clientTools.map(
+                          (ct): UIUCTool => ({
+                            id: ct.id,
+                            invocationId: ct.invocationId,
+                            name: ct.name,
+                            readableName: ct.readableName,
+                            description: ct.description,
+                            aiGeneratedArgumentValues:
+                              ct.aiGeneratedArgumentValues,
+                            output: ct.output
+                              ? {
+                                  text: ct.output.text,
+                                  imageUrls: ct.output.imageUrls,
+                                }
+                              : undefined,
+                            error: ct.error,
+                          }),
+                        )
+                        syncAgentMessage()
+                      },
 
-                    onSelectionStart: (stepNumber) => {
-                      // Agent timeline shows selection running via agentEvents
-                      // No need for isRouting flag for agent mode
-                    },
+                      onContextsMetadata: (
+                        messageId,
+                        contextsMetadata,
+                        totalContexts,
+                      ) => {
+                        // Create lightweight context objects for citation processing
+                        // These have the metadata needed for citations but not full text
+                        message.contexts = contextsMetadata.map(
+                          (meta, idx) => ({
+                            id: idx,
+                            text: '', // Not needed for citation links, just metadata
+                            readable_filename: meta.readable_filename,
+                            course_name: courseName,
+                            'course_name ': courseName,
+                            s3_path: meta.s3_path,
+                            pagenumber: String(meta.pagenumber || ''),
+                            url: meta.url || '',
+                            base_url: meta.base_url || '',
+                          }),
+                        )
+                        syncAgentMessage()
+                      },
 
-                    onSelectionDone: (stepNumber, event) => {
-                      // Agent timeline shows selection done via agentEvents
-                    },
+                      onSelectionStart: (stepNumber) => {
+                        // Agent timeline shows selection running via agentEvents
+                        // No need for isRouting flag for agent mode
+                      },
 
-                    onRetrievalStart: (stepNumber, query) => {
-                      homeDispatch({ field: 'isRetrievalLoading', value: true })
-                    },
+                      onSelectionDone: (stepNumber, event) => {
+                        // Agent timeline shows selection done via agentEvents
+                      },
 
-                    onRetrievalDone: (stepNumber, query, contextsRetrieved) => {
-                      homeDispatch({
-                        field: 'isRetrievalLoading',
-                        value: false,
-                      })
-                      totalContextsRetrieved += contextsRetrieved
-                    },
+                      onRetrievalStart: (stepNumber, query) => {
+                        homeDispatch({
+                          field: 'isRetrievalLoading',
+                          value: true,
+                        })
+                      },
 
-                    onToolStart: (stepNumber, toolName, readableToolName) => {
-                      homeDispatch({ field: 'isRunningTool', value: true })
-                    },
+                      onRetrievalDone: (
+                        stepNumber,
+                        query,
+                        contextsRetrieved,
+                      ) => {
+                        homeDispatch({
+                          field: 'isRetrievalLoading',
+                          value: false,
+                        })
+                        totalContextsRetrieved += contextsRetrieved
+                      },
 
-                    onToolDone: (stepNumber, toolName, output, error) => {
-                      homeDispatch({ field: 'isRunningTool', value: false })
-                      toolsExecuted.push({
-                        name: toolName,
-                        readableName: toolName,
-                        hasOutput: !!output,
-                        hasError: !!error,
-                      })
-                    },
+                      onToolStart: (stepNumber, toolName, readableToolName) => {
+                        homeDispatch({ field: 'isRunningTool', value: true })
+                      },
 
-                    onFinalTokens: (delta, done) => {
-                      // Citations are already processed server-side
-                      if (done) {
+                      onToolDone: (stepNumber, toolName, output, error) => {
+                        homeDispatch({ field: 'isRunningTool', value: false })
+                        toolsExecuted.push({
+                          name: toolName,
+                          readableName: toolName,
+                          hasOutput: !!output,
+                          hasError: !!error,
+                        })
+                      },
+
+                      onFinalTokens: (delta, done) => {
+                        // Citations are already processed server-side
+                        if (done) {
+                          homeDispatch({ field: 'loading', value: false })
+                          homeDispatch({
+                            field: 'messageIsStreaming',
+                            value: false,
+                          })
+                        } else {
+                          homeDispatch({ field: 'loading', value: false })
+                          assistantContent += delta
+                          updateAssistantMessage(assistantContent)
+                        }
+                      },
+
+                      onDone: (conversationId, finalMessageId, summary) => {
+                        if (
+                          assistantMessageId &&
+                          assistantMessageId !== finalMessageId
+                        ) {
+                          const idx = updatedConversation.messages.findIndex(
+                            (m) => m.id === assistantMessageId,
+                          )
+                          if (idx >= 0) {
+                            const updatedMessages = [
+                              ...updatedConversation.messages,
+                            ]
+                            updatedMessages[idx] = {
+                              ...updatedMessages[idx]!,
+                              id: finalMessageId,
+                            }
+                            updatedConversation = {
+                              ...updatedConversation,
+                              messages: updatedMessages,
+                            }
+                          }
+                          assistantMessageId = finalMessageId
+                        }
+
+                        console.log(
+                          '[Agent Mode] Server-side agent completed',
+                          {
+                            conversationId,
+                            finalMessageId,
+                            totalContextsRetrieved:
+                              summary.totalContextsRetrieved,
+                            toolsExecuted: summary.toolsExecuted.length,
+                          },
+                        )
+
                         homeDispatch({ field: 'loading', value: false })
                         homeDispatch({
                           field: 'messageIsStreaming',
                           value: false,
                         })
-                      } else {
-                        homeDispatch({ field: 'loading', value: false })
-                        assistantContent += delta
-                        updateAssistantMessage(assistantContent)
-                      }
-                    },
+                        homeDispatch({ field: 'isRouting', value: false })
+                        homeDispatch({ field: 'isRunningTool', value: false })
+                        homeDispatch({
+                          field: 'isRetrievalLoading',
+                          value: false,
+                        })
 
-                    onDone: (conversationId, finalMessageId, summary) => {
-                      if (
-                        assistantMessageId &&
-                        assistantMessageId !== finalMessageId
-                      ) {
-                        const idx = updatedConversation.messages.findIndex(
-                          (m) => m.id === assistantMessageId,
+                        // Save final conversation state to localStorage
+                        saveToLocalStorage()
+
+                        // Refresh conversation history queries used by Chatbar/sidebar.
+                        queryClient.invalidateQueries({
+                          queryKey: ['conversationHistory', courseName],
+                        })
+                      },
+
+                      onError: (errorMessage, stepNumber, recoverable) => {
+                        console.error(
+                          '[Agent Mode] Server-side agent error:',
+                          errorMessage,
                         )
-                        if (idx >= 0) {
-                          const updatedMessages = [
-                            ...updatedConversation.messages,
-                          ]
-                          updatedMessages[idx] = {
-                            ...updatedMessages[idx]!,
-                            id: finalMessageId,
-                          }
-                          updatedConversation = {
-                            ...updatedConversation,
-                            messages: updatedMessages,
-                          }
-                        }
-                        assistantMessageId = finalMessageId
-                      }
 
-                      console.log('[Agent Mode] Server-side agent completed', {
-                        conversationId,
-                        finalMessageId,
-                        totalContextsRetrieved: summary.totalContextsRetrieved,
-                        toolsExecuted: summary.toolsExecuted.length,
-                      })
+                        homeDispatch({ field: 'loading', value: false })
+                        homeDispatch({
+                          field: 'messageIsStreaming',
+                          value: false,
+                        })
+                        homeDispatch({ field: 'isRouting', value: false })
+                        homeDispatch({ field: 'isRunningTool', value: false })
+                        homeDispatch({
+                          field: 'isRetrievalLoading',
+                          value: false,
+                        })
 
-                      homeDispatch({ field: 'loading', value: false })
-                      homeDispatch({
-                        field: 'messageIsStreaming',
-                        value: false,
-                      })
-                      homeDispatch({ field: 'isRouting', value: false })
-                      homeDispatch({ field: 'isRunningTool', value: false })
-                      homeDispatch({
-                        field: 'isRetrievalLoading',
-                        value: false,
-                      })
-
-                      // Save final conversation state to localStorage
-                      saveToLocalStorage()
-
-                      // Refresh conversation history queries used by Chatbar/sidebar.
-                      queryClient.invalidateQueries({
-                        queryKey: ['conversationHistory', courseName],
-                      })
+                        errorToast({
+                          title: 'Agent Error',
+                          message: errorMessage,
+                        })
+                      },
                     },
-
-                    onError: (errorMessage, stepNumber, recoverable) => {
-                      console.error(
-                        '[Agent Mode] Server-side agent error:',
-                        errorMessage,
-                      )
-
-                      homeDispatch({ field: 'loading', value: false })
-                      homeDispatch({
-                        field: 'messageIsStreaming',
-                        value: false,
-                      })
-                      homeDispatch({ field: 'isRouting', value: false })
-                      homeDispatch({ field: 'isRunningTool', value: false })
-                      homeDispatch({
-                        field: 'isRetrievalLoading',
-                        value: false,
-                      })
-
-                      errorToast({
-                        title: 'Agent Error',
-                        message: errorMessage,
-                      })
-                    },
-                  },
-                  controller.signal,
-                )
+                  })
+                } finally {
+                  clearInterval(stopWatcher)
+                }
               } catch (error) {
                 console.error(
                   '[Agent Mode] Error running server-side agent:',
@@ -1451,31 +1467,7 @@ export const Chat = memo(
               startOfCallToLLM = performance.now()
 
               try {
-                response = await fetch('/api/allNewRoutingChat', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(finalChatBody),
-                })
-
-                // Check if response is ok before proceeding
-                if (!response.ok) {
-                  const errorData = await response.json()
-                  console.log(
-                    'Chat.txs --- errorData from /api/allNewRoutingChat',
-                    errorData,
-                  )
-                  // Read our custom error object. But normal errors are captured too via errorData.error.
-                  const customError = new Error(
-                    errorData.message ||
-                      errorData.error ||
-                      'The LLM might be overloaded or misconfigured. Please check your API key, or use a different LLM.',
-                  )
-                  ;(customError as any).title =
-                    errorData.title || "LLM Didn't Respond"
-                  throw customError
-                }
+                response = await routeChatAsync(finalChatBody)
               } catch (error) {
                 console.error('Error calling the LLM:', error)
                 homeDispatch({ field: 'loading', value: false })
@@ -1922,6 +1914,13 @@ export const Chat = memo(
         stopConversationRef,
         chat_ui,
         agentModeEnabled,
+        abortAgent,
+        queryClient,
+        refetchLLMProviders,
+        routeChatAsync,
+        runAgentAsync,
+        runQueryRewriteAsync,
+        logConversationMutation,
       ],
     )
 
