@@ -1,4 +1,4 @@
-// @utils/app/conversation
+// src/hooks/__internal__/conversation.ts
 import {
   type Conversation,
   type ConversationPage,
@@ -92,7 +92,7 @@ export async function fetchConversationHistory(
     }
   } catch (error) {
     console.error(
-      'utils/app/conversation.ts - Error fetching conversation history:',
+      'hooks/__internal__/conversation.ts - Error fetching conversation history:',
       error,
     )
   }

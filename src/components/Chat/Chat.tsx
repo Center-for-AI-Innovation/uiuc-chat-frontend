@@ -65,9 +65,9 @@ import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
-import { useUpdateConversation } from '~/hooks/conversationQueries'
-import { useFetchEnabledDocGroups } from '~/hooks/docGroupsQueries'
-import { useDeleteMessages } from '~/hooks/messageQueries'
+import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
+import { useFetchEnabledDocGroups } from '~/hooks/queries/useFetchEnabledDocGroups'
+import { useDeleteMessages } from '~/hooks/queries/useDeleteMessages'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
 
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
@@ -89,7 +89,7 @@ import {
   handleImageContent,
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
-import { createLogConversationPayload } from '@/utils/app/conversation'
+import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
 import { runAgentStream } from '~/hooks/useAgentStream'
 import {
   type AgentRunRequest,
