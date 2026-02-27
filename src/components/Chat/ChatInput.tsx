@@ -1,5 +1,6 @@
 // chatinput.tsx
 import {
+  type ChatBody,
   type Content,
   type Message,
   type MessageType,
@@ -54,7 +55,8 @@ import { type CSSProperties } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
-import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
+import { fetchPresignedUrl, uploadToS3 } from '~/utils/apiUtils'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import {
   selectBestModel,
@@ -251,6 +253,7 @@ export const ChatInput = ({
   } = useContext(HomeContext)
 
   const agentModeEnabled = deriveAgentModeEnabled(selectedConversation)
+  const { mutateAsync: routeChatAsync } = useRouteChat()
 
   const [content, setContent] = useState<string>(() => inputContent)
   const [isTyping, setIsTyping] = useState<boolean>(false)
@@ -574,27 +577,16 @@ export const ChatInput = ({
       return
     }
 
-    try {
-      const response = await fetch('/api/allNewRoutingChat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversation: selectedConversation,
-          course_name: courseName,
-          stream: true,
-        }),
-      })
+    const chatBody: ChatBody = {
+      conversation: selectedConversation ?? undefined,
+      course_name: courseName,
+      stream: true,
+      key: '',
+      mode: 'chat',
+    }
 
-      if (!response.ok) {
-        const errorResponse = await response.json()
-        const errorMessage =
-          errorResponse.error ||
-          'An error occurred while processing your request'
-        showErrorToast(errorMessage)
-        return
-      }
+    try {
+      await routeChatAsync(chatBody)
     } catch (error) {
       console.error('Error in chat submission:', error)
       showErrorToast(
