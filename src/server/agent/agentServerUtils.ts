@@ -35,42 +35,36 @@ import { eq } from 'drizzle-orm'
 function conversationToMessagesWithContexts(
   inputData: Conversation,
 ): ChatCompletionMessageParam[] {
-  // Use base conversion
   const messages = baseConversationToMessages(inputData)
 
-  // Find and enhance the last user message with contexts
-  const lastMessage = inputData.messages[inputData.messages.length - 1]
-  if (
-    lastMessage?.role === 'user' &&
-    lastMessage.contexts &&
-    lastMessage.contexts.length > 0
-  ) {
-    // Find the corresponding message in the transformed array (it's the first user message from the end before any tool messages)
-    for (let i = 0; i < messages.length; i++) {
+  const lastUserMessage = [...inputData.messages].reverse().find((m) => {
+    return m?.role === 'user' && Array.isArray(m.contexts) && m.contexts.length
+  })
+
+  if (!lastUserMessage?.contexts?.length) return messages
+
+  const targetIndex = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i]
-      if (msg?.role === 'user' && typeof msg.content === 'string') {
-        // Check if this is the last user message by comparing content
-        const originalContent = Array.isArray(lastMessage.content)
-          ? (lastMessage.content[0]?.text ?? '')
-          : lastMessage.content
-
-        if (
-          msg.content === originalContent ||
-          msg.content.startsWith(originalContent.substring(0, 50))
-        ) {
-          // Append all contexts
-          const contextSummary = lastMessage.contexts
-            .map(
-              (ctx, idx) =>
-                `[Context ${idx + 1} from "${ctx.readable_filename}" (page ${ctx.pagenumber || 'N/A'})]: ${ctx.text}`,
-            )
-            .join('\n\n')
-
-          msg.content = `${msg.content}\n\n---\nRetrieved Documents (${lastMessage.contexts.length} total):\n${contextSummary}`
-          break
-        }
-      }
+      if (msg?.role === 'user' && typeof msg.content === 'string') return i
     }
+    return -1
+  })()
+
+  if (targetIndex === -1) return messages
+
+  const contextSummary = lastUserMessage.contexts
+    .map(
+      (ctx, idx) =>
+        `[Context ${idx + 1} from "${ctx.readable_filename}" (page ${ctx.pagenumber || 'N/A'})]: ${ctx.text}`,
+    )
+    .join('\n\n')
+
+  const target = messages[targetIndex]
+  if (!target) return messages
+  messages[targetIndex] = {
+    ...target,
+    content: `${target.content}\n\n---\nRetrieved Documents (${lastUserMessage.contexts.length} total):\n${contextSummary}`,
   }
 
   return messages
