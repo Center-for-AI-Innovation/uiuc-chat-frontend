@@ -20,17 +20,14 @@ export default async function fetchContextsFromBackend(
     conversation_id: conversation_id,
   }
 
-  const response = await fetch(
-    `https://ai-ta-backend-vyriad.up.railway.app/getTopContexts`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-      signal,
+  const response = await fetch(`${backendUrl}/getTopContexts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  )
+    body: JSON.stringify(requestBody),
+    signal,
+  })
 
   if (!response.ok) {
     throw new Error(`Failed to fetch contexts. Status: ${response.status}`)
