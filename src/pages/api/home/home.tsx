@@ -26,24 +26,18 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import {
-  useFetchConversationHistory,
-  useFetchLastConversation,
-  useUpdateConversation,
-} from '~/hooks/conversationQueries'
-import {
-  useCreateFolder,
-  useDeleteFolder,
-  useFetchFolders,
-  useUpdateFolder,
-} from '~/hooks/folderQueries'
+import { useFetchLastConversation } from '~/hooks/queries/useFetchLastConversation'
+import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
+import { useCreateFolder } from '~/hooks/queries/useCreateFolder'
+import { useDeleteFolder } from '~/hooks/queries/useDeleteFolder'
+import { useFetchFolders } from '~/hooks/queries/useFetchFolders'
+import { useUpdateFolder } from '~/hooks/queries/useUpdateFolder'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
-import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
