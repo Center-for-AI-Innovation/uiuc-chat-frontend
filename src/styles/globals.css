@@ -400,8 +400,39 @@
   background-color: transparent;
 }
 
+/* Thin auto-hiding horizontal scrollbar for card rows */
+.scrollbar-thin-auto {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.scrollbar-thin-auto:hover {
+  scrollbar-color: rgba(156, 154, 157, 0.4) transparent;
+}
+.scrollbar-thin-auto::-webkit-scrollbar {
+  height: 6px;
+  background-color: transparent;
+}
+.scrollbar-thin-auto::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+.scrollbar-thin-auto::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+.scrollbar-thin-auto:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 154, 157, 0.4);
+}
+.scrollbar-thin-auto:hover::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 154, 157, 0.7);
+}
+
 html {
   background: var(--illinois-white);
+}
+
+html.dark {
+  background: var(--illinois-blue);
 }
 
 @media (max-width: 720px) {

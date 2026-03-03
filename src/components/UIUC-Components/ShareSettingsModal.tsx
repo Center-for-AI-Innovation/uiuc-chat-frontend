@@ -10,6 +10,7 @@ import {
 import { type CourseMetadata } from '~/types/courseMetadata'
 import EmailListAccordion from './EmailListAccordion'
 import { callSetCourseMetadata } from '~/utils/apiUtils'
+import { showSuccessToast } from '~/utils/toastUtils'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { motion } from 'framer-motion'
 import { Accordion } from '@/components/shadcn/accordion'
@@ -166,6 +167,11 @@ export default function ShareSettingsModal({
     setMetadata(updatedMetadata)
     queryClient.setQueryData(['courseMetadata', projectName], updatedMetadata)
     await callSetCourseMetadata(projectName, updatedMetadata)
+    await queryClient.invalidateQueries({ queryKey: ['allCourseMetadata'] })
+    showSuccessToast(
+      `Access changed to "${ACCESS_LABELS[level]}"`,
+      'Access updated',
+    )
   }
 
   // Removed old toggle handlers in favor of unified dropdown access control
@@ -182,6 +188,7 @@ export default function ShareSettingsModal({
       ['courseMetadata', course_name],
       new_course_metadata,
     )
+    void queryClient.invalidateQueries({ queryKey: ['allCourseMetadata'] })
   }
 
   // See handleAccessSelect for unified access updates

@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createProject } from '~/utils/apiUtils'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import Navbar from './navbars/Navbar'
+import { ChatbotsGlobalNav } from './chatbots-hub/ChatbotsGlobalNav'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 
 import StepCreate from './MakeNewCoursePageSteps/StepCreate'
@@ -244,7 +244,7 @@ const MakeNewCoursePage = ({
   if (!useIllinoisChatConfig) {
     return (
       <>
-        <Navbar isPlain={false} />
+        <ChatbotsGlobalNav />
         <Head>
           <title>{project_name}</title>
           <meta
@@ -303,7 +303,7 @@ const MakeNewCoursePage = ({
 
   return (
     <>
-      <Navbar isPlain={false} />
+      <ChatbotsGlobalNav />
       <Head>
         <title>{project_name}</title>
         <meta name="description" content="Create a new project on UIUC.chat." />
@@ -318,13 +318,12 @@ const MakeNewCoursePage = ({
           padding: '1rem',
         }}
       >
-        {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
-        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-start py-0 pb-20">
+        <div className="flex w-full flex-1 flex-col items-center justify-start pb-20 pt-[72px]">
           <Card
             padding="none"
             withBorder={true}
             radius="md"
-            className="mt-16 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
+            className="mt-8 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
           >
             <div className="step_container min-h-[16rem]">
               {allSteps[currentStep]}
