@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - illinois-chat
   schedule:
     - cron: '7,37 * * * *' # Runs at 7 and 37 minutes past every hour
   workflow_dispatch:
