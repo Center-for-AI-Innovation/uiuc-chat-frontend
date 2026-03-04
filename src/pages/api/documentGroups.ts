@@ -11,7 +11,7 @@ import {
   updateDocGroupStatus,
 } from '~/db/dbHelpers'
 
-import { addDocumentsToDocGroupQdrant } from '~/utils/qdrantUtils'
+import { updateDocGroupsInVectorStore } from '~/utils/vectorUtils'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 interface RequestBody {
@@ -55,18 +55,18 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
         const sqlResponse = await addDocumentsToDocGroup(courseName, doc)
         if (sqlResponse) {
-          const qdrantResponse = await addDocumentsToDocGroupQdrant(
+          const vectorResponse = await updateDocGroupsInVectorStore(
             courseName,
             doc,
           )
-          if (qdrantResponse && qdrantResponse.status === 'completed') {
+          if (vectorResponse && vectorResponse.status === 'completed') {
             res.status(200).json({ success: true })
           } else {
             // rollback the SQL operation
             await removeDocGroup(courseName, doc, docGroup as string)
             res.status(500).json({
               success: false,
-              error: 'An error occurred during Qdrant update',
+              error: 'An error occurred during vector store update',
             })
           }
         } else {
@@ -103,11 +103,11 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
         const sqlResponse = await addDocumentsToDocGroup(courseName, doc)
         if (sqlResponse) {
-          const qdrantResponse = await addDocumentsToDocGroupQdrant(
+          const vectorResponse = await updateDocGroupsInVectorStore(
             courseName,
             doc,
           )
-          if (qdrantResponse && qdrantResponse.status === 'completed') {
+          if (vectorResponse && vectorResponse.status === 'completed') {
             res.status(200).json({ success: true })
           } else {
             // rollback the SQL operation
@@ -115,7 +115,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             res.status(500).json({
               success: false,
               error:
-                'An error occurred during Qdrant update, rolled back SQL changes',
+                'An error occurred during vector store update, rolled back SQL changes',
             })
           }
         } else {
@@ -151,7 +151,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         doc.doc_groups = doc.doc_groups.filter(
           (group: string) => group !== docGroup,
         )
-        await addDocumentsToDocGroupQdrant(courseName, doc)
+        await updateDocGroupsInVectorStore(courseName, doc)
         res.status(200).json({ success: true })
       } else if (action === 'getDocumentGroups') {
         const documents = await fetchDocumentGroups(courseName)

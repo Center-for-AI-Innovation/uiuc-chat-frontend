@@ -15,7 +15,29 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  vector,
 } from 'drizzle-orm/pg-core'
+
+// Embeddings table (pgvector) — see migrations 0006_pgvector_extension.sql, 0007_embeddings_table.sql. Used for frontend vector search via Drizzle.
+export const embeddings = pgTable('embeddings', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  qdrant_id: uuid('qdrant_id').unique(),
+  embedding: vector('embedding', { dimensions: 4096 }).notNull(),
+  page_content: text('page_content'),
+  course_name: text('course_name'),
+  s3_path: text('s3_path'),
+  readable_filename: text('readable_filename'),
+  url: text('url'),
+  base_url: text('base_url'),
+  doc_groups: jsonb('doc_groups').default([]).$type<string[]>(),
+  chunk_index: integer('chunk_index'),
+  pagenumber: text('pagenumber'),
+  timestamp: text('timestamp'),
+  conversation_id: text('conversation_id'),
+  metadata: jsonb('metadata').default({}),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+})
 
 // API keys table
 export const apiKeys = pgTable('api_keys', {

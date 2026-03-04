@@ -43,6 +43,20 @@
       "when": 1769713616944,
       "tag": "0005_calm_valeria_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1769713700000,
+      "tag": "0006_pgvector_extension",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1769713700001,
+      "tag": "0007_embeddings_table",
+      "breakpoints": true
     }
   ]
 }
