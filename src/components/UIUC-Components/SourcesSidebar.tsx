@@ -1,7 +1,7 @@
 import { Text } from '@mantine/core'
 import { IconArrowBarRight } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { type ContextWithMetadata } from '~/types/chat'
 import { CitationCard } from './CitationCard'
 
@@ -28,6 +28,63 @@ const SourcesSidebar = ({
   courseName,
   citedSourceIndices,
 }: Props) => {
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  // Focus management: focus close button on open, restore focus on close
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement
+      // Delay focus to allow render
+      requestAnimationFrame(() => {
+        closeButtonRef.current?.focus()
+      })
+    } else if (previousFocusRef.current) {
+      previousFocusRef.current.focus()
+      previousFocusRef.current = null
+    }
+  }, [isOpen])
+
+  // Escape key to close
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
+  // Focus trap within sidebar
+  const handleFocusTrap = useCallback((e: KeyboardEvent) => {
+    if (e.key !== 'Tab' || !sidebarRef.current) return
+
+    const focusableElements = sidebarRef.current.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+    )
+    if (focusableElements.length === 0) return
+
+    const firstEl = focusableElements[0]!
+    const lastEl = focusableElements[focusableElements.length - 1]!
+
+    if (e.shiftKey && document.activeElement === firstEl) {
+      e.preventDefault()
+      lastEl.focus()
+    } else if (!e.shiftKey && document.activeElement === lastEl) {
+      e.preventDefault()
+      firstEl.focus()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+    document.addEventListener('keydown', handleFocusTrap)
+    return () => document.removeEventListener('keydown', handleFocusTrap)
+  }, [isOpen, handleFocusTrap])
+
   // Modified effect: Always hide both promptbar icons when SourcesSidebar is open
   useEffect(() => {
     const hideElements = () => {
@@ -215,12 +272,16 @@ const SourcesSidebar = ({
   return isOpen ? (
     <>
       <div
+        ref={sidebarRef}
+        role="complementary"
+        aria-label="Sources sidebar"
         className="fixed bottom-0 right-0 top-20 z-[1000] flex w-[260px] flex-col bg-[--sources-background] text-[--sources-foreground] shadow-lg"
         style={{ height: 'calc(100vh - 80px)' }}
       >
         <div className="flex-1 overflow-y-auto">{renderContent()}</div>
 
         <button
+          ref={closeButtonRef}
           tabIndex={0}
           className={`absolute right-[270px] top-5 z-50 h-7 w-7 text-[--foreground-faded] hover:text-[--foreground] sm:top-0.5 sm:h-8 sm:w-8`}
           type="button"

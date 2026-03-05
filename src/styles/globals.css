@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Skip navigation link for keyboard/screen reader users */
+.skip-nav-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background-color: var(--illinois-orange);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-nav-link:focus {
+  top: 0;
+}
+
 /* .grid-container {
   display: inline-grid;
   gap: 20rem 0rem;
@@ -79,7 +98,7 @@
   --foreground-faded: color-mix(
     in srgb,
     var(--foreground),
-    var(--background) 40%
+    var(--background) 35%
   );
 
   --background-dark: color-mix(in srgb, var(--background), black 25%);
@@ -376,6 +395,11 @@
 ::selection {
   color: var(--background);
   background-color: var(--foreground);
+}
+
+.chat-input::selection {
+  color: #ffffff;
+  background-color: #3a7bd5;
 }
 
 /* Scrollbar Styles - Clean gray theme with hover effects */

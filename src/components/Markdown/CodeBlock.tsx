@@ -64,9 +64,16 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
     // TODO: Fix this codeblock so that it doesn't overflow. Add horizontal scroll bar.
     <div
       className="codeblock relative font-sans text-[16px]"
-      style={{ maxWidth: '100%', overflowX: 'auto' }}
+      style={{
+        maxWidth: '100%',
+        overflowX: 'auto',
+        backgroundColor: '#282c34',
+      }}
     >
-      <div className="flex items-center justify-between px-4 py-1.5">
+      <div
+        className="flex items-center justify-between px-4 py-1.5"
+        style={{ backgroundColor: '#21252b' }}
+      >
         <span className="text-xs lowercase text-white">{language}</span>
 
         <div className="flex items-center">
@@ -80,6 +87,7 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
           <button
             className="codeblock-button flex items-center rounded bg-none p-1 text-xs text-white"
             onClick={downloadAsFile}
+            aria-label="Download code"
           >
             <IconDownload size={18} />
           </button>

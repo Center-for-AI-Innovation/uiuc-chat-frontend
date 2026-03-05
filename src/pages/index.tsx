@@ -207,6 +207,7 @@ const Home: NextPage = () => {
       <LandingPageHeader />
 
       <main
+        id="main-content"
         className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center overflow-hidden
           ${montserrat_paragraph.variable} font-montserratParagraph`}
       >
@@ -809,6 +810,7 @@ const Home: NextPage = () => {
                 us at{' '}
                 <a
                   tabIndex={0}
+                  className="underline"
                   style={{ color: 'var(--illinois-orange)' }}
                   href="mailto:caii_ai@lists.illinois.edu"
                 >
@@ -844,7 +846,8 @@ const Home: NextPage = () => {
                 If you have any questions or would like to submit a bug please{' '}
                 <a
                   tabIndex={0}
-                  style={{ color: 'var(--illinois-orange)' }}
+                  className="underline"
+                  style={{ color: '#b5390d' }}
                   href="mailto:genaisupport@mx.uillinois.edu"
                 >
                   email us
@@ -866,7 +869,8 @@ const Home: NextPage = () => {
                 All code is open source. Join us on{' '}
                 <a
                   tabIndex={0}
-                  style={{ color: 'var(--illinois-orange)' }}
+                  className="underline"
+                  style={{ color: '#b5390d' }}
                   href="https://github.com/Center-for-AI-Innovation"
                 >
                   GitHub
@@ -887,7 +891,8 @@ const Home: NextPage = () => {
                 Developed by the{' '}
                 <a
                   tabIndex={0}
-                  style={{ color: 'var(--illinois-orange)' }}
+                  className="underline"
+                  style={{ color: '#b5390d' }}
                   href="https://ai.ncsa.illinois.edu/"
                 >
                   Center of AI Innovation
@@ -895,7 +900,8 @@ const Home: NextPage = () => {
                 at{' '}
                 <a
                   tabIndex={0}
-                  style={{ color: 'var(--illinois-orange)' }}
+                  className="underline"
+                  style={{ color: '#b5390d' }}
                   href="https://ncsa.illinois.edu/"
                 >
                   National Center for Supercomputing Applications

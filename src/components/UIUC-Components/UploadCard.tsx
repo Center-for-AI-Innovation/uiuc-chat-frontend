@@ -196,8 +196,8 @@ export const UploadCard = memo(function UploadCard({
                     sm:px-4 sm:text-base
                   `}
                 >
-                  <span className="hidden sm:inline">Share Chatbot</span>
-                  <span className="inline sm:hidden">Share</span>
+                  <span className="hidden sm:inline">Sharing and Access</span>
+                  <span className="inline sm:hidden">Access</span>
                   <IconShare size={12} className="ml-1 inline sm:hidden" />
                   <IconShare size={20} className="ml-2 hidden sm:inline" />
                 </Button>

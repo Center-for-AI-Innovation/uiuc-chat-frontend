@@ -107,6 +107,7 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
               deg: 135,
             }}
             className={classes.userAvatar}
+            role="button"
             tabIndex={0}
             aria-label="User Menu"
           >

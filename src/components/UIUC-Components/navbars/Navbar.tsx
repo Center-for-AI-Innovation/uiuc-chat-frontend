@@ -1,6 +1,5 @@
 import {
   Burger,
-  Container,
   createStyles,
   Flex,
   Paper,
@@ -268,10 +267,10 @@ function NavigationContent({
       <Transition transition="pop-top-right" duration={200} mounted={opened}>
         {(styles) => (
           <Paper
+            component="nav"
             className={classes.dropdown}
             style={styles}
-            role="navigation"
-            aria-label="Main"
+            aria-label="Mobile navigation"
           >
             {items.map((item, index) => (
               <Link
@@ -290,11 +289,10 @@ function NavigationContent({
         )}
       </Transition>
 
-      <Container
+      <nav
         className={classes.inner}
         style={{ paddingLeft: '0px' }}
-        role="navigation"
-        aria-label="Main"
+        aria-label="Main navigation"
       >
         <div className={classes.links}>
           {items.map((item, index) => (
@@ -311,7 +309,7 @@ function NavigationContent({
             </Link>
           ))}
         </div>
-      </Container>
+      </nav>
 
       <Burger
         tabIndex={0}
