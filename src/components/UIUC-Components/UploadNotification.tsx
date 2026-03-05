@@ -200,11 +200,22 @@ function UploadNotificationContent({
     return text.slice(0, maxLength) + '...'
   }
 
+  /** Extract just the error message when backend returns verbose dict like {'failure_ingest': {'error': '...'}} */
+  const getDisplayError = (error?: string) => {
+    if (!error?.trim()) return ''
+    const match = error.match(/'error':\s*'((?:[^'\\]|\\.)*)'/)
+    if (match) return match[1]
+    const match2 = error.match(/"error":\s*"((?:[^"\\]|\\.)*)"/)
+    if (match2) return match[2]
+    return error
+  }
+
   const getStatusMessage = (
     status: FileUpload['status'],
     url?: string,
     type?: string,
     isBaseUrl?: boolean,
+    error?: string,
   ) => {
     // if (url) return truncateText(url, 35)
 
@@ -222,7 +233,7 @@ function UploadNotificationContent({
       case 'complete':
         return 'Ready for chat'
       case 'error':
-        return 'Upload failed'
+        return (error && error.trim()) || 'Upload failed'
       default:
         return status
     }
@@ -325,13 +336,24 @@ function UploadNotificationContent({
                     <Text
                       size="xs"
                       className={`truncate text-[--modal-text] ${montserrat_paragraph.variable} font-montserratParagraph`}
-                      title={getStatusMessage(file.status)}
+                      title={
+                        file.status === 'error' && file.error
+                          ? getDisplayError(file.error) || file.error
+                          : getStatusMessage(
+                              file.status,
+                              file.url,
+                              file.type,
+                              file.isBaseUrl,
+                              file.error,
+                            )
+                      }
                     >
                       {getStatusMessage(
                         file.status,
                         file.url,
                         file.type,
                         file.isBaseUrl,
+                        getDisplayError(file.error),
                       )}
                     </Text>
                   </div>
@@ -367,7 +389,7 @@ function UploadNotificationContent({
                     )}
                     {file.status === 'error' && (
                       <Tooltip
-                        label="Upload failed"
+                        label={getDisplayError(file.error) || 'Upload failed'}
                         classNames={{
                           tooltip: `${montserrat_paragraph.variable} font-montserratParagraph`,
                         }}
