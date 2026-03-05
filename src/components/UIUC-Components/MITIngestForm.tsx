@@ -207,6 +207,7 @@ export default function MITIngestForm({
                       className="object-contain"
                     />
                   }
+                  aria-label="MIT OCW course URL"
                   className="mt-4 w-full rounded-full"
                   styles={{
                     input: {

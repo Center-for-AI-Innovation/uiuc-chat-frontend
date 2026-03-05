@@ -281,6 +281,7 @@ export const UploadCard = memo(function UploadCard({
               </Title>
               <Textarea
                 placeholder="Describe your project, goals, expected impact etc..."
+                aria-label="Project Description"
                 radius={'sm'}
                 value={projectDescription}
                 onChange={(e) => setProjectDescription(e.target.value)}
@@ -345,6 +346,7 @@ export const UploadCard = memo(function UploadCard({
                   autosize
                   minRows={2}
                   maxRows={4}
+                  aria-label="Set a greeting"
                   placeholder="Enter a greeting to help users get started with your bot"
                   className={`w-full ${montserrat_paragraph.variable} font-montserratParagraph`}
                   styles={{

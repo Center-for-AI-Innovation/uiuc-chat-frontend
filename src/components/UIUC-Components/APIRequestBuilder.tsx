@@ -229,6 +229,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <Select
             placeholder="Select language"
+            aria-label="Select language"
             data={languageOptions}
             value={selectedLanguage}
             radius={'md'}
@@ -282,6 +283,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           <div className="flex w-full items-center gap-2">
             <Select
               placeholder="Select model"
+              aria-label="Select model"
               data={modelOptions}
               value={selectedModel}
               onChange={(value) => setSelectedModel(value || '')}
@@ -354,6 +356,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           </Title>
           <Textarea
             placeholder="System Prompt"
+            aria-label="System Prompt"
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.currentTarget.value)}
             minRows={2}
@@ -382,6 +385,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           </Title>
           <Textarea
             placeholder="User Query"
+            aria-label="User Query"
             value={userQuery}
             onChange={(e) => setUserQuery(e.currentTarget.value)}
             minRows={2}
@@ -526,6 +530,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           value={codeSnippets[selectedLanguage]}
           autosize
           variant="unstyled"
+          aria-label="Code snippet"
           readOnly
           className="relative mt-4 w-full min-w-0 overflow-x-auto rounded-xl bg-[--background] pl-4 text-sm sm:min-w-[20rem] sm:pl-8 sm:text-base"
           styles={{

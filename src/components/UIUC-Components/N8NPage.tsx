@@ -641,7 +641,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           Your n8n API Key
                         </Title>
                         <TextInput
-                          // label="n8n API Key"
+                          aria-label="n8n API Key"
                           type="password"
                           description="We use this to run your workflows. You can find your n8n API Key in your n8n account settings."
                           placeholder="Enter your n8n API Key here"

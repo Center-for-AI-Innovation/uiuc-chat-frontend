@@ -59,6 +59,7 @@ export const ToolsItem = ({}) => {
             <TextInput
               type="search"
               placeholder="Search Tools"
+              aria-label="Search Tools"
               my="sm"
               radius="md"
               icon={<IconSearch size={isSmallScreen ? 15 : 20} />}

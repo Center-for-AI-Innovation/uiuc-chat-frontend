@@ -554,6 +554,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
               {apiKey && (
                 <Input
                   value={apiKey}
+                  aria-label="Your API Key"
                   className={`${montserrat_paragraph.variable} mt-4 w-full font-montserratParagraph`}
                   radius={'md'}
                   size={'md'}
