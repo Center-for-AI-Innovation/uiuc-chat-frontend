@@ -702,6 +702,7 @@ const Home = ({
         </Head>
         {selectedConversation && (
           <main
+            id="main-content"
             className={`flex h-screen w-screen flex-col pt-20  text-sm text-white dark:text-white`}
           >
             <h1 className="sr-only">Illinois Chat</h1>

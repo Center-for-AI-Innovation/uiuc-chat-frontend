@@ -2247,7 +2247,10 @@ export const ChatMessage = memo(
                 </div>
               ) : (
                 <div className="flex w-[90%] flex-col">
-                  <div className="w-full max-w-full flex-1 overflow-visible">
+                  <div
+                    className="w-full max-w-full flex-1 overflow-visible"
+                    aria-live="polite"
+                  >
                     {renderContent()}
                   </div>
                   {/* Action Buttons Container */}

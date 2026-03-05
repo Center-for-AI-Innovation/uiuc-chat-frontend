@@ -166,6 +166,7 @@ export default function ShareSettingsModal({
     setMetadata(updatedMetadata)
     queryClient.setQueryData(['courseMetadata', projectName], updatedMetadata)
     await callSetCourseMetadata(projectName, updatedMetadata)
+    queryClient.invalidateQueries({ queryKey: ['allCourseMetadata'] })
   }
 
   // Removed old toggle handlers in favor of unified dropdown access control
@@ -223,7 +224,7 @@ export default function ShareSettingsModal({
             <h2
               className={`${montserrat_heading.variable} font-montserratHeading text-xl font-semibold`}
             >
-              Share your chatbot
+              Sharing and Access
             </h2>
             <p
               className={`${montserrat_paragraph.variable} mt-1 font-montserratParagraph text-sm text-[--foreground-faded]`}
@@ -362,10 +363,10 @@ export default function ShareSettingsModal({
             <div className="space-y-3">
               <motion.div
                 animate={{
-                  opacity: currentAccessLevel === 'invited' ? 1 : 0.5,
+                  opacity: 1,
                 }}
                 transition={{ duration: 0.2 }}
-                className="relative"
+                className={`relative ${currentAccessLevel !== 'invited' ? 'text-[#8b8b8b]' : ''}`}
               >
                 {currentAccessLevel === 'invited' ? (
                   <motion.div
