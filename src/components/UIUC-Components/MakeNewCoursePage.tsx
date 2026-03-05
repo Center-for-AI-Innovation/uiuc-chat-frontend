@@ -246,14 +246,18 @@ const MakeNewCoursePage = ({
       <>
         <Navbar isPlain={false} />
         <Head>
-          <title>{project_name}</title>
+          <title>{project_name || 'New Project'} — Illinois Chat</title>
           <meta
             name="description"
             content="Create a new project on UIUC.chat."
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+        <main
+          id="main-content"
+          className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+        >
+          <h1 className="sr-only">Create New Project</h1>
           <div className="flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
             <Card
               shadow="xs"
@@ -305,11 +309,12 @@ const MakeNewCoursePage = ({
     <>
       <Navbar isPlain={false} />
       <Head>
-        <title>{project_name}</title>
+        <title>{project_name || 'New Project'} — Illinois Chat</title>
         <meta name="description" content="Create a new project on UIUC.chat." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main
+        id="main-content"
         className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
         style={{
           justifyContent: 'center',

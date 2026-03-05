@@ -768,7 +768,7 @@ export default function APIKeyInputForm({
       setSidebarCollapsed={setSidebarCollapsed}
     >
       <Head>
-        <title>{projectName}/LLMs</title>
+        <title>{projectName} — LLMs — Illinois Chat</title>
         <meta
           name="UIUC.chat"
           content="The AI teaching assistant built for students at UIUC."
@@ -776,7 +776,11 @@ export default function APIKeyInputForm({
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+      <main
+        id="main-content"
+        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+      >
+        <h1 className="sr-only">{projectName} LLM Settings</h1>
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <Card

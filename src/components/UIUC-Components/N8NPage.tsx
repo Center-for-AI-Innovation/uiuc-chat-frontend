@@ -339,7 +339,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       setSidebarCollapsed={setSidebarCollapsed}
     >
       <Head>
-        <title>{course_name}</title>
+        <title>{course_name} — Tools — Illinois Chat</title>
         <meta
           name="description"
           content="The AI teaching assistant built for students at UIUC."
@@ -347,7 +347,11 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         <link rel="icon" href="/favicon.ico" />
         {/* <Header /> */}
       </Head>
-      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+      <main
+        id="main-content"
+        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+      >
+        <h1 className="sr-only">{course_name} Tools</h1>
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             {useIllinoisChatConfig && (
