@@ -118,6 +118,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
       <div className="w-full px-0 py-4 md:px-2">
         <TextInput
           placeholder="Search by Document Group"
+          aria-label="Search by Document Group"
           mb="sm"
           radius="md"
           icon={<IconSearch />}

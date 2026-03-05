@@ -453,6 +453,7 @@ export default function WebsiteIngestForm({
                 >
                   <Input
                     icon={icon}
+                    aria-label="Website URL"
                     className="w-full rounded-full"
                     styles={{
                       input: {
@@ -506,6 +507,7 @@ export default function WebsiteIngestForm({
 
                         <TextInput
                           name="maximumUrls"
+                          aria-label="Max URLs (1 to 500)"
                           radius="md"
                           placeholder="Default 50"
                           value={maxUrls}

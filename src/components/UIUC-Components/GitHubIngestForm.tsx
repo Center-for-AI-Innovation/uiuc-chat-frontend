@@ -448,6 +448,7 @@ export default function GitHubIngestForm({
 
                 <Input
                   icon={icon}
+                  aria-label="GitHub repository URL"
                   className="mt-4 w-full rounded-full"
                   styles={{
                     input: {

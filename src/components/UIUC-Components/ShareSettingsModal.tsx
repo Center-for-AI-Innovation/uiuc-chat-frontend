@@ -234,6 +234,7 @@ export default function ShareSettingsModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="rounded-full p-2  transition-colors hover:bg-[--background-faded]"
           >
             <div className="flex h-5 w-5 items-center justify-center rounded-full">

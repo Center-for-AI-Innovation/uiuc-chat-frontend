@@ -1092,6 +1092,7 @@ CRITICAL: The optimized prompt must:
                     </Title>
                     <Select
                       placeholder="Select model"
+                      aria-label="Select model"
                       data={modelOptions}
                       value={selectedModel}
                       onChange={(value) => setSelectedModel(value || '')}
@@ -1395,6 +1396,7 @@ CRITICAL: The optimized prompt must:
                     minRows={isEmbedded ? 4 : 3}
                     maxRows={20}
                     placeholder="Enter the system prompt..."
+                    aria-label="System Prompt"
                     className="px-1 pt-3 md:px-0"
                     value={baseSystemPrompt}
                     onChange={(e) => setBaseSystemPrompt(e.target.value)}

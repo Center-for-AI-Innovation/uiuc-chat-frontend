@@ -69,6 +69,7 @@ export const DocumentGroupsItem = ({}) => {
             <TextInput
               type="search"
               placeholder="Search by Document Group"
+              aria-label="Search by Document Group"
               my="sm"
               radius="md"
               icon={<IconSearch size={isSmallScreen ? 15 : 20} />}

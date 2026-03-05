@@ -904,6 +904,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         <Select
                           size="sm"
                           w={200}
+                          aria-label="Date range filter"
                           value={dateRangeType}
                           onChange={(value) => {
                             setDateRangeType(value || 'all')
@@ -1087,6 +1088,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           </div>
                           <Select
                             value={view}
+                            aria-label="View by hour or day"
                             onChange={(value) => setView(value || 'hour')}
                             data={[
                               { value: 'hour', label: 'By Hour' },

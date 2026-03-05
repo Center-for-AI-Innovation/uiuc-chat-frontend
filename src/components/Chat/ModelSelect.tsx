@@ -351,6 +351,7 @@ const ModelDropdown: React.FC<
           className="menu z-[50] w-full"
           size="md"
           placeholder="Select a model"
+          aria-label="Select a model"
           searchable
           value={value}
           onChange={async (modelId) => {

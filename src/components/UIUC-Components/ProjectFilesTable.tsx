@@ -594,6 +594,7 @@ export function ProjectFilesTable({
                               }))
                             : []
                         }
+                        aria-label="Filter by document group"
                         value={selectedDocGroups}
                         placeholder={
                           isLoadingDocumentGroups
@@ -1134,6 +1135,7 @@ export function ProjectFilesTable({
                                 }))
                               : []
                           }
+                          aria-label="Assign document groups"
                           value={record.doc_groups ? record.doc_groups : []}
                           placeholder={
                             isLoadingDocumentGroups

@@ -266,6 +266,7 @@ export default function CanvasIngestForm({
 
               <Input
                 id="canvas-url"
+                aria-label="Canvas course URL"
                 icon={
                   <Image
                     src="/media/canvas_logo.png"

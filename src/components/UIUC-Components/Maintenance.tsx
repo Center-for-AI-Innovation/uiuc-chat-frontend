@@ -34,12 +34,12 @@ const Maintenance = ({}: {
       >
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 text-center">
           <Link href="/">
-            <h2 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
+            <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
               UIUC. <span className="text-[hsl(280,100%,70%)]">chat</span>
-            </h2>
+            </h1>
           </Link>
 
-          <Title className="mt-8 text-amber-400" order={1}>
+          <Title className="mt-8 text-amber-400" order={2}>
             {maintenanceTitleText}
           </Title>
 

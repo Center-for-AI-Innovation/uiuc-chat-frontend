@@ -146,6 +146,7 @@ export default function CourseraIngestForm(): JSX.Element {
                       className="object-contain"
                     />
                   }
+                  aria-label="Coursera course URL"
                   className="mt-4 w-full rounded-full"
                   styles={{
                     input: {
