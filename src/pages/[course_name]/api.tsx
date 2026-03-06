@@ -2,7 +2,7 @@
 import { Flex } from '@mantine/core'
 import { type NextPage } from 'next'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import SettingsLayout, {
   getInitialCollapsedState,
@@ -14,6 +14,7 @@ import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { initiateSignIn } from '~/utils/authHelpers'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 
 const ApiPage: NextPage = () => {
   const router = useRouter()
@@ -22,32 +23,48 @@ const ApiPage: NextPage = () => {
     null,
   )
   const [isLoading, setIsLoading] = useState(true)
-  const [courseName, setCourseName] = useState<string | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
+  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
+
   const getCurrentPageName = () => {
-    return router.query.course_name as string
+    const raw = router.query.course_name
+    return typeof raw === 'string'
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
+  const courseName = getCurrentPageName() as string
 
   useEffect(() => {
-    if (!router.isReady) return
-    const fetchCourseData = async () => {
-      const local_course_name = getCurrentPageName()
+    if (!router.isReady || auth.isLoading) return
 
-      // Check exists
-      const metadata: CourseMetadata =
-        await fetchCourseMetadata(local_course_name)
-      if (metadata === null) {
-        await router.push('/new?course_name=' + local_course_name)
-        return
+    const fetchCourseData = async () => {
+      setIsLoading(true)
+      try {
+        // Check exists
+        const metadata: CourseMetadata = await fetchCourseMetadata(courseName)
+        if (metadata === null) {
+          setErrorType(404)
+          return
+        }
+        setCourseMetadata(metadata)
+      } catch (error) {
+        console.error(error)
+
+        const errorWithStatus = error as Error & { status?: number }
+        const status = errorWithStatus.status
+        if (status === 401 || status === 403 || status === 404) {
+          setErrorType(status as 401 | 403 | 404)
+        }
+      } finally {
+        setIsLoading(false)
       }
-      setCourseName(local_course_name)
-      setCourseMetadata(metadata)
-      setIsLoading(false)
     }
     fetchCourseData()
-  }, [router.isReady])
+  }, [router.isReady, auth.isLoading, courseName])
 
   // Second useEffect to handle permissions and other dependent data
   useEffect(() => {
@@ -83,10 +100,17 @@ const ApiPage: NextPage = () => {
     return <LoadingPlaceholderForAdminPages />
   }
 
-  if (!auth.user || !auth.isAuthenticated) {
-    void router.push(`/new?course_name=${courseName}`)
-    void initiateSignIn(auth, router.asPath)
-    return null
+  if ((!auth.user || !auth.isAuthenticated) && courseName) {
+    return <PermissionGate course_name={courseName as string} />
+  }
+
+  if (errorType !== null) {
+    return (
+      <PermissionGate
+        course_name={courseName ? (courseName as string) : 'new'}
+        errorType={errorType}
+      />
+    )
   }
 
   return (
@@ -105,8 +129,9 @@ const ApiPage: NextPage = () => {
             />
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }
