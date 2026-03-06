@@ -244,7 +244,6 @@ const Sidebar = <T,>({
             {permission === 'edit' ? (
               <div className="h-5 w-5 shrink-0">
                 <Button
-                  disabled
                   className="h-auto w-auto bg-transparent p-0 text-[--foreground] hover:bg-transparent hover:text-[--dashboard-button]"
                   onClick={(e) => {
                     e.stopPropagation()

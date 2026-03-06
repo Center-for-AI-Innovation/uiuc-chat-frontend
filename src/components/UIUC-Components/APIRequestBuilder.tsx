@@ -340,7 +340,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               }
               variant="subtle"
               size="xs"
-              className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
+              className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
             >
               {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
             </Button>
@@ -520,7 +520,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             href="https://docs.uiuc.chat/api/endpoints#image-input-example"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
+            className="text-[--dashboard-button] underline hover:text-[--dashboard-button-hover]"
           >
             Using image inputs (docs) →
           </a>

@@ -821,7 +821,7 @@ export default function APIKeyInputForm({
                     </Title>
                     <Title
                       className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading text-[--foreground]`}
-                      order={5}
+                      order={3}
                       px={18}
                       ml={'md'}
                       style={{ textAlign: 'left' }}
@@ -1052,9 +1052,8 @@ export default function APIKeyInputForm({
                                   </Text>
                                   <Text
                                     size="xs"
-                                    color="dimmed"
                                     mt={4}
-                                    className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    className={`pl-1 text-gray-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
                                     We recommended using 0.1. Higher values
                                     increase randomness or

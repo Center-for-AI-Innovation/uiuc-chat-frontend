@@ -440,7 +440,7 @@ export const WebScrape = ({
                   isUrlUpdated
                     ? 'text-[--dashboard-button-foreground]'
                     : 'text-[--dashboard-button-foreground]'
-                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none`}
+                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
@@ -555,7 +555,7 @@ export const WebScrape = ({
                   isUrlUpdated
                     ? 'text-[--dashboard-button-foreground]'
                     : 'text-[--dashboard-button-foreground]'
-                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none`}
+                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >

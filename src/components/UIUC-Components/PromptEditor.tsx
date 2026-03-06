@@ -927,6 +927,7 @@ CRITICAL: The optimized prompt must:
               <Flex
                 role="button"
                 tabIndex={0}
+                aria-expanded={insightsOpen}
                 align="center"
                 justify="space-between"
                 sx={{
@@ -934,7 +935,14 @@ CRITICAL: The optimized prompt must:
                   padding: '4px 8px',
                   borderRadius: '8px',
                 }}
+                className="focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
                 onClick={() => setInsightsOpen(!insightsOpen)}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setInsightsOpen(!insightsOpen)
+                  }
+                }}
               >
                 <Flex align="center" gap="md">
                   <IconBook
@@ -1210,7 +1218,8 @@ CRITICAL: The optimized prompt must:
                           backgroundColor: 'var(--background)',
                           border: 'none',
                           '&:focus': {
-                            borderColor: '#6e56cf',
+                            outline: '2px solid var(--dashboard-button)',
+                            outlineOffset: '-2px',
                           },
                           fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                           cursor: 'pointer',

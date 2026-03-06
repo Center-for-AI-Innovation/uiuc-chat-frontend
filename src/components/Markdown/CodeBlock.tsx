@@ -1,7 +1,8 @@
 import { IconCheck, IconClipboard, IconDownload } from '@tabler/icons-react'
-import { type FC, memo, useState } from 'react'
+import { type FC, memo, useEffect, useState } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
 import { useTranslation } from 'next-i18next'
 
@@ -16,6 +17,19 @@ interface Props {
 export const CodeBlock: FC<Props> = memo(({ language, value }) => {
   const { t } = useTranslation('markdown')
   const [isCopied, setIsCopied] = useState<boolean>(false)
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const check = () =>
+      setIsDark(document.documentElement.classList.contains('dark'))
+    check()
+    const observer = new MutationObserver(check)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+    return () => observer.disconnect()
+  }, [])
 
   const copyToClipboard = () => {
     if (!navigator.clipboard || !navigator.clipboard.writeText) {
@@ -67,25 +81,32 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
       style={{
         maxWidth: '100%',
         overflowX: 'auto',
-        backgroundColor: '#282c34',
+        backgroundColor: isDark ? '#282c34' : '#f6f8fa',
       }}
     >
       <div
         className="flex items-center justify-between px-4 py-1.5"
-        style={{ backgroundColor: '#21252b' }}
+        style={{ backgroundColor: isDark ? '#21252b' : '#e8eaed' }}
       >
-        <span className="text-xs lowercase text-white">{language}</span>
+        <span
+          className="text-xs lowercase"
+          style={{ color: isDark ? '#fff' : '#24292e' }}
+        >
+          {language}
+        </span>
 
         <div className="flex items-center">
           <button
-            className="codeblock-button flex items-center gap-1.5 rounded bg-none p-1 text-xs text-white"
+            className="codeblock-button flex items-center gap-1.5 rounded bg-none p-1 text-xs"
+            style={{ color: isDark ? '#fff' : '#24292e' }}
             onClick={copyToClipboard}
           >
             {isCopied ? <IconCheck size={18} /> : <IconClipboard size={18} />}
             {isCopied ? t('Copied!') : t('Copy code')}
           </button>
           <button
-            className="codeblock-button flex items-center rounded bg-none p-1 text-xs text-white"
+            className="codeblock-button flex items-center rounded bg-none p-1 text-xs"
+            style={{ color: isDark ? '#fff' : '#24292e' }}
             onClick={downloadAsFile}
             aria-label="Download code"
           >
@@ -96,17 +117,20 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
 
       <SyntaxHighlighter
         language={language}
-        style={{
-          ...oneDark,
-          'pre[class*="language-"]': {
-            ...oneDark['pre[class*="language-"]'],
-            background: 'transparent',
-          },
-          'code[class*="language-"]': {
-            ...oneDark['code[class*="language-"]'],
-            background: 'transparent',
-          },
-        }}
+        style={(() => {
+          const theme = isDark ? oneDark : oneLight
+          return {
+            ...theme,
+            'pre[class*="language-"]': {
+              ...theme['pre[class*="language-"]'],
+              background: 'transparent',
+            },
+            'code[class*="language-"]': {
+              ...theme['code[class*="language-"]'],
+              background: 'transparent',
+            },
+          }
+        })()}
         customStyle={{
           margin: 0,
           whiteSpace: 'pre-wrap',
