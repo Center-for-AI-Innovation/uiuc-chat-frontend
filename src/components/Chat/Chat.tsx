@@ -44,7 +44,7 @@ interface Props {
   courseMetadata: CourseMetadata
   courseName: string
   currentEmail: string
-  documentCount: number | null
+  documentExists: boolean | null
 }
 
 import { notifications } from '@mantine/notifications'
@@ -104,7 +104,7 @@ export const Chat = memo(
     courseMetadata,
     courseName,
     currentEmail,
-    documentCount,
+    documentExists,
   }: Props) => {
     const { t } = useTranslation('chat')
     const auth = useAuth()
@@ -526,7 +526,7 @@ export const Chat = memo(
           message.contexts.length > 0
         // Updated condition to include conversation files AND current file upload message with contexts
         const hasAnyDocuments =
-          (documentCount || 0) > 0 ||
+          documentExists === true ||
           hasConversationFiles(selectedConversation) ||
           isFileUploadMessageWithContexts
 
@@ -547,7 +547,7 @@ export const Chat = memo(
           if (
             courseMetadata?.vector_search_rewrite_disabled ||
             updatedConversation.messages.length <= 1 ||
-            documentCount === 0
+            documentExists === false
           ) {
             console.log(
               'Query rewrite skipped: disabled for course, first message, or no documents',
@@ -911,7 +911,7 @@ export const Chat = memo(
           courseMetadata: courseMetadata,
           llmProviders: llmProviders,
           model: selectedConversation.model,
-          skipQueryRewrite: documentCount === 0,
+          skipQueryRewrite: documentExists === false,
           mode: 'chat',
         }
         updatedConversation = finalChatBody.conversation!
