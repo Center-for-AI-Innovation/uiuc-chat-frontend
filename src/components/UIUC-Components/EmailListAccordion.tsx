@@ -94,7 +94,7 @@ function EmailListItem({
       <button
         onClick={onDelete}
         aria-label={`Remove ${email}`}
-        className="rounded-full p-1.5 opacity-0 transition-all duration-300 hover:bg-[--background-faded] group-hover:opacity-100"
+        className="rounded-full p-1.5 opacity-0 transition-all duration-300 hover:bg-[--background-faded] focus-visible:opacity-100 group-hover:opacity-100"
       >
         <IconX className="h-4 w-4 text-[--foreground] transition-colors" />
       </button>

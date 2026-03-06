@@ -36,7 +36,7 @@ export default function NCSAHostedVLMProviderInput({
         >
           <div>
             <a
-              className="mb-3"
+              className="mb-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
               href="https://ai.ncsa.illinois.edu/"
               target="_blank"
               rel="noopener noreferrer"
@@ -93,7 +93,7 @@ export default function NCSAHostedVLMProviderInput({
             )}
           </form.Field>
         </div>
-        <Text size="sm" color="dimmed" mb="md">
+        <Text size="sm" className="text-gray-600" mb="md">
           Vision Language Models hosted by NCSA. These models can understand and
           analyze images in addition to text. Free for UIUC students.
         </Text>

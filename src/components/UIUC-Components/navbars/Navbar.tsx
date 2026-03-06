@@ -392,7 +392,7 @@ export default function Navbar({
       {/***************** top navigation for all pages *****************/}
 
       <Flex direction="row" align="center" justify="center">
-        <div className="navbar h-20 w-full border-b border-[--navbar-border] bg-[--navbar-background]">
+        <header className="navbar h-20 w-full border-b border-[--navbar-border] bg-[--navbar-background]">
           <Logo />
 
           {/* TODO determine where to show the uploaded banner logo image (assume on the chat sidebar above or replace the project name?)
@@ -441,7 +441,7 @@ export default function Navbar({
               <GlobalHeader isNavbar={true} />
             </div>
           </div>
-        </div>
+        </header>
       </Flex>
     </div>
   )

@@ -162,6 +162,26 @@ export const N8nWorkflowsTable = ({
     refetchWorkflows()
   }, [n8nApiKey])
 
+  // Fix mantine-datatable aria-allowed-attr violations
+  useEffect(() => {
+    const fixAriaAttrs = () => {
+      const container = document.querySelector('.n8n_workflows_table')
+      if (!container) return
+      // Remove invalid aria-expanded from non-interactive elements
+      container
+        .querySelectorAll('[aria-expanded]:not(button):not([role="button"])')
+        .forEach((el) => el.removeAttribute('aria-expanded'))
+      // Fix "No records found" text contrast
+      container
+        .querySelectorAll('.mantine-datatable-empty-state')
+        .forEach((el) => {
+          ;(el as HTMLElement).style.color = 'var(--foreground)'
+        })
+    }
+    const timer = setTimeout(fixAriaAttrs, 100)
+    return () => clearTimeout(timer)
+  }, [records, isLoadingRecords, page])
+
   const startIndex = (page - 1) * PAGE_SIZE
   const endIndex = startIndex + PAGE_SIZE
 
@@ -274,6 +294,7 @@ export const N8nWorkflowsTable = ({
                 <Switch
                   // @ts-ignore -- for some reason N8N returns "active" and we use "enabled" but I can't get them to agree
                   checked={!!record.active}
+                  aria-label={`Enable ${record.name || 'workflow'}`}
                   onChange={(event) => {
                     mutate_active_flows.mutate({
                       id: record.id,

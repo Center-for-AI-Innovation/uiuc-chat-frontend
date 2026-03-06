@@ -1285,7 +1285,7 @@ export const ChatInput = ({
                 <button
                   tabIndex={0}
                   aria-label="Scroll Down"
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--foreground]"
                   onClick={onScrollDownClick}
                   style={{ pointerEvents: 'auto' }}
                 >
@@ -1326,8 +1326,14 @@ export const ChatInput = ({
             tabIndex={0}
             aria-label="Chat Settings"
             size={isSmallScreen ? '10px' : 'xs'}
-            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
+            className={`font-montserratHeading ${montserrat_heading.variable} absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]`}
             onClick={handleTextClick}
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                handleTextClick()
+              }
+            }}
             style={{ cursor: 'pointer', pointerEvents: 'auto' }}
           >
             {selectBestModel(llmProviders)?.name}

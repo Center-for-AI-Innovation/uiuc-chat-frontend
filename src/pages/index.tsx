@@ -222,7 +222,7 @@ const Home: NextPage = () => {
             <div className="sm:w-1/2 ">
               <div
                 role="region"
-                aria-labelledby="Create a chatbot with your content. Share it with a click."
+                aria-labelledby="hero-heading"
                 style={{ color: 'var(--foreground)', lineHeight: '110%' }}
                 className={`
                   text-3xl font-bold sm:mt-4
@@ -230,7 +230,7 @@ const Home: NextPage = () => {
                   ${montserrat_heading.variable} font-montserratHeading
                 `}
               >
-                <h1>
+                <h1 id="hero-heading" style={{ fontSize: 'inherit' }}>
                   Create a chatbot with{' '}
                   <span className="whitespace-nowrap">your content.</span>
                   <span className="mt-4 block">

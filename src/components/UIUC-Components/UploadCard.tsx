@@ -189,7 +189,7 @@ export const UploadCard = memo(function UploadCard({
                   variant="subtle"
                   size="xs"
                   onClick={() => setIsShareModalOpen(true)}
-                  className={`relative transform rounded-3xl bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none
+                  className={`relative transform rounded-3xl bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]
                     ${montserrat_paragraph.variable} min-h-[2rem]
                     px-2 font-montserratParagraph
                     text-sm sm:min-h-[2.5rem]

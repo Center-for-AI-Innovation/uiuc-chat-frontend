@@ -134,7 +134,7 @@ export default function BedrockProviderInput({
         >
           <div>
             <a
-              className="mb-3"
+              className="mb-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
               href="https://aws.amazon.com/bedrock/"
               target="_blank"
               rel="noopener noreferrer"

@@ -323,6 +323,7 @@ const MakeNewCoursePage = ({
           padding: '1rem',
         }}
       >
+        <h1 className="sr-only">Create New Project</h1>
         {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
         <div className="mt-12 flex w-full flex-1 flex-col items-center justify-start py-0 pb-20">
           <Card

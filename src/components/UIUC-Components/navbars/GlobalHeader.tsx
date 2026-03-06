@@ -39,7 +39,7 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
 
   if (!isLoaded) {
     return (
-      <header style={headerStyle} className="py-16">
+      <div style={headerStyle} className="py-16">
         {/* Skeleton placeholders for two icons */}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <div
@@ -52,14 +52,14 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
             style={{ width: '35px', height: '35px', borderRadius: '50%' }}
           ></div>
         </div>
-      </header>
+      </div>
     )
   }
 
   return (
-    <header style={headerStyle} className="py-16">
+    <div style={headerStyle} className="py-16">
       <AuthMenu />
-    </header>
+    </div>
   )
 }
 
@@ -237,7 +237,7 @@ export function LandingPageHeader({
 
   if (!isLoaded) {
     return (
-      <header style={headerStyle} className="py-16">
+      <div style={headerStyle} className="py-16">
         {/* Skeleton placeholders for two icons */}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           {forGeneralPurposeNotLandingpage === false && (
@@ -284,7 +284,7 @@ export function LandingPageHeader({
             style={{ width: '35px', height: '35px', borderRadius: '50%' }}
           ></div>
         </div>
-      </header>
+      </div>
     )
   }
 

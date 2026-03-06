@@ -214,7 +214,7 @@ const useStyles = createStyles((theme) => ({
     borderRadius: theme.radius.md,
     fontSize: rem(13),
     marginRight: theme.spacing.md,
-    color: 'var(--foreground-faded)',
+    color: 'var(--foreground)',
 
     '&.collapsed': {
       display: 'none',
@@ -514,7 +514,8 @@ export default function NavigationSidebar({
       )}
 
       {/* Sidebar */}
-      <div
+      <aside
+        aria-label="Settings navigation"
         className={`${classes.sidebar} ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''} md:desktop`}
       >
         <div
@@ -620,7 +621,7 @@ export default function NavigationSidebar({
             {!isCollapsed ? <ThemeToggle /> : <CollapsedThemeToggle />}
           </div>
         </div>
-      </div>
+      </aside>
     </>
   )
 }

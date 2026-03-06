@@ -121,6 +121,28 @@ export function ProjectFilesTable({
   )
   const { theme } = useStyles()
 
+  // Patch DataTable filter buttons for accessibility (library doesn't support aria-labels)
+  useEffect(() => {
+    const container = document.querySelector('.project_files_table')
+    if (!container) return
+    // Add aria-label to filter ActionIcon buttons
+    container
+      .querySelectorAll<HTMLButtonElement>(
+        'button.mantine-ActionIcon-root[aria-haspopup="dialog"]:not([aria-label])',
+      )
+      .forEach((btn) => {
+        btn.setAttribute('aria-label', 'Filter column')
+      })
+    // Add role="button" to Popover target divs with aria-expanded
+    container
+      .querySelectorAll<HTMLDivElement>(
+        'div[aria-haspopup="dialog"][aria-expanded]:not([role])',
+      )
+      .forEach((div) => {
+        div.setAttribute('role', 'button')
+      })
+  })
+
   // State to track overflow status of error column in each row of failed documents
   const [overflowStates, setOverflowStates] = useState<{
     [key: number]: boolean
@@ -550,7 +572,7 @@ export function ProjectFilesTable({
             {tabValue !== 'failed' && (
               <Button
                 onClick={() => setExportModalOpened(true)}
-                className={`w-full border-0 bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} font-montserratParagraph focus:outline-none focus:ring-0`}
+                className={`w-full border-0 bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} font-montserratParagraph focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]`}
               >
                 Export
               </Button>
@@ -571,7 +593,7 @@ export function ProjectFilesTable({
                       onClick={() => {
                         setShowMultiSelect(true)
                       }}
-                      className={`mb-2 w-full bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:mb-0 sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} border-0 font-montserratParagraph focus:outline-none focus:ring-0`}
+                      className={`mb-2 w-full bg-[--dashboard-button] px-4 py-2 text-xs transition-colors duration-300 hover:bg-[--dashboard-button-hover] sm:mb-0 sm:w-auto sm:px-6 sm:py-3 ${montserrat_paragraph.variable} border-0 font-montserratParagraph focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]`}
                     >
                       <span className="block sm:hidden">Add to Groups</span>
                       <span className="hidden sm:block">
@@ -823,7 +845,7 @@ export function ProjectFilesTable({
                           setModalOpened(true)
                         }
                       }}
-                      className={`mb-2 w-full border-0 px-4 py-2 text-xs focus:outline-none focus:ring-0 sm:mb-0 sm:w-auto sm:px-6 sm:py-3 ${
+                      className={`mb-2 w-full border-0 px-4 py-2 text-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button] sm:mb-0 sm:w-auto sm:px-6 sm:py-3 ${
                         selectedCount
                           ? 'bg-red-900 hover:bg-red-800'
                           : 'bg-transparent'
@@ -1312,7 +1334,7 @@ export function ProjectFilesTable({
             }}
           >
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--background-faded] text-[--foreground] hover:bg-[--dashboard-button-hover] hover:text-[--dashboard-button-foreground] focus:shadow-none focus:outline-none"
+              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--background-faded] text-[--foreground] hover:bg-[--dashboard-button-hover] hover:text-[--dashboard-button-foreground] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
               onClick={() => {
                 setModalOpened(false)
               }}
@@ -1323,7 +1345,7 @@ export function ProjectFilesTable({
               Cancel
             </Button>
             <Button
-              className="btext-[--dashboard-button-foreground] min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
+              className="btext-[--dashboard-button-foreground] min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
               onClick={async () => {
                 setModalOpened(false)
                 setIsDeletingDocuments(true)
@@ -1437,7 +1459,7 @@ export function ProjectFilesTable({
             }}
           >
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
+              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
               onClick={() => {
                 setExportModalOpened(false)
               }}
@@ -1449,7 +1471,7 @@ export function ProjectFilesTable({
               Cancel
             </Button>
             <Button
-              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
+              className="min-w-[3rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
               onClick={async () => {
                 setExportModalOpened(false)
                 const result = await handleExport(getCurrentPageName())
