@@ -164,7 +164,7 @@ const ChatPage: NextPage = () => {
             current_email={currentEmail}
             course_metadata={course_metadata}
             course_name={'chat'}
-            document_count={0}
+            document_exists={false}
             link_parameters={{
               guidedLearning: false,
               documentsOnly: false,

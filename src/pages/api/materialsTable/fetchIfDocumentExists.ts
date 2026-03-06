@@ -1,27 +1,25 @@
 import { db } from '~/db/dbClient'
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { and, eq, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { documents } from '~/db/schema'
-import { type PgColumn } from 'drizzle-orm/pg-core'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
-type FetchDocumentCountResponse = {
+type FetchIfDocumentExistsResponse = {
   total_count?: number
   error?: string
 }
 
 /**
- * API handler to fetch the total count of documents for a course.
- * Optionally supports filtering by a search key/value pair.
+ * API handler to check if at least one document exists for a course.
  *
  * @param {AuthenticatedRequest} req - The incoming HTTP request.
  * @param {NextApiResponse} res - The outgoing HTTP response.
- * @returns A JSON response with the document count.
+ * @returns A JSON response with total_count (0 or 1) indicating document existence.
  */
-async function fetchDocumentCount(
+async function fetchIfDocumentExists(
   req: AuthenticatedRequest,
-  res: NextApiResponse<FetchDocumentCountResponse>,
+  res: NextApiResponse<FetchIfDocumentExistsResponse>,
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -47,9 +45,9 @@ async function fetchDocumentCount(
 
     return res.status(200).json({ total_count })
   } catch (error) {
-    console.error('Failed to fetch document count:', error)
+    console.error('Failed to check document existence:', error)
     return res.status(500).json({ error: (error as any).message })
   }
 }
 
-export default withCourseAccessFromRequest('any')(fetchDocumentCount)
+export default withCourseAccessFromRequest('any')(fetchIfDocumentExists)
