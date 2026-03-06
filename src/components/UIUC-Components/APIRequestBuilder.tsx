@@ -15,8 +15,9 @@ import {
   IconChevronDown,
   IconInfoCircle,
 } from '@tabler/icons-react'
-import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
+import { type AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 interface APIRequestBuilderProps {
@@ -46,7 +47,7 @@ export default function APIRequestBuilder({
   const [streamEnabled, setStreamEnabled] = useState(true)
   const [temperature, setTemperature] = useState(0.1)
 
-  const { data: llmProviders } = useGetProjectLLMProviders({
+  const { data: llmProviders } = useFetchLLMProviders({
     projectName: course_name,
   })
 
@@ -75,8 +76,8 @@ export default function APIRequestBuilder({
     ? Object.entries(llmProviders).flatMap(([provider, config]) =>
         config.enabled && config.models && provider !== 'WebLLM'
           ? config.models
-              .filter((model) => model.enabled)
-              .map((model) => ({
+              .filter((model: AnySupportedModel) => model.enabled)
+              .map((model: AnySupportedModel) => ({
                 group: provider,
                 value: model.id,
                 label: model.name,
@@ -331,6 +332,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               rightSection={<IconChevronDown size={14} />}
             />
             <Button
+              aria-label="Copy Code Snippet"
               onClick={() =>
                 handleCopyCodeSnippet(codeSnippets[selectedLanguage])
               }
@@ -407,6 +409,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             Temperature
           </Title>
           <Slider
+            aria-label="Temperature"
             value={temperature}
             onChange={setTemperature}
             min={0}

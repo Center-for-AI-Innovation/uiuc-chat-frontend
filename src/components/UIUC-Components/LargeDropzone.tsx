@@ -220,6 +220,12 @@ export function LargeDropzone({
           return { ok: true, s3_path: file.name }
         } catch (error) {
           console.error('Error during file upload or ingest:', error)
+          // Update file status to error so it doesn't block navigation
+          setUploadFiles((prev) =>
+            prev.map((f) =>
+              f.name === uniqueReadableFileName ? { ...f, status: 'error' } : f,
+            ),
+          )
           return { ok: false, s3_path: file.name }
         }
       }),
@@ -329,8 +335,7 @@ export function LargeDropzone({
       <div
         style={{
           display: 'flex',
-          flexDirection: is_new_course && !isSmallScreen ? 'row' : 'column',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
         }}
       >
         <div
@@ -357,23 +362,61 @@ export function LargeDropzone({
               cursor: isDisabled ? 'not-allowed' : 'pointer',
               borderWidth: '2px',
               borderStyle: 'dashed',
-              borderColor: 'var(--foreground)',
+              borderColor: 'var(--dashboard-border)',
               borderRadius: rem(12),
               padding: '1rem',
               margin: '0 auto',
               maxWidth: '100%',
               overflow: 'hidden',
-              background:
-                'linear-gradient(135deg, var(--dashboard-background-faded) 0%, var(--dashboard-background) 100%)',
-              transition: 'all 0.3s ease, background-position 0.3s ease',
-              backgroundSize: '200% 200%',
-              // backgroundPosition: '0% 0%',
-              // ':hover': {
-              //   backgroundPosition: '100% 100%',
-              //   background: 'linear-gradient(135deg, #2a2a40 0%, #1c1c2e 100%)',
-              // },
+              background: 'var(--background)',
             }}
             onDrop={async (files) => {
+              // Common audio and video file extensions to block
+              const audioVideoExtensions = [
+                // Audio extensions
+                '.mp3',
+                '.wav',
+                '.ogg',
+                '.m4a',
+                '.flac',
+                '.aac',
+                '.wma',
+                '.aiff',
+                '.ape',
+                '.opus',
+                // Video extensions
+                '.mp4',
+                '.avi',
+                '.mov',
+                '.wmv',
+                '.flv',
+                '.mkv',
+                '.webm',
+                '.m4v',
+                '.mpg',
+                '.mpeg',
+                '.3gp',
+              ]
+
+              const hasRejected = files.some((f) => {
+                // Check MIME type
+                const hasMimeType =
+                  f.type.startsWith('audio/') || f.type.startsWith('video/')
+
+                // Check file extension as fallback
+                const fileName = f.name.toLowerCase()
+                const hasExtension = audioVideoExtensions.some((ext) =>
+                  fileName.endsWith(ext),
+                )
+
+                return hasMimeType || hasExtension
+              })
+
+              if (hasRejected) {
+                alert('Audio and video files are not supported at this time.')
+                return
+              }
+
               ingestFiles(files, is_new_course).catch((error) => {
                 console.error('Error during file upload:', error)
               })
@@ -462,16 +505,6 @@ export function LargeDropzone({
             </div>
           )} */}
         </div>
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'column',
-            textAlign: 'center',
-          }}
-        ></div>
       </div>
     </>
   )

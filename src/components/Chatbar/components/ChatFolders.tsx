@@ -11,7 +11,7 @@ import Folder from '@/components/Folder'
 
 import { ConversationComponent } from './Conversation'
 import { useQueryClient } from '@tanstack/react-query'
-import { useUpdateConversation } from '~/hooks/conversationQueries'
+import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
 
 interface Props {
   searchTerm: string
@@ -44,7 +44,12 @@ export const ChatFolders = ({
         value: folder.id,
       })
       conversation.folderId = folder.id
-      updateConversationMutation.mutate(conversation)
+      const latestMessage =
+        conversation.messages?.[conversation.messages.length - 1] ?? null
+      updateConversationMutation.mutate({
+        conversation,
+        message: latestMessage,
+      })
     }
   }
 
