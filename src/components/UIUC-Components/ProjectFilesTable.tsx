@@ -141,7 +141,7 @@ export function ProjectFilesTable({
       .forEach((div) => {
         div.setAttribute('role', 'button')
       })
-  })
+  }, [])
 
   // State to track overflow status of error column in each row of failed documents
   const [overflowStates, setOverflowStates] = useState<{
@@ -849,7 +849,9 @@ export function ProjectFilesTable({
                         selectedCount
                           ? 'bg-red-900 hover:bg-red-800'
                           : 'bg-transparent'
-                      } transition-colors duration-300 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                      } transition-colors duration-300 ${
+                        montserrat_paragraph.variable
+                      } font-montserratParagraph`}
                     >
                       <span className="block sm:hidden">
                         Delete {selectedCount}
