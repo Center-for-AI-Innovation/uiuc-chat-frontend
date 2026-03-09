@@ -219,7 +219,14 @@ function Logo() {
   )
 }
 
-function BannerImage({ url }: { url: string }) {
+function BannerImage({
+  url,
+  courseName,
+}: {
+  url: string
+  courseName?: string
+}) {
+  const altText = courseName ? `${courseName} logo` : 'Course chatbot logo'
   return (
     <div style={styles.logoContainerBox}>
       <Image
@@ -227,8 +234,8 @@ function BannerImage({ url }: { url: string }) {
         style={styles.thumbnailImage}
         width={2000}
         height={2000}
-        alt="Course chatbot logo"
-        aria-label="The course creator uploaded a logo for this chatbot."
+        alt={altText}
+        aria-label={altText}
         onError={(e) => (e.currentTarget.style.display = 'none')}
       />
     </div>
