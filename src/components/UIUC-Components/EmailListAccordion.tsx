@@ -221,8 +221,9 @@ function EmailListAccordion({
   }
 
   const handlePaste = async (evt: React.ClipboardEvent<HTMLInputElement>) => {
-    evt.preventDefault()
     const paste = evt.clipboardData.getData('text')
+    if (!paste) return // Let browser handle paste if clipboard data is unavailable
+    evt.preventDefault()
     const emails = paste.match(/[\w\d\.-]+@[\w\d\.-]+\.[\w\d\.-]+/g)
 
     if (emails) {
