@@ -228,6 +228,19 @@ export async function runAgentConversation(
     })
   }
 
+  const persistCurrentMessage = async (phase: string) => {
+    try {
+      await persistMessageServer({
+        conversation: workingConversation,
+        message,
+        courseName,
+        userIdentifier,
+      })
+    } catch (error) {
+      console.error(`Error persisting message ${phase}:`, error)
+    }
+  }
+
   try {
     // Agent loop - up to MAX_AGENT_STEPS iterations
     for (let step = 0; step < MAX_AGENT_STEPS; step++) {
@@ -495,7 +508,9 @@ export async function runAgentConversation(
         // Emit running events for each tool
         const toolEventIds: Record<string, string> = {}
         for (const [idx, tool] of n8nTools.entries()) {
-          const eventId = `agent-step-${stepNumber}-tool-${tool.invocationId || `${tool.id}-${idx}`}`
+          const eventId = `agent-step-${stepNumber}-tool-${
+            tool.invocationId || `${tool.id}-${idx}`
+          }`
           toolEventIds[tool.invocationId || `${tool.id}-${idx}`] = eventId
 
           appendAgentEvent({
@@ -597,32 +612,14 @@ export async function runAgentConversation(
       }
 
       // Persist message after each step
-      try {
-        await persistMessageServer({
-          conversation: workingConversation,
-          message,
-          courseName,
-          userIdentifier,
-        })
-      } catch (error) {
-        console.error('Error persisting message after step:', error)
-      }
+      await persistCurrentMessage('after step')
     }
 
     // Combine all contexts for the final prompt
     message.contexts = [...fileUploadContexts, ...accumulatedContexts]
 
     // Persist before building prompt
-    try {
-      await persistMessageServer({
-        conversation: workingConversation,
-        message,
-        courseName,
-        userIdentifier,
-      })
-    } catch (error) {
-      console.error('Error persisting message before prompt build:', error)
-    }
+    await persistCurrentMessage('before prompt build')
 
     // Build the final prompt
     const chatBody: ChatBody = {
@@ -646,6 +643,7 @@ export async function runAgentConversation(
       title: 'Generating response',
       createdAt: new Date().toISOString(),
     })
+    await persistCurrentMessage('after final response start')
 
     // Build prompt (this populates finalPromtEngineeredMessage and latestSystemMessage)
     const conversationWithPrompt = await buildPrompt({
@@ -754,6 +752,7 @@ export async function runAgentConversation(
       updateAgentEvent(finalEventId, {
         status: 'done',
       })
+      await persistCurrentMessage('after final response completion')
 
       // Create assistant message
       const assistantMessage: Message = {
@@ -797,6 +796,7 @@ export async function runAgentConversation(
         status: 'error',
         metadata: { errorMessage },
       })
+      await persistCurrentMessage('after final response failure')
       return {
         success: false,
         conversation: workingConversation,

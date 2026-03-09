@@ -188,12 +188,16 @@ export const AgentExecutionTimeline = ({
   const streaming = useMemo(() => {
     if (groupedEvents.length === 0) return false
 
-    // Check if final_response exists and is done
     const finalResponse = groupedEvents.find((e) => e.type === 'final_response')
-    if (finalResponse?.status === 'done') return false
+    if (finalResponse) {
+      return (
+        finalResponse.status === 'running' || finalResponse.status === 'pending'
+      )
+    }
 
-    // If no final response yet, or it's still running, we're active
-    return true
+    return groupedEvents.some(
+      (event) => event.status === 'running' || event.status === 'pending',
+    )
   }, [groupedEvents])
 
   // Elapsed time tracking
