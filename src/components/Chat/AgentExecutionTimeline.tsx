@@ -16,6 +16,7 @@ import type { AgentEvent, AgentEventMetadata } from '@/types/chat'
 
 interface AgentExecutionTimelineProps {
   events?: AgentEvent[]
+  isRunning?: boolean
 }
 
 // Grouped event - multiple retrievals in same step become one group
@@ -162,6 +163,7 @@ const formatElapsedTime = (seconds: number): string => {
 
 export const AgentExecutionTimeline = ({
   events,
+  isRunning = false,
 }: AgentExecutionTimelineProps) => {
   const groupedEvents = useMemo(() => {
     if (!events) return []
@@ -184,21 +186,36 @@ export const AgentExecutionTimeline = ({
     }, 0)
   }, [groupedEvents])
 
-  // Agent is "active" until final_response is done (not just when something is running)
-  const streaming = useMemo(() => {
-    if (groupedEvents.length === 0) return false
-
-    const finalResponse = groupedEvents.find((e) => e.type === 'final_response')
-    if (finalResponse) {
-      return (
-        finalResponse.status === 'running' || finalResponse.status === 'pending'
-      )
+  const completedAtTimestamp = useMemo(() => {
+    if (groupedEvents.length === 0) {
+      return null
     }
 
-    return groupedEvents.some(
-      (event) => event.status === 'running' || event.status === 'pending',
+    const nonFinalResponseEvents = groupedEvents.filter(
+      (event) => event.type !== 'final_response',
     )
+    const lastRelevantEvent =
+      nonFinalResponseEvents[nonFinalResponseEvents.length - 1] ??
+      groupedEvents[groupedEvents.length - 1]
+
+    return lastRelevantEvent ? getEventTimestamp(lastRelevantEvent) : null
   }, [groupedEvents])
+
+  // Agent timeline is "active" while agent tasks are still in progress.
+  // Final response token streaming is shown separately in the assistant message.
+  const streaming = useMemo(() => {
+    if (isRunning) {
+      return true
+    }
+
+    if (groupedEvents.length === 0) return false
+
+    return groupedEvents.some(
+      (event) =>
+        event.type !== 'final_response' &&
+        (event.status === 'running' || event.status === 'pending'),
+    )
+  }, [groupedEvents, isRunning])
 
   // Elapsed time tracking
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -215,12 +232,10 @@ export const AgentExecutionTimeline = ({
 
     if (!streaming) {
       // Calculate final elapsed time
-      if (startTimeRef.current && events && events.length > 0) {
-        const lastEvent = events[events.length - 1]
-        const endTime = new Date(
-          lastEvent?.updatedAt || lastEvent?.createdAt || Date.now(),
-        ).getTime()
-        setElapsedSeconds(Math.round((endTime - startTimeRef.current) / 1000))
+      if (startTimeRef.current && completedAtTimestamp) {
+        setElapsedSeconds(
+          Math.round((completedAtTimestamp - startTimeRef.current) / 1000),
+        )
       }
       return
     }
@@ -235,7 +250,7 @@ export const AgentExecutionTimeline = ({
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [streaming, events])
+  }, [streaming, events, completedAtTimestamp])
 
   const [isOpen, setIsOpen] = useState(false)
   const [showPreview, setShowPreview] = useState(true)
