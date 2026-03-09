@@ -330,6 +330,7 @@ export default function ShareSettingsModal({
                   type="text"
                   value={shareUrl}
                   readOnly
+                  aria-label="Share link"
                   className={`${montserrat_paragraph.variable} w-full rounded-lg bg-[--background-faded] px-4 py-2.5 font-montserratParagraph text-sm text-[--foreground] ring-1 ring-[--background-dark] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[--illinois-orange]`}
                 />
               </div>
@@ -438,7 +439,9 @@ export default function ShareSettingsModal({
                   opacity: 1,
                 }}
                 transition={{ duration: 0.2 }}
-                className={`relative ${currentAccessLevel !== 'invited' ? 'text-[#8b8b8b]' : ''}`}
+                className={`relative ${
+                  currentAccessLevel !== 'invited' ? 'text-[#8b8b8b]' : ''
+                }`}
               >
                 {currentAccessLevel === 'invited' ? (
                   <motion.div
