@@ -14,6 +14,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:coverage:check": "npm run test:coverage && node scripts/check-coverage.mjs",
+    "test:a11y": "vitest run a11y",
     "test:watch": "vitest --watch",
     "start": "next start",
     "format": "prettier --check --ignore-path .gitignore .",
