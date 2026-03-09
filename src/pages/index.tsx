@@ -208,6 +208,7 @@ const Home: NextPage = () => {
 
       <main
         id="main-content"
+        tabIndex={-1}
         className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center overflow-hidden
           ${montserrat_paragraph.variable} font-montserratParagraph`}
       >

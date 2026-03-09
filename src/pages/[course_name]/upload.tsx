@@ -94,6 +94,7 @@ const CourseMain: NextPage = () => {
       </Head>
       <main
         id="main-content"
+        tabIndex={-1}
         className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
       >
         <h1 className="sr-only">{projectName} Materials</h1>

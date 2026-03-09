@@ -279,9 +279,13 @@ const NewModelDropdown: React.FC<{
         classNames={{
           root: 'w-full',
           wrapper: 'w-full',
-          input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
+          input: `${montserrat_paragraph.variable} font-montserratParagraph ${
+            isSmallScreen ? 'text-xs' : 'text-sm'
+          } w-full`,
           rightSection: 'pointer-events-none',
-          item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
+          item: `${montserrat_paragraph.variable} font-montserratParagraph ${
+            isSmallScreen ? 'text-xs' : 'text-sm'
+          }`,
         }}
         styles={(theme) => ({
           input: {
@@ -778,6 +782,7 @@ export default function APIKeyInputForm({
 
       <main
         id="main-content"
+        tabIndex={-1}
         className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
       >
         <h1 className="sr-only">{projectName} LLM Settings</h1>
