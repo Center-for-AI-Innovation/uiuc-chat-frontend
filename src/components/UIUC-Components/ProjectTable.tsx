@@ -136,14 +136,12 @@ const ListProjectTable: React.FC = () => {
             .toLowerCase()
             .localeCompare(courseNameB.toLowerCase())
           break
-        case 'privacy':
-          comparison =
-            metadataA.is_private === metadataB.is_private
-              ? 0
-              : metadataA.is_private
-                ? 1
-                : -1
+        case 'privacy': {
+          const privacyLevel = (m: typeof metadataA) =>
+            m.is_private ? (m.allow_logged_in_users ? 1 : 2) : 0
+          comparison = privacyLevel(metadataA) - privacyLevel(metadataB)
           break
+        }
         case 'owner':
           comparison = metadataA.course_owner
             .toLowerCase()
@@ -206,7 +204,13 @@ const ListProjectTable: React.FC = () => {
             style={{ cursor: 'pointer', color: 'var(--illinois-blue)' }}
           >
             <td>{courseName}</td>
-            <td>{courseMetadata.is_private ? 'Private' : 'Public'}</td>
+            <td>
+              {courseMetadata.is_private
+                ? courseMetadata.allow_logged_in_users
+                  ? 'Logged-in Users'
+                  : 'Private'
+                : 'Public'}
+            </td>
             <td>{courseMetadata.course_owner}</td>
             <td>{filteredAdmins.join(', ')}</td>
           </StyledRow>
