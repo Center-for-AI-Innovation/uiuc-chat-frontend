@@ -93,6 +93,9 @@ const ListProjectTable: React.FC = () => {
       const response = await fetch(
         `/api/UIUC-api/getAllCourseMetadata?currUserEmail=${currUserEmail}`,
       )
+      if (!response.ok) {
+        throw new Error(`Failed to fetch course metadata: ${response.status}`)
+      }
       const data = await response.json()
       return data || []
     },
