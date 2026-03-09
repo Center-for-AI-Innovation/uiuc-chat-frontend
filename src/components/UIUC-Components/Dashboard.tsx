@@ -105,6 +105,7 @@ const Dashboard = ({
       </Head>
       <main
         id="main-content"
+        tabIndex={-1}
         className="course-page-main mt-20"
         style={{
           minHeight: '100vh',

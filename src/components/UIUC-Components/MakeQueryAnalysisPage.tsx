@@ -438,6 +438,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         </Head>
         <main
           id="main-content"
+          tabIndex={-1}
           className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
         >
           <h1 className="sr-only">{course_name} Analytics</h1>

@@ -55,6 +55,7 @@ export const PermissionGate = ({
       </Head>
       <main
         id="main-content"
+        tabIndex={-1}
         className="course-page-main flex min-h-screen flex-col items-center justify-center"
       >
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">

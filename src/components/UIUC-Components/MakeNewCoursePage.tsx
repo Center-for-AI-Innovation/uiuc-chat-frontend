@@ -61,7 +61,9 @@ const MakeNewCoursePage = ({
           return false
         }
         const response = await fetch(
-          `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(debouncedProjectName)}`,
+          `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(
+            debouncedProjectName,
+          )}`,
         )
         if (!response.ok) {
           throw new Error('Failed to check project name availability')
@@ -255,6 +257,7 @@ const MakeNewCoursePage = ({
         </Head>
         <main
           id="main-content"
+          tabIndex={-1}
           className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
         >
           <h1 className="sr-only">Create New Project</h1>
@@ -315,6 +318,7 @@ const MakeNewCoursePage = ({
       </Head>
       <main
         id="main-content"
+        tabIndex={-1}
         className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
         style={{
           justifyContent: 'center',
