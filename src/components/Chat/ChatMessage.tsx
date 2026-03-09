@@ -1659,6 +1659,17 @@ export const ChatMessage = memo(
       loading &&
       messageIndex === (selectedConversation?.messages.length ?? 0) - 1
 
+    const hasFinalResponseEvent = agentEvents.some(
+      (event) => event.type === 'final_response',
+    )
+
+    const isCurrentAgentRunMessage =
+      hasAgentEvents &&
+      !hasFinalResponseEvent &&
+      message.role === 'user' &&
+      messageIsStreaming &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
     const shouldShowSources =
       condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
 
@@ -1867,7 +1878,10 @@ export const ChatMessage = memo(
                         )}
                         <div className="mt-4 flex w-full flex-col items-start space-y-3">
                           {hasAgentEvents ? (
-                            <AgentExecutionTimeline events={agentEvents} />
+                            <AgentExecutionTimeline
+                              events={agentEvents}
+                              isRunning={isCurrentAgentRunMessage}
+                            />
                           ) : (
                             <>
                               {/* Query rewrite loading state - only show for current message */}
