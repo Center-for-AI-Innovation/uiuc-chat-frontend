@@ -242,6 +242,27 @@ describe('conversation API', () => {
     expect(assistant.contexts?.[0]?.pagenumber).toBe('')
   })
 
+  it('convertDBToChatConversation normalizes offset conversation timestamps to ISO strings', () => {
+    const conv = convertDBToChatConversation(
+      {
+        id: 'c1',
+        name: 'Conversation',
+        model: 'gpt-4o',
+        prompt: '',
+        temperature: 0.1,
+        user_email: 'u@example.com',
+        project_name: 'CS101',
+        folder_id: null,
+        created_at: '2026-03-09T17:20:00.000-07:00',
+        updated_at: '2026-03-09T17:28:25.124-07:00',
+      } as any,
+      [],
+    )
+
+    expect(conv.createdAt).toBe('2026-03-10T00:20:00.000Z')
+    expect(conv.updatedAt).toBe('2026-03-10T00:28:25.124Z')
+  })
+
   it('convertDBToChatConversation warns when first message is missing metadata', () => {
     const warnSpy = vi
       .spyOn(console, 'warn')

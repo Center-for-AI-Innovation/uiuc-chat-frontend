@@ -180,7 +180,12 @@ const formatDbTimestamp = (
   value: Date | string | null | undefined,
 ): string | undefined => {
   if (!value) return undefined
-  return value instanceof Date ? value.toISOString() : value
+  const date = value instanceof Date ? value : new Date(value)
+  const ms = date.getTime()
+  if (!Number.isFinite(ms)) {
+    return typeof value === 'string' ? value : undefined
+  }
+  return new Date(ms).toISOString()
 }
 
 export function convertDBToChatConversation(
