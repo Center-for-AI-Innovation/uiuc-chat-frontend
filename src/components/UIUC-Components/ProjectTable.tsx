@@ -249,7 +249,7 @@ const ListProjectTable: React.FC = () => {
                   width: '100%',
                 }}
               >
-                <StyledTable>
+                <StyledTable aria-label="Chatbots list">
                   <thead>
                     <tr>
                       {[

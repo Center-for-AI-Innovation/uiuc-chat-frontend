@@ -1371,7 +1371,10 @@ export const ChatMessage = memo(
                 },
                 table({ children }) {
                   return (
-                    <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                    <table
+                      aria-label="Data table from chat response"
+                      className="border-collapse border border-black px-3 py-1 dark:border-white"
+                    >
                       {children}
                     </table>
                   )

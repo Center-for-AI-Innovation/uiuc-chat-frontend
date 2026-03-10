@@ -878,6 +878,7 @@ export function ProjectFilesTable({
       {/* <div className="flex-1 flex flex-col overflow-hidden h-[90%]"> */}
       <div className="project_files_table flex h-[90%] flex-1 flex-col overflow-hidden pb-4">
         <DataTable
+          aria-label="Project documents"
           records={
             tabValue === 'failed'
               ? failedDocuments?.final_docs
@@ -1494,6 +1495,7 @@ export function ProjectFilesTable({
 function errorStateForProjectFilesTable() {
   return (
     <DataTable
+      aria-label="Project documents"
       records={[]}
       borderRadius="lg"
       withColumnBorders
