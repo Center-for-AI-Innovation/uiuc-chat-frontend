@@ -91,7 +91,18 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
   } else {
     return (
       <>
-        <a href="#main-content" className="skip-nav-link">
+        <a
+          href="#main-content"
+          className="skip-nav-link"
+          onClick={(e) => {
+            const target = document.getElementById('main-content')
+            if (target) {
+              e.preventDefault()
+              target.focus()
+              target.scrollIntoView()
+            }
+          }}
+        >
           Skip to main content
         </a>
         <KeycloakProvider>
@@ -99,7 +110,9 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
             <PostHogProvider client={posthog}>
               {/* <SpeedInsights /> */}
               <Analytics />
-              <Notifications position="bottom-center" zIndex={2077} />
+              <div aria-live="assertive" aria-atomic="true">
+                <Notifications position="bottom-center" zIndex={2077} />
+              </div>
               <ReactQueryDevtools
                 initialIsOpen={false}
                 position="left"
