@@ -304,7 +304,9 @@ function NavText({
 }) {
   return (
     <span
-      className={`${montserrat_heading.variable} font-montserratHeading ${collapsed ? 'hidden' : ''}`}
+      className={`${montserrat_heading.variable} font-montserratHeading ${
+        collapsed ? 'hidden' : ''
+      }`}
     >
       {children}
     </span>
@@ -331,8 +333,7 @@ export function CollapsedThemeToggle() {
           <IconDeviceLaptop
             size={16}
             className="text-[--foreground]"
-            role="img"
-            aria-label="Toggle system theme"
+            aria-hidden="true"
           />
         )
       case 'light':
@@ -340,8 +341,7 @@ export function CollapsedThemeToggle() {
           <IconSun
             size={16}
             className="text-[--foreground]"
-            role="img"
-            aria-label="Toggle light theme"
+            aria-hidden="true"
           />
         )
       case 'dark':
@@ -349,8 +349,7 @@ export function CollapsedThemeToggle() {
           <IconMoon
             size={16}
             className="text-[--foreground]"
-            role="img"
-            aria-label="Toggle dark theme"
+            aria-hidden="true"
           />
         )
       default:
@@ -358,8 +357,7 @@ export function CollapsedThemeToggle() {
           <IconDeviceLaptop
             size={16}
             className="text-[--foreground]"
-            role="img"
-            aria-label="Toggle system theme"
+            aria-hidden="true"
           />
         )
     }
@@ -382,7 +380,7 @@ export function CollapsedThemeToggle() {
     <button
       onClick={cycleTheme}
       className="rounded-full border border-[--dashboard-border] bg-[--background-faded] p-1.5 transition-all hover:scale-105 hover:border-[--dashboard-faded] hover:bg-[--dashboard-faded]"
-      aria-label="Toggle theme"
+      aria-label={getCurrentTitle()}
       title={getCurrentTitle()}
     >
       {getCurrentIcon()}
@@ -516,10 +514,14 @@ export default function NavigationSidebar({
       {/* Sidebar */}
       <aside
         aria-label="Settings navigation"
-        className={`${classes.sidebar} ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''} md:desktop`}
+        className={`${classes.sidebar} ${isOpen ? 'open' : ''} ${
+          isCollapsed ? 'collapsed' : ''
+        } md:desktop`}
       >
         <div
-          className={`${classes.sidebarContent} ${isCollapsed ? 'collapsed' : ''}`}
+          className={`${classes.sidebarContent} ${
+            isCollapsed ? 'collapsed' : ''
+          }`}
         >
           {/* Header */}
           <div
@@ -527,7 +529,9 @@ export default function NavigationSidebar({
           >
             {/* Breadcrumb - Always visible on mobile, conditionally on desktop */}
             <div
-              className={`${classes.breadcrumb} ${isCollapsed ? 'collapsed' : ''}`}
+              className={`${classes.breadcrumb} ${
+                isCollapsed ? 'collapsed' : ''
+              }`}
             >
               <div
                 className={`flex items-center gap-2 ${montserrat_heading.variable} font-montserratHeading`}
@@ -565,7 +569,9 @@ export default function NavigationSidebar({
           {/* Chat Button */}
           <button
             tabIndex={0}
-            className={`${classes.chatButton} ${isCollapsed ? 'collapsed' : ''}`}
+            className={`${classes.chatButton} ${
+              isCollapsed ? 'collapsed' : ''
+            }`}
             onClick={handleChatNavigation}
             onMouseEnter={() => {
               if (course_name) {
@@ -583,7 +589,9 @@ export default function NavigationSidebar({
               aria-label="Back to Chat"
             />
             <span
-              className={`md:${isCollapsed ? 'hidden' : 'inline'} ${montserrat_paragraph.variable} font-montserratParagraph font-bold`}
+              className={`md:${isCollapsed ? 'hidden' : 'inline'} ${
+                montserrat_paragraph.variable
+              } font-montserratParagraph font-bold`}
             >
               Back to Chat
             </span>
@@ -599,7 +607,9 @@ export default function NavigationSidebar({
                 href={item.link}
                 prefetch={false}
                 data-active={activeLink === item.link}
-                className={`${classes.navLink} ${isCollapsed ? 'collapsed' : ''}`}
+                className={`${classes.navLink} ${
+                  isCollapsed ? 'collapsed' : ''
+                }`}
                 onMouseEnter={() => handleLinkHover(item.link)}
                 onClick={() => {
                   // Close sidebar on mobile after navigation
