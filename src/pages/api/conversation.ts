@@ -180,7 +180,12 @@ const formatDbTimestamp = (
   value: Date | string | null | undefined,
 ): string | undefined => {
   if (!value) return undefined
-  return value instanceof Date ? value.toISOString() : value
+  const date = value instanceof Date ? value : new Date(value)
+  const ms = date.getTime()
+  if (!Number.isFinite(ms)) {
+    return typeof value === 'string' ? value : undefined
+  }
+  return new Date(ms).toISOString()
 }
 
 export function convertDBToChatConversation(
@@ -843,24 +848,34 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         const count = parsedData?.total_count || 0
         const conversations = parsedData?.conversations || []
 
-        // `search_conversations_v3` may already include messages. Only fetch messages
-        // separately when they are missing to avoid redundant DB queries (and to keep
-        // tests/mocks simpler).
-        const conversationIdsMissingMessages = conversations
-          .filter(
-            (conv: any) =>
-              typeof conv?.id === 'string' && !Array.isArray(conv?.messages),
-          )
+        // `search_conversations_v3` may include embedded messages, but those payloads
+        // can be partial (e.g. missing `processed_content`), which drops agent events
+        // after rehydration. Fetch canonical DB messages when needed.
+        const conversationIdsNeedingMessageHydration = conversations
+          .filter((conv: any) => {
+            if (typeof conv?.id !== 'string') return false
+            if (!Array.isArray(conv?.messages)) return true
+            if (conv.messages.length === 0) return false
+            return conv.messages.some(
+              (msg: any) =>
+                !msg ||
+                typeof msg !== 'object' ||
+                !('processed_content' in msg),
+            )
+          })
           .map((conv: any) => conv.id as string)
 
         let messagesByConversation = new Map<string, DBMessage[]>()
 
-        if (conversationIdsMissingMessages.length > 0) {
+        if (conversationIdsNeedingMessageHydration.length > 0) {
           const dbMessagesForConversations = await db
             .select()
             .from(messages)
             .where(
-              inArray(messages.conversation_id, conversationIdsMissingMessages),
+              inArray(
+                messages.conversation_id,
+                conversationIdsNeedingMessageHydration,
+              ),
             )
 
           const safeMessages = Array.isArray(dbMessagesForConversations)
@@ -881,11 +896,15 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
         const fetchedConversations = conversations.map((conv: any) => {
           const convId = conv?.id
-          const convMessages = Array.isArray(conv?.messages)
-            ? (conv.messages as DBMessage[])
-            : typeof convId === 'string'
-              ? (messagesByConversation.get(convId) ?? [])
-              : []
+          const hydratedMessages =
+            typeof convId === 'string'
+              ? messagesByConversation.get(convId)
+              : undefined
+          const convMessages =
+            hydratedMessages ??
+            (Array.isArray(conv?.messages)
+              ? (conv.messages as DBMessage[])
+              : [])
 
           return convertDBToChatConversation(conv, convMessages)
         })

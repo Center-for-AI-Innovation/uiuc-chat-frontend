@@ -19,7 +19,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       .from(messages)
       .where(eq(messages.id, message.id))
       .limit(1)
-    const existing = existingMessage?.[0] ?? null
+    const existingRecord = existingMessage[0]
 
     // Get the latest message's timestamp for this conversation
     const latestMessage = await db
@@ -30,15 +30,17 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       .limit(1)
 
     const dbMessage = convertChatToDBMessage(message, conversationId)
+    // Normalize `undefined` to `null` so downstream DB logic and tests can rely on explicit nulls.
+    // (Some callers/mocks omit `updated_at` entirely.)
+    if (dbMessage.updated_at === undefined) {
+      dbMessage.updated_at = null
+    }
 
     // If this is a new message, ensure its timestamp is after the latest message
-    if (!existing && latestMessage?.[0]?.created_at) {
+    if (!existingRecord && latestMessage?.[0]?.created_at) {
       const latestTime = new Date(latestMessage[0].created_at).getTime()
       dbMessage.created_at = new Date(latestTime + 1000)
       dbMessage.updated_at = new Date(dbMessage.created_at)
-    }
-    if (typeof dbMessage.updated_at === 'undefined') {
-      dbMessage.updated_at = null as unknown as NewMessages['updated_at']
     }
 
     // If message exists, update it. If not, insert it.
@@ -61,14 +63,14 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     // If this was an edit of an existing message, we need to handle following messages
-    if (existing) {
+    if (existingRecord) {
       const followingMessages = await db
         .select({ id: messages.id })
         .from(messages)
         .where(
           and(
             eq(messages.conversation_id, conversationId),
-            gt(messages.created_at, existing.created_at ?? new Date(0)),
+            gt(messages.created_at, existingRecord?.created_at ?? new Date(0)),
           ),
         )
         .orderBy(asc(messages.created_at))
