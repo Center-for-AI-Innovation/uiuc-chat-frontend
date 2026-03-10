@@ -45,7 +45,9 @@ const CredentialInput = ({
   return (
     <div style={{ position: 'relative', width: '100%', marginBottom: '1rem' }}>
       <Input.Wrapper
-        id="credential-input"
+        id={`credential-input-${placeholder
+          .toLowerCase()
+          .replace(/\s+/g, '-')}`}
         label={placeholder}
         styles={{
           label: { color: 'var(--dashboard-foreground-faded)' },

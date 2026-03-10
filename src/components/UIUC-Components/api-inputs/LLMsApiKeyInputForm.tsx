@@ -91,7 +91,7 @@ export const APIKeyInput = ({
   return (
     <div style={{ position: 'relative', width: '100%' }}>
       <Input.Wrapper
-        id="API-key-input"
+        id={`API-key-input-${placeholder.toLowerCase().replace(/\s+/g, '-')}`}
         label={placeholder}
         styles={{
           label: { color: 'var(--dashboard-foreground-faded)' },
