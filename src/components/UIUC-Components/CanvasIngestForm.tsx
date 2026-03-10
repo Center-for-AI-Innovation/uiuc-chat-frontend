@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../Dialog'
-import { Label } from '@radix-ui/react-label'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { type FileUpload } from './UploadNotification'
@@ -312,8 +311,17 @@ export default function CanvasIngestForm({
             </div>
 
             <div className="mt-4">
-              <Label className="block ">Select Content to Import</Label>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <p
+                id="content-import-label"
+                className="block text-sm font-medium"
+              >
+                Select Content to Import
+              </p>
+              <div
+                role="group"
+                aria-labelledby="content-import-label"
+                className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3"
+              >
                 {[
                   'Files',
                   'Pages',
