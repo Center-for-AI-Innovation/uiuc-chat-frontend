@@ -4,7 +4,6 @@ import {
   Card,
   Flex,
   Group,
-  Input,
   Select,
   Stack,
   Text,
@@ -90,54 +89,48 @@ export const APIKeyInput = ({
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
-      <Input.Wrapper
-        id={`API-key-input-${placeholder.toLowerCase().replace(/\s+/g, '-')}`}
-        label={placeholder}
-        styles={{
-          label: { color: 'var(--dashboard-foreground-faded)' },
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <TextInput
-            type="password"
-            placeholder={placeholder}
-            aria-label={placeholder}
-            value={field.state.value}
-            onChange={(e) => {
-              field.handleChange(e.target.value)
-            }}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                field.form.handleSubmit()
-              }
-            }}
-            style={{ flex: 1 }}
-            styles={{
-              input: {
-                color: 'var(--foreground)',
-                backgroundColor: 'var(--background)',
-                padding: '8px',
-                borderRadius: '4px',
-              },
-            }}
-          />
-          <ActionIcon
-            aria-label="Clear"
-            size="xs"
-            onClick={(e) => {
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <TextInput
+          id={`API-key-input-${placeholder.toLowerCase().replace(/\s+/g, '-')}`}
+          label={placeholder}
+          type="password"
+          placeholder={placeholder}
+          value={field.state.value}
+          onChange={(e) => {
+            field.handleChange(e.target.value)
+          }}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
               e.preventDefault()
-              field.handleChange('')
               field.form.handleSubmit()
-            }}
-            type="submit"
-            className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] hover:text-[white]"
-            style={{ marginLeft: '8px' }}
-          >
-            <IconX size={12} />
-          </ActionIcon>
-        </div>
-      </Input.Wrapper>
+            }
+          }}
+          style={{ flex: 1 }}
+          styles={{
+            label: { color: 'var(--dashboard-foreground-faded)' },
+            input: {
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--background)',
+              padding: '8px',
+              borderRadius: '4px',
+            },
+          }}
+        />
+        <ActionIcon
+          aria-label="Clear"
+          size="xs"
+          onClick={(e) => {
+            e.preventDefault()
+            field.handleChange('')
+            field.form.handleSubmit()
+          }}
+          type="submit"
+          className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] hover:text-[white]"
+          style={{ marginLeft: '8px' }}
+        >
+          <IconX size={12} />
+        </ActionIcon>
+      </div>
       <FieldInfo field={field} />
       <div className="pt-1" />
       <div
