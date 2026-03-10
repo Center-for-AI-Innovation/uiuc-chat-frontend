@@ -37,7 +37,8 @@ function EmailInput({
       <input
         type="text"
         placeholder="Add people by email"
-        className={`${montserrat_paragraph.variable} w-full rounded-md border border-[--foreground-faded] bg-[--modal] px-10 py-2.5 font-montserratParagraph text-sm text-[--modal-text] placeholder-[--foreground-faded] transition-all duration-300 focus:border-[--illinois-orange] focus:outline-none`}
+        aria-label="Add people by email"
+        className={`${montserrat_paragraph.variable} w-full rounded-md border border-[--foreground-faded] bg-[--modal] px-10 py-2.5 font-montserratParagraph text-sm text-[--modal-text] placeholder-[--foreground-faded] transition-all duration-300 focus:border-[--illinois-orange]`}
         value={value}
         onKeyDown={onKeyDown}
         onChange={onChange}
