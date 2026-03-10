@@ -331,6 +331,7 @@ export function LandingPageHeader({
                     <IconClipboardText
                       size={18}
                       strokeWidth={2}
+                      aria-hidden="true"
                       style={{
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
@@ -357,6 +358,7 @@ export function LandingPageHeader({
                     <IconNews
                       size={18}
                       strokeWidth={2}
+                      aria-hidden="true"
                       style={{
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
@@ -378,6 +380,7 @@ export function LandingPageHeader({
                     <IconHome
                       size={18}
                       strokeWidth={2}
+                      aria-hidden="true"
                       style={{
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
@@ -399,6 +402,7 @@ export function LandingPageHeader({
                     <IconSparkles
                       size={18}
                       strokeWidth={2}
+                      aria-hidden="true"
                       style={{
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
@@ -431,7 +435,9 @@ export function LandingPageHeader({
               tabIndex={0}
               aria-label="Toggle Menu"
               aria-expanded={isMenuOpen}
-              className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
+              className={`${classes.menuIcon} order-2 ${
+                !showDocsInNav ? 'highlight-button' : ''
+              }`}
               onClick={(e) => toggleMenu(e)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -441,7 +447,12 @@ export function LandingPageHeader({
               }}
               ref={menuButtonRef as React.RefObject<HTMLDivElement>}
             >
-              <Menu2 size={24} strokeWidth={2} color="var(--illinois-orange)" />
+              <Menu2
+                size={24}
+                strokeWidth={2}
+                color="var(--illinois-orange)"
+                aria-hidden="true"
+              />
             </div>
           )}
         </div>
@@ -456,7 +467,9 @@ export function LandingPageHeader({
             }}
           >
             <div
-              className={`dropdown-menu ${menuVisible ? 'menu-visible' : 'menu-hidden'}`}
+              className={`dropdown-menu ${
+                menuVisible ? 'menu-visible' : 'menu-hidden'
+              }`}
             >
               {/* Menu pointer triangle */}
               <div className="menu-pointer"></div>
@@ -477,6 +490,7 @@ export function LandingPageHeader({
                         <IconClipboardText
                           size={18}
                           strokeWidth={2}
+                          aria-hidden="true"
                           style={{
                             marginRight: '8px',
                             color: 'var(--illinois-orange)',
@@ -532,6 +546,7 @@ export function LandingPageHeader({
                         <IconHome
                           size={18}
                           strokeWidth={2}
+                          aria-hidden="true"
                           style={{
                             marginRight: '8px',
                             color: 'var(--illinois-orange)',
@@ -558,6 +573,7 @@ export function LandingPageHeader({
                         <IconSparkles
                           size={18}
                           strokeWidth={2}
+                          aria-hidden="true"
                           style={{
                             marginRight: '8px',
                             color: 'var(--illinois-orange)',
