@@ -375,10 +375,24 @@ export async function fetchContextsServer(
     new Promise<void>((resolve) => setTimeout(resolve, ms))
   const delaysMs = [0, 500, 1000, 2000]
   let lastError: string | null = null
+  const isAbortError = (error: unknown) => {
+    return (
+      signal?.aborted === true ||
+      (error instanceof Error && error.name === 'AbortError')
+    )
+  }
 
   for (let attempt = 0; attempt < delaysMs.length; attempt++) {
     try {
+      if (signal?.aborted) {
+        return []
+      }
+
       if (delaysMs[attempt]) await sleep(delaysMs[attempt]!)
+      if (signal?.aborted) {
+        return []
+      }
+
       const contexts = await fetchContextsFromBackend(
         courseName,
         searchQuery,
@@ -404,6 +418,10 @@ export async function fetchContextsServer(
 
       return contexts
     } catch (error) {
+      if (isAbortError(error)) {
+        return []
+      }
+
       lastError = error instanceof Error ? error.message : 'Unknown error'
       if (attempt < delaysMs.length - 1) {
         console.warn(
