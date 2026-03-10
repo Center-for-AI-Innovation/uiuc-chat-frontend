@@ -111,6 +111,11 @@
     var(--foreground),
     var(--background) 25%
   );
+  --foreground-subtle: color-mix(
+    in srgb,
+    var(--foreground),
+    var(--background) 15%
+  );
 
   --background-dark: color-mix(in srgb, var(--background), black 25%);
   --background-faded: color-mix(

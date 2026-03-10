@@ -241,7 +241,7 @@ const Home: NextPage = () => {
                 </h1>
               </div>
 
-              <div className="mb-8 mt-4 text-sm text-[--foreground-faded]">
+              <div className="mb-8 mt-4 text-sm text-[--foreground-subtle]">
                 Deep search your documents, build an AI-teaching assistant,
                 accelerate your literature review,{' '}
                 <span className="whitespace-nowrap">and get creative.</span>
@@ -270,7 +270,7 @@ const Home: NextPage = () => {
                 {/* p-10                style={{ background: 'var(--illinois-orange-gradient)' }} */}
                 <div className="">
                   <img
-                    alt="Upload Materials Banner"
+                    alt="Screenshot of the Illinois Chat interface showing document upload and AI chat"
                     src="/media/banner_upload_materials.png"
                     className="w-full max-w-full rounded-xl"
                   ></img>
@@ -279,12 +279,12 @@ const Home: NextPage = () => {
                 <div className="icons_scrolling_container overflow-hidden">
                   <div className="icons_scrolling">
                     <img
-                      alt="Banner Icons"
+                      alt=""
                       src="/media/banner_icons.png"
                       className="max-w-full"
                     ></img>
                     <img
-                      alt="Banner Icons"
+                      alt=""
                       src="/media/banner_icons.png"
                       className="max-w-full"
                     ></img>
@@ -397,7 +397,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
-                  alt="Banner Step 1"
+                  alt="Drag-and-drop file upload interface with connections to Canvas, GitHub, and Notion"
                   src="/media/banner_step_001.png"
                   className="w-full max-w-full rounded-xl"
                 ></img>
@@ -487,7 +487,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
-                  alt="Banner Step 2"
+                  alt="Dashboard for selecting AI models, customizing prompts, and configuring tools"
                   src="/media/banner_step_002.png"
                   className="w-full max-w-full rounded-xl"
                 ></img>
@@ -573,7 +573,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
-                  alt="Banner Step 3"
+                  alt="Sharing settings panel showing options to publish and collaborate on chatbots"
                   src="/media/banner_step_003.png"
                   className="w-full max-w-full rounded-xl"
                 ></img>
