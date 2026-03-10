@@ -50,7 +50,6 @@ import ModelUsageChart from './ModelUsageChart'
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
     fontFamily: 'var(--font-montserratHeading)',
-    outline: 'none',
     color: 'var(--dashboard-button-foreground)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -963,6 +962,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             type="range"
                             size="sm"
                             w={200}
+                            aria-label="Custom date range picker"
                             value={dateRange}
                             onChange={setDateRange}
                             // TODO fix me type error complaining placeholder doesn't exist for mantine/date v6
