@@ -117,7 +117,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
           <IconMessage size={16} className="text-[--sidebar]" />
           <input
             aria-label="Rename Chat Input"
-            className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar] outline-none"
+            className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar]"
             type="text"
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
