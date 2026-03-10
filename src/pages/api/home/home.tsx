@@ -701,26 +701,17 @@ const Home = ({
           <link rel="icon" href="/favicon.ico" />
         </Head>
         {selectedConversation && (
-          <main
-            id="main-content"
-            tabIndex={-1}
-            className={`flex h-screen w-screen flex-col pt-20  text-sm text-white dark:text-white`}
+          <div
+            className={`flex h-screen w-screen flex-col pt-20 text-sm text-white dark:text-white`}
           >
-            <h1 className="sr-only">Illinois Chat</h1>
             <Navbar isPlain={false} />
 
-            <div className="flex h-full w-full overflow-y-auto sm:pt-0">
-              {/* {isDragging &&
-                VisionCapableModels.has(
-                  selectedConversation?.model.id as any,
-                ) && (
-                  <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
-                    <GradientIconPhoto />
-                    <span className="text-3xl font-extrabold text-[--foreground]">
-                      Drop your image here!
-                    </span>
-                  </div>
-                )} */}
+            <main
+              id="main-content"
+              tabIndex={-1}
+              className="flex h-full w-full overflow-y-auto sm:pt-0"
+            >
+              <h1 className="sr-only">Illinois Chat</h1>
 
               <Chatbar
                 current_email={current_email}
@@ -737,8 +728,8 @@ const Home = ({
                   documentExists={document_exists}
                 />
               )}
-            </div>
-          </main>
+            </main>
+          </div>
         )}
       </HomeContext.Provider>
     </div>
