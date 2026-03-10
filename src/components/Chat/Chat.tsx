@@ -66,6 +66,7 @@ import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useAuth } from 'react-oidc-context'
 import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
+import { saveConversationToLocalStorage } from '~/hooks/__internal__/conversation'
 import { useLogConversation } from '@/hooks/queries/useLogConversation'
 import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
@@ -732,8 +733,6 @@ export const Chat = memo(
                   mode: 'chat',
                 }
 
-                console.log('queryRewriteBody:', queryRewriteBody)
-
                 if (!queryRewriteBody.model || !queryRewriteBody.model.id) {
                   queryRewriteBody.model = selectedConversation.model
                 }
@@ -952,7 +951,6 @@ export const Chat = memo(
                 return
               }
 
-              console.log('[Agent Mode] Using SERVER-SIDE agent pipeline')
               await runServerAgentMode({
                 abortAgent,
                 conversations,
@@ -2079,59 +2077,10 @@ export const Chat = memo(
         }
 
         try {
-          // Update localStorage
-          try {
-            localStorage.setItem(
-              'selectedConversation',
-              JSON.stringify(updatedConversation),
-            )
-          } catch (storageError) {
-            // Handle localStorage quota exceeded error
-            if (
-              storageError instanceof DOMException &&
-              (storageError.name === 'QuotaExceededError' ||
-                storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-                storageError.code === 22 ||
-                storageError.code === 1014)
-            ) {
-              console.warn(
-                'localStorage quota exceeded in handleFeedback, saving minimal conversation data instead',
-              )
-
-              // Create a minimal version of the conversation with just essential data
-              const minimalConversation = {
-                id: updatedConversation.id,
-                name: updatedConversation.name,
-                model: updatedConversation.model,
-                temperature: updatedConversation.temperature,
-                folderId: updatedConversation.folderId,
-                userEmail: updatedConversation.userEmail,
-                projectName: updatedConversation.projectName,
-                createdAt: updatedConversation.createdAt,
-                updatedAt: updatedConversation.updatedAt,
-              }
-
-              try {
-                // Try to save the minimal version
-                localStorage.setItem(
-                  'selectedConversation',
-                  JSON.stringify(minimalConversation),
-                )
-              } catch (minimalError) {
-                // If even minimal version fails, just log the error
-                console.error(
-                  'Failed to save even minimal conversation data to localStorage',
-                  minimalError,
-                )
-              }
-            } else {
-              // Some other error occurred
-              console.error(
-                'Error saving conversation to localStorage:',
-                storageError,
-              )
-            }
-          }
+          saveConversationToLocalStorage(updatedConversation, {
+            allowEmptyMessages: true,
+            logContext: 'handleFeedback',
+          })
 
           // Update the conversation using handleUpdateConversation
           handleFeedbackUpdate(updatedConversation, {

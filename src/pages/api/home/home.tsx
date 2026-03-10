@@ -32,6 +32,7 @@ import { useCreateFolder } from '~/hooks/queries/useCreateFolder'
 import { useDeleteFolder } from '~/hooks/queries/useDeleteFolder'
 import { useFetchFolders } from '~/hooks/queries/useFetchFolders'
 import { useUpdateFolder } from '~/hooks/queries/useUpdateFolder'
+import { saveConversationToLocalStorage } from '~/hooks/__internal__/conversation'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
@@ -283,54 +284,10 @@ const Home = ({
       field: 'selectedConversation',
       value: conversation,
     })
-
-    try {
-      localStorage.setItem('selectedConversation', JSON.stringify(conversation))
-    } catch (error) {
-      // Handle localStorage quota exceeded error
-      if (
-        error instanceof DOMException &&
-        (error.name === 'QuotaExceededError' ||
-          error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-          error.code === 22 ||
-          error.code === 1014)
-      ) {
-        console.warn(
-          'localStorage quota exceeded in handleSelectConversation, saving minimal conversation data instead',
-        )
-
-        // Create a minimal version of the conversation with just essential data
-        const minimalConversation = {
-          id: conversation.id,
-          name: conversation.name,
-          model: conversation.model,
-          temperature: conversation.temperature,
-          folderId: conversation.folderId,
-          userEmail: conversation.userEmail,
-          projectName: conversation.projectName,
-          createdAt: conversation.createdAt,
-          updatedAt: conversation.updatedAt,
-          agentModeEnabled: conversation.agentModeEnabled,
-        }
-
-        try {
-          // Try to save the minimal version
-          localStorage.setItem(
-            'selectedConversation',
-            JSON.stringify(minimalConversation),
-          )
-        } catch (minimalError) {
-          // If even minimal version fails, just log the error
-          console.error(
-            'Failed to save even minimal conversation data to localStorage',
-            minimalError,
-          )
-        }
-      } else {
-        // Some other error occurred
-        console.error('Error saving conversation to localStorage:', error)
-      }
-    }
+    saveConversationToLocalStorage(conversation, {
+      allowEmptyMessages: true,
+      logContext: 'handleSelectConversation',
+    })
     // await saveConversationToServer(conversation)
   }
 
@@ -379,16 +336,10 @@ const Home = ({
     dispatch({ field: 'selectedConversation', value: newConversation })
     dispatch({ field: 'loading', value: false })
 
-    try {
-      localStorage.setItem(
-        'selectedConversation',
-        JSON.stringify(newConversation),
-      )
-    } catch (error) {
-      // Since this is a new conversation, it should be small enough to fit in localStorage
-      // But we'll handle the error just in case
-      console.error('Error saving new conversation to localStorage:', error)
-    }
+    saveConversationToLocalStorage(newConversation, {
+      allowEmptyMessages: true,
+      logContext: 'handleNewConversation',
+    })
   }
 
   const handleUpdateConversation = (
@@ -400,58 +351,10 @@ const Home = ({
       [data.key]: data.value,
     }
 
-    // Save to localStorage with error handling
-    try {
-      localStorage.setItem(
-        'selectedConversation',
-        JSON.stringify(updatedConversation),
-      )
-    } catch (error) {
-      // Handle localStorage quota exceeded error
-      if (
-        error instanceof DOMException &&
-        (error.name === 'QuotaExceededError' ||
-          error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-          error.code === 22 ||
-          error.code === 1014)
-      ) {
-        console.warn(
-          'localStorage quota exceeded, saving minimal conversation data instead',
-        )
-
-        // Create a minimal version of the conversation with just essential data
-        const minimalConversation = {
-          id: updatedConversation.id,
-          name: updatedConversation.name,
-          model: updatedConversation.model,
-          temperature: updatedConversation.temperature,
-          folderId: updatedConversation.folderId,
-          userEmail: updatedConversation.userEmail,
-          projectName: updatedConversation.projectName,
-          createdAt: updatedConversation.createdAt,
-          updatedAt: updatedConversation.updatedAt,
-          agentModeEnabled: updatedConversation.agentModeEnabled,
-          // Don't include messages or contexts which are likely the largest parts
-        }
-
-        try {
-          // Try to save the minimal version
-          localStorage.setItem(
-            'selectedConversation',
-            JSON.stringify(minimalConversation),
-          )
-        } catch (minimalError) {
-          // If even minimal version fails, just log the error
-          console.error(
-            'Failed to save even minimal conversation data to localStorage',
-            minimalError,
-          )
-        }
-      } else {
-        // Some other error occurred
-        console.error('Error saving conversation to localStorage:', error)
-      }
-    }
+    saveConversationToLocalStorage(updatedConversation, {
+      allowEmptyMessages: true,
+      logContext: 'handleUpdateConversation',
+    })
 
     dispatch({ field: 'selectedConversation', value: updatedConversation })
 

@@ -300,8 +300,8 @@ describe('pages/api/home/home (shared Home component)', () => {
         folderId: null,
         userEmail: 'u@example.com',
         projectName: 'CS101',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: '2026-03-10T00:20:00.000Z',
+        updatedAt: '2026-03-10T00:28:25.124Z',
       }),
     )
 
