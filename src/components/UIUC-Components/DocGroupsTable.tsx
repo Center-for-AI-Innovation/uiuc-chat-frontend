@@ -139,6 +139,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
           }}
         >
           <Table
+            aria-label="Document groups"
             className="document_groups_table"
             style={{
               tableLayout: 'fixed',

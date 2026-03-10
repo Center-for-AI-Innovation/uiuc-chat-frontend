@@ -245,6 +245,7 @@ export const N8nWorkflowsTable = ({
       {/* dataTable styling options https://icflorescu.github.io/mantine-datatable/examples/overriding-the-default-styles/  */}
       <div className={`n8n_workflows_table ${widthClasses}`}>
         <DataTable
+          aria-label="n8n workflows"
           height={500}
           styles={{
             pagination: {
