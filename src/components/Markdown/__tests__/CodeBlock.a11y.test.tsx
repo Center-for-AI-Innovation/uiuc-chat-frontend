@@ -23,7 +23,7 @@ describe('CodeBlock - accessibility', () => {
     const header = container.querySelector('.flex.items-center.justify-between')
     expect(header).toBeTruthy()
     expect((header as HTMLElement).style.backgroundColor).toBe(
-      'rgb(232, 234, 237)',
+      'rgb(240, 241, 243)',
     )
   })
 

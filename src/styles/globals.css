@@ -982,7 +982,11 @@ a[data-footnote-backref] {
   background: 'white' !important;
 }
 
-.codeBlock pre:has(> code) {
+:root:not(.dark) .codeBlock pre:has(> code) {
+  background-color: transparent !important;
+}
+
+.dark .codeBlock pre:has(> code) {
   background-color: var(--dashboard-background-dark) !important;
 }
 
