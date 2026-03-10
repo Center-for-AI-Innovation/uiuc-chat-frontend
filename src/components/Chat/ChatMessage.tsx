@@ -1693,11 +1693,11 @@ export const ChatMessage = memo(
           className={`group md:px-6 ${
             message.role === 'assistant'
               ? 'bg-[--chat-background]'
-              : 'bg-[--chat-background-user] pt-4'
+              : 'bg-[--chat-background-user]'
           } max-w-[100%]`}
           style={{ overflowWrap: 'anywhere' }}
         >
-          <div className="relative flex w-full overflow-visible px-2 py-2 pt-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6  lg:mx-[10%]">
+          <div className="relative flex w-full overflow-visible px-2 py-3 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 lg:mx-[10%]">
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
@@ -1717,7 +1717,7 @@ export const ChatMessage = memo(
                       <textarea
                         aria-label="Edit message"
                         ref={textareaRef}
-                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
+                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary]"
                         value={messageContent}
                         onChange={handleInputChange}
                         onKeyDown={handlePressEnter}
@@ -1778,63 +1778,74 @@ export const ChatMessage = memo(
                                 }
                               })}
                               {/* File cards for all messages */}
-                              <div className="-m-1 flex w-full flex-wrap justify-start">
-                                {message.content
-                                  .filter((item) => item.type === 'file')
-                                  .map((content, index) => {
-                                    const fileName =
-                                      content.fileName || 'Unknown file'
-                                    const isPreviewable = isFilePreviewable(
-                                      fileName,
-                                      content.fileType,
-                                    )
-                                    return (
-                                      <div key={index} className="mb-2">
-                                        <FileCard
-                                          fileName={fileName}
-                                          fileType={content.fileType}
-                                          fileUrl={content.fileUrl}
-                                          isPreviewable={isPreviewable}
-                                          onClick={() =>
-                                            handleFileAction(
-                                              fileName,
-                                              content.fileUrl,
-                                              content.fileType,
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    )
-                                  })}
-                              </div>
-
-                              {/* Image previews for all messages */}
-                              <div className="-m-1 flex w-full flex-wrap justify-start">
-                                {message.content
-                                  .filter((item) => item.type === 'image_url')
-                                  .map((content, index) => {
-                                    // Try to get the processed URL from imageUrls state first
-                                    const imageUrlsArray = Array.from(imageUrls)
-                                    const processedUrl =
-                                      imageUrlsArray[index] ||
-                                      content.image_url?.url
-
-                                    return (
-                                      <div
-                                        key={index}
-                                        className={classes.imageContainerStyle}
-                                      >
-                                        <div className="overflow-hidden rounded-lg">
-                                          <ImagePreview
-                                            src={processedUrl as string}
-                                            alt="Chat message"
-                                            className={classes.imageStyle}
+                              {message.content.some(
+                                (item) => item.type === 'file',
+                              ) && (
+                                <div className="-m-1 flex w-full flex-wrap justify-start">
+                                  {message.content
+                                    .filter((item) => item.type === 'file')
+                                    .map((content, index) => {
+                                      const fileName =
+                                        content.fileName || 'Unknown file'
+                                      const isPreviewable = isFilePreviewable(
+                                        fileName,
+                                        content.fileType,
+                                      )
+                                      return (
+                                        <div key={index} className="mb-2">
+                                          <FileCard
+                                            fileName={fileName}
+                                            fileType={content.fileType}
+                                            fileUrl={content.fileUrl}
+                                            isPreviewable={isPreviewable}
+                                            onClick={() =>
+                                              handleFileAction(
+                                                fileName,
+                                                content.fileUrl,
+                                                content.fileType,
+                                              )
+                                            }
                                           />
                                         </div>
-                                      </div>
-                                    )
-                                  })}
-                              </div>
+                                      )
+                                    })}
+                                </div>
+                              )}
+
+                              {/* Image previews for all messages */}
+                              {message.content.some(
+                                (item) => item.type === 'image_url',
+                              ) && (
+                                <div className="-m-1 flex w-full flex-wrap justify-start">
+                                  {message.content
+                                    .filter((item) => item.type === 'image_url')
+                                    .map((content, index) => {
+                                      // Try to get the processed URL from imageUrls state first
+                                      const imageUrlsArray =
+                                        Array.from(imageUrls)
+                                      const processedUrl =
+                                        imageUrlsArray[index] ||
+                                        content.image_url?.url
+
+                                      return (
+                                        <div
+                                          key={index}
+                                          className={
+                                            classes.imageContainerStyle
+                                          }
+                                        >
+                                          <div className="overflow-hidden rounded-lg">
+                                            <ImagePreview
+                                              src={processedUrl as string}
+                                              alt="Chat message"
+                                              className={classes.imageStyle}
+                                            />
+                                          </div>
+                                        </div>
+                                      )
+                                    })}
+                                </div>
+                              )}
 
                               {/* Image description loading state for last message */}
                               {isImg2TextLoading &&
@@ -2250,15 +2261,14 @@ export const ChatMessage = memo(
                             <button
                               tabIndex={0}
                               aria-label="Edit Message"
-                              className={`text-[--foreground-faded] opacity-0 transition-opacity duration-200 hover:text-[--foreground] focus:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100
-                                ${
-                                  Array.isArray(message.content) &&
-                                  message.content.some(
-                                    (content) => content.type === 'image_url',
-                                  )
-                                    ? 'hidden'
-                                    : ''
-                                }`}
+                              className={`text-[--foreground-faded] hover:text-[--foreground] ${
+                                Array.isArray(message.content) &&
+                                message.content.some(
+                                  (content) => content.type === 'image_url',
+                                )
+                                  ? 'hidden'
+                                  : ''
+                              }`}
                               type="button"
                               onClick={toggleEditing}
                             >
