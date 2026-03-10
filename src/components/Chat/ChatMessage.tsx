@@ -226,7 +226,6 @@ const FilePreviewModal: React.FC<{
       messageIsStreaming,
       isImg2TextLoading,
       isRouting,
-      isRunningTool,
       isRetrievalLoading,
       isQueryRewriting,
       loading,
@@ -472,7 +471,6 @@ export const ChatMessage = memo(
         messageIsStreaming,
         isImg2TextLoading,
         isRouting,
-        isRunningTool,
         isRetrievalLoading,
         isQueryRewriting,
         loading,
@@ -495,14 +493,16 @@ export const ChatMessage = memo(
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-    // SET TIMER for message writing (from gpt-4)
-    const [timerVisible, setTimerVisible] = useState(false)
     const { classes } = useStyles() // for Accordion
 
     const agentEvents = Array.isArray(message.agentEvents)
       ? message.agentEvents
       : []
     const hasAgentEvents = agentEvents.length > 0
+    const timerVisible =
+      message.role === 'assistant' &&
+      messageIsStreaming &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
 
     // Remove the local state for sources sidebar and use only context
     const isSourcesSidebarOpen = activeSidebarMessageId === message.id
@@ -583,26 +583,6 @@ export const ChatMessage = memo(
       return activeSidebarMessageId !== null
     }
 
-    // Cleanup effect for modal
-    useEffect(() => {
-      return () => {
-        setIsFeedbackModalOpen(false)
-      }
-    }, [message.id])
-
-    useEffect(() => {
-      if (message.role === 'assistant') {
-        if (
-          messageIsStreaming &&
-          messageIndex == (selectedConversation?.messages.length ?? 0) - 1
-        ) {
-          setTimerVisible(true)
-        } else {
-          setTimerVisible(false)
-        }
-      }
-    }, [message.role, messageIsStreaming, messageIndex, selectedConversation])
-
     useEffect(() => {
       let isActive = true
 
@@ -655,7 +635,7 @@ export const ChatMessage = memo(
       return () => {
         isActive = false
       }
-    }, [courseName, isRunningTool, message.content])
+    }, [courseName, message.content])
 
     const toggleEditing = () => {
       if (!isEditing) {
