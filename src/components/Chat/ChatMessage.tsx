@@ -9,7 +9,14 @@ import React, {
   createContext,
   useContext as useReactContext,
 } from 'react'
-import { Text, createStyles, Badge, Tooltip, Modal } from '@mantine/core'
+import {
+  Text,
+  createStyles,
+  Badge,
+  Tooltip,
+  Modal,
+  Button,
+} from '@mantine/core'
 import {
   IconCheck,
   IconEdit,
@@ -19,6 +26,8 @@ import {
   IconFileTypePdf,
   IconFileTypeDocx,
   IconFileTypeTxt,
+  IconFileTypeXls,
+  IconFileTypePpt,
   IconFile,
   IconEye,
 } from '@tabler/icons-react'
@@ -217,7 +226,6 @@ const FilePreviewModal: React.FC<{
       messageIsStreaming,
       isImg2TextLoading,
       isRouting,
-      isRunningTool,
       isRetrievalLoading,
       isQueryRewriting,
       loading,
@@ -463,7 +471,6 @@ export const ChatMessage = memo(
         messageIsStreaming,
         isImg2TextLoading,
         isRouting,
-        isRunningTool,
         isRetrievalLoading,
         isQueryRewriting,
         loading,
@@ -486,14 +493,16 @@ export const ChatMessage = memo(
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-    // SET TIMER for message writing (from gpt-4)
-    const [timerVisible, setTimerVisible] = useState(false)
     const { classes } = useStyles() // for Accordion
 
     const agentEvents = Array.isArray(message.agentEvents)
       ? message.agentEvents
       : []
     const hasAgentEvents = agentEvents.length > 0
+    const timerVisible =
+      message.role === 'assistant' &&
+      messageIsStreaming &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
 
     // Remove the local state for sources sidebar and use only context
     const isSourcesSidebarOpen = activeSidebarMessageId === message.id
@@ -574,102 +583,59 @@ export const ChatMessage = memo(
       return activeSidebarMessageId !== null
     }
 
-    // Cleanup effect for modal
     useEffect(() => {
-      return () => {
-        setIsFeedbackModalOpen(false)
-      }
-    }, [message.id])
+      let isActive = true
 
-    useEffect(() => {
-      if (message.role === 'assistant') {
-        if (
-          messageIsStreaming &&
-          messageIndex == (selectedConversation?.messages.length ?? 0) - 1
-        ) {
-          setTimerVisible(true)
-        } else {
-          setTimerVisible(false)
+      const fetchUrls = async () => {
+        if (!Array.isArray(message.content)) {
+          return
         }
-      }
-    }, [message.role, messageIsStreaming, messageIndex, selectedConversation])
 
-    function deepEqual(a: any, b: any) {
-      if (a === b) {
-        return true
-      }
+        const nextUrls = await Promise.all(
+          message.content.map(async (content) => {
+            if (content.type !== 'image_url' || !content.image_url) {
+              return null
+            }
 
-      if (
-        typeof a !== 'object' ||
-        a === null ||
-        typeof b !== 'object' ||
-        b === null
-      ) {
-        return false
-      }
+            const imageUrl = content.image_url.url
+            const isValidUrl = await checkIfUrlIsValid(imageUrl)
+            if (isValidUrl) {
+              return imageUrl
+            }
 
-      const keysA = Object.keys(a),
-        keysB = Object.keys(b)
+            const path = extractPathFromUrl(imageUrl)
+            return getPresignedUrl(path, courseName)
+          }),
+        )
 
-      if (keysA.length !== keysB.length) {
-        return false
-      }
-
-      for (const key of keysA) {
-        if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
-          return false
+        if (!isActive) {
+          return
         }
-      }
 
-      return true
-    }
+        const resolvedUrls = nextUrls.filter((url): url is string => {
+          return Boolean(url)
+        })
 
-    useEffect(() => {
-      const fetchUrl = async () => {
-        let isValid = false
-        if (Array.isArray(message.content)) {
-          const updatedContent = await Promise.all(
-            message.content.map(async (content) => {
-              if (content.type === 'image_url' && content.image_url) {
-                isValid = await checkIfUrlIsValid(content.image_url.url)
-                if (isValid) {
-                  setImageUrls(
-                    (prevUrls) =>
-                      new Set([...prevUrls, content.image_url?.url as string]),
-                  )
-                  return content
-                } else {
-                  const path = extractPathFromUrl(content.image_url.url)
-                  const presignedUrl = await getPresignedUrl(path, courseName)
-                  setImageUrls(
-                    (prevUrls) => new Set([...prevUrls, presignedUrl]),
-                  )
-                  return { ...content, image_url: { url: presignedUrl } }
-                }
-              }
-              return content
-            }),
-          )
-          if (
-            !isValid &&
-            // onImageUrlsUpdate && // Commented out image upload functionality
-            !deepEqual(updatedContent, message.content)
-          ) {
-            // onImageUrlsUpdate( // Commented out image upload functionality
-            //   { ...message, content: updatedContent }, // Commented out image upload functionality
-            //   messageIndex, // Commented out image upload functionality
-            // ) // Commented out image upload functionality
-          }
+        if (resolvedUrls.length === 0) {
+          return
         }
+
+        setImageUrls((prevUrls) => {
+          return new Set([...prevUrls, ...resolvedUrls])
+        })
       }
-      // Call fetchUrl for all messages that contain images
+
       if (
         Array.isArray(message.content) &&
         message.content.some((content) => content.type === 'image_url')
       ) {
-        fetchUrl()
+        void fetchUrls()
       }
-    }, [message.content, messageIndex, isRunningTool])
+
+      return () => {
+        isActive = false
+      }
+    }, [courseName, message.content])
 
     const toggleEditing = () => {
       if (!isEditing) {
@@ -1673,6 +1639,17 @@ export const ChatMessage = memo(
       loading &&
       messageIndex === (selectedConversation?.messages.length ?? 0) - 1
 
+    const hasFinalResponseEvent = agentEvents.some(
+      (event) => event.type === 'final_response',
+    )
+
+    const isCurrentAgentRunMessage =
+      hasAgentEvents &&
+      !hasFinalResponseEvent &&
+      message.role === 'user' &&
+      messageIsStreaming &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
     const shouldShowSources =
       condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
 
@@ -1704,7 +1681,6 @@ export const ChatMessage = memo(
                   {isEditing ? (
                     <div className="flex w-full flex-col">
                       <textarea
-                        aria-label="Edit message"
                         ref={textareaRef}
                         className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
                         value={messageContent}
@@ -1882,7 +1858,10 @@ export const ChatMessage = memo(
                         )}
                         <div className="mt-4 flex w-full flex-col items-start space-y-3">
                           {hasAgentEvents ? (
-                            <AgentExecutionTimeline events={agentEvents} />
+                            <AgentExecutionTimeline
+                              events={agentEvents}
+                              isRunning={isCurrentAgentRunMessage}
+                            />
                           ) : (
                             <>
                               {/* Query rewrite loading state - only show for current message */}
@@ -1933,7 +1912,9 @@ export const ChatMessage = memo(
                                     title="Retrieved documents"
                                     isLoading={false}
                                     error={false}
-                                    content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                                    content={`Found ${getContextsLength(
+                                      message.contexts,
+                                    )} document chunks.`}
                                   />
                                 )}
 
@@ -1951,7 +1932,9 @@ export const ChatMessage = memo(
                                     title="Retrieving documents"
                                     isLoading={isRetrievalLoading}
                                     error={false}
-                                    content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                                    content={`Found ${getContextsLength(
+                                      message.contexts,
+                                    )} document chunks.`}
                                   />
                                 )}
 
@@ -2163,11 +2146,14 @@ export const ChatMessage = memo(
                                 </>
                               )}
 
+                              {/* Only show "Generating final response" for NON-agent mode.
+                                  Agent mode shows status via AgentExecutionTimeline instead. */}
                               {!isRouting &&
                                 !isRetrievalLoading &&
                                 !isImg2TextLoading &&
                                 !isQueryRewriting &&
                                 loading &&
+                                !selectedConversation?.agentModeEnabled && // Don't show for agent mode
                                 (messageIndex ===
                                   (selectedConversation?.messages.length ?? 0) -
                                     1 ||
@@ -2215,11 +2201,17 @@ export const ChatMessage = memo(
                             }}
                           >
                             <button
-                              tabIndex={0}
-                              aria-label="Edit Message"
-                              className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
-                                ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
                               type="button"
+                              aria-label="Edit message"
+                              className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
+                                ${
+                                  Array.isArray(message.content) &&
+                                  message.content.some(
+                                    (content) => content.type === 'image_url',
+                                  )
+                                    ? 'hidden'
+                                    : ''
+                                }`}
                               onClick={toggleEditing}
                             >
                               <IconEdit
@@ -2244,15 +2236,6 @@ export const ChatMessage = memo(
                     {shouldShowSources && (
                       <div className="relative z-0 mb-1 flex justify-start">
                         <button
-                          tabIndex={0}
-                          aria-label={
-                            'Open citations for ' +
-                            getContextsLength(message.contexts) +
-                            ' Source' +
-                            (getContextsLength(message.contexts) == 1
-                              ? ''
-                              : 's')
-                          }
                           className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
                           onClick={() => handleSourcesSidebarToggle(true)}
                         >
@@ -2276,7 +2259,9 @@ export const ChatMessage = memo(
                                     style={{
                                       marginLeft: index > 0 ? '-0.75rem' : '0',
                                       zIndex: index,
-                                      transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                                      transform: `rotate(${
+                                        index % 2 === 0 ? '-1deg' : '1deg'
+                                      })`,
                                     }}
                                   >
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>

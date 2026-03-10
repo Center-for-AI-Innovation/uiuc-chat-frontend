@@ -422,20 +422,13 @@ describe('conversation utils', () => {
   it('saveConversationToLocalStorage logs unexpected errors in the outer try/catch', () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const messages: any = {
-      length: 1,
-      0: {
-        id: 'm1',
-        role: 'user',
-        content: 'hi',
-        feedback: { isPositive: true },
-      },
-      map: () => {
+    const conversation = makeConversation() as Conversation
+    Object.defineProperty(conversation, 'messages', {
+      get() {
         throw new Error('boom')
       },
-    }
+    })
 
-    const conversation = makeConversation({ messages } as any)
     expect(saveConversationToLocalStorage(conversation)).toBe(false)
     expect(errSpy).toHaveBeenCalled()
   })
@@ -576,6 +569,34 @@ describe('conversation utils', () => {
       JSON.parse(localStorage.getItem('selectedConversation') || '{}')
         .messages[0].id,
     ).toBe('a')
+  })
+
+  it('fetchConversationHistory writes the server timestamp format back to selectedConversation', async () => {
+    localStorage.setItem('selectedConversation', JSON.stringify({ id: 'c1' }))
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          conversations: [
+            makeConversation({
+              id: 'c1',
+              createdAt: '2026-03-09T17:20:00.000-07:00',
+              updatedAt: '2026-03-09T17:28:25.124-07:00',
+            }),
+          ],
+          nextCursor: null,
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    )
+
+    await fetchConversationHistory('', 'CS101', 0)
+
+    const saved = JSON.parse(
+      localStorage.getItem('selectedConversation') || '{}',
+    )
+    expect(saved.createdAt).toBe('2026-03-09T17:20:00.000-07:00')
+    expect(saved.updatedAt).toBe('2026-03-09T17:28:25.124-07:00')
   })
 
   it('fetchConversationHistory returns empty response when server returns non-ok', async () => {
