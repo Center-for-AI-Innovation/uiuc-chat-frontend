@@ -848,7 +848,7 @@ const Home: NextPage = () => {
                 <a
                   tabIndex={0}
                   className="underline"
-                  style={{ color: '#b5390d' }}
+                  style={{ color: '#9e3010' }}
                   href="mailto:genaisupport@mx.uillinois.edu"
                 >
                   email us
@@ -871,7 +871,7 @@ const Home: NextPage = () => {
                 <a
                   tabIndex={0}
                   className="underline"
-                  style={{ color: '#b5390d' }}
+                  style={{ color: '#9e3010' }}
                   href="https://github.com/Center-for-AI-Innovation"
                 >
                   GitHub
@@ -893,7 +893,7 @@ const Home: NextPage = () => {
                 <a
                   tabIndex={0}
                   className="underline"
-                  style={{ color: '#b5390d' }}
+                  style={{ color: '#9e3010' }}
                   href="https://ai.ncsa.illinois.edu/"
                 >
                   Center of AI Innovation
@@ -902,7 +902,7 @@ const Home: NextPage = () => {
                 <a
                   tabIndex={0}
                   className="underline"
-                  style={{ color: '#b5390d' }}
+                  style={{ color: '#9e3010' }}
                   href="https://ncsa.illinois.edu/"
                 >
                   National Center for Supercomputing Applications
