@@ -152,7 +152,16 @@ const FileCard: React.FC<{
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Open file ${fileName}`}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
       style={{
         display: 'inline-flex',
         maxWidth: '320px',
@@ -170,6 +179,14 @@ const FileCard: React.FC<{
         e.currentTarget.style.backgroundColor = 'var(--background-dark)'
       }}
       onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--border)'
+        e.currentTarget.style.backgroundColor = 'var(--background-faded)'
+      }}
+      onFocus={(e) => {
+        e.currentTarget.style.borderColor = 'var(--primary)'
+        e.currentTarget.style.backgroundColor = 'var(--background-dark)'
+      }}
+      onBlur={(e) => {
         e.currentTarget.style.borderColor = 'var(--border)'
         e.currentTarget.style.backgroundColor = 'var(--background-faded)'
       }}
@@ -1921,7 +1938,9 @@ export const ChatMessage = memo(
                                 title="Retrieved documents"
                                 isLoading={false}
                                 error={false}
-                                content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                                content={`Found ${getContextsLength(
+                                  message.contexts,
+                                )} document chunks.`}
                               />
                             )}
 
@@ -1938,7 +1957,9 @@ export const ChatMessage = memo(
                                 title="Retrieving documents"
                                 isLoading={isRetrievalLoading}
                                 error={false}
-                                content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                                content={`Found ${getContextsLength(
+                                  message.contexts,
+                                )} document chunks.`}
                               />
                             )}
 
@@ -2229,8 +2250,15 @@ export const ChatMessage = memo(
                             <button
                               tabIndex={0}
                               aria-label="Edit Message"
-                              className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
-                                ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
+                              className={`text-[--foreground-faded] opacity-0 transition-opacity duration-200 hover:text-[--foreground] focus:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100
+                                ${
+                                  Array.isArray(message.content) &&
+                                  message.content.some(
+                                    (content) => content.type === 'image_url',
+                                  )
+                                    ? 'hidden'
+                                    : ''
+                                }`}
                               type="button"
                               onClick={toggleEditing}
                             >
@@ -2291,7 +2319,9 @@ export const ChatMessage = memo(
                                     style={{
                                       marginLeft: index > 0 ? '-0.75rem' : '0',
                                       zIndex: index,
-                                      transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                                      transform: `rotate(${
+                                        index % 2 === 0 ? '-1deg' : '1deg'
+                                      })`,
                                     }}
                                   >
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>
