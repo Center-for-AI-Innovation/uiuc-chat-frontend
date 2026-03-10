@@ -81,12 +81,12 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
       style={{
         maxWidth: '100%',
         overflowX: 'auto',
-        backgroundColor: isDark ? '#282c34' : '#f6f8fa',
+        backgroundColor: isDark ? '#282c34' : '#ffffff',
       }}
     >
       <div
         className="flex items-center justify-between px-4 py-1.5"
-        style={{ backgroundColor: isDark ? '#21252b' : '#e8eaed' }}
+        style={{ backgroundColor: isDark ? '#21252b' : '#f0f1f3' }}
       >
         <span
           className="text-xs lowercase"
