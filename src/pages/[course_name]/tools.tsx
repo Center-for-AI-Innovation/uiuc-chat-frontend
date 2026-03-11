@@ -11,7 +11,7 @@ import {
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { Title } from '@mantine/core'
 
-import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
+import MakeToolsPage from '~/components/UIUC-Components/SimPage'
 import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
 

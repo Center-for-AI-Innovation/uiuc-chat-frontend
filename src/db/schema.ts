@@ -213,6 +213,11 @@ export const projects = pgTable('projects', {
   metadata_schema: jsonb('metadata_schema'),
   conversation_map_index: text('conversation_map_index'),
   document_map_index: text('document_map_index'),
+  // Sim AI columns — uncomment after running migration 0006_add_sim_columns.sql
+  // and setting NEXT_PUBLIC_SIM_STORAGE=supabase in .env:
+  // sim_api_key: text('sim_api_key'),
+  // sim_base_url: text('sim_base_url'),
+  // sim_workspace_id: text('sim_workspace_id'),
 })
 
 // CourseNames table
