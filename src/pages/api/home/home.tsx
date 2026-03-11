@@ -704,6 +704,7 @@ const Home = ({
           <div
             className={`flex h-screen w-screen flex-col pt-20 text-sm text-white dark:text-white`}
           >
+            <h1 className="sr-only">{course_name} — Illinois Chat</h1>
             <Navbar isPlain={false} />
 
             <main
