@@ -100,7 +100,7 @@ const Sidebar = <T,>({
   }
 
   return isOpen ? (
-    <div className="relative h-full">
+    <nav className="relative h-full" aria-label="Chat sidebar">
       <div
         className={`relative ${side}-0 z-40 flex h-full w-[300px] flex-none flex-col space-y-2 border-r border-[--dashboard-border] bg-[--sidebar-background] p-2 text-[14px] shadow-xl transition-all sm:relative sm:top-0 md:w-[340px] md:p-3 lg:w-[360px] xl:w-[390px]`}
       >
@@ -232,9 +232,9 @@ const Sidebar = <T,>({
                           word.length === 0
                             ? ''
                             : word.match(/^[A-Z0-9]+$/)
-                              ? word // keep acronym casing
-                              : word.charAt(0).toUpperCase() +
-                                word.slice(1).toLowerCase(),
+                            ? word // keep acronym casing
+                            : word.charAt(0).toUpperCase() +
+                              word.slice(1).toLowerCase(),
                         )
                         .join(' ')
                     })()}
@@ -270,7 +270,7 @@ const Sidebar = <T,>({
           searchTerm={searchTerm}
           onSearch={handleSearchTerm}
         />
-        <nav
+        <div
           className="flex-grow overflow-auto"
           onScroll={onScroll}
           tabIndex={0}
@@ -301,14 +301,14 @@ const Sidebar = <T,>({
               </span>
             </div>
           )}
-        </nav>
+        </div>
 
         {footerComponent}
       </div>
 
       {/* TODO: eventually update the open/close sidebar button component so both sides work... for now, changing just for this sidebar */}
       {/*      <CloseSidebarButton onClick={toggleOpen} side={side} /> */}
-    </div>
+    </nav>
   ) : (
     <div className="relative">
       <div className="absolute left-2 top-2 z-[150]">

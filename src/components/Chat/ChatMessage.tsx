@@ -1559,8 +1559,8 @@ export const ChatMessage = memo(
           tooltipAlignment === 'left'
             ? 'left-align'
             : tooltipAlignment === 'right'
-              ? 'right-align'
-              : ''
+            ? 'right-align'
+            : ''
         } ${isCurrentlyStreaming ? 'streaming-tooltip' : ''}`
 
         return (
@@ -1587,9 +1587,36 @@ export const ChatMessage = memo(
           </span>
         )
       } else {
+        // When the link text is a bare URL, derive a readable label from the hostname + path
+        const childText =
+          typeof children === 'string'
+            ? children
+            : Array.isArray(children) && typeof children[0] === 'string'
+            ? children[0]
+            : null
+
+        const isBareUrl =
+          childText != null &&
+          /^https?:\/\//i.test(childText.trim()) &&
+          href &&
+          childText.trim().replace(/\/+$/, '') ===
+            href.trim().replace(/\/+$/, '')
+
+        let displayContent: React.ReactNode = children
+        if (isBareUrl && href) {
+          try {
+            const parsed = new URL(href)
+            const host = parsed.hostname.replace(/^www\./, '')
+            const path = parsed.pathname.replace(/\/+$/, '')
+            displayContent = path && path !== '/' ? `${host}${path}` : host
+          } catch {
+            // Fall back to raw children if URL parsing fails
+          }
+        }
+
         return (
           <a {...commonProps} className={'linkMarkDown'}>
-            {children}
+            {displayContent}
           </a>
         )
       }
