@@ -52,7 +52,7 @@ interface Props {
   courseMetadata: CourseMetadata
   courseName: string
   currentEmail: string
-  documentCount: number | null
+  documentExists: boolean | null
 }
 
 import { notifications } from '@mantine/notifications'
@@ -115,7 +115,7 @@ export const Chat = memo(
     courseMetadata,
     courseName,
     currentEmail,
-    documentCount,
+    documentExists,
   }: Props) => {
     const { t } = useTranslation('chat')
     const auth = useAuth()
@@ -530,53 +530,53 @@ export const Chat = memo(
             })
           }
 
-          // FIXED: Check if this is a file upload message with contexts
-          const isFileUploadMessageWithContexts =
-            Array.isArray(message.content) &&
-            message.content.some(
-              (c) => typeof c === 'object' && c.type === 'file',
-            ) &&
-            message.contexts &&
-            Array.isArray(message.contexts) &&
-            message.contexts.length > 0
-          // Updated condition to include conversation files AND current file upload message with contexts
-          const hasAnyDocuments =
-            (documentCount || 0) > 0 ||
-            hasConversationFiles(selectedConversation) ||
-            isFileUploadMessageWithContexts
+        // FIXED: Check if this is a file upload message with contexts
+        const isFileUploadMessageWithContexts =
+          Array.isArray(message.content) &&
+          message.content.some(
+            (c) => typeof c === 'object' && c.type === 'file',
+          ) &&
+          message.contexts &&
+          Array.isArray(message.contexts) &&
+          message.contexts.length > 0
+        // Updated condition to include conversation files AND current file upload message with contexts
+        const hasAnyDocuments =
+          documentExists === true ||
+          hasConversationFiles(selectedConversation) ||
+          isFileUploadMessageWithContexts
 
-          // Skip vector search entirely if there are no documents AND no conversation files AND no file upload contexts
-          if (!hasAnyDocuments) {
+        // Skip vector search entirely if there are no documents AND no conversation files AND no file upload contexts
+        if (!hasAnyDocuments) {
+          homeDispatch({ field: 'wasQueryRewritten', value: false })
+          homeDispatch({ field: 'queryRewriteText', value: null })
+          message.wasQueryRewritten = undefined
+          message.queryRewriteText = undefined
+          // FIXED: Don't clear contexts if this is a file upload message with contexts
+          if (!isFileUploadMessageWithContexts) {
+            message.contexts = []
+          }
+        } else {
+          // Action 2: Context Retrieval: Vector Search
+          let rewrittenQuery = searchQuery // Default to original query
+          // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
+          if (
+            courseMetadata?.vector_search_rewrite_disabled ||
+            updatedConversation.messages.length <= 1 ||
+            documentExists === false
+          ) {
+            console.log(
+              'Query rewrite skipped: disabled for course, first message, or no documents',
+            )
+            rewrittenQuery = searchQuery
             homeDispatch({ field: 'wasQueryRewritten', value: false })
             homeDispatch({ field: 'queryRewriteText', value: null })
             message.wasQueryRewritten = undefined
             message.queryRewriteText = undefined
-            // FIXED: Don't clear contexts if this is a file upload message with contexts
-            if (!isFileUploadMessageWithContexts) {
-              message.contexts = []
-            }
           } else {
-            // Action 2: Context Retrieval: Vector Search
-            let rewrittenQuery = searchQuery // Default to original query
-            // Skip query rewrite if disabled in course metadata, if it's the first message, or if there are no documents
-            if (
-              courseMetadata?.vector_search_rewrite_disabled ||
-              updatedConversation.messages.length <= 1 ||
-              documentCount === 0
-            ) {
-              console.log(
-                'Query rewrite skipped: disabled for course, first message, or no documents',
-              )
-              rewrittenQuery = searchQuery
-              homeDispatch({ field: 'wasQueryRewritten', value: false })
-              homeDispatch({ field: 'queryRewriteText', value: null })
-              message.wasQueryRewritten = undefined
-              message.queryRewriteText = undefined
-            } else {
-              homeDispatch({ field: 'isQueryRewriting', value: true })
-              try {
-                // TODO: add toggle to turn queryRewrite on and off on materials page
-                const QUERY_REWRITE_PROMPT = `You are a vector database query optimizer that improves search queries for semantic vector retrieval.
+            homeDispatch({ field: 'isQueryRewriting', value: true })
+            try {
+              // TODO: add toggle to turn queryRewrite on and off on materials page
+              const QUERY_REWRITE_PROMPT = `You are a vector database query optimizer that improves search queries for semantic vector retrieval.
 
                   INPUT:
                   The input will include:
@@ -1020,18 +1020,18 @@ export const Chat = memo(
             }
           }
 
-          const finalChatBody: ChatBody = {
-            conversation: updatedConversation,
-            key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
-            course_name: courseName,
-            stream: true,
-            courseMetadata: courseMetadata,
-            llmProviders: llmProviders,
-            model: selectedConversation.model,
-            skipQueryRewrite: documentCount === 0,
-            mode: 'chat',
-          }
-          updatedConversation = finalChatBody.conversation!
+        const finalChatBody: ChatBody = {
+          conversation: updatedConversation,
+          key: getOpenAIKey(llmProviders, courseMetadata, apiKey),
+          course_name: courseName,
+          stream: true,
+          courseMetadata: courseMetadata,
+          llmProviders: llmProviders,
+          model: selectedConversation.model,
+          skipQueryRewrite: documentExists === false,
+          mode: 'chat',
+        }
+        updatedConversation = finalChatBody.conversation!
 
           // Action 4: Build Prompt - Put everything together into a prompt
           // const buildPromptResponse = await fetch('/api/buildPrompt', {
