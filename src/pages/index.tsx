@@ -414,7 +414,7 @@ const Home: NextPage = () => {
                   >
                     1
                   </div>
-                  <div
+                  <h3
                     className={`
                     text-xl font-bold
                     ${montserrat_heading.variable} font-montserratHeading
@@ -422,7 +422,7 @@ const Home: NextPage = () => {
                   >
                     Bring your documents{' '}
                     <span className="whitespace-nowrap">and tools</span>
-                  </div>
+                  </h3>
                 </div>
 
                 <div className="mt-4 flex flex-col gap-2 text-sm">
@@ -504,7 +504,7 @@ const Home: NextPage = () => {
                   >
                     2
                   </div>
-                  <div
+                  <h3
                     className={`
                     text-xl font-bold
                     ${montserrat_heading.variable} font-montserratHeading
@@ -514,7 +514,7 @@ const Home: NextPage = () => {
                     <span className="whitespace-nowrap">
                       tools <span className="font-normal">(optional)</span>
                     </span>
-                  </div>
+                  </h3>
                 </div>
 
                 <div className="mt-4 text-sm">
@@ -590,14 +590,14 @@ const Home: NextPage = () => {
                   >
                     3
                   </div>
-                  <div
+                  <h3
                     className={`
                     text-xl font-bold
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
                     Share with anyone
-                  </div>
+                  </h3>
                 </div>
 
                 <div className="mt-4 text-sm">
@@ -665,15 +665,7 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Ready to build?
-              </h2>
-              <h2
-                className={`
-                text-xl font-bold
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              >
-                Use our API.
+                Ready to build? Use our API.
               </h2>
 
               <div className="mt-4">
