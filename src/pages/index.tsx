@@ -232,14 +232,14 @@ const Home: NextPage = () => {
                   ${montserrat_heading.variable} font-montserratHeading
                 `}
               >
-                <h2>
+                <h1>
                   Create a chatbot with{' '}
                   <span className="whitespace-nowrap">your content.</span>
                   <p className="mt-4">
                     Share it with{' '}
                     <span className="whitespace-nowrap">a click.</span>
                   </p>
-                </h2>
+                </h1>
               </div>
 
               <div className="mb-8 mt-4 text-sm text-[--foreground-faded]">
