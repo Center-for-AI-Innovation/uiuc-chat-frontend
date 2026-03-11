@@ -612,7 +612,9 @@ export const ChatInput = ({
     if (totalSize > limit) {
       showToast({
         title: 'Files Too Large',
-        message: `The total size of all files cannot exceed ${limit / 1024 / 1024}MB. Please remove large files or upload smaller ones.`,
+        message: `The total size of all files cannot exceed ${
+          limit / 1024 / 1024
+        }MB. Please remove large files or upload smaller ones.`,
         type: 'error',
         autoClose: 6000,
       })
@@ -625,7 +627,11 @@ export const ChatInput = ({
       if (!ext || !ALLOWED_FILE_EXTENSIONS.includes(ext)) {
         showToast({
           title: 'Unsupported File Type',
-          message: `The file "${file.name}" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(', ')}.`,
+          message: `The file "${
+            file.name
+          }" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(
+            ', ',
+          )}.`,
           type: 'error',
           autoClose: 6000,
         })
@@ -793,7 +799,9 @@ export const ChatInput = ({
           ),
         )
         showErrorToast(
-          `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `Failed to process ${file.name}: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`,
         )
       }
     }
@@ -1103,7 +1111,9 @@ export const ChatInput = ({
                       0,
                       name.lastIndexOf('.'),
                     )
-                    return `${nameWithoutExt.substring(0, maxLength - 3)}...${extension ? `.${extension}` : ''}`
+                    return `${nameWithoutExt.substring(0, maxLength - 3)}...${
+                      extension ? `.${extension}` : ''
+                    }`
                   }
 
                   return (
@@ -1217,6 +1227,7 @@ export const ChatInput = ({
               {/* Textarea for message input */}
               <textarea
                 ref={textareaRef}
+                aria-label="Message input"
                 className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-12 text-white outline-none"
                 style={{
                   resize: 'none',

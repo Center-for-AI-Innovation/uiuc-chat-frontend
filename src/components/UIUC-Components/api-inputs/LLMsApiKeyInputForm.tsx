@@ -1059,6 +1059,7 @@ export default function APIKeyInputForm({
                                     model to stick to its normal behavior.
                                   </Text>
                                   <Slider
+                                    aria-label="Temperature"
                                     value={
                                       findDefaultModel(llmProviders)
                                         ?.temperature
