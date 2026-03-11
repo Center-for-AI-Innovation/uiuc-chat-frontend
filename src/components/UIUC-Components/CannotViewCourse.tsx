@@ -131,7 +131,7 @@ export const CannotViewCourse = ({
                   className={`${montserrat_heading.variable} font-montserratHeading`}
                   variant="gradient"
                   gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                  order={2}
+                  order={3}
                   p="lg"
                   // size={20}
                 >
