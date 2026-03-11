@@ -186,6 +186,11 @@ describe('pages/api/home/home (shared Home component)', () => {
     await screen.findByTestId('chat')
     await screen.findByTestId('chatbar')
 
+    // WCAG 2.4.1: page must have an H1 element
+    const h1 = screen.getByRole('heading', { level: 1 })
+    expect(h1).toBeTruthy()
+    expect(h1.textContent).toContain('CS101')
+
     fireEvent.dragEnter(document)
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByText('Drop your image here!')).toBeNull()
