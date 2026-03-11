@@ -45,7 +45,7 @@
   --illinois-blue: #13294b;
 
   /* Secondary Colors (Storm) */
-  --illinois-storm-dark: #707372;
+  --illinois-storm-dark: #636563;
   --illinois-storm-medium: #9c9a9d;
   --illinois-storm-light: #c8c6c7;
   --illinois-white: #ffffff;
@@ -84,7 +84,7 @@
   --illinois-blue-gradient: linear-gradient(135deg, #1d58a7, #13294b);
   --illinois-orange-gradient: linear-gradient(
     -135deg,
-    #fcb316,
+    #b57f0e,
     var(--illinois-orange)
   );
 
