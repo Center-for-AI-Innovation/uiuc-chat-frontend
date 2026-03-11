@@ -280,12 +280,13 @@ const Home: NextPage = () => {
                 <div className="icons_scrolling_container overflow-hidden">
                   <div className="icons_scrolling">
                     <img
-                      alt="Banner Icons"
+                      alt="Supported file type icons"
                       src="/media/banner_icons.png"
                       className="max-w-full"
                     ></img>
                     <img
-                      alt="Banner Icons"
+                      alt=""
+                      role="presentation"
                       src="/media/banner_icons.png"
                       className="max-w-full"
                     ></img>
