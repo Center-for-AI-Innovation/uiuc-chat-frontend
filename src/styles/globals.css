@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * WCAG 2.4.7 – Focus Visible (Level AA)
+ * Ensure all interactive elements show a visible focus indicator on keyboard
+ * navigation. Uses :focus-visible so mouse clicks do not trigger the ring.
+ * !important overrides component-level focus:outline-none / focus:ring-0.
+ */
+*:focus-visible {
+  outline: 2px solid var(--illinois-orange) !important;
+  outline-offset: 2px !important;
+}
+
 /* Skip navigation link for keyboard/screen reader users */
 .skip-nav-link {
   position: absolute;
@@ -601,12 +612,10 @@ li {
 /* 👇 FOR EmailChips.tsx -- to make nice email input fields. 👇 */
 .input:focus {
   border-color: cornflowerblue;
-  outline: none;
 }
 
 .input.has-error {
   border-color: tomato;
-  outline: none;
 }
 
 .error {
