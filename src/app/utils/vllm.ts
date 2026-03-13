@@ -1,4 +1,5 @@
-import { type CoreMessage, generateText, streamText } from 'ai'
+import { generateText, streamText } from 'ai'
+import type { CoreMessage, TextPart, ImagePart, FilePart } from 'ai'
 import { type Conversation } from '~/types/chat'
 import { type NCSAHostedVLMProvider } from '~/utils/modelProviders/LLMProvider'
 export const dynamic = 'force-dynamic'
@@ -98,14 +99,35 @@ function convertConversationToVercelAISDKv3(
   conversation.messages.forEach((message, index) => {
     if (message.role === 'system') return
 
-    let content: string
+    let content: CoreMessage['content']
     if (index === conversation.messages.length - 1 && message.role === 'user') {
       content = message.finalPromtEngineeredMessage || ''
     } else if (Array.isArray(message.content)) {
       content = message.content
-        .filter((c) => c.type === 'text')
-        .map((c) => c.text)
-        .join('\n')
+        .map((c) => {
+          switch (c.type) {
+            case 'text':
+              return c.text
+                ? ({ type: 'text', text: c.text } as TextPart)
+                : null
+            case 'image_url':
+              return c.image_url?.url
+                ? ({ type: 'image', image: c.image_url.url } as ImagePart)
+                : null
+            case 'file':
+              return c.fileUrl && c.fileType
+                ? ({
+                    type: 'file',
+                    data: c.fileUrl,
+                    mimeType: c.fileType,
+                    filename: c.fileName || '',
+                  } as FilePart)
+                : null
+            default:
+              return null
+          }
+        })
+        .filter((c) => c !== null)
     } else {
       content = message.content as string
     }
@@ -113,7 +135,7 @@ function convertConversationToVercelAISDKv3(
     coreMessages.push({
       role: message.role as 'user' | 'assistant',
       content: content,
-    })
+    } as CoreMessage)
   })
 
   return coreMessages
