@@ -1,4 +1,4 @@
-import { type CoreMessage, generateText, streamText, smoothStream } from 'ai'
+import { type ModelMessage, generateText, streamText, smoothStream } from 'ai'
 import { type Conversation } from '~/types/chat'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import {
@@ -55,7 +55,7 @@ export async function runAnthropicChat(
     model: model,
     messages: convertConversationToVercelAISDKv3(conversation),
     temperature: conversation.temperature,
-    maxTokens: 4096,
+    maxOutputTokens: 4096,
     ...(isAnthropicModelWithThinking && {
       providerOptions: {
         anthropic: {
@@ -85,7 +85,7 @@ async function handleStreamingResponse(
   commonParams: any,
   isThinkingEnabled: boolean,
 ): Promise<Response> {
-  const result = await streamText({
+  const result = streamText({
     ...commonParams,
     experimental_transform: [
       smoothStream({
@@ -99,9 +99,9 @@ async function handleStreamingResponse(
   }
 
   // Get the original stream response
-  const originalResponse = result.toDataStreamResponse({
+  const originalResponse = result.toUIMessageStreamResponse({
     sendReasoning: true,
-    getErrorMessage: () => {
+    onError: () => {
       return `An error occurred while streaming the response.`
     },
   })
@@ -272,13 +272,13 @@ async function handleNonStreamingResponse(
   isThinkingEnabled: boolean,
 ): Promise<Response> {
   if (isThinkingEnabled) {
-    const { text, reasoning } = await generateText({
+    const { text, reasoningText } = await generateText({
       ...commonParams,
     })
 
     // Format the response with reasoning wrapped in <think> tags at the beginning
-    const formattedContent = reasoning
-      ? `<think>${reasoning}</think>\n${text}`
+    const formattedContent = reasoningText
+      ? `<think>${reasoningText}</think>\n${text}`
       : text
 
     return new Response(
@@ -306,8 +306,8 @@ async function handleNonStreamingResponse(
  */
 function convertConversationToVercelAISDKv3(
   conversation: Conversation,
-): CoreMessage[] {
-  const coreMessages: CoreMessage[] = []
+): ModelMessage[] {
+  const coreMessages: ModelMessage[] = []
 
   const systemMessage = conversation.messages.findLast(
     (msg) => msg.latestSystemMessage !== undefined,

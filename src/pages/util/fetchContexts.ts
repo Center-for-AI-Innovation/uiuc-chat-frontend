@@ -12,12 +12,12 @@ export default async function fetchContextsFromBackend(
 ): Promise<ContextWithMetadata[]> {
   const backendUrl = getBackendUrl()
 
-  const requestBody = {
-    course_name: course_name,
-    search_query: search_query,
-    token_limit: token_limit,
-    doc_groups: doc_groups,
-    conversation_id: conversation_id,
+  const requestBody: Record<string, unknown> = {
+    course_name,
+    search_query,
+    token_limit,
+    doc_groups,
+    ...(conversation_id ? { conversation_id } : {}),
   }
 
   const response = await fetch(`${backendUrl}/getTopContexts`, {
@@ -30,7 +30,10 @@ export default async function fetchContextsFromBackend(
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch contexts. Status: ${response.status}`)
+    const errorBody = await response.text().catch(() => '')
+    throw new Error(
+      `Failed to fetch contexts. Status: ${response.status}${errorBody ? ` Body: ${errorBody}` : ''}`,
+    )
   }
 
   const data: ContextWithMetadata[] = await response.json()

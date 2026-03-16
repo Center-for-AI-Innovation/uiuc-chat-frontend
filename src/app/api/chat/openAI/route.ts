@@ -1,8 +1,9 @@
 import { createOpenAI } from '@ai-sdk/openai'
-import { generateText, streamText, type CoreMessage } from 'ai'
+import { generateText, streamText, type ModelMessage } from 'ai'
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { type AuthenticatedRequest } from '~/utils/appRouterAuth'
+import { uiMessageStreamResponseToTextWithThink } from '~/app/utils/streaming/reasoningToThink'
 import { decrypt } from '~/utils/crypto'
 import { withCourseAccessFromRequest } from '~/app/api/authorization'
 
@@ -81,30 +82,43 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
 
     const openAIClient = createOpenAI({
       apiKey,
-      baseURL: 'https://api.openai.com/v1', // Default OpenAI API URL
-      compatibility: 'strict', // Use strict mode for OpenAI API
+
+      // Default OpenAI API URL
+      baseURL: 'https://api.openai.com/v1',
     })
 
-    const openAIModel = openAIClient(model)
+    const openAIModel = openAIClient.responses(model)
 
-    const commonParams = {
+    const commonParams: Record<string, unknown> = {
       model: openAIModel,
-      messages: messages as CoreMessage[],
-      temperature: 0.7, // You might want to make this configurable
-      maxTokens: 8192,
+      messages: messages as ModelMessage[],
+      maxOutputTokens: 8192,
+    }
+    if (supportsTemperature(model)) {
+      commonParams.temperature = 0.7
+    } else {
+      commonParams.providerOptions = { openai: { reasoningSummary: 'auto' } }
     }
 
     if (stream) {
-      const result = await streamText(commonParams as any)
-      const response = result.toTextStreamResponse()
-      return new NextResponse(response.body, {
-        status: response.status,
-        headers: response.headers,
+      const result = streamText(commonParams as any)
+      const uiResponse = result.toUIMessageStreamResponse({
+        sendReasoning: true,
+        onError: () => `An error occurred while streaming the response.`,
+      })
+      const textResponse = uiMessageStreamResponseToTextWithThink(uiResponse)
+      return new NextResponse(textResponse.body, {
+        status: textResponse.status,
+        headers: textResponse.headers,
       })
     } else {
       const result = await generateText(commonParams as any)
+      const formatted =
+        result.reasoningText && result.reasoningText.length > 0
+          ? `<think>${result.reasoningText}</think>\n${result.text}`
+          : result.text
       return NextResponse.json({
-        choices: [{ message: { content: result.text } }],
+        choices: [{ message: { content: formatted } }],
       })
     }
   } catch (error) {
@@ -118,3 +132,10 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
 }
 
 export const POST = withCourseAccessFromRequest('any')(handler)
+
+function supportsTemperature(modelId: string): boolean {
+  const id = modelId.toLowerCase()
+  if (id.startsWith('gpt-5')) return false
+  if (id.startsWith('o')) return false
+  return true
+}

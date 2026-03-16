@@ -1,6 +1,7 @@
 // Shared utility for converting conversation to OpenAI message format
 import type {
   ChatCompletionMessageParam,
+  ChatCompletionMessageFunctionToolCall,
   ChatCompletionMessageToolCall,
   ChatCompletionToolMessageParam,
 } from 'openai/resources/chat/completions'
@@ -41,21 +42,25 @@ export const conversationToMessages = (
       if (toolsWithResults.length > 0) {
         // Create an assistant message with tool_calls for tools that have results
         // This matches OpenAI's expected format: assistant message with tool_calls, followed by tool results
-        const toolCalls: ChatCompletionMessageToolCall[] = toolsWithResults
-          .map((tool) => {
-            if (!tool.invocationId) return null
-            return {
-              id: tool.invocationId,
-              type: 'function' as const,
-              function: {
-                name: tool.name,
-                arguments: JSON.stringify(tool.aiGeneratedArgumentValues || {}),
-              },
-            }
-          })
-          .filter(
-            (call): call is ChatCompletionMessageToolCall => call !== null,
-          )
+        const toolCalls: ChatCompletionMessageFunctionToolCall[] =
+          toolsWithResults
+            .map((tool): ChatCompletionMessageFunctionToolCall | null => {
+              if (!tool.invocationId) return null
+              return {
+                id: tool.invocationId,
+                type: 'function' as const,
+                function: {
+                  name: tool.name,
+                  arguments: JSON.stringify(
+                    tool.aiGeneratedArgumentValues || {},
+                  ),
+                },
+              }
+            })
+            .filter(
+              (call): call is ChatCompletionMessageFunctionToolCall =>
+                call !== null,
+            )
 
         if (toolCalls.length > 0) {
           transformedData.push({

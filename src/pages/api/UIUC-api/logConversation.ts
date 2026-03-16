@@ -8,7 +8,6 @@ import {
   type SaveConversationDelta,
   type ConversationMeta,
 } from '~/types/chat'
-import { RunTree } from 'langsmith'
 import { sanitizeForLogging } from '@/utils/sanitization'
 import { llmConvoMonitor } from '~/db/schema'
 import { getBackendUrl } from '~/utils/apiUtils'
@@ -264,39 +263,9 @@ const logConversation = async (
   // )
   // console.log('👆👆👆👆👆👆👆👆👆👆👆👆👆')
 
-  // Log to Langsmith
-  const rt = new RunTree({
-    run_type: 'llm',
-    name: 'Final Response Log',
-    inputs: {
-      'User input': sanitizeForLogging(
-        (previousUserMessage?.content as Content[] | undefined)?.[0]?.text,
-      ),
-      'System message': sanitizeForLogging(
-        previousUserMessage?.latestSystemMessage,
-      ),
-      'Engineered prompt': sanitizeForLogging(
-        previousUserMessage?.finalPromtEngineeredMessage,
-      ),
-    },
-    outputs: {
-      Assistant: sanitizeForLogging(latestAssistantMessage?.content),
-    },
-    project_name: 'uiuc-chat-production',
-    metadata: {
-      projectName: course_name,
-      conversation_id: conversationId,
-      tools: sanitizeForLogging(previousUserMessage?.tools),
-    }, // "conversation_id" is a SPECIAL KEYWORD. CANNOT BE ALTERED: https://docs.smith.langchain.com/old/monitoring/faq/threads
-    // id: conversation.id, // DON'T USE - breaks the threading support
-  })
-
-  // End and submit the run
-  if (latestAssistantMessage && previousUserMessage) {
-    rt.end()
-    await rt.postRun()
-  }
-  // console.log('✅✅✅✅✅✅✅✅ AFTER ALL LANGSMITH CALLS')
+  // LangSmith disabled (requested):
+  // - Previously we used `RunTree` from `langsmith` to log user/system/prompt + assistant output.
+  // - Re-enable by restoring the import and this block.
 
   return res.status(200).json({ success: true })
 }

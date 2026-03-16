@@ -37,10 +37,11 @@ export const getAzureModels = async (
 
     // console.log('Fetching Azure models from:', url)
 
+    const apiKey = await decryptKeyIfNeeded(azureProvider.apiKey as string)
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'api-key': await decryptKeyIfNeeded(azureProvider.apiKey!),
+        'api-key': apiKey,
       },
     })
 
@@ -69,10 +70,10 @@ export const getAzureModels = async (
 
     const azureModels: AzureModel[] = responseJson.data.reduce(
       (acc: AzureModel[], model: any) => {
+        const modelName = (model.model ?? '').toLowerCase()
         const predefinedModel = Object.values(AzureModels).find(
           (azureModel) =>
-            azureModel.azureDeploymentModelName.toLowerCase() ===
-            model.model.toLowerCase(),
+            azureModel.azureDeploymentModelName.toLowerCase() === modelName,
         )
         if (predefinedModel) {
           acc.push({
