@@ -5,14 +5,14 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { OPENAI_API_VERSION } from '../app/const'
 import { decryptKeyIfNeeded } from '../crypto'
-import { type AzureModel, AzureModelID, AzureModels } from './azureModels'
+import { type AzureModel, AzureModelID, AzureModels } from './types/azure'
 
 // OMG azure sucks
 // the azureDeploymentID is require to make requests. Grab it from the /deployments list in getAzureModels()
 // The azureDeploymentModelName is the Azure-standardized model names, similar to OpenAI model IDs.
 
-export { AzureModelID, AzureModels } from './azureModels'
-export type { AzureModel } from './azureModels'
+export { AzureModelID, AzureModels } from './types/azure'
+export type { AzureModel } from './types/azure'
 
 export const getAzureModels = async (
   azureProvider: AzureProvider,
