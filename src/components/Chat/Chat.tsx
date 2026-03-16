@@ -17,9 +17,6 @@ import {
 } from 'react'
 
 import {
-  type AgentEvent,
-  type AgentEventMetadata,
-  type AgentEventStatus,
   type ChatBody,
   type Content,
   type ContextWithMetadata,
@@ -1171,59 +1168,6 @@ export const Chat = memo(
               })
             }
 
-            let finalResponseEventId: string | null = null
-
-            const updateAgentEventsForFinal = (
-              producer: (events: AgentEvent[]) => AgentEvent[],
-            ) => {
-              const currentEvents = message.agentEvents ?? []
-              const nextEvents = producer(currentEvents)
-              message.agentEvents = nextEvents
-              syncAgentMessage()
-            }
-
-            if (agentModeEnabled) {
-              const existingEvents: AgentEvent[] = message.agentEvents ?? []
-              const maxExistingStep = existingEvents.reduce(
-                (acc, event) => Math.max(acc, event.stepNumber),
-                0,
-              )
-              const finalStepNumber = maxExistingStep + 1
-              finalResponseEventId = `agent-final-response-${message.id}`
-              const finalEvent: AgentEvent = {
-                id: finalResponseEventId,
-                stepNumber: finalStepNumber,
-                type: 'final_response',
-                status: 'running',
-                title: `Step ${finalStepNumber}: Crafting final response`,
-                createdAt: new Date().toISOString(),
-              }
-              updateAgentEventsForFinal((events) => [...events, finalEvent])
-            }
-
-            const updateFinalEventStatus = (
-              status: AgentEventStatus,
-              metadata?: AgentEventMetadata,
-            ) => {
-              if (!agentModeEnabled || !finalResponseEventId) return
-              updateAgentEventsForFinal((events) =>
-                events.map((event) => {
-                  if (event.id !== finalResponseEventId) return event
-                  const mergedMetadata =
-                    metadata || event.metadata
-                      ? { ...event.metadata, ...metadata }
-                      : event.metadata
-                  return {
-                    ...event,
-                    status,
-                    ...(mergedMetadata ? { metadata: mergedMetadata } : {}),
-                    updatedAt: new Date().toISOString(),
-                  }
-                }),
-              )
-              syncAgentMessage()
-            }
-
             const decoder = new TextDecoder()
             let done = false
             let isFirst = true
@@ -1232,12 +1176,6 @@ export const Chat = memo(
             let finalAssistantRespose = ''
             const citationLinkCache = new Map<number, string>()
             const stateMachineContext = { state: State.Normal, buffer: '' }
-            if (agentModeEnabled) {
-              posthog.capture('agent_mode_run', {
-                course_name: finalChatBody.course_name,
-                model_id: finalChatBody.model?.id,
-              })
-            }
             try {
               // Action 6: Stream the LLM response, based on model provider.
               while (!done) {
@@ -1345,10 +1283,6 @@ export const Chat = memo(
               }
             } catch (error) {
               console.error('Error reading from stream:', error)
-              updateFinalEventStatus('error', {
-                errorMessage:
-                  error instanceof Error ? error.message : 'Streaming error',
-              })
               homeDispatch({ field: 'loading', value: false })
               homeDispatch({ field: 'messageIsStreaming', value: false })
               return
@@ -1357,10 +1291,6 @@ export const Chat = memo(
             if (!done) {
               throw new Error('LLM response stream ended before it was done.')
             }
-
-            updateFinalEventStatus('done', {
-              info: 'Assistant response generated.',
-            })
 
             homeDispatch({ field: 'messageIsStreaming', value: false })
 
@@ -1380,23 +1310,6 @@ export const Chat = memo(
                 updatedConversation.messages?.[
                   updatedConversation.messages.length - 1
                 ] ?? message
-
-              const precedingUserMessage =
-                updatedConversation.messages?.[
-                  updatedConversation.messages.length - 2
-                ]
-
-              if (
-                precedingUserMessage &&
-                precedingUserMessage.role === 'user' &&
-                Array.isArray(precedingUserMessage.agentEvents) &&
-                precedingUserMessage.agentEvents.length > 0
-              ) {
-                await updateConversationMutation.mutateAsync({
-                  conversation: updatedConversation,
-                  message: precedingUserMessage,
-                })
-              }
 
               if (streamedAssistantMessage.role === 'assistant') {
                 await updateConversationMutation.mutateAsync({
@@ -1459,12 +1372,6 @@ export const Chat = memo(
               // saveConversations(updatedConversations)
             } catch (error) {
               console.error('An error occurred: ', error)
-              updateFinalEventStatus('error', {
-                errorMessage:
-                  error instanceof Error
-                    ? error.message
-                    : 'Unable to finalize response',
-              })
               controller.abort()
             }
           } else {

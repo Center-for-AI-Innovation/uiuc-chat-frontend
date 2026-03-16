@@ -471,6 +471,7 @@ export const ChatMessage = memo(
         messageIsStreaming,
         isImg2TextLoading,
         isRouting,
+        isRunningTool,
         isRetrievalLoading,
         isQueryRewriting,
         loading,
@@ -493,16 +494,13 @@ export const ChatMessage = memo(
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+    const [timerVisible, setTimerVisible] = useState(false)
     const { classes } = useStyles() // for Accordion
 
     const agentEvents = Array.isArray(message.agentEvents)
       ? message.agentEvents
       : []
     const hasAgentEvents = agentEvents.length > 0
-    const timerVisible =
-      message.role === 'assistant' &&
-      messageIsStreaming &&
-      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
 
     // Remove the local state for sources sidebar and use only context
     const isSourcesSidebarOpen = activeSidebarMessageId === message.id
@@ -584,58 +582,91 @@ export const ChatMessage = memo(
     }
 
     useEffect(() => {
-      let isActive = true
+      return () => {
+        setIsFeedbackModalOpen(false)
+      }
+    }, [message.id])
 
-      const fetchUrls = async () => {
-        if (!Array.isArray(message.content)) {
-          return
+    useEffect(() => {
+      if (message.role === 'assistant') {
+        if (
+          messageIsStreaming &&
+          messageIndex == (selectedConversation?.messages.length ?? 0) - 1
+        ) {
+          setTimerVisible(true)
+        } else {
+          setTimerVisible(false)
         }
+      }
+    }, [message.role, messageIsStreaming, messageIndex, selectedConversation])
 
-        const nextUrls = await Promise.all(
-          message.content.map(async (content) => {
-            if (content.type !== 'image_url' || !content.image_url) {
-              return null
-            }
+    function deepEqual(a: any, b: any) {
+      if (a === b) {
+        return true
+      }
 
-            const imageUrl = content.image_url.url
-            const isValidUrl = await checkIfUrlIsValid(imageUrl)
-            if (isValidUrl) {
-              return imageUrl
-            }
+      if (
+        typeof a !== 'object' ||
+        a === null ||
+        typeof b !== 'object' ||
+        b === null
+      ) {
+        return false
+      }
 
-            const path = extractPathFromUrl(imageUrl)
-            return getPresignedUrl(path, courseName)
-          }),
-        )
+      const keysA = Object.keys(a),
+        keysB = Object.keys(b)
 
-        if (!isActive) {
-          return
+      if (keysA.length !== keysB.length) {
+        return false
+      }
+
+      for (const key of keysA) {
+        if (!keysB.includes(key) || !deepEqual(a[key], b[key])) {
+          return false
         }
+      }
 
-        const resolvedUrls = nextUrls.filter((url): url is string => {
-          return Boolean(url)
-        })
+      return true
+    }
 
-        if (resolvedUrls.length === 0) {
-          return
+    useEffect(() => {
+      const fetchUrl = async () => {
+        let isValid = false
+        if (Array.isArray(message.content)) {
+          const updatedContent = await Promise.all(
+            message.content.map(async (content) => {
+              if (content.type === 'image_url' && content.image_url) {
+                isValid = await checkIfUrlIsValid(content.image_url.url)
+                if (isValid) {
+                  setImageUrls(
+                    (prevUrls) =>
+                      new Set([...prevUrls, content.image_url?.url as string]),
+                  )
+                  return content
+                }
+
+                const path = extractPathFromUrl(content.image_url.url)
+                const presignedUrl = await getPresignedUrl(path, courseName)
+                setImageUrls((prevUrls) => new Set([...prevUrls, presignedUrl]))
+                return { ...content, image_url: { url: presignedUrl } }
+              }
+              return content
+            }),
+          )
+          if (!isValid && !deepEqual(updatedContent, message.content)) {
+            return
+          }
         }
-
-        setImageUrls((prevUrls) => {
-          return new Set([...prevUrls, ...resolvedUrls])
-        })
       }
 
       if (
         Array.isArray(message.content) &&
         message.content.some((content) => content.type === 'image_url')
       ) {
-        void fetchUrls()
+        fetchUrl()
       }
-
-      return () => {
-        isActive = false
-      }
-    }, [courseName, message.content])
+    }, [message.content, messageIndex, isRunningTool])
 
     const toggleEditing = () => {
       if (!isEditing) {
@@ -2167,7 +2198,7 @@ export const ChatMessage = memo(
                                       tool.output !== undefined ||
                                       tool.error !== undefined,
                                   )) && (
-                                  <div className="flex items-center gap-3 rounded-lg bg-[--background-faded] px-4 py-3">
+                                  <div className="flex items-center gap-3 px-4 py-3">
                                     <p
                                       className={`text-sm font-semibold ${montserrat_paragraph.variable} font-montserratParagraph`}
                                     >
