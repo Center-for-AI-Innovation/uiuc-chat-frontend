@@ -10,6 +10,7 @@ import {
   parseAgentStreamEvent,
 } from '~/types/agentStream'
 import { type AgentEvent } from '~/types/chat'
+import { createHeaders } from '~/utils/httpHeaders'
 
 export interface UseAgentStreamCallbacks {
   onInitializing?: (
@@ -229,9 +230,7 @@ const fetchAgentStream = (
 ): Promise<Response> => {
   return fetch('/api/agent', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: createHeaders(request.userEmail),
     body: JSON.stringify(request),
     signal,
   })
