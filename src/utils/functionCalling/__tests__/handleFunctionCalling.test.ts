@@ -188,6 +188,70 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     })
   })
 
+  it('handleFunctionCall appends tool invocations when message.tools already exists', async () => {
+    const availableTools: any[] = [
+      { id: 'w1', name: 'my_tool', readableName: 'My Tool', description: 'd' },
+    ]
+    const existingTool: any = {
+      id: 'prev',
+      name: 'prev_tool',
+      readableName: 'Prev Tool',
+      invocationId: 'prev1',
+    }
+    const message: any = {
+      id: 'u1',
+      role: 'user',
+      content: 'hi',
+      tools: [existingTool],
+    }
+    const conversation: any = {
+      id: 'c1',
+      model: { id: 'gpt-4o', name: 'm', tokenLimit: 10, enabled: true },
+      messages: [message],
+    }
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                tool_calls: [
+                  {
+                    id: 'call1',
+                    function: { name: 'my_tool', arguments: '{"x":1}' },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    )
+
+    const tools = await handleFunctionCall(
+      message,
+      availableTools,
+      [],
+      '',
+      conversation,
+      'openai-key',
+      'CS101',
+    )
+
+    expect(tools).toHaveLength(1)
+    expect(conversation.messages[0].tools).toHaveLength(2)
+    expect(conversation.messages[0].tools[0]).toMatchObject({
+      id: 'prev',
+      invocationId: 'prev1',
+    })
+    expect(conversation.messages[0].tools[1]).toMatchObject({
+      id: 'w1',
+      invocationId: 'call1',
+    })
+  })
+
   it('handleFunctionCall uses OpenAICompatible and lowercases modelId for OpenRouter', async () => {
     const conversation = {
       id: 'c1',
