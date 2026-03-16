@@ -712,8 +712,6 @@ const Home = ({
               tabIndex={-1}
               className="flex h-full w-full overflow-y-auto sm:pt-0"
             >
-              <h1 className="sr-only">Illinois Chat</h1>
-
               <Chatbar
                 current_email={current_email}
                 courseName={course_name}
