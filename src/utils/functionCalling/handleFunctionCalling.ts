@@ -67,11 +67,14 @@ export async function handleFunctionCall(
         try {
           const parsedUrl = new URL(baseUrl)
           const hostname = parsedUrl.hostname.toLowerCase()
-          const isOpenRouter = hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
+          const isOpenRouter =
+            hostname === 'openrouter.ai' || hostname.endsWith('.openrouter.ai')
           if (isOpenRouter) {
             modelIdToSend = selectedConversation.model.id.toLowerCase()
           }
-        } catch { /* invalid URL, use original modelId */ }
+        } catch {
+          /* invalid URL, use original modelId */
+        }
       }
       body.modelId = modelIdToSend
     } else {
@@ -96,7 +99,8 @@ export async function handleFunctionCall(
       return []
     }
 
-    const modelMessage = openaiFunctionCallResponse.choices?.[0]?.message?.content
+    const modelMessage =
+      openaiFunctionCallResponse.choices?.[0]?.message?.content
     const openaiResponseAll: ChatCompletionMessageToolCall[] =
       openaiFunctionCallResponse.choices?.[0]?.message?.tool_calls || []
     const openaiResponse = openaiResponseAll.filter(
@@ -108,7 +112,9 @@ export async function handleFunctionCall(
       // Model responded without invoking tools - store for buildPrompt routing.
       if (modelMessage && selectedConversation.messages.length > 0) {
         const lastMsg =
-          selectedConversation.messages[selectedConversation.messages.length - 1]
+          selectedConversation.messages[
+            selectedConversation.messages.length - 1
+          ]
         if (lastMsg && lastMsg.role === 'user') {
           ;(lastMsg as any)._toolRoutingResponse = modelMessage
         }
