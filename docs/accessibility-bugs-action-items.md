@@ -98,16 +98,137 @@ Each issue is mapped to its unit test(s) or documented reason for omission.
 | ChatNavbar   | `ChatNavbar.test.tsx`   | New Chat, Settings, Dashboard buttons have accessible labels; logo alt text uses course name |
 | Conversation | `Conversation.test.tsx` | Button has `aria-label="Select Chat, {name}"`, rename input has `aria-label`                 |
 
-### Manual testing procedures
+### Manual verification procedures
 
-#### P1 #9 — Headings must be properly nested (WCAG 1.3.1)
+Below is a verification checklist for every accessibility fix in the `fix/accessibility-issues` branch. Each section lists what was fixed, the relevant commits, and step-by-step instructions to confirm the fix.
 
-**What was fixed:**
+---
 
-- Step titles ("Bring your documents and tools", "Customize LLMs…", "Share with anyone") changed from `<div>` to `<h3>` under their parent `<h2>` section heading
-- "Ready to build?" and "Use our API." merged into a single `<h2>` (were two consecutive `<h2>` elements)
+#### #1 — Code snippet contrast insufficient (WCAG 1.4.3)
 
-**Expected heading hierarchy on landing page (`/`):**
+**Commits:** `5fac668b`, `cee56c57`
+**Files:** `globals.css`, `CodeBlock.tsx`
+
+**How to verify:**
+
+1. Open any chat page and generate a response containing a code block
+2. Switch to **light mode** using the theme toggle
+3. Confirm the code block header (language label, "Copy code", download button) is visible against its background
+4. Check contrast ratio with DevTools: select the header element → Computed → look for color/background-color. Ratio should be >= 4.5:1
+5. Repeat in **dark mode** — buttons and text should also be visible
+
+---
+
+#### #2 — "Members" text contrast (WCAG 1.4.3)
+
+**Commits:** `a2cc976b`, `9f14cb17`
+**Files:** `globals.css`
+
+**How to verify:**
+
+1. Navigate to any chatbot's dashboard → "Sharing and Access" modal
+2. Inspect the "Members" label text
+3. Use a contrast checker (e.g., DevTools color picker or WebAIM Contrast Checker) to verify the text meets WCAG AA (>= 4.5:1)
+
+---
+
+#### #3 — Insufficient ARIA tags (WCAG 4.1.2)
+
+**Commits:** `065c9c2f`, `cabbd864`, `39b707f9`, `eff84ee8`, `f7cbaceb`
+**Files:** Multiple components — ChatInput, ChatMessage, CodeBlock, MessageActions, GlobalHeader, Sidebar, etc.
+
+**How to verify:**
+
+1. Open a chat page in Chrome
+2. Run Lighthouse → Accessibility audit
+3. Confirm no "Elements do not have an accessible name" violations
+4. Use a screen reader (VoiceOver on macOS: Cmd+F5) and Tab through the chat interface
+5. Verify each interactive element (Send button, Copy, Scroll Down, thumbs up/down, Edit, Regenerate) is announced with a meaningful label
+6. Confirm decorative SVG icons have `aria-hidden="true"` (inspect any Tabler icon in DevTools)
+
+---
+
+#### #4 — Missing semantic HTML landmarks (WCAG 1.3.1)
+
+**Commits:** `5028f2b8`, `5b8b40d5`, `b5a6e62f`
+**Files:** `Sidebar.tsx`, `Navbar.tsx`, `home.tsx`
+
+**How to verify:**
+
+1. Open the chat page
+2. In DevTools Console, run: `document.querySelectorAll('nav, main, header, footer, aside').forEach(el => console.log(el.tagName, el.getAttribute('aria-label')))`
+3. Confirm the sidebar is a `<nav aria-label="Chat sidebar">` element
+4. Confirm the top navbar is outside the `<main>` element
+5. With VoiceOver, press **Ctrl+Option+U** to open the Landmarks rotor — verify "Chat sidebar" navigation landmark appears
+
+---
+
+#### #5 — Code block buttons missing aria-labels (WCAG 4.1.2)
+
+**Commits:** `eff84ee8`, `065c9c2f`
+**Files:** `CodeBlock.tsx`
+
+**How to verify:**
+
+1. Generate a code block in chat
+2. Inspect the copy button — confirm `aria-label="Copy code"` or visible text "Copy code"
+3. Inspect the download button — confirm `aria-label="Download code"`
+4. Tab to each button with keyboard — screen reader should announce "Copy code" / "Download code"
+
+---
+
+#### #6 — Logo alt text (WCAG 1.1.1)
+
+**Commits:** `c2b20cfd`, `2b89957c`, `49d85771`
+**Files:** `ChatNavbar.tsx`, `Navbar.tsx`, `Sidebar.tsx`
+
+**How to verify:**
+
+1. Navigate to a chatbot page (e.g., `/Testing/chat`)
+2. Inspect the chatbot logo image in the sidebar and navbar
+3. Confirm `alt` attribute contains the course name (e.g., "Testing logo" or "Course banner")
+4. On the landing page (`/`), confirm the Illinois logo has `alt="Illinois logo"`
+
+---
+
+#### #7 — Skip navigation (WCAG 2.4.1)
+
+**Commits:** `065c9c2f`
+**Files:** `_app.tsx`, `globals.css`
+
+**How to verify:**
+
+1. Open any page and press **Tab** once — a "Skip to main content" link should appear at the top of the viewport
+2. Press **Enter** — focus should move to the `#main-content` element and the page should scroll to the main area
+3. Press **Tab** again — the skip link should disappear (it's only visible on focus)
+4. Confirm `#main-content` target exists: `document.getElementById('main-content')` should return an element
+
+---
+
+#### #8 — Chatbot table rows keyboard-accessible (WCAG 2.1.1)
+
+**Commits:** `065c9c2f`
+**Files:** `ProjectTable.tsx`
+
+**How to verify:**
+
+1. Navigate to the "My Chatbots" page (or Explore page)
+2. Tab to a chatbot row in the table
+3. Press **Enter** or **Space** — it should navigate to that chatbot
+4. Confirm rows have `tabIndex="0"` and `role="button"` in DevTools
+
+---
+
+#### #9 — Headings must be properly nested (WCAG 1.3.1)
+
+**Commits:** `9815a4db`, `117bc07c`, `ac78a92e`
+**Files:** `index.tsx`, `CannotViewCourse.tsx`
+
+**How to verify:**
+
+1. Open the landing page in Chrome
+2. Run in Console: `document.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h => console.log(h.tagName, h.textContent.trim().substring(0, 60)))`
+3. Confirm no heading level is skipped (no h2 -> h4 jump) and the hierarchy is:
 
 ```
 h1  Create a chatbot with your content.
@@ -124,14 +245,207 @@ h1  Create a chatbot with your content.
   h3  Developed at Illinois
 ```
 
+4. Use the [HeadingsMap extension](https://chromewebstore.google.com/detail/headingsmap/flbjommegcjonpdmenkdiocclhjacmbi) or WAVE to visualize the heading tree
+5. Run Lighthouse → Accessibility and confirm no "Heading elements are not in a sequentially-descending order" warning
+
+---
+
+#### #10 — Focus trap in "Sources" panel (WCAG 2.1.2)
+
+**Commits:** `065c9c2f`
+**Files:** `SourcesSidebar.tsx`
+
 **How to verify:**
 
-1. Open the landing page in Chrome
-2. Open DevTools → Elements panel
-3. Run in Console: `document.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(h => console.log(h.tagName, h.textContent.trim().substring(0, 60)))`
-4. Confirm no heading level is skipped (e.g., no h2→h4 jump) and children are always one level deeper than parents
-5. Alternatively, use the [HeadingsMap browser extension](https://chromewebstore.google.com/detail/headingsmap/flbjommegcjonpdmenkdiocclhjacmbi) or the WAVE accessibility tool to visualize the heading tree
-6. Run Lighthouse → Accessibility audit and confirm "Heading elements are not in a sequentially-descending order" does not appear
+1. Open a chat page with documents uploaded
+2. Open the Sources panel
+3. Press **Escape** — the panel should close and focus should return to the chat
+4. Confirm the close button has an accessible label
+
+---
+
+#### #11 — Hover-only action buttons (WCAG 2.1.1)
+
+**Commits:** `7215578d`
+**Files:** `ChatMessage.tsx`, `globals.css`
+
+**How to verify:**
+
+1. Open a chat with existing messages
+2. Without hovering, confirm the message action buttons (copy, thumbs up/down, regenerate) are visible
+3. Tab to each action button — they should be focusable and announced by screen reader
+4. Confirm `tabIndex=0` on each button in DevTools
+
+---
+
+#### #12 — Clipboard paste broken
+
+**Commits:** `065c9c2f`
+**Files:** `EmailListAccordion.tsx`
+
+**How to verify:**
+
+1. Navigate to a chatbot dashboard → "Sharing and Access"
+2. Copy an email address to clipboard
+3. Click the email input field and press **Cmd+V** (macOS) or **Ctrl+V** (Windows)
+4. Confirm the email is pasted successfully
+
+---
+
+#### #13 — ARIA-hidden on decorative icons / Data table accessible names (WCAG 1.3.1)
+
+**Commits:** `f7cbaceb`, `35efadda`
+**Files:** Various components with Tabler icons, `ProjectFilesTable.tsx`
+
+**How to verify:**
+
+1. Inspect any decorative icon (e.g., sidebar icons) in DevTools — confirm `aria-hidden="true"` is present
+2. Navigate to a dashboard with a data table
+3. Confirm the `<table>` has an `aria-label` attribute (e.g., "Project files")
+4. Run Lighthouse → Accessibility and confirm no "data tables do not have an accessible name" violations
+
+---
+
+#### #14 — Form controls must have labels (WCAG 3.3.2)
+
+**Commits:** `328303cb`, `6640bac1`, `fed4ce4b`, `35c5fc73`
+**Files:** `ChatInput.tsx`, `Temperature.tsx`, `LLMsApiKeyInputForm.tsx`, `UploadCard.tsx`
+
+**How to verify:**
+
+1. Open a chat page — inspect the textarea: confirm `aria-label="Message input"` is present
+2. Open Chat Settings → Temperature slider: confirm `aria-label="Temperature"` is present
+3. Navigate to a chatbot dashboard → LLM settings → Temperature slider: confirm `aria-label="Temperature"`
+4. Run in Console: `document.querySelectorAll('input:not([type=hidden]), textarea, select').forEach(el => { const label = el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.id; console.log(el.tagName, el.type, label || 'MISSING LABEL') })`
+5. Confirm no "MISSING LABEL" entries for interactive controls
+
+---
+
+#### #15 — Duplicate accessible names on theme toggle (WCAG 4.1.2)
+
+**Commits:** `73208871`
+**Files:** Theme toggle component
+
+**How to verify:**
+
+1. Inspect the theme toggle buttons (system/light/dark) in the sidebar footer
+2. Confirm each button has a **unique** `aria-label` (e.g., "System theme", "Light theme", "Dark theme")
+3. Run Lighthouse → confirm no "Links/buttons do not have a unique accessible name" warnings
+
+---
+
+#### #16 — Privacy status not updating
+
+**Commits:** `e3fbd4f5`, `262133b5`
+**Files:** `ProjectTable.tsx`
+
+**How to verify:**
+
+1. Create or edit a chatbot, set sharing to "All logged-in users"
+2. Navigate to "My Chatbots" table
+3. Confirm the chatbot shows "Logged-in Users" (not "Private")
+4. Change to "Public" — confirm label updates to "Public"
+
+---
+
+#### #17 — Heatmap uses semantic table (WCAG 1.3.1)
+
+**Commits:** `212fbafd`
+**Files:** `ConversationsHeatmapByHourChart.tsx`
+
+**How to verify:**
+
+1. Navigate to `/{course}/analysis`
+2. Scroll to the heatmap chart
+3. Inspect the element — confirm it uses `<table>` with `<thead>`, `<tbody>`, `<th scope="col">`, `<th scope="row">`, and `<td>` elements
+4. Confirm the table has `aria-label="Conversations by day and hour heatmap"`
+5. Confirm each cell has `aria-label` (e.g., "Monday at 14:00: 5 conversations")
+
+---
+
+#### #18 — Focus-visible indicators (WCAG 2.4.7)
+
+**Commits:** `1386f967`, `a4723635`, `e2493072`
+**Files:** `globals.css`
+
+**How to verify:**
+
+1. Open any page and press **Tab** repeatedly
+2. Confirm every focusable element (buttons, links, inputs) shows a visible focus outline
+3. The outline should be clearly visible in both light and dark modes
+4. Check specifically: chat input, send button, sidebar buttons, navbar links
+
+---
+
+#### #19 — H1 elements on all pages (WCAG 2.4.1)
+
+**Commits:** `ecceebf5`, `d3b7d88d`, `ac78a92e`, `62761842`
+**Files:** `home.tsx`, `index.tsx`, `upload.tsx`, `prompt.tsx`, `api.tsx`, `Explore.tsx`, `MakeNewCoursePage.tsx`, etc.
+
+**How to verify:**
+
+1. Visit each key page: `/`, `/chat`, `/{course}/chat`, `/{course}/dashboard`, `/{course}/upload`, `/new`
+2. On each page, run: `document.querySelectorAll('h1').length` — should be exactly 1
+3. Confirm the h1 has class `sr-only` (screen-reader only) and contains the page/course name
+4. With VoiceOver, the h1 should be the first heading announced
+
+---
+
+#### #20 — Bare URL link text in chat messages (WCAG 2.4.4)
+
+**Commits:** `5b8b40d5`
+**Files:** `ChatMessage.tsx`
+
+**How to verify:**
+
+1. Get a chat response that contains a bare URL (e.g., `https://chat.illinois.edu/new`)
+2. Confirm the link displays a readable label like `chat.illinois.edu/new` instead of the full `https://...` URL
+3. Confirm the link has `text-decoration: underline` (not color-only indication)
+4. Hover over the link — confirm underline thickness increases
+
+---
+
+#### #21 — Sidebar navigation landmark (WCAG 1.3.1)
+
+**Commits:** `5b8b40d5`, `5028f2b8`
+**Files:** `Sidebar.tsx`
+
+**How to verify:**
+
+1. Open the chat page with sidebar visible
+2. Inspect the sidebar container — confirm it is a `<nav>` element with `aria-label="Chat sidebar"`
+3. Confirm there is no nested `<nav>` inside (the conversation list should be a `<div>`)
+4. With VoiceOver landmarks rotor (Ctrl+Option+U → Landmarks), confirm "Chat sidebar" appears
+
+---
+
+#### #22 — Switches keyboard-operable (WCAG 2.1.1)
+
+**Commits:** `966fc253`
+**Files:** Various switch/toggle components
+
+**How to verify:**
+
+1. Tab to any Switch/toggle control (e.g., in Chat Settings)
+2. Press **Space** or **Enter** — the switch should toggle
+3. Confirm the switch has a visible focus indicator when focused
+
+---
+
+#### General — Run full automated verification
+
+To verify all fixes at once:
+
+```bash
+# Run all 1026 tests (requires Node v22)
+nvm use 22 && npx vitest run
+
+# Run only accessibility-specific tests
+npx vitest run --grep "a11y|accessibility|aria|wcag"
+
+# Run Lighthouse CI (requires Chrome)
+npx lighthouse https://chat.illinois.edu --only-categories=accessibility --output=json
+```
 
 ### Not covered — with reasons
 
