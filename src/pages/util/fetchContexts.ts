@@ -8,6 +8,7 @@ export default async function fetchContextsFromBackend(
   token_limit = 4000,
   doc_groups: string[] = [],
   conversation_id?: string,
+  signal?: AbortSignal,
 ): Promise<ContextWithMetadata[]> {
   const backendUrl = getBackendUrl()
 
@@ -25,6 +26,7 @@ export default async function fetchContextsFromBackend(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(requestBody),
+    signal,
   })
 
   if (!response.ok) {

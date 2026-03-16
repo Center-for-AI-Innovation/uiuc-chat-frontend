@@ -24,32 +24,32 @@ export const PermissionGate = ({
   const getErrorMessage = () => {
     switch (errorType) {
       case 401:
-        return "You must sign in to access this chatbot."
+        return 'You must sign in to access this chatbot.'
       case 403:
         return "You don't have sufficient permissions to access this chatbot."
       case 404:
-        return "This chatbot does not exist."
+        return 'This chatbot does not exist.'
       default:
-        return "You must sign in to access this chatbot."
+        return 'You must sign in to access this chatbot.'
     }
   }
 
   const getTitle = () => {
     switch (errorType) {
       case 401:
-        return "Sign in required"
+        return 'Sign in required'
       case 403:
         return "You don't have sufficient permissions"
       case 404:
-        return "Chatbot not found"
+        return 'Chatbot not found'
       default:
-        return "Sign in required"
+        return 'Sign in required'
     }
   }
 
   return (
     <>
-      <main className="justify-center course-page-main flex min-h-screen flex-col items-center">
+      <main className="course-page-main flex min-h-screen flex-col items-center justify-center">
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">
           <Link href="/">
             <h2
@@ -83,17 +83,17 @@ export const PermissionGate = ({
             >
               {getErrorMessage()}
             </Text>
-            {(errorType === 403) && (
+            {errorType === 403 && (
               <Link href="/chatbots">
                 <Button
-                  className=" btn bg-[--button] text-white hover:bg-[--button-hover] login-btn"
+                  className=" login-btn btn bg-[--button] text-white hover:bg-[--button-hover]"
                   style={{ fontSize: '24px' }}
                 >
                   My Chatbots →
                 </Button>
               </Link>
             )}
-            {(errorType === 404) && (
+            {errorType === 404 && (
               <Link
                 href={
                   course_name !== 'new'
@@ -102,7 +102,7 @@ export const PermissionGate = ({
                 }
               >
                 <Button
-                  className=" btn bg-[--button] text-white hover:bg-[--button-hover] login-btn"
+                  className=" login-btn btn bg-[--button] text-white hover:bg-[--button-hover]"
                   style={{ fontSize: '24px' }}
                 >
                   Create New →
@@ -112,7 +112,7 @@ export const PermissionGate = ({
             {errorType !== 404 && errorType !== 403 && (
               <Link href="/sign-in">
                 <Button
-                  className=" btn bg-[--button] text-white hover:bg-[--button-hover] login-btn"
+                  className=" login-btn btn bg-[--button] text-white hover:bg-[--button-hover]"
                   style={{ fontSize: '24px' }}
                   onClick={handleSignIn}
                 >

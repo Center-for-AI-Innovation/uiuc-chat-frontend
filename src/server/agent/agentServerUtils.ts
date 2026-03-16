@@ -36,42 +36,36 @@ import { eq } from 'drizzle-orm'
 function conversationToMessagesWithContexts(
   inputData: Conversation,
 ): ChatCompletionMessageParam[] {
-  // Use base conversion
   const messages = baseConversationToMessages(inputData)
 
-  // Find and enhance the last user message with contexts
-  const lastMessage = inputData.messages[inputData.messages.length - 1]
-  if (
-    lastMessage?.role === 'user' &&
-    lastMessage.contexts &&
-    lastMessage.contexts.length > 0
-  ) {
-    // Find the corresponding message in the transformed array (it's the first user message from the end before any tool messages)
-    for (let i = 0; i < messages.length; i++) {
+  const lastUserMessage = [...inputData.messages].reverse().find((m) => {
+    return m?.role === 'user' && Array.isArray(m.contexts) && m.contexts.length
+  })
+
+  if (!lastUserMessage?.contexts?.length) return messages
+
+  const targetIndex = (() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i]
-      if (msg?.role === 'user' && typeof msg.content === 'string') {
-        // Check if this is the last user message by comparing content
-        const originalContent = Array.isArray(lastMessage.content)
-          ? (lastMessage.content[0]?.text ?? '')
-          : lastMessage.content
-
-        if (
-          msg.content === originalContent ||
-          msg.content.startsWith(originalContent.substring(0, 50))
-        ) {
-          // Append all contexts
-          const contextSummary = lastMessage.contexts
-            .map(
-              (ctx, idx) =>
-                `[Context ${idx + 1} from "${ctx.readable_filename}" (page ${ctx.pagenumber || 'N/A'})]: ${ctx.text}`,
-            )
-            .join('\n\n')
-
-          msg.content = `${msg.content}\n\n---\nRetrieved Documents (${lastMessage.contexts.length} total):\n${contextSummary}`
-          break
-        }
-      }
+      if (msg?.role === 'user' && typeof msg.content === 'string') return i
     }
+    return -1
+  })()
+
+  if (targetIndex === -1) return messages
+
+  const contextSummary = lastUserMessage.contexts
+    .map(
+      (ctx, idx) =>
+        `[Context ${idx + 1} from "${ctx.readable_filename}" (page ${ctx.pagenumber || 'N/A'})]: ${ctx.text}`,
+    )
+    .join('\n\n')
+
+  const target = messages[targetIndex]
+  if (!target) return messages
+  messages[targetIndex] = {
+    ...target,
+    content: `${target.content}\n\n---\nRetrieved Documents (${lastUserMessage.contexts.length} total):\n${contextSummary}`,
   }
 
   return messages
@@ -86,6 +80,7 @@ export interface SelectToolsServerParams {
   openaiKey: string
   imageUrls?: string[]
   imageDescription?: string
+  signal?: AbortSignal
 }
 
 export interface SelectToolsServerResult {
@@ -106,6 +101,7 @@ export async function selectToolsServer(
     openaiKey,
     imageUrls = [],
     imageDescription = '',
+    signal,
   } = params
 
   const lastMessage = conversation.messages[conversation.messages.length - 1]
@@ -172,6 +168,7 @@ export async function selectToolsServer(
         Authorization: `Bearer ${decryptedKey}`,
       },
       body: JSON.stringify(requestBody),
+      signal,
     })
 
     if (!response.ok) {
@@ -245,6 +242,7 @@ export interface ExecuteToolServerParams {
   tool: UIUCTool
   projectName: string
   n8nApiKey?: string
+  signal?: AbortSignal
 }
 
 /**
@@ -254,7 +252,7 @@ export interface ExecuteToolServerParams {
 export async function executeToolServer(
   params: ExecuteToolServerParams,
 ): Promise<UIUCTool> {
-  const { tool, projectName, n8nApiKey } = params
+  const { tool, projectName, n8nApiKey, signal } = params
   const toolCopy = { ...tool }
 
   // Get N8N API key if not provided
@@ -275,6 +273,7 @@ export async function executeToolServer(
       apiKey,
       tool.readableName,
       tool.aiGeneratedArgumentValues,
+      signal,
     )
 
     const timeEnd = Date.now()
@@ -343,9 +342,12 @@ export async function executeToolsServer(
   tools: UIUCTool[],
   projectName: string,
   n8nApiKey?: string,
+  signal?: AbortSignal,
 ): Promise<UIUCTool[]> {
   const results = await Promise.all(
-    tools.map((tool) => executeToolServer({ tool, projectName, n8nApiKey })),
+    tools.map((tool) =>
+      executeToolServer({ tool, projectName, n8nApiKey, signal }),
+    ),
   )
   return results
 }
@@ -356,6 +358,7 @@ export interface FetchContextsServerParams {
   tokenLimit?: number
   docGroups?: string[]
   conversationId?: string
+  signal?: AbortSignal
 }
 
 /**
@@ -371,22 +374,38 @@ export async function fetchContextsServer(
     tokenLimit = 4000,
     docGroups = [],
     conversationId,
+    signal,
   } = params
 
   const sleep = (ms: number) =>
     new Promise<void>((resolve) => setTimeout(resolve, ms))
   const delaysMs = [0, 500, 1000, 2000]
   let lastError: string | null = null
+  const isAbortError = (error: unknown) => {
+    return (
+      signal?.aborted === true ||
+      (error instanceof Error && error.name === 'AbortError')
+    )
+  }
 
   for (let attempt = 0; attempt < delaysMs.length; attempt++) {
     try {
+      if (signal?.aborted) {
+        return []
+      }
+
       if (delaysMs[attempt]) await sleep(delaysMs[attempt]!)
+      if (signal?.aborted) {
+        return []
+      }
+
       const contexts = await fetchContextsFromBackend(
         courseName,
         searchQuery,
         tokenLimit,
         docGroups,
         conversationId,
+        signal,
       )
 
       if (!Array.isArray(contexts)) {
@@ -405,6 +424,10 @@ export async function fetchContextsServer(
 
       return contexts
     } catch (error) {
+      if (isAbortError(error)) {
+        return []
+      }
+
       lastError = error instanceof Error ? error.message : 'Unknown error'
       if (attempt < delaysMs.length - 1) {
         console.warn(
@@ -457,6 +480,7 @@ export async function fetchToolsServer(
   courseName: string,
   n8nApiKey?: string,
   limit = 20,
+  signal?: AbortSignal,
 ): Promise<UIUCTool[]> {
   // Get N8N API key if not provided
   let apiKey = n8nApiKey
@@ -479,6 +503,7 @@ export async function fetchToolsServer(
 
     const response = await fetch(
       `${backendUrl}/getworkflows?api_key=${apiKey}&limit=${limit}&pagination=false`,
+      { signal },
     )
 
     if (!response.ok) {

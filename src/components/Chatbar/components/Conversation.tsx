@@ -116,6 +116,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
         >
           <IconMessage size={16} className="text-[--sidebar]" />
           <input
+            aria-label="Rename Chat Input"
             className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar] outline-none"
             type="text"
             value={renameValue}
@@ -126,6 +127,8 @@ export const ConversationComponent = ({ conversation }: Props) => {
         </div>
       ) : (
         <button
+          tabIndex={0}
+          aria-label={'Select Chat, ' + conversation.name}
           className={`flex w-full cursor-pointer items-start gap-3 rounded-lg p-3 text-[.75rem] transition-colors duration-200 ${
             messageIsStreaming ? 'disabled:cursor-not-allowed' : ''
           } ${
@@ -160,13 +163,16 @@ export const ConversationComponent = ({ conversation }: Props) => {
       {(isDeleting || isRenaming) &&
         selectedConversation?.id === conversation.id && (
           <div className="absolute right-1 top-[.5rem] z-10 flex">
-            <SidebarActionButton handleClick={handleConfirm}>
+            <SidebarActionButton
+              ariaLabel={isDeleting ? 'Confirm Delete' : 'Confirm Rename'}
+              handleClick={handleConfirm}
+            >
               <IconCheck
                 size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>
-            <SidebarActionButton handleClick={handleCancel}>
+            <SidebarActionButton ariaLabel="Cancel" handleClick={handleCancel}>
               <IconX
                 size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
@@ -179,13 +185,19 @@ export const ConversationComponent = ({ conversation }: Props) => {
         !isDeleting &&
         !isRenaming && (
           <div className="absolute right-1 top-[.5rem] z-10 flex">
-            <SidebarActionButton handleClick={handleOpenRenameModal}>
+            <SidebarActionButton
+              ariaLabel="Edit Chat"
+              handleClick={handleOpenRenameModal}
+            >
               <IconPencil
                 size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>
-            <SidebarActionButton handleClick={handleOpenDeleteModal}>
+            <SidebarActionButton
+              ariaLabel="Delete Chat"
+              handleClick={handleOpenDeleteModal}
+            >
               <IconTrash
                 size={16}
                 className="text-[--sidebar] opacity-50 hover:opacity-100"

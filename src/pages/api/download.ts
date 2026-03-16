@@ -24,7 +24,7 @@ export async function generatePresignedUrl(
   if (filePath.endsWith('.pdf')) {
     ResponseContentType = 'application/pdf'
   } else if (filePath.endsWith('.png')) {
-    ResponseContentType = 'image/png'
+    ResponseContentType = 'application/png'
   }
 
   if (courseName === 'vyriad' || courseName === 'pubmed') {
@@ -34,7 +34,6 @@ export async function generatePresignedUrl(
       )
     }
 
-    // Extract bucket name from the first part of the path
     const pathParts = filePath.split('/')
     const bucketName = pathParts[0]
     const actualKey = pathParts.slice(1).join('/')
@@ -83,7 +82,11 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       fileName?: string
     }
 
-    const presignedUrl = await generatePresignedUrl(filePath, courseName, fileName)
+    const presignedUrl = await generatePresignedUrl(
+      filePath,
+      courseName,
+      fileName,
+    )
 
     res.status(200).json({
       message: 'Presigned URL generated successfully',

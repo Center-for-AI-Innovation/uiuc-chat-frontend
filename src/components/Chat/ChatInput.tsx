@@ -1,5 +1,6 @@
 // chatinput.tsx
 import {
+  type ChatBody,
   type Content,
   type Message,
   type MessageType,
@@ -54,7 +55,8 @@ import { type CSSProperties } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
-import { fetchPresignedUrl, uploadToS3 } from 'src/utils/apiUtils'
+import { useRouteChat } from '@/hooks/queries/useRouteChat'
+import { fetchPresignedUrl, uploadToS3 } from '~/utils/apiUtils'
 import { UserSettings } from '~/components/Chat/UserSettings'
 import {
   selectBestModel,
@@ -66,6 +68,7 @@ import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { ContextWithMetadata } from '~/types/chat'
 import { modelSupportsTools } from '~/utils/modelProviders/capabilities'
 import posthog from 'posthog-js'
+import { deriveAgentModeEnabled } from '~/utils/app/agentMode'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -139,6 +142,7 @@ interface Props {
   courseName: string
   chat_ui?: ChatUI
   onRegenerate?: () => void
+  agentModeFeatureEnabled?: boolean
 }
 
 async function createNewConversation(
@@ -165,7 +169,6 @@ async function createNewConversation(
   }
 
   homeDispatch({ field: 'selectedConversation', value: newConversation })
-  homeDispatch({ field: 'agentModeEnabled', value: false })
   homeDispatch({
     field: 'conversations',
     value: (prev: Conversation[]) => [newConversation, ...prev],
@@ -231,6 +234,7 @@ export const ChatInput = ({
   courseName,
   chat_ui,
   onRegenerate,
+  agentModeFeatureEnabled = false,
 }: Props) => {
   const { t } = useTranslation('chat')
 
@@ -241,13 +245,15 @@ export const ChatInput = ({
       prompts,
       showModelSettings,
       llmProviders,
-      agentModeEnabled,
       tools,
     },
 
     dispatch: homeDispatch,
     handleUpdateConversation,
   } = useContext(HomeContext)
+
+  const agentModeEnabled = deriveAgentModeEnabled(selectedConversation)
+  const { mutateAsync: routeChatAsync } = useRouteChat()
 
   const [content, setContent] = useState<string>(() => inputContent)
   const [isTyping, setIsTyping] = useState<boolean>(false)
@@ -571,27 +577,16 @@ export const ChatInput = ({
       return
     }
 
-    try {
-      const response = await fetch('/api/allNewRoutingChat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          conversation: selectedConversation,
-          course_name: courseName,
-          stream: true,
-        }),
-      })
+    const chatBody: ChatBody = {
+      conversation: selectedConversation ?? undefined,
+      course_name: courseName,
+      stream: true,
+      key: '',
+      mode: 'chat',
+    }
 
-      if (!response.ok) {
-        const errorResponse = await response.json()
-        const errorMessage =
-          errorResponse.error ||
-          'An error occurred while processing your request'
-        showErrorToast(errorMessage)
-        return
-      }
+    try {
+      await routeChatAsync(chatBody)
     } catch (error) {
       console.error('Error in chat submission:', error)
       showErrorToast(
@@ -1228,7 +1223,7 @@ export const ChatInput = ({
                   overflow: 'hidden',
                   pointerEvents: 'auto',
                 }}
-                placeholder={'Message Illinois.chat'}
+                placeholder={'Message Illinois Chat'}
                 value={content}
                 rows={1}
                 onCompositionStart={() => setIsTyping(true)}
@@ -1241,6 +1236,8 @@ export const ChatInput = ({
 
               {/* Send button */}
               <button
+                type="button"
+                aria-label="Send message"
                 className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center justify-center rounded-full bg-[white/30] p-2 opacity-50 hover:opacity-100"
                 onClick={handleSend}
                 style={{ pointerEvents: 'auto' }}
@@ -1282,6 +1279,8 @@ export const ChatInput = ({
             {showScrollDownButton && (
               <div className="absolute bottom-2 right-10 lg:-right-10 lg:bottom-0">
                 <button
+                  type="button"
+                  aria-label="Scroll Down"
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
                   onClick={onScrollDownClick}
                   style={{ pointerEvents: 'auto' }}
@@ -1336,7 +1335,8 @@ export const ChatInput = ({
               <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
             </Text>
             {/* Agent Mode pill */}
-            {selectedConversation?.model &&
+            {agentModeFeatureEnabled &&
+            selectedConversation?.model &&
             llmProviders &&
             modelSupportsTools(selectedConversation.model, llmProviders) ? (
               <button
@@ -1351,10 +1351,6 @@ export const ChatInput = ({
                   posthog.capture('agent_mode_toggled', {
                     enabled: next,
                     model_id: selectedConversation?.model?.id,
-                  })
-                  homeDispatch({
-                    field: 'agentModeEnabled',
-                    value: next,
                   })
                   if (selectedConversation) {
                     handleUpdateConversation(selectedConversation, {

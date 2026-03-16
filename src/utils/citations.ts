@@ -71,226 +71,204 @@ export async function replaceCitationLinks(
   citationLinkCache: Map<number, string>,
   courseName: string,
   /** Optional server-side presigned URL generator (bypasses API auth) */
-  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
+  serverPresignedUrlFn?: (
+    filePath: string,
+    courseName: string,
+  ) => Promise<string | null>,
 ): Promise<string> {
   if (!lastMessage.contexts) {
-    console.log('[Citations] No contexts on message, returning sanitized content:', content.substring(0, 100))
     return safeText(content)
   }
 
   // Process citations first - this is the most common case
   // Updated pattern to match multiple citation indices separated by commas
-  // Using bounded whitespace AND newlines to handle multi-line citations
+  // Using bounded whitespace to prevent catastrophic backtracking
+  // Removed extra whitespace from the pattern to prevent capturing it
   const citationPattern =
-    /(?:&lt;cite|<cite)[\s]{0,100}>([0-9,\s]+)(?:[\s]{0,100},[\s]{0,100}p\.[\s]{0,100}(\d+))?[\s]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g
+    /(?:&lt;cite|<cite)[ \t]{0,100}>([0-9,\s]+)(?:[ \t]{0,100},[ \t]{0,100}p\.[ \t]{0,100}(\d+))?[ \t]{0,100}(?:&lt;\/cite&gt;|<\/cite>)/g
 
-  // Fast path - if no citations, skip the replacement
-  if (!citationPattern.test(content)) {
-    console.log('[Citations] Pattern did not match. Content:', content, 'Contexts count:', lastMessage.contexts?.length)
+  const hasCitations = citationPattern.test(content)
+  citationPattern.lastIndex = 0
+
+  // Filename-style citations are another common pattern to support.
+  const hasFilenamePattern = /\b\d+\s*\.\s*\[.*?\]\(#\)/.test(content)
+
+  // Fast path - if no citations and no filename patterns, return early
+  if (!hasCitations && !hasFilenamePattern) {
     return safeText(content)
   }
 
-  // Reset lastIndex after test()
-  citationPattern.lastIndex = 0
-
   let result = content
-  let offset = 0
+  if (hasCitations) {
+    const source = result
+    const parts: string[] = []
+    let cursor = 0
+    let match: RegExpExecArray | null
 
-  // Process citations
-  let match
-  while ((match = citationPattern.exec(result)) !== null) {
-    const originalCitation = match[0]
-    // Parse multiple citation indices
-    const citationIndicesStr = match[1] as string
-    const citationIndices = citationIndicesStr
-      .split(',')
-      .map((idx) => parseInt(idx.trim(), 10))
-      .filter(
-        (idx) => !isNaN(idx) && idx > 0 && idx <= lastMessage.contexts!.length,
-      )
+    citationPattern.lastIndex = 0
+    while ((match = citationPattern.exec(source)) !== null) {
+      const originalCitation = match[0]
+      const matchIndex = match.index
+      parts.push(source.slice(cursor, matchIndex))
 
-    // Skip if no valid citation indices
-    if (citationIndices.length === 0) continue
+      const citationIndicesStr = match[1] as string
+      const citationIndices = citationIndicesStr
+        .split(',')
+        .map((idx) => parseInt(idx.trim(), 10))
+        .filter(
+          (idx) =>
+            !isNaN(idx) && idx > 0 && idx <= lastMessage.contexts!.length,
+        )
 
-    // Page number applies to all citations in this group
-    const pageNumber = match[2] ? safeText(match[2]) : undefined
+      // Default to leaving the original markup if we can't resolve it.
+      let replacementText = originalCitation
 
-    // Process each citation index
-    const citationLinks = await Promise.all(
-      citationIndices.map(async (citationIndex) => {
-        const context = lastMessage.contexts![citationIndex - 1]
-        if (!context) return null
+      if (citationIndices.length > 0) {
+        const pageNumber = match[2] ? safeText(match[2]) : undefined
 
-        // Get or create the citation link
+        const citationLinks = await Promise.all(
+          citationIndices.map(async (citationIndex) => {
+            const context = lastMessage.contexts![citationIndex - 1]
+            if (!context) return null
+
+            const link = await getCitationLink(
+              context,
+              citationLinkCache,
+              citationIndex,
+              courseName,
+              serverPresignedUrlFn,
+            )
+
+            const safeLink = safeUrl(link)
+            const displayTitle = safeText(
+              context.readable_filename || `Document ${citationIndex}`,
+            )
+            const contextPageNumber = context.pagenumber
+              ? safeText(context.pagenumber.toString())
+              : pageNumber
+
+            return {
+              index: citationIndex,
+              title: displayTitle,
+              pageNumber: contextPageNumber,
+              link: safeLink,
+            }
+          }),
+        )
+
+        const validCitations = citationLinks.filter(
+          (citation) => citation !== null,
+        ) as {
+          index: number
+          title: string
+          pageNumber?: string
+          link: string
+        }[]
+
+        if (validCitations.length === 1) {
+          const citation = validCitations[0]!
+          const innerText = citation.pageNumber
+            ? `${citation.title}, p.${citation.pageNumber}`
+            : `${citation.title}`
+          const tooltipTitle = `Citation ${citation.index}`
+
+          replacementText = citation.link
+            ? `[${innerText}](${citation.link}${citation.pageNumber ? `#page=${citation.pageNumber}` : ''} "${tooltipTitle}")`
+            : innerText
+        } else if (validCitations.length > 1) {
+          replacementText = validCitations
+            .map((citation, idx) => {
+              const innerText = citation.pageNumber
+                ? `${citation.title}, p.${citation.pageNumber}`
+                : `${citation.title}`
+              const tooltipTitle = `Citation ${citation.index}`
+              const linkText = citation.link
+                ? `[${innerText}](${citation.link}${citation.pageNumber ? `#page=${citation.pageNumber}` : ''} "${tooltipTitle}")`
+                : innerText
+              return idx < validCitations.length - 1 ? `${linkText};` : linkText
+            })
+            .join(' ')
+        }
+      }
+
+      parts.push(replacementText)
+      cursor = matchIndex + originalCitation.length
+    }
+
+    parts.push(source.slice(cursor))
+    result = parts.join('')
+  }
+
+  // Fast path - if no filename patterns, return early
+  if (!hasFilenamePattern) {
+    return safeText(result)
+  }
+
+  const filenamePattern = /(\b\d+\s*\.)\s*\[(.*?)\]\(#\)/g
+  {
+    const source = result
+    const parts: string[] = []
+    let cursor = 0
+    let match: RegExpExecArray | null
+
+    filenamePattern.lastIndex = 0
+    while ((match = filenamePattern.exec(source)) !== null) {
+      const originalText = match[0]
+      const matchIndex = match.index
+      parts.push(source.slice(cursor, matchIndex))
+
+      const filenameIndex = parseInt(match[1] as string, 10)
+      const context = lastMessage.contexts[filenameIndex - 1]
+
+      let replacementText = originalText
+      if (context) {
         const link = await getCitationLink(
           context,
           citationLinkCache,
-          citationIndex,
+          filenameIndex,
           courseName,
           serverPresignedUrlFn,
         )
 
         // Sanitize all text content and validate URL
         const safeLink = safeUrl(link)
-        const displayTitle = safeText(
-          context.readable_filename || `Document ${citationIndex}`,
-        )
-        const contextPageNumber = context.pagenumber
+        const filename = safeText(match[2] || '')
+        let pageNumber = context.pagenumber
           ? safeText(context.pagenumber.toString())
-          : pageNumber
+          : undefined
 
-        return {
-          index: citationIndex,
-          title: displayTitle,
-          pageNumber: contextPageNumber,
-          link: safeLink,
+        if (!pageNumber) {
+          const pageNumberMatch = filename.match(/page:\s*(\d+)/)
+          pageNumber = pageNumberMatch
+            ? safeText(pageNumberMatch[1])
+            : undefined
         }
-      }),
-    )
 
-    // Filter out null values
-    const validCitations = citationLinks.filter(
-      (citation) => citation !== null,
-    ) as {
-      index: number
-      title: string
-      pageNumber?: string
-      link: string
-    }[]
+        const displayTitle = safeText(
+          context.readable_filename || `Document ${filenameIndex}`,
+        )
+        const innerText = pageNumber
+          ? `${displayTitle}, p.${pageNumber}`
+          : `${displayTitle}`
 
-    if (validCitations.length === 0) continue
+        const tooltipTitle = `Citation ${filenameIndex}`
+        const linkText = safeLink
+          ? `[${innerText}](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''} "${tooltipTitle}")`
+          : innerText
 
-    let replacementText = ''
-
-    if (validCitations.length === 1) {
-      // Single citation case - no parentheses
-      const citation = validCitations[0]!
-      // Create inner text without parentheses
-      const innerText = citation.pageNumber
-        ? `${citation.title}, p.${citation.pageNumber}`
-        : `${citation.title}`
-
-      // Create tooltip with citation number
-      const tooltipTitle = `Citation ${citation.index}`
-
-      // Only create link if we have a valid safe URL
-      const linkText = citation.link
-        ? `[${innerText}](${citation.link}${citation.pageNumber ? `#page=${citation.pageNumber}` : ''} "${tooltipTitle}")`
-        : innerText // Fallback to plain text if URL is invalid
-
-      // No parentheses around the link
-      replacementText = linkText
-    } else {
-      // Multiple citations case - no parentheses
-      // Add each citation as a separate link, separated by semicolons with minimal space for better wrapping
-      replacementText = validCitations
-        .map((citation, idx) => {
-          // For each citation, create the inner text without parentheses
-          const innerText = citation.pageNumber
-            ? `${citation.title}, p.${citation.pageNumber}`
-            : `${citation.title}`
-
-          // Create tooltip with citation number
-          const tooltipTitle = `Citation ${citation.index}`
-
-          // Only create link if we have a valid safe URL
-          const linkText = citation.link
-            ? `[${innerText}](${citation.link}${citation.pageNumber ? `#page=${citation.pageNumber}` : ''} "${tooltipTitle}")`
-            : innerText // Fallback to plain text if URL is invalid
-
-          // Add semicolon between citations except for the last one
-          // Use minimal space after semicolon to allow natural line breaks without excess space
-          return idx < validCitations.length - 1 ? `${linkText};` : linkText
-        })
-        .join(' ') // Join with a single space between citations
-    }
-
-    // Replace at exact position accounting for previous replacements
-    result =
-      result.slice(0, match.index + offset) +
-      replacementText +
-      result.slice(match.index + offset + originalCitation.length)
-
-    // Adjust offset for future replacements
-    offset += replacementText.length - originalCitation.length
-  }
-
-  // Fast path - if no filename patterns, return early
-  const hasFilenamePattern = /\b\d+\s*\.\s*\[.*?\]\(#\)/.test(result)
-  if (!hasFilenamePattern) {
-    return safeText(result)
-  }
-
-  // Process filename patterns if present
-  const filenamePattern = /(\b\d+\s*\.)\s*\[(.*?)\]\(#\)/g
-  offset = 0
-
-  while ((match = filenamePattern.exec(result)) !== null) {
-    const originalText = match[0]
-    const filenameIndex = parseInt(match[1] as string, 10)
-    const context = lastMessage.contexts[filenameIndex - 1]
-
-    if (context) {
-      const link = await getCitationLink(
-        context,
-        citationLinkCache,
-        filenameIndex,
-        courseName,
-        serverPresignedUrlFn,
-      )
-
-      // Sanitize all text content and validate URL
-      const safeLink = safeUrl(link)
-      const filename = safeText(match[2] || '')
-      let pageNumber = context.pagenumber
-        ? safeText(context.pagenumber.toString())
-        : undefined
-
-      if (!pageNumber) {
-        const pageNumberMatch = filename.match(/page:\s*(\d+)/)
-        pageNumber = pageNumberMatch ? safeText(pageNumberMatch[1]) : undefined
+        // Keep parentheses outside the link for consistency
+        replacementText = `${match[1]} (${linkText})`
       }
 
-      const displayTitle = safeText(
-        context.readable_filename || `Document ${filenameIndex}`,
-      )
-      // Create inner text without parentheses for consistency
-      const innerText = pageNumber
-        ? `${displayTitle}, p.${pageNumber}`
-        : `${displayTitle}`
-
-      // Add citation number to tooltip
-      const tooltipTitle = `Citation ${filenameIndex}`
-
-      // Only create link if we have a valid safe URL
-      const linkText = safeLink
-        ? `[${innerText}](${safeLink}${pageNumber ? `#page=${pageNumber}` : ''} "${tooltipTitle}")`
-        : innerText // Fallback to plain text if URL is invalid
-
-      // Keep parentheses outside the link for consistency
-      const replacementText = `${match[1]} (${linkText})`
-
-      // Replace at exact position accounting for previous replacements
-      result =
-        result.slice(0, match.index + offset) +
-        replacementText +
-        result.slice(match.index + offset + originalText.length)
-
-      // Adjust offset for future replacements
-      offset += replacementText.length - originalText.length
+      parts.push(replacementText)
+      cursor = matchIndex + originalText.length
     }
+
+    parts.push(source.slice(cursor))
+    result = parts.join('')
   }
 
   return safeText(result)
-}
-
-/**
- * Escapes special characters in a string to be used in a regular expression.
- * @param {string} string - The string to escape.
- * @returns {string} The escaped string.
- */
-function escapeRegExp(string: string): string {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 /**
@@ -305,13 +283,20 @@ const getCitationLink = async (
   citationLinkCache: Map<number, string>,
   citationIndex: number,
   courseName: string,
-  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
+  serverPresignedUrlFn?: (
+    filePath: string,
+    courseName: string,
+  ) => Promise<string | null>,
 ): Promise<string> => {
   const cachedLink = citationLinkCache.get(citationIndex)
   if (cachedLink) {
     return safeUrl(cachedLink) // Validate cached URLs too
   } else {
-    const link = (await generateCitationLink(context, courseName, serverPresignedUrlFn)) as string
+    const link = (await generateCitationLink(
+      context,
+      courseName,
+      serverPresignedUrlFn,
+    )) as string
     const safeLink = safeUrl(link)
     if (safeLink) {
       citationLinkCache.set(citationIndex, safeLink)
@@ -330,7 +315,10 @@ const getCitationLink = async (
 const generateCitationLink = async (
   context: ContextWithMetadata,
   courseName: string,
-  serverPresignedUrlFn?: (filePath: string, courseName: string) => Promise<string | null>,
+  serverPresignedUrlFn?: (
+    filePath: string,
+    courseName: string,
+  ) => Promise<string | null>,
 ): Promise<string> => {
   if (context.url) {
     return safeUrl(context.url)

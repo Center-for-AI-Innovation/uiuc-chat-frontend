@@ -27,10 +27,10 @@ const ChatPage: NextPage = () => {
   const getCurrentPageName = () => {
     const raw = router.query.course_name
     return typeof raw === 'string'
-        ? raw
-        : Array.isArray(raw)
-          ? raw[0]
-          : undefined
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
   const courseName = getCurrentPageName() as string
 
@@ -172,7 +172,7 @@ const ChatPage: NextPage = () => {
     )
   }
 
-   if (errorType !== null) {
+  if (errorType !== null) {
     return (
       <PermissionGate
         course_name={courseName ? (courseName as string) : 'new'}
@@ -194,7 +194,7 @@ const ChatPage: NextPage = () => {
             current_email={currentEmail}
             course_metadata={course_metadata}
             course_name={'chat'}
-            document_count={0}
+            document_exists={false}
             link_parameters={{
               guidedLearning: false,
               documentsOnly: false,

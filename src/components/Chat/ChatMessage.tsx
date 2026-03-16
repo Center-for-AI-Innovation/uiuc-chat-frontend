@@ -53,7 +53,7 @@ import ThinkTagDropdown, { extractThinkTagContent } from './ThinkTagDropdown'
 import {
   saveConversationToServer,
   createLogConversationPayload,
-} from '@/utils/app/conversation'
+} from '@/hooks/__internal__/conversation'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -226,7 +226,6 @@ const FilePreviewModal: React.FC<{
       messageIsStreaming,
       isImg2TextLoading,
       isRouting,
-      isRunningTool,
       isRetrievalLoading,
       isQueryRewriting,
       loading,
@@ -495,7 +494,6 @@ export const ChatMessage = memo(
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-    // SET TIMER for message writing (from gpt-4)
     const [timerVisible, setTimerVisible] = useState(false)
     const { classes } = useStyles() // for Accordion
 
@@ -583,7 +581,6 @@ export const ChatMessage = memo(
       return activeSidebarMessageId !== null
     }
 
-    // Cleanup effect for modal
     useEffect(() => {
       return () => {
         setIsFeedbackModalOpen(false)
@@ -647,31 +644,22 @@ export const ChatMessage = memo(
                       new Set([...prevUrls, content.image_url?.url as string]),
                   )
                   return content
-                } else {
-                  const path = extractPathFromUrl(content.image_url.url)
-                  const presignedUrl = await getPresignedUrl(path, courseName)
-                  setImageUrls(
-                    (prevUrls) => new Set([...prevUrls, presignedUrl]),
-                  )
-                  return { ...content, image_url: { url: presignedUrl } }
                 }
+
+                const path = extractPathFromUrl(content.image_url.url)
+                const presignedUrl = await getPresignedUrl(path, courseName)
+                setImageUrls((prevUrls) => new Set([...prevUrls, presignedUrl]))
+                return { ...content, image_url: { url: presignedUrl } }
               }
               return content
             }),
           )
-          if (
-            !isValid &&
-            // onImageUrlsUpdate && // Commented out image upload functionality
-            !deepEqual(updatedContent, message.content)
-          ) {
-            // onImageUrlsUpdate( // Commented out image upload functionality
-            //   { ...message, content: updatedContent }, // Commented out image upload functionality
-            //   messageIndex, // Commented out image upload functionality
-            // ) // Commented out image upload functionality
+          if (!isValid && !deepEqual(updatedContent, message.content)) {
+            return
           }
         }
       }
-      // Call fetchUrl for all messages that contain images
+
       if (
         Array.isArray(message.content) &&
         message.content.some((content) => content.type === 'image_url')
@@ -1682,6 +1670,17 @@ export const ChatMessage = memo(
       loading &&
       messageIndex === (selectedConversation?.messages.length ?? 0) - 1
 
+    const hasFinalResponseEvent = agentEvents.some(
+      (event) => event.type === 'final_response',
+    )
+
+    const isCurrentAgentRunMessage =
+      hasAgentEvents &&
+      !hasFinalResponseEvent &&
+      message.role === 'user' &&
+      messageIsStreaming &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
     const shouldShowSources =
       condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
 
@@ -1890,7 +1889,10 @@ export const ChatMessage = memo(
                         )}
                         <div className="mt-4 flex w-full flex-col items-start space-y-3">
                           {hasAgentEvents ? (
-                            <AgentExecutionTimeline events={agentEvents} />
+                            <AgentExecutionTimeline
+                              events={agentEvents}
+                              isRunning={isCurrentAgentRunMessage}
+                            />
                           ) : (
                             <>
                               {/* Query rewrite loading state - only show for current message */}
@@ -1941,7 +1943,9 @@ export const ChatMessage = memo(
                                     title="Retrieved documents"
                                     isLoading={false}
                                     error={false}
-                                    content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                                    content={`Found ${getContextsLength(
+                                      message.contexts,
+                                    )} document chunks.`}
                                   />
                                 )}
 
@@ -1959,7 +1963,9 @@ export const ChatMessage = memo(
                                     title="Retrieving documents"
                                     isLoading={isRetrievalLoading}
                                     error={false}
-                                    content={`Found ${getContextsLength(message.contexts)} document chunks.`}
+                                    content={`Found ${getContextsLength(
+                                      message.contexts,
+                                    )} document chunks.`}
                                   />
                                 )}
 
@@ -2192,7 +2198,7 @@ export const ChatMessage = memo(
                                       tool.output !== undefined ||
                                       tool.error !== undefined,
                                   )) && (
-                                  <div className="flex items-center gap-3 rounded-lg px-4 py-3">
+                                  <div className="flex items-center gap-3 px-4 py-3">
                                     <p
                                       className={`text-sm font-semibold ${montserrat_paragraph.variable} font-montserratParagraph`}
                                     >
@@ -2226,8 +2232,17 @@ export const ChatMessage = memo(
                             }}
                           >
                             <button
+                              type="button"
+                              aria-label="Edit message"
                               className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
-                                ${Array.isArray(message.content) && message.content.some((content) => content.type === 'image_url') ? 'hidden' : ''}`}
+                                ${
+                                  Array.isArray(message.content) &&
+                                  message.content.some(
+                                    (content) => content.type === 'image_url',
+                                  )
+                                    ? 'hidden'
+                                    : ''
+                                }`}
                               onClick={toggleEditing}
                             >
                               <IconEdit
@@ -2275,7 +2290,9 @@ export const ChatMessage = memo(
                                     style={{
                                       marginLeft: index > 0 ? '-0.75rem' : '0',
                                       zIndex: index,
-                                      transform: `rotate(${index % 2 === 0 ? '-1deg' : '1deg'})`,
+                                      transform: `rotate(${
+                                        index % 2 === 0 ? '-1deg' : '1deg'
+                                      })`,
                                     }}
                                   >
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-100 transition-opacity duration-200"></div>

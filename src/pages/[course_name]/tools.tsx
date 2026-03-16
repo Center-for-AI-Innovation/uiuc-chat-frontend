@@ -31,10 +31,10 @@ const ToolsPage: NextPage = () => {
   const getCurrentPageName = () => {
     const raw = router.query.course_name
     return typeof raw === 'string'
-        ? raw
-        : Array.isArray(raw)
-          ? raw[0]
-          : undefined
+      ? raw
+      : Array.isArray(raw)
+        ? raw[0]
+        : undefined
   }
   const courseName = getCurrentPageName() as string
 
@@ -49,7 +49,8 @@ const ToolsPage: NextPage = () => {
         )
         if (!exsitResponse.ok) {
           const s = exsitResponse.status
-          if (s === 401 || s === 403 || s === 404) setErrorType(s as 401 | 403 | 404)
+          if (s === 401 || s === 403 || s === 404)
+            setErrorType(s as 401 | 403 | 404)
           return
         }
 
@@ -57,14 +58,14 @@ const ToolsPage: NextPage = () => {
         if (!data) {
           setErrorType(404)
           return
-        }
-        else {
+        } else {
           const dataResponse = await fetch(
             `/api/UIUC-api/getAllCourseData?course_name=${courseName}`,
           )
           if (!dataResponse.ok) {
             const s = dataResponse.status
-            if (s === 401 || s === 403 || s === 404) setErrorType(s as 401 | 403 | 404)
+            if (s === 401 || s === 403 || s === 404)
+              setErrorType(s as 401 | 403 | 404)
             return
           }
           const data = await dataResponse.json()
@@ -80,7 +81,7 @@ const ToolsPage: NextPage = () => {
           setErrorType(status as 401 | 403 | 404)
         }
       } finally {
-      setIsLoading(false)
+        setIsLoading(false)
       }
 
       posthog.capture('tool_page_visited', {
