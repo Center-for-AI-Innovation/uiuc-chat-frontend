@@ -186,6 +186,7 @@ export type AgentStreamEvent =
 export interface AgentRunRequest {
   conversationId?: string // Optional - new conversation if not provided
   courseName: string
+  userEmail?: string
   userMessage: {
     id: string
     content:

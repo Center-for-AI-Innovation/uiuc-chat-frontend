@@ -183,6 +183,7 @@ export async function runServerAgentMode({
   const agentRequest: AgentRunRequest = {
     conversationId: updatedConversation.id,
     courseName,
+    userEmail: selectedConversation.userEmail,
     userMessage: {
       id: message.id,
       content: message.content,

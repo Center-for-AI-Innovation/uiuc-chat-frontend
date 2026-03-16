@@ -120,4 +120,32 @@ describe('runAgentStream', () => {
 
     expect(onError).toHaveBeenCalledWith('bad request', undefined, false)
   })
+
+  it('sends the standard persistence headers with agent requests', async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(createStreamResponse([])) as typeof fetch
+
+    await runAgentStream(
+      {
+        courseName: 'CS101',
+        userEmail: 'user@example.com',
+        userMessage: { id: 'user-1', content: 'hello' },
+        documentGroups: [],
+        model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' },
+        temperature: 0.3,
+      },
+      {},
+    )
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      '/api/agent',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Content-Type': 'application/json',
+          'x-user-email': 'user@example.com',
+        }),
+      }),
+    )
+  })
 })
