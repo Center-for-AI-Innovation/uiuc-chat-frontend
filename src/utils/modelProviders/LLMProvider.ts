@@ -2,7 +2,7 @@ import {
   type AzureModel,
   AzureModelID,
   AzureModels,
-} from '~/utils/modelProviders/azureModels'
+} from '~/utils/modelProviders/types/azure'
 import {
   type OllamaModel,
   OllamaModelIDs,

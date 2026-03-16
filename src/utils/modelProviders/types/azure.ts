@@ -20,7 +20,6 @@ export enum AzureModelID {
   GPT_4_1 = 'gpt-4.1',
   GPT_4_1_mini = 'gpt-4.1-mini',
   GPT_4_1_nano = 'gpt-4.1-nano',
-  // New GPT-5 family (Azure canonical names may differ per deployment)
   GPT_5 = 'gpt-5',
   GPT_5_mini = 'gpt-5-mini',
   GPT_5_nano = 'gpt-5-nano',
@@ -38,7 +37,6 @@ export enum AzureDeploymentModelName {
   GPT_4_1 = 'gpt-4.1',
   GPT_4_1_mini = 'gpt-4.1-mini',
   GPT_4_1_nano = 'gpt-4.1-nano',
-  // New GPT-5 family
   GPT_5 = 'gpt-5',
   GPT_5_mini = 'gpt-5-mini',
   GPT_5_nano = 'gpt-5-nano',
