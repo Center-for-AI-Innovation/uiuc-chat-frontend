@@ -139,6 +139,8 @@ const SourcesSidebar = ({
 
         // Remove the maintain-margin class after a short delay
         setTimeout(() => {
+          // make sure the setTimeout callback safely no-ops when document is unavailable after test teardown
+          if (typeof document === 'undefined') return
           const mainContent = document.querySelector('.overflow-wrap')
           if (mainContent) {
             mainContent.classList.remove('maintain-margin')
