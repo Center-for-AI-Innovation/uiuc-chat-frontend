@@ -206,7 +206,7 @@ function UploadNotificationContent({
     const match = error.match(/'error':\s*'((?:[^'\\]|\\.)*)'/)
     if (match) return match[1]
     const match2 = error.match(/"error":\s*"((?:[^"\\]|\\.)*)"/)
-    if (match2) return match[2]
+    if (match2) return match2[1]
     return error
   }
 
