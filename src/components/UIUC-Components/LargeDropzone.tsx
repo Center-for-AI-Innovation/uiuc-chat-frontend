@@ -472,24 +472,14 @@ export function LargeDropzone({
               </Text>
 
               {!isDisabled && (
-                <>
-                  <Text
-                    ta="center"
-                    fz={isSmallScreen ? 'xs' : 'sm'}
-                    mt="xs"
-                    className="text-[--foreground-faded]"
-                  >
-                    Drag&apos;n&apos;drop files or a whole folder here
-                  </Text>
-                  <Text
-                    ta="center"
-                    fz="xs"
-                    mt={4}
-                    className="text-[--foreground-faded]"
-                  >
-                    Images without extractable text (OCR) cannot be ingested.
-                  </Text>
-                </>
+                <Text
+                  ta="center"
+                  fz={isSmallScreen ? 'xs' : 'sm'}
+                  mt="xs"
+                  className="text-[--foreground-faded]"
+                >
+                  Drag&apos;n&apos;drop files or a whole folder here
+                </Text>
               )}
 
               <div className="mt-2 w-full overflow-x-hidden sm:mt-4">
