@@ -11,6 +11,7 @@ import {
   makeConversation,
   makeMessage,
 } from '~/test-utils/mocks/chat'
+import { type AgentEvent } from '@/types/chat'
 
 const messageMocks = vi.hoisted(() => ({
   saveConversationToServer: vi.fn(async () => ({})),
@@ -73,7 +74,92 @@ vi.mock('../MessageActions', () => ({
     ),
 }))
 
+const makeAgentRetrievalEvent = () =>
+  ({
+    id: 'agent-step-1-retrieval-0',
+    stepNumber: 1,
+    type: 'retrieval',
+    status: 'done',
+    title: 'Searching documents',
+    createdAt: '2026-03-09T20:00:00.000Z',
+    updatedAt: '2026-03-09T20:00:03.000Z',
+    metadata: {
+      contextQuery: 'transformers',
+      contextsRetrieved: 6,
+    },
+  }) as const
+
+async function renderAgentTimelineMessage({
+  agentEvents,
+  messageId,
+}: {
+  agentEvents: AgentEvent[]
+  messageId: string
+}) {
+  const { ChatMessage, SourcesSidebarProvider } = await import('../ChatMessage')
+
+  const userMsg = makeMessage({
+    id: messageId,
+    role: 'user',
+    content: 'Find papers about transformers',
+    agentEvents,
+  })
+
+  const conversation = makeConversation({
+    id: `${messageId}-conversation`,
+    messages: [userMsg],
+  })
+
+  renderWithProviders(
+    <SourcesSidebarProvider>
+      <ChatMessage
+        message={userMsg as any}
+        messageIndex={0}
+        courseName="CS101"
+      />
+    </SourcesSidebarProvider>,
+    {
+      homeState: {
+        selectedConversation: conversation as any,
+        messageIsStreaming: true,
+        loading: false,
+      },
+      homeContext: { dispatch: vi.fn() },
+    },
+  )
+}
+
 describe('ChatMessage', () => {
+  it('keeps agent timeline active for the current in-progress user message', async () => {
+    await renderAgentTimelineMessage({
+      messageId: 'u-agent',
+      agentEvents: [makeAgentRetrievalEvent()],
+    })
+
+    expect(await screen.findByText('Active')).toBeInTheDocument()
+    expect(screen.getByText('6 chunks so far')).toBeInTheDocument()
+  })
+
+  it('marks agent timeline complete once final response generation begins', async () => {
+    await renderAgentTimelineMessage({
+      messageId: 'u-agent-final',
+      agentEvents: [
+        makeAgentRetrievalEvent(),
+        {
+          id: 'agent-final-response',
+          stepNumber: 2,
+          type: 'final_response',
+          status: 'running',
+          title: 'Generating response',
+          createdAt: '2026-03-09T20:00:04.000Z',
+        },
+      ],
+    })
+
+    expect(await screen.findByText('6 chunks retrieved')).toBeInTheDocument()
+    expect(screen.queryByText('Active')).not.toBeInTheDocument()
+  })
+
   it('renders assistant markdown and opens Sources sidebar when contexts exist', async () => {
     const user = userEvent.setup()
     vi.spyOn(console, 'log').mockImplementation(() => {})

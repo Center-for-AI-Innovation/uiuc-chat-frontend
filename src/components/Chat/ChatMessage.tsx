@@ -9,7 +9,14 @@ import React, {
   createContext,
   useContext as useReactContext,
 } from 'react'
-import { Text, createStyles, Badge, Tooltip, Modal } from '@mantine/core'
+import {
+  Text,
+  createStyles,
+  Badge,
+  Tooltip,
+  Modal,
+  Button,
+} from '@mantine/core'
 import {
   IconCheck,
   IconEdit,
@@ -19,6 +26,8 @@ import {
   IconFileTypePdf,
   IconFileTypeDocx,
   IconFileTypeTxt,
+  IconFileTypeXls,
+  IconFileTypePpt,
   IconFile,
   IconEye,
 } from '@tabler/icons-react'
@@ -52,6 +61,7 @@ import rehypeMathjax from 'rehype-mathjax'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import { IntermediateStateAccordion } from '../UIUC-Components/IntermediateStateAccordion'
+import { AgentExecutionTimeline } from './AgentExecutionTimeline'
 import { FeedbackModal } from './FeedbackModal'
 
 const useStyles = createStyles((theme) => ({
@@ -233,7 +243,6 @@ const FilePreviewModal: React.FC<{
       messageIsStreaming,
       isImg2TextLoading,
       isRouting,
-      isRunningTool,
       isRetrievalLoading,
       isQueryRewriting,
       loading,
@@ -502,9 +511,13 @@ export const ChatMessage = memo(
 
     const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-    // SET TIMER for message writing (from gpt-4)
     const [timerVisible, setTimerVisible] = useState(false)
     const { classes } = useStyles() // for Accordion
+
+    const agentEvents = Array.isArray(message.agentEvents)
+      ? message.agentEvents
+      : []
+    const hasAgentEvents = agentEvents.length > 0
 
     // Remove the local state for sources sidebar and use only context
     const isSourcesSidebarOpen = activeSidebarMessageId === message.id
@@ -585,7 +598,6 @@ export const ChatMessage = memo(
       return activeSidebarMessageId !== null
     }
 
-    // Cleanup effect for modal
     useEffect(() => {
       return () => {
         setIsFeedbackModalOpen(false)
@@ -649,31 +661,22 @@ export const ChatMessage = memo(
                       new Set([...prevUrls, content.image_url?.url as string]),
                   )
                   return content
-                } else {
-                  const path = extractPathFromUrl(content.image_url.url)
-                  const presignedUrl = await getPresignedUrl(path, courseName)
-                  setImageUrls(
-                    (prevUrls) => new Set([...prevUrls, presignedUrl]),
-                  )
-                  return { ...content, image_url: { url: presignedUrl } }
                 }
+
+                const path = extractPathFromUrl(content.image_url.url)
+                const presignedUrl = await getPresignedUrl(path, courseName)
+                setImageUrls((prevUrls) => new Set([...prevUrls, presignedUrl]))
+                return { ...content, image_url: { url: presignedUrl } }
               }
               return content
             }),
           )
-          if (
-            !isValid &&
-            // onImageUrlsUpdate && // Commented out image upload functionality
-            !deepEqual(updatedContent, message.content)
-          ) {
-            // onImageUrlsUpdate( // Commented out image upload functionality
-            //   { ...message, content: updatedContent }, // Commented out image upload functionality
-            //   messageIndex, // Commented out image upload functionality
-            // ) // Commented out image upload functionality
+          if (!isValid && !deepEqual(updatedContent, message.content)) {
+            return
           }
         }
       }
-      // Call fetchUrl for all messages that contain images
+
       if (
         Array.isArray(message.content) &&
         message.content.some((content) => content.type === 'image_url')
@@ -1714,6 +1717,17 @@ export const ChatMessage = memo(
       loading &&
       messageIndex === (selectedConversation?.messages.length ?? 0) - 1
 
+    const hasFinalResponseEvent = agentEvents.some(
+      (event) => event.type === 'final_response',
+    )
+
+    const isCurrentAgentRunMessage =
+      hasAgentEvents &&
+      !hasFinalResponseEvent &&
+      message.role === 'user' &&
+      messageIsStreaming &&
+      messageIndex === (selectedConversation?.messages.length ?? 0) - 1
+
     const shouldShowSources =
       condHasContexts && !condIsStreamingAndLastMsg && !condLoadingAndLastMsg
 
@@ -1745,7 +1759,6 @@ export const ChatMessage = memo(
                   {isEditing ? (
                     <div className="flex w-full flex-col">
                       <textarea
-                        aria-label="Edit message"
                         ref={textareaRef}
                         className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary]"
                         value={messageContent}
@@ -1932,340 +1945,328 @@ export const ChatMessage = memo(
                         ) : (
                           <>{message.content}</>
                         )}
-                        <div className="mt-2 flex w-full flex-col items-start space-y-2">
-                          {/* Query rewrite loading state - only show for current message */}
-                          {isQueryRewriting &&
-                            messageIndex ===
-                              (selectedConversation?.messages?.length ?? 0) -
-                                1 && (
-                              <IntermediateStateAccordion
-                                accordionKey="query-rewrite"
-                                title="Optimizing search query"
-                                isLoading={isQueryRewriting}
-                                error={false}
-                                content={<></>}
-                              />
-                            )}
-
-                          {/* Query rewrite result - show for any message that was optimized */}
-                          {(!isQueryRewriting ||
-                            messageIndex <
-                              (selectedConversation?.messages?.length ?? 0) -
-                                1) &&
-                            message.wasQueryRewritten !== undefined &&
-                            message.wasQueryRewritten !== null && (
-                              <IntermediateStateAccordion
-                                accordionKey="query-rewrite-result"
-                                title={
-                                  message.wasQueryRewritten
-                                    ? 'Optimized search query'
-                                    : 'No query optimization necessary'
-                                }
-                                isLoading={false}
-                                error={false}
-                                content={
-                                  message.wasQueryRewritten
-                                    ? message.queryRewriteText
-                                    : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
-                                }
-                              />
-                            )}
-
-                          {/* Retrieval results for all messages */}
-                          {Array.isArray(message.contexts) &&
-                            message.contexts.length > 0 && (
-                              <IntermediateStateAccordion
-                                accordionKey="retrieval loading"
-                                title="Retrieved documents"
-                                isLoading={false}
-                                error={false}
-                                content={`Found ${getContextsLength(
-                                  message.contexts,
-                                )} document chunks.`}
-                              />
-                            )}
-
-                          {/* Retrieval loading state for last message */}
-                          {isRetrievalLoading &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
-                              <IntermediateStateAccordion
-                                accordionKey="retrieval loading"
-                                title="Retrieving documents"
-                                isLoading={isRetrievalLoading}
-                                error={false}
-                                content={`Found ${getContextsLength(
-                                  message.contexts,
-                                )} document chunks.`}
-                              />
-                            )}
-
-                          {/* Tool Routing loading state for last message */}
-                          {isRouting &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
-                              <IntermediateStateAccordion
-                                accordionKey={`routing tools`}
-                                title={'Routing the request to relevant tools'}
-                                isLoading={isRouting}
-                                error={false}
-                                content={<></>}
-                              />
-                            )}
-
-                          {/* Tool input arguments state for last message */}
-                          {isRouting === false &&
-                            message.tools &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) && (
-                              <>
-                                {message.tools.map((response, index) => (
+                        <div className="mt-4 flex w-full flex-col items-start space-y-3">
+                          {hasAgentEvents ? (
+                            <AgentExecutionTimeline
+                              events={agentEvents}
+                              isRunning={isCurrentAgentRunMessage}
+                            />
+                          ) : (
+                            <>
+                              {/* Query rewrite loading state - only show for current message */}
+                              {isQueryRewriting &&
+                                messageIndex ===
+                                  (selectedConversation?.messages?.length ??
+                                    0) -
+                                    1 && (
                                   <IntermediateStateAccordion
-                                    key={`routing-${index}`}
-                                    accordionKey={`routing-${index}`}
+                                    accordionKey="query-rewrite"
+                                    title="Optimizing search query"
+                                    isLoading={isQueryRewriting}
+                                    error={false}
+                                    content={<></>}
+                                  />
+                                )}
+
+                              {/* Query rewrite result - show for any message that was optimized */}
+                              {(!isQueryRewriting ||
+                                messageIndex <
+                                  (selectedConversation?.messages?.length ??
+                                    0) -
+                                    1) &&
+                                message.wasQueryRewritten !== undefined &&
+                                message.wasQueryRewritten !== null && (
+                                  <IntermediateStateAccordion
+                                    accordionKey="query-rewrite-result"
                                     title={
-                                      <>
-                                        Routing the request to{' '}
-                                        <Badge
-                                          color="var(--background-dark)"
-                                          radius="md"
-                                          size="sm"
-                                          styles={{
-                                            root: {
-                                              color: 'var(--foreground)',
-                                              backgroundColor:
-                                                'var(--background-dark)',
-                                            },
-                                          }}
-                                        >
-                                          {response.readableName}
-                                        </Badge>
-                                      </>
+                                      message.wasQueryRewritten
+                                        ? 'Optimized search query'
+                                        : 'No query optimization necessary'
+                                    }
+                                    isLoading={false}
+                                    error={false}
+                                    content={
+                                      message.wasQueryRewritten
+                                        ? message.queryRewriteText
+                                        : "The LLM determined no optimization was necessary. We only optimize when it's necessary to turn a single message into a stand-alone search to retrieve the best documents."
+                                    }
+                                  />
+                                )}
+
+                              {/* Retrieval results for all messages */}
+                              {Array.isArray(message.contexts) &&
+                                message.contexts.length > 0 && (
+                                  <IntermediateStateAccordion
+                                    accordionKey="retrieval loading"
+                                    title="Retrieved documents"
+                                    isLoading={false}
+                                    error={false}
+                                    content={`Found ${getContextsLength(
+                                      message.contexts,
+                                    )} document chunks.`}
+                                  />
+                                )}
+
+                              {/* Retrieval loading state for last message */}
+                              {isRetrievalLoading &&
+                                (messageIndex ===
+                                  (selectedConversation?.messages.length ?? 0) -
+                                    1 ||
+                                  messageIndex ===
+                                    (selectedConversation?.messages.length ??
+                                      0) -
+                                      2) && (
+                                  <IntermediateStateAccordion
+                                    accordionKey="retrieval loading"
+                                    title="Retrieving documents"
+                                    isLoading={isRetrievalLoading}
+                                    error={false}
+                                    content={`Found ${getContextsLength(
+                                      message.contexts,
+                                    )} document chunks.`}
+                                  />
+                                )}
+
+                              {/* Tool Routing loading state for last message */}
+                              {isRouting &&
+                                (messageIndex ===
+                                  (selectedConversation?.messages.length ?? 0) -
+                                    1 ||
+                                  messageIndex ===
+                                    (selectedConversation?.messages.length ??
+                                      0) -
+                                      2) && (
+                                  <IntermediateStateAccordion
+                                    accordionKey={`routing tools`}
+                                    title={
+                                      'Routing the request to relevant tools'
                                     }
                                     isLoading={isRouting}
                                     error={false}
-                                    content={
-                                      <>
-                                        Arguments :{' '}
-                                        {response.aiGeneratedArgumentValues
-                                          ?.image_urls ? (
-                                          <div>
-                                            <div className="flex overflow-x-auto">
-                                              {JSON.parse(
-                                                response
-                                                  .aiGeneratedArgumentValues
-                                                  .image_urls,
-                                              ).length > 0 ? (
-                                                JSON.parse(
-                                                  response
-                                                    .aiGeneratedArgumentValues
-                                                    .image_urls,
-                                                ).map(
-                                                  (
-                                                    imageUrl: string,
-                                                    index: number,
-                                                  ) => (
-                                                    <div
-                                                      key={index}
-                                                      className={
-                                                        classes.imageContainerStyle
-                                                      }
-                                                    >
-                                                      <div className="overflow-hidden rounded-lg">
-                                                        <ImagePreview
-                                                          src={imageUrl}
-                                                          alt={`Tool image argument ${index}`}
-                                                          className={
-                                                            classes.imageStyle
-                                                          }
-                                                        />
-                                                      </div>
-                                                    </div>
-                                                  ),
-                                                )
-                                              ) : (
-                                                <p>No arguments provided</p>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ) : (
-                                          <pre>
-                                            {JSON.stringify(
-                                              response.aiGeneratedArgumentValues,
-                                              null,
-                                              2,
-                                            )}
-                                          </pre>
-                                        )}
-                                      </>
-                                    }
+                                    content={<></>}
                                   />
-                                ))}
-                              </>
-                            )}
+                                )}
 
-                          {/* Tool output states for last message */}
-                          {(messageIndex ===
-                            (selectedConversation?.messages.length ?? 0) - 1 ||
-                            messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                2) && (
-                            <>
-                              {message.tools?.map((response, index) => (
-                                <IntermediateStateAccordion
-                                  key={`tool-${index}`}
-                                  accordionKey={`tool-${index}`}
-                                  title={
-                                    <>
-                                      Tool output from{' '}
-                                      <Badge
-                                        color="var(--background-dark)"
-                                        radius="md"
-                                        size="sm"
-                                        styles={{
-                                          root: {
-                                            color: response.error
-                                              ? 'var(--illinois-white)'
-                                              : 'var(--foreground)',
-                                            backgroundColor: response.error
-                                              ? 'var(--badge-error)'
-                                              : 'var(--background-dark)',
-                                          },
-                                        }}
-                                      >
-                                        {response.readableName}
-                                      </Badge>
-                                    </>
-                                  }
-                                  isLoading={
-                                    response.output === undefined &&
-                                    response.error === undefined
-                                  }
-                                  error={response.error ? true : false}
-                                  content={
-                                    <>
-                                      {response.error ? (
-                                        <span>{response.error}</span>
-                                      ) : (
-                                        <>
-                                          <div
-                                            style={{
-                                              display: 'flex',
-                                              overflowX: 'auto',
-                                              gap: '10px',
-                                            }}
-                                          >
-                                            {response.output?.imageUrls &&
-                                              response.output?.imageUrls.map(
-                                                (imageUrl, index) => (
-                                                  <div
-                                                    key={index}
-                                                    className={
-                                                      classes.imageContainerStyle
-                                                    }
-                                                  >
-                                                    <div className="overflow-hidden rounded-lg">
-                                                      <ImagePreview
-                                                        src={imageUrl}
-                                                        alt={`Tool output image ${index}`}
-                                                        className={
-                                                          classes.imageStyle
-                                                        }
-                                                      />
-                                                    </div>
-                                                  </div>
-                                                ),
-                                              )}
-                                          </div>
-                                          <div>
-                                            {response.output?.text
-                                              ? response.output.text
-                                              : JSON.stringify(
-                                                  response.output?.data,
+                              {/* Tool input arguments state for last message */}
+                              {isRouting === false &&
+                                message.tools &&
+                                (messageIndex ===
+                                  (selectedConversation?.messages.length ?? 0) -
+                                    1 ||
+                                  messageIndex ===
+                                    (selectedConversation?.messages.length ??
+                                      0) -
+                                      2) && (
+                                  <>
+                                    {message.tools.map((response, index) => (
+                                      <IntermediateStateAccordion
+                                        key={`routing-${index}`}
+                                        accordionKey={`routing-${index}`}
+                                        title={
+                                          <>
+                                            Routing the request to{' '}
+                                            <Badge
+                                              color="var(--background-dark)"
+                                              radius="md"
+                                              size="sm"
+                                              styles={{
+                                                root: {
+                                                  color: 'var(--foreground)',
+                                                  backgroundColor:
+                                                    'var(--background-dark)',
+                                                },
+                                              }}
+                                            >
+                                              {response.readableName}
+                                            </Badge>
+                                          </>
+                                        }
+                                        isLoading={isRouting}
+                                        error={false}
+                                        content={
+                                          <>
+                                            Arguments :{' '}
+                                            {response.aiGeneratedArgumentValues
+                                              ?.image_urls ? (
+                                              <div>
+                                                <div className="flex overflow-x-auto">
+                                                  {JSON.parse(
+                                                    response
+                                                      .aiGeneratedArgumentValues
+                                                      .image_urls,
+                                                  ).length > 0 ? (
+                                                    JSON.parse(
+                                                      response
+                                                        .aiGeneratedArgumentValues
+                                                        .image_urls,
+                                                    ).map(
+                                                      (
+                                                        imageUrl: string,
+                                                        index: number,
+                                                      ) => (
+                                                        <div
+                                                          key={index}
+                                                          className={
+                                                            classes.imageContainerStyle
+                                                          }
+                                                        >
+                                                          <div className="overflow-hidden rounded-lg">
+                                                            <ImagePreview
+                                                              src={imageUrl}
+                                                              alt={`Tool image argument ${index}`}
+                                                              className={
+                                                                classes.imageStyle
+                                                              }
+                                                            />
+                                                          </div>
+                                                        </div>
+                                                      ),
+                                                    )
+                                                  ) : (
+                                                    <p>No arguments provided</p>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            ) : (
+                                              <pre>
+                                                {JSON.stringify(
+                                                  response.aiGeneratedArgumentValues,
                                                   null,
                                                   2,
                                                 )}
-                                          </div>
+                                              </pre>
+                                            )}
+                                          </>
+                                        }
+                                      />
+                                    ))}
+                                  </>
+                                )}
+
+                              {/* Tool output states for last message */}
+                              {(messageIndex ===
+                                (selectedConversation?.messages.length ?? 0) -
+                                  1 ||
+                                messageIndex ===
+                                  (selectedConversation?.messages.length ?? 0) -
+                                    2) && (
+                                <>
+                                  {message.tools?.map((response, index) => (
+                                    <IntermediateStateAccordion
+                                      key={`tool-${index}`}
+                                      accordionKey={`tool-${index}`}
+                                      title={
+                                        <>
+                                          Tool output from{' '}
+                                          <Badge
+                                            color="var(--background-dark)"
+                                            radius="md"
+                                            size="sm"
+                                            styles={{
+                                              root: {
+                                                color: response.error
+                                                  ? 'var(--illinois-white)'
+                                                  : 'var(--foreground)',
+                                                backgroundColor: response.error
+                                                  ? 'var(--badge-error)'
+                                                  : 'var(--background-dark)',
+                                              },
+                                            }}
+                                          >
+                                            {response.readableName}
+                                          </Badge>
                                         </>
-                                      )}
-                                    </>
-                                  }
-                                />
-                              ))}
+                                      }
+                                      isLoading={
+                                        response.output === undefined &&
+                                        response.error === undefined
+                                      }
+                                      error={response.error ? true : false}
+                                      content={
+                                        <>
+                                          {response.error ? (
+                                            <span>{response.error}</span>
+                                          ) : (
+                                            <>
+                                              <div
+                                                style={{
+                                                  display: 'flex',
+                                                  overflowX: 'auto',
+                                                  gap: '10px',
+                                                }}
+                                              >
+                                                {response.output?.imageUrls &&
+                                                  response.output?.imageUrls.map(
+                                                    (imageUrl, index) => (
+                                                      <div
+                                                        key={index}
+                                                        className={
+                                                          classes.imageContainerStyle
+                                                        }
+                                                      >
+                                                        <div className="overflow-hidden rounded-lg">
+                                                          <ImagePreview
+                                                            src={imageUrl}
+                                                            alt={`Tool output image ${index}`}
+                                                            className={
+                                                              classes.imageStyle
+                                                            }
+                                                          />
+                                                        </div>
+                                                      </div>
+                                                    ),
+                                                  )}
+                                              </div>
+                                              <div>
+                                                {response.output?.text
+                                                  ? response.output.text
+                                                  : JSON.stringify(
+                                                      response.output?.data,
+                                                      null,
+                                                      2,
+                                                    )}
+                                              </div>
+                                            </>
+                                          )}
+                                        </>
+                                      }
+                                    />
+                                  ))}
+                                </>
+                              )}
+
+                              {/* Only show "Generating final response" for NON-agent mode.
+                                  Agent mode shows status via AgentExecutionTimeline instead. */}
+                              {!isRouting &&
+                                !isRetrievalLoading &&
+                                !isImg2TextLoading &&
+                                !isQueryRewriting &&
+                                loading &&
+                                !selectedConversation?.agentModeEnabled && // Don't show for agent mode
+                                (messageIndex ===
+                                  (selectedConversation?.messages.length ?? 0) -
+                                    1 ||
+                                  messageIndex ===
+                                    (selectedConversation?.messages.length ??
+                                      0) -
+                                      2) &&
+                                (!message.tools ||
+                                  message.tools.every(
+                                    (tool) =>
+                                      tool.output !== undefined ||
+                                      tool.error !== undefined,
+                                  )) && (
+                                  <div className="flex items-center gap-3 px-4 py-3">
+                                    <p
+                                      className={`text-sm font-semibold ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    >
+                                      Generating final response…
+                                    </p>
+                                    <LoadingSpinner size="xs" />
+                                  </div>
+                                )}
                             </>
                           )}
-                          {(() => {
-                            if (
-                              messageIsStreaming === undefined ||
-                              !messageIsStreaming
-                            ) {
-                              // console.log(
-                              //   'isRouting: ',
-                              //   isRouting,
-                              //   'isRetrievalLoading: ',
-                              //   isRetrievalLoading,
-                              //   'isImg2TextLoading: ',
-                              //   isImg2TextLoading,
-                              //   'messageIsStreaming: ',
-                              //   messageIsStreaming,
-                              //   'loading: ',
-                              //   loading,
-                              // )
-                            }
-                            return null
-                          })()}
-                          {!isRouting &&
-                            !isRetrievalLoading &&
-                            !isImg2TextLoading &&
-                            !isQueryRewriting &&
-                            loading &&
-                            (messageIndex ===
-                              (selectedConversation?.messages.length ?? 0) -
-                                1 ||
-                              messageIndex ===
-                                (selectedConversation?.messages.length ?? 0) -
-                                  2) &&
-                            (!message.tools ||
-                              message.tools.every(
-                                (tool) =>
-                                  tool.output !== undefined ||
-                                  tool.error !== undefined,
-                              )) && (
-                              <>
-                                <div
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    marginLeft: '10px',
-                                    marginTop: '10px',
-                                  }}
-                                >
-                                  <p
-                                    style={{
-                                      marginRight: '10px',
-                                      fontWeight: 'bold',
-                                      textShadow: '0 0 15px',
-                                    }}
-                                    className={`pulsate text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
-                                  >
-                                    Generating final response:
-                                  </p>
-                                  <LoadingSpinner size="xs" />
-                                </div>
-                              </>
-                            )}
                         </div>
                       </div>
                       {!isEditing && (
@@ -2289,17 +2290,17 @@ export const ChatMessage = memo(
                             }}
                           >
                             <button
-                              tabIndex={0}
-                              aria-label="Edit Message"
-                              className={`text-[--foreground-faded] hover:text-[--foreground] ${
-                                Array.isArray(message.content) &&
-                                message.content.some(
-                                  (content) => content.type === 'image_url',
-                                )
-                                  ? 'hidden'
-                                  : ''
-                              }`}
                               type="button"
+                              aria-label="Edit message"
+                              className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
+                                ${
+                                  Array.isArray(message.content) &&
+                                  message.content.some(
+                                    (content) => content.type === 'image_url',
+                                  )
+                                    ? 'hidden'
+                                    : ''
+                                }`}
                               onClick={toggleEditing}
                             >
                               <IconEdit
@@ -2327,15 +2328,6 @@ export const ChatMessage = memo(
                     {shouldShowSources && (
                       <div className="relative z-0 mb-1 flex justify-start">
                         <button
-                          tabIndex={0}
-                          aria-label={
-                            'Open citations for ' +
-                            getContextsLength(message.contexts) +
-                            ' Source' +
-                            (getContextsLength(message.contexts) == 1
-                              ? ''
-                              : 's')
-                          }
                           className="group/button relative flex items-center gap-0 rounded-xl bg-[--dashboard-button] px-3 py-1.5 text-sm font-medium text-[--dashboard-button-foreground] transition-all duration-200 hover:bg-[--dashboard-button-hover]"
                           onClick={() => handleSourcesSidebarToggle(true)}
                         >
