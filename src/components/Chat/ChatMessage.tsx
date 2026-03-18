@@ -1562,8 +1562,8 @@ export const ChatMessage = memo(
           tooltipAlignment === 'left'
             ? 'left-align'
             : tooltipAlignment === 'right'
-            ? 'right-align'
-            : ''
+              ? 'right-align'
+              : ''
         } ${isCurrentlyStreaming ? 'streaming-tooltip' : ''}`
 
         return (
@@ -1595,8 +1595,8 @@ export const ChatMessage = memo(
           typeof children === 'string'
             ? children
             : Array.isArray(children) && typeof children[0] === 'string'
-            ? children[0]
-            : null
+              ? children[0]
+              : null
 
         const isBareUrl =
           childText != null &&
@@ -1737,11 +1737,11 @@ export const ChatMessage = memo(
           className={`group md:px-6 ${
             message.role === 'assistant'
               ? 'bg-[--chat-background]'
-              : 'bg-[--chat-background-user]'
+              : 'bg-[--chat-background-user] pt-4'
           } max-w-[100%]`}
           style={{ overflowWrap: 'anywhere' }}
         >
-          <div className="relative flex w-full overflow-visible px-2 py-3 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 lg:mx-[10%]">
+          <div className="relative flex w-full overflow-visible px-2 py-2 pt-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 lg:mx-[10%]">
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
