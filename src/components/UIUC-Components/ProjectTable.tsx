@@ -247,6 +247,7 @@ const ListProjectTable: React.FC = () => {
                 style={{
                   overflowX: 'auto',
                   width: '100%',
+                  padding: '4px',
                 }}
               >
                 <StyledTable aria-label="Chatbots list">
@@ -260,7 +261,22 @@ const ListProjectTable: React.FC = () => {
                       ].map(({ label, key }) => (
                         <th
                           key={key}
+                          tabIndex={0}
+                          role="columnheader button"
+                          aria-sort={
+                            sortColumn === key
+                              ? sortDirection === 'asc'
+                                ? 'ascending'
+                                : 'descending'
+                              : 'none'
+                          }
                           onClick={() => handleSort(key as SortableColumn)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              handleSort(key as SortableColumn)
+                            }
+                          }}
                           style={{ cursor: 'pointer' }}
                         >
                           <div
