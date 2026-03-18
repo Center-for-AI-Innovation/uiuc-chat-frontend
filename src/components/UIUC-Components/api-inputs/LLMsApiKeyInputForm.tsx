@@ -213,7 +213,7 @@ const NewModelDropdown: React.FC<{
         className="menu z-[50] w-full"
         size="md"
         placeholder="Select a model"
-        // searchable
+        searchable
         value={value?.id || ''}
         onChange={async (modelId) => {
           const selectedModel = allModels.find((model) => model.id === modelId)

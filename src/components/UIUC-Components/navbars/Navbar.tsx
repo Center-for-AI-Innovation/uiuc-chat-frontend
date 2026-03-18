@@ -88,10 +88,6 @@ const useStyles = createStyles((theme) => ({
       textDecoration: 'none',
     },
 
-    '&:focus': {
-      outline: '2px solid var(--dashboard-button)',
-    },
-
     '&[data-active="true"]': {
       color: 'var(--navbar-active)',
       /*      borderBottom: '2px solid var(--navbar-hover)',*/
@@ -139,7 +135,7 @@ const useStyles = createStyles((theme) => ({
     zIndex: 2,
     border: '1px solid var(--navbar-border)',
     borderRadius: '10px',
-    overflow: 'hidden',
+    overflow: 'visible',
     width: 'calc(100% - 1rem)',
     maxWidth: '330px',
     backgroundColor: 'var(--background-faded)',

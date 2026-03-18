@@ -187,11 +187,6 @@ const useStyles = createStyles((theme) => ({
 
     fontWeight: 500,
 
-    '&:focus': {
-      outline: '2px solid var(--background)',
-      outlineOffset: '-3px',
-    },
-
     '&:hover': {
       backgroundColor: 'var(--dashboard-button-hover)',
       transform: 'translateY(-1px)',
@@ -224,6 +219,7 @@ const useStyles = createStyles((theme) => ({
   navSection: {
     flex: 1,
     overflowY: 'auto',
+    padding: '4px',
   },
 
   navLink: {
@@ -246,11 +242,6 @@ const useStyles = createStyles((theme) => ({
       transform: 'translateX(0px)' /* 4px */,
     },
 
-    '&:focus': {
-      outline: '2px solid var(--foreground-faded)',
-      outlineOffset: '-3px',
-    },
-
     '&[data-active="true"]': {
       backgroundColor: 'var(--dashboard-button)',
       color: 'var(--dashboard-button-foreground)',
@@ -259,10 +250,6 @@ const useStyles = createStyles((theme) => ({
       '&:hover': {
         backgroundColor: 'var(--dashboard-button-hover)',
         color: 'var(--dashboard-button-foreground)',
-      },
-
-      '&:focus': {
-        outline: '2px solid var(--background)',
       },
     },
 

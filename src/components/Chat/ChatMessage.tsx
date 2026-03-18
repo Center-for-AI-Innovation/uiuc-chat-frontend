@@ -1538,6 +1538,34 @@ export const ChatMessage = memo(
         setShowTooltip(false)
       }, [])
 
+      const handleFocus = useCallback(() => {
+        if (!linkRef.current || !title) return
+        setShowTooltip(true)
+        const linkRect = linkRef.current.getBoundingClientRect()
+        const tooltipWidth = 200
+        if (linkRect.left < tooltipWidth / 2) {
+          setTooltipAlignment('left')
+        } else if (linkRect.right + tooltipWidth / 2 > window.innerWidth) {
+          setTooltipAlignment('right')
+        } else {
+          setTooltipAlignment('center')
+        }
+      }, [title])
+
+      const handleBlur = useCallback(() => {
+        setShowTooltip(false)
+      }, [])
+
+      const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' && href) {
+            e.preventDefault()
+            window.open(href, '_blank')?.focus()
+          }
+        },
+        [href],
+      )
+
       // Check if this message is currently streaming
       const isCurrentlyStreaming =
         messageIsStreaming &&
@@ -1551,6 +1579,9 @@ export const ChatMessage = memo(
         onMouseUp: handleClick,
         onMouseEnter: handleMouseEnter,
         onMouseLeave: handleMouseLeave,
+        onFocus: handleFocus,
+        onBlur: handleBlur,
+        onKeyDown: handleKeyDown,
         onClick: (e: React.MouseEvent) => e.preventDefault(), // Prevent default click behavior
         style: { pointerEvents: 'all' as const },
         ref: linkRef,

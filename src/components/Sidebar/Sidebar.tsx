@@ -232,9 +232,9 @@ const Sidebar = <T,>({
                           word.length === 0
                             ? ''
                             : word.match(/^[A-Z0-9]+$/)
-                            ? word // keep acronym casing
-                            : word.charAt(0).toUpperCase() +
-                              word.slice(1).toLowerCase(),
+                              ? word // keep acronym casing
+                              : word.charAt(0).toUpperCase() +
+                                word.slice(1).toLowerCase(),
                         )
                         .join(' ')
                     })()}
@@ -271,9 +271,9 @@ const Sidebar = <T,>({
           onSearch={handleSearchTerm}
         />
         <div
-          className="flex-grow overflow-auto"
+          className="flex-grow overflow-auto p-1"
           onScroll={onScroll}
-          tabIndex={0}
+          role="region"
           aria-label="Chat conversations"
         >
           {folders?.length > 0 && (
