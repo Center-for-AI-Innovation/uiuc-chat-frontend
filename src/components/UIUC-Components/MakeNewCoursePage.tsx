@@ -434,8 +434,9 @@ const MakeNewCoursePage = ({
               </Button>
 
               <Button
-                variant="dashboard"
+                variant="outline"
                 size="sm"
+                className="border-[#13294B]/30 text-[#13294B] hover:bg-[#13294B]/10"
                 disabled={
                   isLoading ||
                   (projectName === '' && !hasCreatedProject) ||
