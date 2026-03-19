@@ -383,7 +383,7 @@ describe('validateRequestBody', () => {
   //       api_key: 'k',
   //     }),
   //   ).rejects.toThrow(/does not support vision/i)
-  })
+  // })
 
   it('throws when messages are missing or invalid', async () => {
     await expect(
