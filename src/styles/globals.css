@@ -370,7 +370,6 @@
     white 20%
   );
 
-
   --dashboard-border: color-mix(
     in srgb,
     var(--dashboard-background),
