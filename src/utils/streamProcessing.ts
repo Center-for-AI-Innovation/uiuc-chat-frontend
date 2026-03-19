@@ -371,16 +371,16 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
     throw new Error("Invalid stream provided. 'stream' must be a boolean.")
   }
 
-  const hasImageContent = body.messages.some(
-    (message) =>
-      Array.isArray(message.content) &&
-      message.content.some((content) => content.type === 'image_url'),
-  )
-  if (hasImageContent && !VisionCapableModels.has(body.model as any)) {
-    throw new Error(
-      `The selected model '${body.model}' does not support vision capabilities. Use one of these: ${Array.from(VisionCapableModels).join(', ')}`,
-    )
-  }
+  // const hasImageContent = body.messages.some(
+  //   (message) =>
+  //     Array.isArray(message.content) &&
+  //     message.content.some((content) => content.type === 'image_url'),
+  // )
+  // if (hasImageContent && !VisionCapableModels.has(body.model as any)) {
+  //   throw new Error(
+  //     `The selected model '${body.model}' does not support vision capabilities. Use one of these: ${Array.from(VisionCapableModels).join(', ')}`,
+  //   )
+  // }
 
   // Additional validation for other fields can be added here if needed
 }
