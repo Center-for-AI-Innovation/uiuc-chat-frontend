@@ -436,7 +436,7 @@ const MakeNewCoursePage = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="border-[#13294B]/30 text-[#13294B] hover:bg-[#13294B]/10"
+                className="hover:text-(--illinois-blue) border-[#13294B] text-[#13294B] hover:bg-[#13294B]/10"
                 disabled={
                   isLoading ||
                   (projectName === '' && !hasCreatedProject) ||
