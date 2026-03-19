@@ -1,5 +1,5 @@
 import { generateText, streamText } from 'ai'
-import type { CoreMessage, TextPart, ImagePart, FilePart } from 'ai'
+import type { CoreMessage, TextPart, ImagePart } from 'ai'
 import { type Conversation } from '~/types/chat'
 import { type NCSAHostedVLMProvider } from '~/utils/modelProviders/LLMProvider'
 export const dynamic = 'force-dynamic'
@@ -99,29 +99,26 @@ function convertConversationToVercelAISDKv3(
   conversation.messages.forEach((message, index) => {
     if (message.role === 'system') return
 
+    const isLastUserMessage =
+      index === conversation.messages.length - 1 && message.role === 'user'
+
     let content: CoreMessage['content']
-    if (index === conversation.messages.length - 1 && message.role === 'user') {
-      content = message.finalPromtEngineeredMessage || ''
-    } else if (Array.isArray(message.content)) {
+    if (Array.isArray(message.content)) {
       content = message.content
         .map((c) => {
           switch (c.type) {
             case 'text':
               return c.text
-                ? ({ type: 'text', text: c.text } as TextPart)
+                ? ({
+                    type: 'text',
+                    text: isLastUserMessage
+                      ? message.finalPromtEngineeredMessage || c.text
+                      : c.text,
+                  } as TextPart)
                 : null
             case 'image_url':
               return c.image_url?.url
                 ? ({ type: 'image', image: c.image_url.url } as ImagePart)
-                : null
-            case 'file':
-              return c.fileUrl && c.fileType
-                ? ({
-                    type: 'file',
-                    data: c.fileUrl,
-                    mimeType: c.fileType,
-                    filename: c.fileName || '',
-                  } as FilePart)
                 : null
             default:
               return null
@@ -129,7 +126,9 @@ function convertConversationToVercelAISDKv3(
         })
         .filter((c) => c !== null)
     } else {
-      content = message.content as string
+      content = isLastUserMessage
+        ? message.finalPromtEngineeredMessage || (message.content as string)
+        : (message.content as string)
     }
 
     coreMessages.push({
