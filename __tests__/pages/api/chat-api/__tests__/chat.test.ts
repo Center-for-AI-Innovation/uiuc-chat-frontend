@@ -335,7 +335,7 @@ describe('chat-api/chat', () => {
     expect(hoisted.handleStreamingResponse).toHaveBeenCalled()
   })
 
-  it('invokes handleImageContent and handleToolsServer when image content and tools are present', async () => {
+  it('invokes handleToolsServer and does not handleImageContent when image content and tools are present but with a vision capable model', async () => {
     hoisted.fetchTools.mockResolvedValueOnce([{ id: 't1' }])
     hoisted.handleContextSearch.mockResolvedValueOnce([{ id: 1 }])
     const res = createMockRes()
@@ -345,6 +345,42 @@ describe('chat-api/chat', () => {
         method: 'POST',
         body: {
           model: 'gpt-4o',
+          messages: [
+            {
+              id: 'm1',
+              role: 'user',
+              content: [
+                { type: 'image_url', image_url: { url: 'http://img' } },
+                { type: 'text', text: 'hi' },
+              ],
+            },
+          ],
+          temperature: 0.1,
+          course_name: 'CS101',
+          stream: false,
+          api_key: 'k',
+          retrieval_only: false,
+        },
+        socket: { remoteAddress: '127.0.0.1' } as any,
+      }) as any,
+      res as any,
+    )
+
+    expect(hoisted.handleImageContent).not.toHaveBeenCalled()
+    expect(hoisted.handleToolsServer).toHaveBeenCalled()
+    expect(hoisted.handleNonStreamingResponse).toHaveBeenCalled()
+  })
+
+  it('invokes handleImageContent and handleToolsServer when image content and tools are present with a non vision model', async () => {
+    hoisted.fetchTools.mockResolvedValueOnce([{ id: 't1' }])
+    hoisted.handleContextSearch.mockResolvedValueOnce([{ id: 1 }])
+    const res = createMockRes()
+
+    await chat(
+      createMockReq({
+        method: 'POST',
+        body: {
+          model: 'magistral-small-latest',
           messages: [
             {
               id: 'm1',
