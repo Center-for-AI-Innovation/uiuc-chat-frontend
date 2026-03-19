@@ -482,4 +482,42 @@ describe('runAgentStream', () => {
       }),
     )
   })
+
+  it('skips lines that do not start with "data: "', async () => {
+    const encoder = new TextEncoder()
+    const body = new ReadableStream({
+      start(controller) {
+        // SSE comment line (no "data: " prefix) followed by a valid event
+        controller.enqueue(
+          encoder.encode(
+            ': this is a comment\nretry: 3000\ndata: {"type":"done","conversationId":"c1","finalMessageId":"a1","summary":null}\n\n',
+          ),
+        )
+        controller.close()
+      },
+    })
+
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(body, {
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+      }),
+    ) as typeof fetch
+
+    const onDone = vi.fn()
+
+    await runAgentStream(
+      {
+        courseName: 'CS101',
+        userMessage: { id: 'user-1', content: 'hello' },
+        documentGroups: [],
+        model: { id: 'gpt-4o-mini', name: 'GPT-4o mini' },
+        temperature: 0.3,
+      },
+      { onDone },
+    )
+
+    // The comment and retry lines should be skipped, but the data line should dispatch
+    expect(onDone).toHaveBeenCalledWith('c1', 'a1', null)
+  })
 })
