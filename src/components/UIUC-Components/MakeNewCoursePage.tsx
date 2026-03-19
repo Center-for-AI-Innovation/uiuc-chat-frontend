@@ -24,6 +24,18 @@ import { useAuth } from 'react-oidc-context'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from './GlobalFooter'
 
+/**
+ * Build a safe relative URL for navigating to a project's chat page.
+ * Guards against open-redirect attacks by stripping protocol-relative
+ * prefixes and ensuring the result is a plain path segment.
+ */
+const buildProjectChatPath = (name: string): string => {
+  // encodeURIComponent handles special chars, but also strip leading
+  // slashes/backslashes to prevent protocol-relative URLs (//evil.com).
+  const encoded = encodeURIComponent(name).replace(/^(%2F|%5C)+/gi, '')
+  return `/${encoded}/chat`
+}
+
 const MakeNewCoursePage = ({
   project_name,
   current_user_email,
@@ -333,7 +345,7 @@ const MakeNewCoursePage = ({
             radius="lg"
             className="my-8 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
           >
-            <div className="step_container min-h-[16rem]">
+            <div className="step_container min-h-[24rem]">
               {allSteps[currentStep]}
             </div>
             <UploadNotification
@@ -372,7 +384,7 @@ const MakeNewCoursePage = ({
               <Button
                 variant="dashboard"
                 size="sm"
-                className={isLastStep ? 'opacity-0' : ''}
+                className={isLastStep ? 'pointer-events-none opacity-0' : ''}
                 onClick={async () => {
                   if (currentStep === 0) {
                     if (!hasCreatedProject) {
@@ -422,7 +434,7 @@ const MakeNewCoursePage = ({
               </Button>
 
               <Button
-                variant="outline"
+                variant="dashboard"
                 size="sm"
                 disabled={
                   isLoading ||
@@ -431,7 +443,7 @@ const MakeNewCoursePage = ({
                     (!isCourseAvailable || isWaitingForAvailabilityCheck))
                 }
                 onClick={async () => {
-                  const safeName = encodeURIComponent(projectName)
+                  const chatPath = buildProjectChatPath(projectName)
                   if (!hasCreatedProject) {
                     const isCreated = await handleSubmit(
                       projectName,
@@ -441,10 +453,10 @@ const MakeNewCoursePage = ({
                     )
                     if (isCreated) {
                       setHasCreatedProject(true)
-                      router.push(`/${safeName}/chat`)
+                      router.push(chatPath)
                     }
                   } else {
-                    router.push(`/${safeName}/chat`)
+                    router.push(chatPath)
                   }
                 }}
               >
