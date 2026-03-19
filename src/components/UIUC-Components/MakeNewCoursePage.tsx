@@ -65,7 +65,9 @@ const MakeNewCoursePage = ({
           return false
         }
         const response = await fetch(
-          `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(debouncedProjectName)}`,
+          `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(
+            debouncedProjectName,
+          )}`,
         )
         if (!response.ok) {
           throw new Error('Failed to check project name availability')
@@ -429,6 +431,7 @@ const MakeNewCoursePage = ({
                     (!isCourseAvailable || isWaitingForAvailabilityCheck))
                 }
                 onClick={async () => {
+                  const safeName = encodeURIComponent(projectName)
                   if (!hasCreatedProject) {
                     const isCreated = await handleSubmit(
                       projectName,
@@ -438,10 +441,10 @@ const MakeNewCoursePage = ({
                     )
                     if (isCreated) {
                       setHasCreatedProject(true)
-                      router.push(`/${projectName}/chat`)
+                      router.push(`/${safeName}/chat`)
                     }
                   } else {
-                    router.push(`/${projectName}/chat`)
+                    router.push(`/${safeName}/chat`)
                   }
                 }}
               >

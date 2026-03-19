@@ -4,6 +4,7 @@ import router from 'next/router'
 import { Button } from '@/components/shadcn/ui/button'
 
 const StepSuccess = ({ project_name }: { project_name: string }) => {
+  const safeName = encodeURIComponent(project_name)
   return (
     <>
       <div className="step">
@@ -19,7 +20,7 @@ const StepSuccess = ({ project_name }: { project_name: string }) => {
                 variant="dashboard"
                 size="default"
                 onClick={() => {
-                  router.push(`/${project_name}/chat`)
+                  router.push(`/${safeName}/chat`)
                 }}
               >
                 <IconMessage size={18} />
@@ -30,7 +31,7 @@ const StepSuccess = ({ project_name }: { project_name: string }) => {
                 variant="outline"
                 size="default"
                 onClick={() => {
-                  router.push(`/${project_name}/dashboard`)
+                  router.push(`/${safeName}/dashboard`)
                 }}
               >
                 <IconSettings size={18} />
