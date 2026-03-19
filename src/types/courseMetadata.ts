@@ -24,6 +24,7 @@ export interface CourseMetadata {
   vector_search_rewrite_disabled: boolean | undefined
   allow_logged_in_users: boolean | undefined
   is_frozen: boolean | undefined
+  agent_mode_enabled?: boolean
 }
 
 export type ProjectWideLLMProviders = {
@@ -52,4 +53,5 @@ export interface CourseMetadataOptionalForUpsert {
   vector_search_rewrite_disabled: boolean | undefined
   allow_logged_in_users: boolean | undefined
   is_frozen: boolean | undefined
+  agent_mode_enabled?: boolean
 }

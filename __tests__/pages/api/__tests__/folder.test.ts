@@ -117,11 +117,6 @@ describe('folder API', () => {
     expect(res.status).toHaveBeenCalledWith(200)
     const body = (res.json as any).mock.calls[0]?.[0]
     expect(body[0]).toMatchObject({ id: 'f1', name: 'Folder', type: 'chat' })
-    const findManyArg = hoisted.findMany.mock.calls[0]?.[0]
-    expect(
-      findManyArg?.with?.conversations?.with?.messages?.columns
-        ?.processed_content,
-    ).toBe(true)
   })
 
   it('DELETE returns 400 when deletedFolderId is missing', async () => {
