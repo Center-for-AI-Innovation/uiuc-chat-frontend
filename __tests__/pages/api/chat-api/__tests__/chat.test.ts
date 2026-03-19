@@ -335,7 +335,7 @@ describe('chat-api/chat', () => {
     expect(hoisted.handleStreamingResponse).toHaveBeenCalled()
   })
 
-  it('invokes handleToolsServer and does not handleImageContent when image content and tools are present but with a vision capable model', async () => {
+  it('invokes handleToolsServer and does not invoke handleImageContent when and tools and image content are present with a vision model', async () => {
     hoisted.fetchTools.mockResolvedValueOnce([{ id: 't1' }])
     hoisted.handleContextSearch.mockResolvedValueOnce([{ id: 1 }])
     const res = createMockRes()
