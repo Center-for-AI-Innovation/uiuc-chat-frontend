@@ -8,6 +8,12 @@ export type ChatbotProjectType =
   | 'Student Org.'
   | 'Entertainment'
 
+export type KnowledgeSource = {
+  name: string
+  description?: string
+  doc_count: number
+}
+
 export type ChatbotCardData = {
   course_name: string
   title: string
@@ -21,6 +27,7 @@ export type ChatbotCardData = {
   isPrivate?: boolean
   bannerImageS3?: string
   metadata?: CourseMetadata
+  knowledgeSources?: KnowledgeSource[]
 }
 
 export type ChatbotSectionData = {
@@ -38,6 +45,8 @@ export type AccessibleChatbotData = {
   accessLevel: ChatbotAccessLevel
   organization?: string
   bannerImageS3?: string
+  metadata?: CourseMetadata
+  knowledgeSources?: KnowledgeSource[]
 }
 
 /** Maps a project type to the section title it belongs to in the chatbots hub */

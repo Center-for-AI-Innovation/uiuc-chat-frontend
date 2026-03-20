@@ -134,6 +134,8 @@ const ChatbotsHubPage = () => {
           accessLevel: bot.accessLevel,
           organization: bot.organization,
           bannerImageS3: bot.bannerImageS3,
+          metadata: bot.metadata,
+          knowledgeSources: bot.knowledgeSources,
         })
       }
 

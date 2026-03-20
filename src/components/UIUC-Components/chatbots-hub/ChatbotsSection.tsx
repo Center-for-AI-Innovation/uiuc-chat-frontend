@@ -7,7 +7,7 @@ export function ChatbotsSection({ title, cards }: ChatbotSectionData) {
       <h2 className="mb-6 text-2xl font-bold text-[--illinois-blue] dark:text-white">
         {title}
       </h2>
-      <div className="scrollbar-thin-auto flex gap-5 overflow-x-auto pb-2">
+      <div className="scrollbar-thin-auto -mx-6 flex gap-5 overflow-x-auto px-6 py-6">
         {cards.map((card) => (
           <ChatbotHubCard key={`${title}-${card.course_name}`} {...card} />
         ))}

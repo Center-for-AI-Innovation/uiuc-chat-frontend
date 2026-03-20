@@ -400,7 +400,7 @@
   background-color: transparent;
 }
 
-/* Thin auto-hiding horizontal scrollbar for card rows */
+/* Thin auto-hiding scrollbar for card rows and dialogs */
 .scrollbar-thin-auto {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
@@ -410,6 +410,7 @@
 }
 .scrollbar-thin-auto::-webkit-scrollbar {
   height: 6px;
+  width: 6px;
   background-color: transparent;
 }
 .scrollbar-thin-auto::-webkit-scrollbar-track {
