@@ -45,7 +45,7 @@ describe('ConversationComponent - accessibility', () => {
     )
 
     expect(
-      screen.getByRole('button', { name: /Select Chat, My Chat/i }),
+      screen.getByRole('option', { name: /Select Chat, My Chat/i }),
     ).toBeInTheDocument()
   })
 
@@ -85,7 +85,7 @@ describe('ConversationComponent - accessibility', () => {
       },
     )
 
-    const convoButton = screen.getByRole('button', { name: /Rename me/i })
+    const convoButton = screen.getByRole('option', { name: /Rename me/i })
     const actionButtons = Array.from(
       container.querySelectorAll('button'),
     ).filter((b) => b !== convoButton)
