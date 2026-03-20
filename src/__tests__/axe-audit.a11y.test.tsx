@@ -330,7 +330,9 @@ describe('axe accessibility audit', () => {
           } as any
         }
       >
-        <ConversationComponent conversation={conversation} />
+        <div role="listbox" aria-label="Chat history">
+          <ConversationComponent conversation={conversation} />
+        </div>
       </ChatbarContext.Provider>,
       {
         homeState: {
