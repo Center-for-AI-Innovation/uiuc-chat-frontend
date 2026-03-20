@@ -368,22 +368,22 @@ describe('validateRequestBody', () => {
     ).rejects.toThrow(/invalid model/i)
   })
 
-  // it('throws when image content is used with a non-vision model', async () => {
-  //   await expect(
-  //     validateRequestBody({
-  //       model: 'gpt-3.5-turbo',
-  //       messages: [
-  //         {
-  //           id: 'm1',
-  //           role: 'user',
-  //           content: [{ type: 'image_url', image_url: { url: 'x' } }],
-  //         } as any,
-  //       ],
-  //       course_name: 'CS101',
-  //       api_key: 'k',
-  //     }),
-  //   ).rejects.toThrow(/does not support vision/i)
-  // })
+  it('throws when image content is used with a non-vision model', async () => {
+    await expect(
+      validateRequestBody({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            id: 'm1',
+            role: 'user',
+            content: [{ type: 'image_url', image_url: { url: 'x' } }],
+          } as any,
+        ],
+        course_name: 'CS101',
+        api_key: 'k',
+      }),
+    ).rejects.toThrow(/does not support vision/i)
+  })
 
   it('throws when messages are missing or invalid', async () => {
     await expect(
