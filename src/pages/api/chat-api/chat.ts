@@ -36,7 +36,6 @@ import {
   type AnySupportedModel,
   type GenericSupportedModel,
   ProviderNames,
-  VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { type AuthContextProps } from 'react-oidc-context'
@@ -255,11 +254,7 @@ export default async function chat(
     (content) => content.image_url?.url as string,
   )
 
-  if (
-    !VisionCapableModels.has(model as any) &&
-    imageContent.length > 0 &&
-    !retrieval_only
-  ) {
+  if (imageContent.length > 0 && !retrieval_only) {
     // convert the provided key into an OpenAI provider.
     const llmProviders = {} as AllLLMProviders
     const { searchQuery: newSearchQuery, imgDesc: newImgDesc } =
