@@ -40,4 +40,23 @@ describe('buildPrompt API', () => {
     expect(res.status).toHaveBeenCalledWith(200)
     expect(res.json).toHaveBeenCalledWith({ id: 'c1' })
   })
+
+  it('returns 500 when buildPrompt throws', async () => {
+    hoisted.buildPrompt.mockRejectedValueOnce(new Error('boom'))
+    const res = createMockRes()
+    await handler(
+      createMockReq({
+        method: 'POST',
+        body: { conversation: { id: 'c1' }, course_name: 'CS101' },
+      }) as any,
+      res as any,
+    )
+    expect(res.status).toHaveBeenCalledWith(500)
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: 'An error occurred in buildPromptAPI',
+        details: 'boom',
+      }),
+    )
+  })
 })
