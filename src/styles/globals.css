@@ -1554,3 +1554,8 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
     @apply bg-background text-foreground;
   }
 }
+
+/* Prevent tailwindCSS styling override for MathJax */
+.math svg {
+  display: unset;
+}
