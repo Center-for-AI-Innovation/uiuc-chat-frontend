@@ -1,6 +1,5 @@
 import {
   Burger,
-  Container,
   createStyles,
   Flex,
   Paper,
@@ -89,10 +88,6 @@ const useStyles = createStyles((theme) => ({
       textDecoration: 'none',
     },
 
-    '&:focus': {
-      outline: '2px solid var(--dashboard-button)',
-    },
-
     '&[data-active="true"]': {
       color: 'var(--navbar-active)',
       /*      borderBottom: '2px solid var(--navbar-hover)',*/
@@ -140,7 +135,7 @@ const useStyles = createStyles((theme) => ({
     zIndex: 2,
     border: '1px solid var(--navbar-border)',
     borderRadius: '10px',
-    overflow: 'hidden',
+    overflow: 'visible',
     width: 'calc(100% - 1rem)',
     maxWidth: '330px',
     backgroundColor: 'var(--background-faded)',
@@ -220,7 +215,14 @@ function Logo() {
   )
 }
 
-function BannerImage({ url }: { url: string }) {
+function BannerImage({
+  url,
+  courseName,
+}: {
+  url: string
+  courseName?: string
+}) {
+  const altText = courseName ? `${courseName} logo` : 'Course chatbot logo'
   return (
     <div style={styles.logoContainerBox}>
       <Image
@@ -228,8 +230,8 @@ function BannerImage({ url }: { url: string }) {
         style={styles.thumbnailImage}
         width={2000}
         height={2000}
-        alt="Course chatbot logo"
-        aria-label="The course creator uploaded a logo for this chatbot."
+        alt={altText}
+        aria-label={altText}
         onError={(e) => (e.currentTarget.style.display = 'none')}
       />
     </div>
@@ -268,14 +270,13 @@ function NavigationContent({
       <Transition transition="pop-top-right" duration={200} mounted={opened}>
         {(styles) => (
           <Paper
+            component="nav"
             className={classes.dropdown}
             style={styles}
-            role="navigation"
-            aria-label="Main"
+            aria-label="Mobile navigation"
           >
             {items.map((item, index) => (
               <Link
-                role="button"
                 tabIndex={0}
                 key={index}
                 href={item.link}
@@ -291,16 +292,14 @@ function NavigationContent({
         )}
       </Transition>
 
-      <Container
+      <nav
         className={classes.inner}
         style={{ paddingLeft: '0px' }}
-        role="navigation"
-        aria-label="Main"
+        aria-label="Main navigation"
       >
         <div className={classes.links}>
           {items.map((item, index) => (
             <Link
-              role="button"
               tabIndex={0}
               key={index}
               href={item.link}
@@ -313,12 +312,12 @@ function NavigationContent({
             </Link>
           ))}
         </div>
-      </Container>
+      </nav>
 
       <Burger
-        role="button"
         tabIndex={0}
         aria-label="Toggle Menu"
+        aria-expanded={opened}
         opened={opened}
         onClick={onToggle}
         className={classes.burger}
@@ -396,7 +395,7 @@ export default function Navbar({
       {/***************** top navigation for all pages *****************/}
 
       <Flex direction="row" align="center" justify="center">
-        <div className="navbar h-20 w-full border-b border-[--navbar-border] bg-[--navbar-background]">
+        <header className="navbar h-20 w-full border-b border-[--navbar-border] bg-[--navbar-background]">
           <Logo />
 
           {/* TODO determine where to show the uploaded banner logo image (assume on the chat sidebar above or replace the project name?)
@@ -445,7 +444,7 @@ export default function Navbar({
               <GlobalHeader isNavbar={true} />
             </div>
           </div>
-        </div>
+        </header>
       </Flex>
     </div>
   )
