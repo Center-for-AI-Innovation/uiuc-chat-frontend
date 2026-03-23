@@ -144,10 +144,7 @@ const Home: NextPage = () => {
           content="Chat with your documents, with full support for any format and web scraping."
         />
         <link rel="icon" href="/favicon.ico" />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-        />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <style>
           {`
             * {
@@ -210,6 +207,8 @@ const Home: NextPage = () => {
       <LandingPageHeader />
 
       <main
+        id="main-content"
+        tabIndex={-1}
         className={`illinois-blue-gradient-bg flex min-h-screen flex-col items-center justify-center overflow-hidden
           ${montserrat_paragraph.variable} font-montserratParagraph`}
       >
@@ -224,7 +223,7 @@ const Home: NextPage = () => {
             <div className="sm:w-1/2 ">
               <div
                 role="region"
-                aria-labelledby="Create a chatbot with your content. Share it with a click."
+                aria-labelledby="hero-heading"
                 style={{ color: 'var(--foreground)', lineHeight: '110%' }}
                 className={`
                   text-3xl font-bold sm:mt-4
@@ -232,17 +231,17 @@ const Home: NextPage = () => {
                   ${montserrat_heading.variable} font-montserratHeading
                 `}
               >
-                <h2>
+                <h1 id="hero-heading" style={{ fontSize: 'inherit' }}>
                   Create a chatbot with{' '}
                   <span className="whitespace-nowrap">your content.</span>
-                  <p className="mt-4">
+                  <span className="mt-4 block">
                     Share it with{' '}
                     <span className="whitespace-nowrap">a click.</span>
-                  </p>
-                </h2>
+                  </span>
+                </h1>
               </div>
 
-              <div className="mb-8 mt-4 text-sm text-[--foreground-faded]">
+              <div className="mb-8 mt-4 text-sm text-[--foreground-subtle]">
                 Deep search your documents, build an AI-teaching assistant,
                 accelerate your literature review,{' '}
                 <span className="whitespace-nowrap">and get creative.</span>
@@ -271,7 +270,7 @@ const Home: NextPage = () => {
                 {/* p-10                style={{ background: 'var(--illinois-orange-gradient)' }} */}
                 <div className="">
                   <img
-                    alt="Upload Materials Banner"
+                    alt="Screenshot of the Illinois Chat interface showing document upload and AI chat"
                     src="/media/banner_upload_materials.png"
                     className="w-full max-w-full rounded-xl"
                   ></img>
@@ -280,12 +279,13 @@ const Home: NextPage = () => {
                 <div className="icons_scrolling_container overflow-hidden">
                   <div className="icons_scrolling">
                     <img
-                      alt="Banner Icons"
+                      alt="Supported file type icons"
                       src="/media/banner_icons.png"
                       className="max-w-full"
                     ></img>
                     <img
-                      alt="Banner Icons"
+                      alt=""
+                      role="presentation"
                       src="/media/banner_icons.png"
                       className="max-w-full"
                     ></img>
@@ -398,7 +398,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
-                  alt="Banner Step 1"
+                  alt="Drag-and-drop file upload interface with connections to Canvas, GitHub, and Notion"
                   src="/media/banner_step_001.png"
                   className="w-full max-w-full rounded-xl"
                 ></img>
@@ -415,7 +415,7 @@ const Home: NextPage = () => {
                   >
                     1
                   </div>
-                  <div
+                  <h3
                     className={`
                     text-xl font-bold
                     ${montserrat_heading.variable} font-montserratHeading
@@ -423,7 +423,7 @@ const Home: NextPage = () => {
                   >
                     Bring your documents{' '}
                     <span className="whitespace-nowrap">and tools</span>
-                  </div>
+                  </h3>
                 </div>
 
                 <div className="mt-4 flex flex-col gap-2 text-sm">
@@ -488,7 +488,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
-                  alt="Banner Step 2"
+                  alt="Dashboard for selecting AI models, customizing prompts, and configuring tools"
                   src="/media/banner_step_002.png"
                   className="w-full max-w-full rounded-xl"
                 ></img>
@@ -505,7 +505,7 @@ const Home: NextPage = () => {
                   >
                     2
                   </div>
-                  <div
+                  <h3
                     className={`
                     text-xl font-bold
                     ${montserrat_heading.variable} font-montserratHeading
@@ -515,7 +515,7 @@ const Home: NextPage = () => {
                     <span className="whitespace-nowrap">
                       tools <span className="font-normal">(optional)</span>
                     </span>
-                  </div>
+                  </h3>
                 </div>
 
                 <div className="mt-4 text-sm">
@@ -574,7 +574,7 @@ const Home: NextPage = () => {
                 style={{ background: 'var(--illinois-orange-gradient)' }}
               >
                 <img
-                  alt="Banner Step 3"
+                  alt="Sharing settings panel showing options to publish and collaborate on chatbots"
                   src="/media/banner_step_003.png"
                   className="w-full max-w-full rounded-xl"
                 ></img>
@@ -591,14 +591,14 @@ const Home: NextPage = () => {
                   >
                     3
                   </div>
-                  <div
+                  <h3
                     className={`
                     text-xl font-bold
                     ${montserrat_heading.variable} font-montserratHeading
                   `}
                   >
                     Share with anyone
-                  </div>
+                  </h3>
                 </div>
 
                 <div className="mt-4 text-sm">
@@ -666,15 +666,7 @@ const Home: NextPage = () => {
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               >
-                Ready to build?
-              </h2>
-              <h2
-                className={`
-                text-xl font-bold
-                ${montserrat_heading.variable} font-montserratHeading
-              `}
-              >
-                Use our API.
+                Ready to build? Use our API.
               </h2>
 
               <div className="mt-4">
@@ -812,6 +804,7 @@ const Home: NextPage = () => {
                 us at{' '}
                 <a
                   tabIndex={0}
+                  className="underline"
                   style={{ color: 'var(--illinois-orange)' }}
                   href="mailto:caii_ai@lists.illinois.edu"
                 >
@@ -825,14 +818,14 @@ const Home: NextPage = () => {
 
         {/* second section below the blue banner */}
         <div className="container flex w-full max-w-5xl flex-col items-center justify-center gap-4 overflow-hidden px-4 py-8 sm:px-8 sm:py-20">
-          <h4
+          <h2
             className={`
             text-4xl font-extrabold tracking-tight
             ${montserrat_heading.variable} font-montserratHeading
           `}
           >
             About Us
-          </h4>
+          </h2>
           <div className="mt-4 grid grid-cols-1 gap-14 sm:grid-cols-3 md:gap-8">
             <div className="flex max-w-xs flex-col gap-4 rounded-xl bg-[--dashboard-background-faded] p-6">
               <h3
@@ -847,7 +840,8 @@ const Home: NextPage = () => {
                 If you have any questions or would like to submit a bug please{' '}
                 <a
                   tabIndex={0}
-                  style={{ color: 'var(--illinois-orange)' }}
+                  className="underline"
+                  style={{ color: '#9e3010' }}
                   href="mailto:genaisupport@mx.uillinois.edu"
                 >
                   email us
@@ -869,7 +863,8 @@ const Home: NextPage = () => {
                 All code is open source. Join us on{' '}
                 <a
                   tabIndex={0}
-                  style={{ color: 'var(--illinois-orange)' }}
+                  className="underline"
+                  style={{ color: '#9e3010' }}
                   href="https://github.com/Center-for-AI-Innovation"
                 >
                   GitHub
@@ -890,7 +885,8 @@ const Home: NextPage = () => {
                 Developed by the{' '}
                 <a
                   tabIndex={0}
-                  style={{ color: 'var(--illinois-orange)' }}
+                  className="underline"
+                  style={{ color: '#9e3010' }}
                   href="https://ai.ncsa.illinois.edu/"
                 >
                   Center of AI Innovation
@@ -898,7 +894,8 @@ const Home: NextPage = () => {
                 at{' '}
                 <a
                   tabIndex={0}
-                  style={{ color: 'var(--illinois-orange)' }}
+                  className="underline"
+                  style={{ color: '#9e3010' }}
                   href="https://ncsa.illinois.edu/"
                 >
                   National Center for Supercomputing Applications

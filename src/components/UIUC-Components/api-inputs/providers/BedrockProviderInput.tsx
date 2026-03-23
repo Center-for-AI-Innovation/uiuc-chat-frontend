@@ -6,7 +6,6 @@ import {
   Skeleton,
   Button,
   TextInput,
-  Input,
   ActionIcon,
 } from '@mantine/core'
 import { IconCheck, IconExternalLink, IconX } from '@tabler/icons-react'
@@ -44,51 +43,52 @@ const CredentialInput = ({
 }) => {
   return (
     <div style={{ position: 'relative', width: '100%', marginBottom: '1rem' }}>
-      <Input.Wrapper
-        id="credential-input"
-        label={placeholder}
-        styles={{
-          label: { color: 'var(--dashboard-foreground-faded)' },
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-          <TextInput
-            type="password"
-            placeholder={placeholder}
-            aria-label={placeholder}
-            value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
-            styles={{
-              root: {
-                flex: 1,
-              },
-              label: { color: 'var(--dashboard-foreground-faded)' },
-              input: {
-                color: 'var(--foreground)',
-                backgroundColor: 'var(--background)',
-                padding: '8px',
-                borderRadius: '4px',
-                width: '100%',
-              },
-              wrapper: {
-                width: '100%',
-              },
-            }}
-          />
-          <ActionIcon
-            aria-label="Clear"
-            size="xs"
-            onClick={(e) => {
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+        <TextInput
+          id={`credential-input-${placeholder
+            .toLowerCase()
+            .replace(/\s+/g, '-')}`}
+          label={placeholder}
+          type="password"
+          placeholder={placeholder}
+          value={field.state.value}
+          onChange={(e) => field.handleChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
               e.preventDefault()
-              field.handleChange('')
-            }}
-            className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground]"
-            style={{ marginLeft: '8px' }}
-          >
-            <IconX size={12} />
-          </ActionIcon>
-        </div>
-      </Input.Wrapper>
+              onEnterPress()
+            }
+          }}
+          styles={{
+            root: {
+              flex: 1,
+            },
+            label: { color: 'var(--dashboard-foreground-faded)' },
+            input: {
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--background)',
+              padding: '8px',
+              borderRadius: '4px',
+              width: '100%',
+            },
+            wrapper: {
+              width: '100%',
+            },
+          }}
+        />
+        <ActionIcon
+          aria-label="Clear"
+          size="xs"
+          onClick={(e) => {
+            e.preventDefault()
+            field.handleChange('')
+          }}
+          className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground]"
+          style={{ marginLeft: '8px' }}
+        >
+          <IconX size={12} />
+        </ActionIcon>
+      </div>
       <FieldInfo field={field} />
     </div>
   )
@@ -134,7 +134,7 @@ export default function BedrockProviderInput({
         >
           <div>
             <a
-              className="mb-3"
+              className="mb-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
               href="https://aws.amazon.com/bedrock/"
               target="_blank"
               rel="noopener noreferrer"
