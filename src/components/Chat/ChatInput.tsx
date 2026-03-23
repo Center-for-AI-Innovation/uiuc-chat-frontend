@@ -618,7 +618,9 @@ export const ChatInput = ({
     if (totalSize > limit) {
       showToast({
         title: 'Files Too Large',
-        message: `The total size of all files cannot exceed ${limit / 1024 / 1024}MB. Please remove large files or upload smaller ones.`,
+        message: `The total size of all files cannot exceed ${
+          limit / 1024 / 1024
+        }MB. Please remove large files or upload smaller ones.`,
         type: 'error',
         autoClose: 6000,
       })
@@ -631,7 +633,11 @@ export const ChatInput = ({
       if (!ext || !ALLOWED_FILE_EXTENSIONS.includes(ext)) {
         showToast({
           title: 'Unsupported File Type',
-          message: `The file "${file.name}" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(', ')}.`,
+          message: `The file "${
+            file.name
+          }" is not supported. Please upload files of the following types: ${ALLOWED_FILE_EXTENSIONS.join(
+            ', ',
+          )}.`,
           type: 'error',
           autoClose: 6000,
         })
@@ -797,7 +803,9 @@ export const ChatInput = ({
           ),
         )
         showErrorToast(
-          `Failed to process ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          `Failed to process ${file.name}: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`,
         )
       }
     }
@@ -1052,6 +1060,8 @@ export const ChatInput = ({
                               }}
                               fill="currentColor"
                               viewBox="0 0 20 20"
+                              role="img"
+                              aria-label="Completed"
                             >
                               <path
                                 fillRule="evenodd"
@@ -1082,6 +1092,8 @@ export const ChatInput = ({
                               }}
                               fill="currentColor"
                               viewBox="0 0 20 20"
+                              role="img"
+                              aria-label="Error"
                             >
                               <path
                                 fillRule="evenodd"
@@ -1103,7 +1115,9 @@ export const ChatInput = ({
                       0,
                       name.lastIndexOf('.'),
                     )
-                    return `${nameWithoutExt.substring(0, maxLength - 3)}...${extension ? `.${extension}` : ''}`
+                    return `${nameWithoutExt.substring(0, maxLength - 3)}...${
+                      extension ? `.${extension}` : ''
+                    }`
                   }
 
                   return (
@@ -1214,6 +1228,7 @@ export const ChatInput = ({
               {/* Textarea for message input */}
               <textarea
                 ref={textareaRef}
+                aria-label="Message input"
                 className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-12 text-white outline-none"
                 style={{
                   resize: 'none',
@@ -1281,7 +1296,7 @@ export const ChatInput = ({
                 <button
                   type="button"
                   aria-label="Scroll Down"
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus:outline-none"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-[--background-faded] text-[--foreground] hover:bg-[--background-dark] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--foreground]"
                   onClick={onScrollDownClick}
                   style={{ pointerEvents: 'auto' }}
                 >
@@ -1320,9 +1335,18 @@ export const ChatInput = ({
           {/* Model picker and Agent Mode pill container */}
           <div className="absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-2">
             <Text
+              role="button"
+              tabIndex={0}
+              aria-label="Chat Settings"
               size={isSmallScreen ? '10px' : 'xs'}
-              className={`font-montserratHeading ${montserrat_heading.variable} flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100`}
+              className={`font-montserratHeading ${montserrat_heading.variable} flex items-center gap-1 break-words rounded-full px-3 py-1 text-[--message-faded] opacity-60 hover:bg-white/20 hover:text-[--message] hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]`}
               onClick={handleTextClick}
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleTextClick()
+                }
+              }}
               style={{ cursor: 'pointer', pointerEvents: 'auto' }}
             >
               {selectBestModel(llmProviders)?.name}

@@ -149,7 +149,7 @@ const SupportedFileUploadTypes = () => {
                       size={24}
                       stroke={1.5}
                     />
-                    <span className="mt-1 text-xs text-gray-400">
+                    <span className="mt-1 text-xs text-gray-500">
                       {type.label}
                     </span>
                   </motion.div>

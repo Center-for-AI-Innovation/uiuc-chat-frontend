@@ -402,11 +402,17 @@ export default function WebsiteIngestForm({
       >
         <DialogTrigger
           asChild
-          role="link"
           tabIndex={0}
           className="focus:bg-[--dashboard-background-dark]"
         >
           <Card
+            role="button"
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                ;(e.currentTarget as HTMLElement).click()
+              }
+            }}
             className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[--dashboard-border] bg-transparent px-6 py-4 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
@@ -453,6 +459,7 @@ export default function WebsiteIngestForm({
                 >
                   <Input
                     icon={icon}
+                    aria-label="Website URL"
                     className="w-full rounded-full"
                     styles={{
                       input: {
@@ -506,6 +513,7 @@ export default function WebsiteIngestForm({
 
                         <TextInput
                           name="maximumUrls"
+                          aria-label="Max URLs (1 to 500)"
                           radius="md"
                           placeholder="Default 50"
                           value={maxUrls}

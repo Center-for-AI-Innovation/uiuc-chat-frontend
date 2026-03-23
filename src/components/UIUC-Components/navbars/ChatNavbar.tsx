@@ -264,8 +264,8 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                 style={{ ...styles.thumbnailImage }}
                 width={2000}
                 height={2000}
-                alt="The course creator uploaded a logo for this chatbot."
-                aria-label="The course creator uploaded a logo for this chatbot."
+                alt={`${getCurrentCourseName()} logo`}
+                aria-label={`${getCurrentCourseName()} logo`}
                 onError={(e) => (e.currentTarget.style.display = 'none')} // display nothing if image fails
               />
             </div>
@@ -556,7 +556,9 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       // Don't prevent default to allow normal right-click menu
                       // But add the URL to the clipboard
                       navigator.clipboard.writeText(
-                        `${window.location.origin}/${getCurrentCourseName()}/dashboard`,
+                        `${
+                          window.location.origin
+                        }/${getCurrentCourseName()}/dashboard`,
                       )
                     }}
                     aria-label={`Go to dashboard`}

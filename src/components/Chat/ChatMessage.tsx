@@ -162,7 +162,16 @@ const FileCard: React.FC<{
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Open file ${fileName}`}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
       style={{
         display: 'inline-flex',
         maxWidth: '320px',
@@ -180,6 +189,14 @@ const FileCard: React.FC<{
         e.currentTarget.style.backgroundColor = 'var(--background-dark)'
       }}
       onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--border)'
+        e.currentTarget.style.backgroundColor = 'var(--background-faded)'
+      }}
+      onFocus={(e) => {
+        e.currentTarget.style.borderColor = 'var(--primary)'
+        e.currentTarget.style.backgroundColor = 'var(--background-dark)'
+      }}
+      onBlur={(e) => {
         e.currentTarget.style.borderColor = 'var(--border)'
         e.currentTarget.style.backgroundColor = 'var(--background-faded)'
       }}
@@ -1357,7 +1374,10 @@ export const ChatMessage = memo(
                 },
                 table({ children }) {
                   return (
-                    <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                    <table
+                      aria-label="Data table from chat response"
+                      className="border-collapse border border-black px-3 py-1 dark:border-white"
+                    >
                       {children}
                     </table>
                   )
@@ -1518,6 +1538,34 @@ export const ChatMessage = memo(
         setShowTooltip(false)
       }, [])
 
+      const handleFocus = useCallback(() => {
+        if (!linkRef.current || !title) return
+        setShowTooltip(true)
+        const linkRect = linkRef.current.getBoundingClientRect()
+        const tooltipWidth = 200
+        if (linkRect.left < tooltipWidth / 2) {
+          setTooltipAlignment('left')
+        } else if (linkRect.right + tooltipWidth / 2 > window.innerWidth) {
+          setTooltipAlignment('right')
+        } else {
+          setTooltipAlignment('center')
+        }
+      }, [title])
+
+      const handleBlur = useCallback(() => {
+        setShowTooltip(false)
+      }, [])
+
+      const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' && href) {
+            e.preventDefault()
+            window.open(href, '_blank')?.focus()
+          }
+        },
+        [href],
+      )
+
       // Check if this message is currently streaming
       const isCurrentlyStreaming =
         messageIsStreaming &&
@@ -1531,6 +1579,9 @@ export const ChatMessage = memo(
         onMouseUp: handleClick,
         onMouseEnter: handleMouseEnter,
         onMouseLeave: handleMouseLeave,
+        onFocus: handleFocus,
+        onBlur: handleBlur,
+        onKeyDown: handleKeyDown,
         onClick: (e: React.MouseEvent) => e.preventDefault(), // Prevent default click behavior
         style: { pointerEvents: 'all' as const },
         ref: linkRef,
@@ -1570,9 +1621,36 @@ export const ChatMessage = memo(
           </span>
         )
       } else {
+        // When the link text is a bare URL, derive a readable label from the hostname + path
+        const childText =
+          typeof children === 'string'
+            ? children
+            : Array.isArray(children) && typeof children[0] === 'string'
+              ? children[0]
+              : null
+
+        const isBareUrl =
+          childText != null &&
+          /^https?:\/\//i.test(childText.trim()) &&
+          href &&
+          childText.trim().replace(/\/+$/, '') ===
+            href.trim().replace(/\/+$/, '')
+
+        let displayContent: React.ReactNode = children
+        if (isBareUrl && href) {
+          try {
+            const parsed = new URL(href)
+            const host = parsed.hostname.replace(/^www\./, '')
+            const path = parsed.pathname.replace(/\/+$/, '')
+            displayContent = path && path !== '/' ? `${host}${path}` : host
+          } catch {
+            // Fall back to raw children if URL parsing fails
+          }
+        }
+
         return (
           <a {...commonProps} className={'linkMarkDown'}>
-            {children}
+            {displayContent}
           </a>
         )
       }
@@ -1694,7 +1772,7 @@ export const ChatMessage = memo(
           } max-w-[100%]`}
           style={{ overflowWrap: 'anywhere' }}
         >
-          <div className="relative flex w-full overflow-visible px-2 py-2 pt-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6  lg:mx-[10%]">
+          <div className="relative flex w-full overflow-visible px-2 py-2 pt-4 text-base md:mx-[5%] md:max-w-[90%] md:gap-6 lg:mx-[10%]">
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
@@ -1713,7 +1791,7 @@ export const ChatMessage = memo(
                     <div className="flex w-full flex-col">
                       <textarea
                         ref={textareaRef}
-                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary] focus:outline-none"
+                        className="w-full resize-none whitespace-pre-wrap rounded-md border border-[--foreground-faded] bg-[--background-faded] p-3 focus:border-[--primary]"
                         value={messageContent}
                         onChange={handleInputChange}
                         onKeyDown={handlePressEnter}
@@ -1774,63 +1852,74 @@ export const ChatMessage = memo(
                                 }
                               })}
                               {/* File cards for all messages */}
-                              <div className="-m-1 flex w-full flex-wrap justify-start">
-                                {message.content
-                                  .filter((item) => item.type === 'file')
-                                  .map((content, index) => {
-                                    const fileName =
-                                      content.fileName || 'Unknown file'
-                                    const isPreviewable = isFilePreviewable(
-                                      fileName,
-                                      content.fileType,
-                                    )
-                                    return (
-                                      <div key={index} className="mb-2">
-                                        <FileCard
-                                          fileName={fileName}
-                                          fileType={content.fileType}
-                                          fileUrl={content.fileUrl}
-                                          isPreviewable={isPreviewable}
-                                          onClick={() =>
-                                            handleFileAction(
-                                              fileName,
-                                              content.fileUrl,
-                                              content.fileType,
-                                            )
-                                          }
-                                        />
-                                      </div>
-                                    )
-                                  })}
-                              </div>
-
-                              {/* Image previews for all messages */}
-                              <div className="-m-1 flex w-full flex-wrap justify-start">
-                                {message.content
-                                  .filter((item) => item.type === 'image_url')
-                                  .map((content, index) => {
-                                    // Try to get the processed URL from imageUrls state first
-                                    const imageUrlsArray = Array.from(imageUrls)
-                                    const processedUrl =
-                                      imageUrlsArray[index] ||
-                                      content.image_url?.url
-
-                                    return (
-                                      <div
-                                        key={index}
-                                        className={classes.imageContainerStyle}
-                                      >
-                                        <div className="overflow-hidden rounded-lg">
-                                          <ImagePreview
-                                            src={processedUrl as string}
-                                            alt="Chat message"
-                                            className={classes.imageStyle}
+                              {message.content.some(
+                                (item) => item.type === 'file',
+                              ) && (
+                                <div className="-m-1 flex w-full flex-wrap justify-start">
+                                  {message.content
+                                    .filter((item) => item.type === 'file')
+                                    .map((content, index) => {
+                                      const fileName =
+                                        content.fileName || 'Unknown file'
+                                      const isPreviewable = isFilePreviewable(
+                                        fileName,
+                                        content.fileType,
+                                      )
+                                      return (
+                                        <div key={index} className="mb-2">
+                                          <FileCard
+                                            fileName={fileName}
+                                            fileType={content.fileType}
+                                            fileUrl={content.fileUrl}
+                                            isPreviewable={isPreviewable}
+                                            onClick={() =>
+                                              handleFileAction(
+                                                fileName,
+                                                content.fileUrl,
+                                                content.fileType,
+                                              )
+                                            }
                                           />
                                         </div>
-                                      </div>
-                                    )
-                                  })}
-                              </div>
+                                      )
+                                    })}
+                                </div>
+                              )}
+
+                              {/* Image previews for all messages */}
+                              {message.content.some(
+                                (item) => item.type === 'image_url',
+                              ) && (
+                                <div className="-m-1 flex w-full flex-wrap justify-start">
+                                  {message.content
+                                    .filter((item) => item.type === 'image_url')
+                                    .map((content, index) => {
+                                      // Try to get the processed URL from imageUrls state first
+                                      const imageUrlsArray =
+                                        Array.from(imageUrls)
+                                      const processedUrl =
+                                        imageUrlsArray[index] ||
+                                        content.image_url?.url
+
+                                      return (
+                                        <div
+                                          key={index}
+                                          className={
+                                            classes.imageContainerStyle
+                                          }
+                                        >
+                                          <div className="overflow-hidden rounded-lg">
+                                            <ImagePreview
+                                              src={processedUrl as string}
+                                              alt="Chat message"
+                                              className={classes.imageStyle}
+                                            />
+                                          </div>
+                                        </div>
+                                      )
+                                    })}
+                                </div>
+                              )}
 
                               {/* Image description loading state for last message */}
                               {isImg2TextLoading &&
@@ -2258,7 +2347,10 @@ export const ChatMessage = memo(
                 </div>
               ) : (
                 <div className="flex w-[90%] flex-col">
-                  <div className="w-full max-w-full flex-1 overflow-visible">
+                  <div
+                    className="w-full max-w-full flex-1 overflow-visible"
+                    aria-live="polite"
+                  >
                     {renderContent()}
                   </div>
                   {/* Action Buttons Container */}

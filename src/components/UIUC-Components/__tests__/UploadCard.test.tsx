@@ -87,7 +87,9 @@ describe('UploadCard', () => {
     )
 
     await user.click(
-      screen.getByRole('button', { name: /Share Chatbot|Share/i }),
+      screen.getByRole('button', {
+        name: /Sharing and Access|Share Chatbot|Share/i,
+      }),
     )
     expect(
       screen.getByRole('dialog', { name: 'Share modal' }),

@@ -53,6 +53,7 @@ describe('ProjectTable', () => {
           course_owner: 'owner@example.com',
           course_admins: ['admin@example.com', 'rohan13@illinois.edu'],
           is_private: true,
+          allow_logged_in_users: false,
         },
       },
       {
@@ -60,6 +61,15 @@ describe('ProjectTable', () => {
           course_owner: 'b@example.com',
           course_admins: [],
           is_private: false,
+          allow_logged_in_users: false,
+        },
+      },
+      {
+        CS103: {
+          course_owner: 'c@example.com',
+          course_admins: [],
+          is_private: true,
+          allow_logged_in_users: true,
         },
       },
     ]
@@ -77,6 +87,8 @@ describe('ProjectTable', () => {
 
     expect(await screen.findByText('CS101')).toBeInTheDocument()
     expect(screen.getByText('Private')).toBeInTheDocument()
+    expect(screen.getByText('Public')).toBeInTheDocument()
+    expect(screen.getByText('Logged-in Users')).toBeInTheDocument()
 
     // Click row navigates in same tab
     await user.click(screen.getByText('CS101'))

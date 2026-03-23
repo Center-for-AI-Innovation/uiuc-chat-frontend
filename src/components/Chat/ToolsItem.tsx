@@ -59,6 +59,7 @@ export const ToolsItem = ({}) => {
             <TextInput
               type="search"
               placeholder="Search Tools"
+              aria-label="Search Tools"
               my="sm"
               radius="md"
               icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
@@ -80,6 +81,7 @@ export const ToolsItem = ({}) => {
 
             {/* unable to use this until v7 of mantine since we can't control the hover color              highlightOnHover */}
             <Table
+              aria-label="Tools configuration"
               variant="striped"
               className="text-[--modal-text]"
               style={{

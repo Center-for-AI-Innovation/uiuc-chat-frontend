@@ -947,6 +947,7 @@ CRITICAL: The optimized prompt must:
               <Flex
                 role="button"
                 tabIndex={0}
+                aria-expanded={insightsOpen}
                 align="center"
                 justify="space-between"
                 sx={{
@@ -954,7 +955,14 @@ CRITICAL: The optimized prompt must:
                   padding: '4px 8px',
                   borderRadius: '8px',
                 }}
+                className="focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
                 onClick={() => setInsightsOpen(!insightsOpen)}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setInsightsOpen(!insightsOpen)
+                  }
+                }}
               >
                 <Flex align="center" gap="md">
                   <IconBook
@@ -1112,6 +1120,7 @@ CRITICAL: The optimized prompt must:
                     </Title>
                     <Select
                       placeholder="Select model"
+                      aria-label="Select model"
                       data={modelOptions}
                       value={selectedModel}
                       onChange={(value) => setSelectedModel(value || '')}
@@ -1229,7 +1238,8 @@ CRITICAL: The optimized prompt must:
                           backgroundColor: 'var(--background)',
                           border: 'none',
                           '&:focus': {
-                            borderColor: '#6e56cf',
+                            outline: '2px solid var(--dashboard-button)',
+                            outlineOffset: '-2px',
                           },
                           fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                           cursor: 'pointer',
@@ -1415,6 +1425,7 @@ CRITICAL: The optimized prompt must:
                     minRows={isEmbedded ? 4 : 3}
                     maxRows={20}
                     placeholder="Enter the system prompt..."
+                    aria-label="System Prompt"
                     className="px-1 pt-3 md:px-0"
                     value={baseSystemPrompt}
                     onChange={(e) => setBaseSystemPrompt(e.target.value)}
