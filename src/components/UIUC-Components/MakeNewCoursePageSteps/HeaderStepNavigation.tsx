@@ -20,9 +20,9 @@ const HeaderStepNavigation = ({
         )}
 
         {title && (
-          <h4 className="overflow-hidden text-ellipsis whitespace-nowrap text-xl font-semibold">
+          <h2 className="overflow-hidden text-ellipsis whitespace-nowrap text-xl font-semibold">
             {title}
-          </h4>
+          </h2>
         )}
 
         {description && (

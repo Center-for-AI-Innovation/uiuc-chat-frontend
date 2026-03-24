@@ -36,7 +36,7 @@ export default function OllamaProviderInput({
         >
           <div>
             <a
-              className="mb-3"
+              className="mb-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
               href="https://ollama.ai/"
               target="_blank"
               rel="noopener noreferrer"
@@ -93,7 +93,7 @@ export default function OllamaProviderInput({
             )}
           </form.Field>
         </div>
-        <Text size="sm" color="dimmed" mb="md">
+        <Text size="sm" className="text-gray-600" mb="md">
           Ollama allows you easily self host LLMs. Set up Ollama on your machine
           and provide the base URL. Note that only the following models are
           supported, email us if you&apos;d like any others:{' '}

@@ -73,8 +73,8 @@ describe('app/api/chat/openaiFunctionCall POST', () => {
         method: 'POST',
         headers: expect.objectContaining({
           Authorization: 'Bearer k',
-          'HTTP-Referer': expect.any(String),
-          'X-Title': expect.any(String),
+          'HTTP-Referer': 'https://chat.illinois.edu',
+          'X-Title': 'Illinois Chat',
         }),
         body: expect.any(String),
       }),
