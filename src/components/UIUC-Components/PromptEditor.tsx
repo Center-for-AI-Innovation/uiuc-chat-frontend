@@ -267,6 +267,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const [documentsOnly, setDocumentsOnly] = useState(false)
   const [systemPromptOnly, setSystemPromptOnly] = useState(false)
   const [vectorSearchRewrite, setVectorSearchRewrite] = useState(false)
+  const [agentModeFeatureEnabled, setAgentModeFeatureEnabled] = useState(false)
 
   const courseMetadataRef = useRef<CourseMetadata | null>(null)
   const initialSwitchStateRef = useRef<{
@@ -274,11 +275,13 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     documentsOnly: boolean
     systemPromptOnly: boolean
     vectorSearchRewrite: boolean
+    agentModeFeatureEnabled: boolean
   }>({
     guidedLearning: false,
     documentsOnly: false,
     systemPromptOnly: false,
     vectorSearchRewrite: false,
+    agentModeFeatureEnabled: false,
   })
 
   const removeThinkSections = (text: string): string => {
@@ -355,12 +358,14 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
           setDocumentsOnly(metadata.documentsOnly || false)
           setSystemPromptOnly(metadata.systemPromptOnly || false)
           setVectorSearchRewrite(!metadata.vector_search_rewrite_disabled)
+          setAgentModeFeatureEnabled(metadata.agent_mode_enabled ?? false)
           courseMetadataRef.current = metadata
           initialSwitchStateRef.current = {
             guidedLearning: metadata.guidedLearning || false,
             documentsOnly: metadata.documentsOnly || false,
             systemPromptOnly: metadata.systemPromptOnly || false,
             vectorSearchRewrite: !metadata.vector_search_rewrite_disabled,
+            agentModeFeatureEnabled: metadata.agent_mode_enabled ?? false,
           }
         }
 
@@ -402,6 +407,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         documentsOnly: courseMetadata.documentsOnly || false,
         systemPromptOnly: courseMetadata.systemPromptOnly || false,
         vectorSearchRewrite: !courseMetadata.vector_search_rewrite_disabled,
+        agentModeFeatureEnabled: courseMetadata.agent_mode_enabled ?? false,
       }
     }
   }, [courseMetadata])
@@ -411,13 +417,14 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     newSystemPrompt: string | undefined,
   ) => {
     let success = false
-    if (courseMetadata && project_name) {
+    if (courseMetadataRef.current && project_name) {
       const updatedCourseMetadata = {
-        ...courseMetadata,
-        system_prompt: newSystemPrompt, // Keep as is, whether it's an empty string or undefined
+        ...courseMetadataRef.current,
+        system_prompt: newSystemPrompt,
         guidedLearning,
         documentsOnly,
         systemPromptOnly,
+        agent_mode_enabled: agentModeFeatureEnabled,
       }
       success = await callSetCourseMetadata(project_name, updatedCourseMetadata)
       if (success) {
@@ -437,7 +444,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     if (courseMetadata && project_name) {
       const updatedCourseMetadata = {
         ...courseMetadata,
-        system_prompt: null, // Explicitly set to undefined
+        system_prompt: null,
         guidedLearning: false,
         documentsOnly: false,
         systemPromptOnly: false,
@@ -500,6 +507,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
       documentsOnly,
       systemPromptOnly,
       vectorSearchRewrite,
+      agentModeFeatureEnabled,
     }
 
     const initialSwitchState = initialSwitchStateRef.current
@@ -518,6 +526,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
       documentsOnly,
       systemPromptOnly,
       vector_search_rewrite_disabled: !vectorSearchRewrite,
+      agent_mode_enabled: agentModeFeatureEnabled,
     } as CourseMetadata
 
     try {
@@ -536,21 +545,27 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         currentSwitchState.vectorSearchRewrite
       ) {
         changes.push(
-          `Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`,
+          `Smart Document Search ${
+            currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
         initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning
       ) {
         changes.push(
-          `Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`,
+          `Guided Learning ${
+            currentSwitchState.guidedLearning ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
         initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly
       ) {
         changes.push(
-          `Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`,
+          `Document-Based References Only ${
+            currentSwitchState.documentsOnly ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
@@ -558,7 +573,19 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         currentSwitchState.systemPromptOnly
       ) {
         changes.push(
-          `Bypass Illinois Chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
+          `Bypass Illinois Chat's internal prompting ${
+            currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'
+          }`,
+        )
+      }
+      if (
+        initialSwitchState.agentModeFeatureEnabled !==
+        currentSwitchState.agentModeFeatureEnabled
+      ) {
+        changes.push(
+          `Agent Mode ${
+            currentSwitchState.agentModeFeatureEnabled ? 'enabled' : 'disabled'
+          }`,
         )
       }
 
@@ -608,6 +635,9 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
 
     if ('vector_search_rewrite_disabled' in updates) {
       setVectorSearchRewrite(!updates.vector_search_rewrite_disabled)
+    }
+    if ('agent_mode_enabled' in updates) {
+      setAgentModeFeatureEnabled(updates.agent_mode_enabled ?? false)
     }
 
     courseMetadataRef.current = {
@@ -928,13 +958,21 @@ CRITICAL: The optimized prompt must:
               <Flex
                 role="button"
                 tabIndex={0}
+                aria-expanded={insightsOpen}
                 align="center"
                 justify="space-between"
                 sx={{
                   cursor: 'pointer',
                   borderRadius: '8px',
                 }}
+                className="focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
                 onClick={() => setInsightsOpen(!insightsOpen)}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setInsightsOpen(!insightsOpen)
+                  }
+                }}
               >
                 <Flex align="center" gap="md">
                   <IconBook
@@ -1091,6 +1129,7 @@ CRITICAL: The optimized prompt must:
                     </Title>
                     <Select
                       placeholder="Select model"
+                      aria-label="Select model"
                       data={modelOptions}
                       value={selectedModel}
                       onChange={(value) => setSelectedModel(value || '')}
@@ -1208,7 +1247,8 @@ CRITICAL: The optimized prompt must:
                           backgroundColor: 'var(--background)',
                           borderColor: 'var(--button)',
                           '&:focus': {
-                            borderColor: '#6e56cf',
+                            outline: '2px solid var(--dashboard-button)',
+                            outlineOffset: '-2px',
                           },
                           fontFamily: `var(--font-montserratParagraph), ${theme.fontFamily}`,
                           cursor: 'pointer',
@@ -1396,6 +1436,7 @@ CRITICAL: The optimized prompt must:
                     minRows={isEmbedded ? 4 : 3}
                     maxRows={20}
                     placeholder="Enter the system prompt..."
+                    aria-label="System Prompt"
                     className="px-1 pt-3 md:px-0"
                     value={baseSystemPrompt}
                     onChange={(e) => setBaseSystemPrompt(e.target.value)}
@@ -1696,6 +1737,19 @@ CRITICAL: The optimized prompt must:
                     checked={systemPromptOnly}
                     onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ systemPromptOnly: value })
+                    }
+                  />
+
+                  <Switch
+                    size="lg"
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
+                    label="Enable Agent Mode"
+                    tooltip="Runs a multi-step server-side agent loop that can iteratively search documents and execute tools before generating the final answer."
+                    checked={agentModeFeatureEnabled}
+                    onCheckedChange={(value: boolean) =>
+                      handleSettingChange({ agent_mode_enabled: value })
                     }
                   />
 
@@ -2076,6 +2130,18 @@ CRITICAL: The optimized prompt must:
                     checked={systemPromptOnly}
                     onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ systemPromptOnly: value })
+                    }
+                  />
+
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
+                    label="Enable Agent Mode"
+                    tooltip="Enables the Agent Mode feature for this project. Agent Mode runs a multi-step server-side loop that can iteratively search documents and execute tools before generating the final answer."
+                    checked={agentModeFeatureEnabled}
+                    onCheckedChange={(value: boolean) =>
+                      handleSettingChange({ agent_mode_enabled: value })
                     }
                   />
 

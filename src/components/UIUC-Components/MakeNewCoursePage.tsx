@@ -264,14 +264,19 @@ const MakeNewCoursePage = ({
       <>
         <Navbar isPlain={false} />
         <Head>
-          <title>{project_name}</title>
+          <title>{project_name || 'New Project'} — Illinois Chat</title>
           <meta
             name="description"
             content="Create a new project on UIUC.chat."
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+        >
+          <h1 className="sr-only">Create New Project</h1>
           <div className="flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
             <Card
               shadow="xs"
@@ -323,11 +328,13 @@ const MakeNewCoursePage = ({
     <>
       <Navbar isPlain={false} />
       <Head>
-        <title>{project_name}</title>
+        <title>{project_name || 'New Project'} — Illinois Chat</title>
         <meta name="description" content="Create a new project on UIUC.chat." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main
+        id="main-content"
+        tabIndex={-1}
         className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
         style={
           {
@@ -338,7 +345,9 @@ const MakeNewCoursePage = ({
           } as React.CSSProperties
         }
       >
-        <div className="flex w-full flex-1 flex-col items-center justify-center pb-20 pt-16">
+        <h1 className="sr-only">Create New Project</h1>
+        {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
+        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-start py-0 pb-20">
           <Card
             padding="none"
             withBorder={true}

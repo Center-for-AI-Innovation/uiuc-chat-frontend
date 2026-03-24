@@ -4,7 +4,6 @@ import {
   Card,
   Flex,
   Group,
-  Input,
   Select,
   Stack,
   Text,
@@ -91,57 +90,49 @@ export const APIKeyInput = ({
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
-      <Input.Wrapper
-        id="API-key-input"
-        label={placeholder}
-        styles={{
-          label: {
-            color: 'var(--dashboard-foreground-faded)',
-            marginBottom: '4px',
-          },
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <TextInput
-            type="password"
-            placeholder={placeholder}
-            aria-label={placeholder}
-            value={field.state.value}
-            onChange={(e) => {
-              field.handleChange(e.target.value)
-            }}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                field.form.handleSubmit()
-              }
-            }}
-            style={{ flex: 1 }}
-            styles={{
-              input: {
-                color: 'var(--foreground)',
-                backgroundColor: 'var(--background)',
-                padding: '8px',
-                borderRadius: '4px',
-              },
-            }}
-          />
-          <ActionIcon
-            aria-label="Clear"
-            size="xs"
-            onClick={(e) => {
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <TextInput
+          id={`API-key-input-${placeholder.toLowerCase().replace(/\s+/g, '-')}`}
+          label={placeholder}
+          type="password"
+          placeholder={placeholder}
+          aria-label={placeholder}
+          value={field.state.value}
+          onChange={(e) => {
+            field.handleChange(e.target.value)
+          }}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
               e.preventDefault()
-              field.handleChange('')
               field.form.handleSubmit()
-            }}
-            type="submit"
-            className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] hover:text-[white]"
-            style={{ marginLeft: '8px' }}
-          >
-            <IconX size={12} />
-          </ActionIcon>
-        </div>
-      </Input.Wrapper>
+            }
+          }}
+          style={{ flex: 1 }}
+          styles={{
+            label: { color: 'var(--dashboard-foreground-faded)' },
+            input: {
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--background)',
+              padding: '8px',
+              borderRadius: '4px',
+            },
+          }}
+        />
+        <ActionIcon
+          aria-label="Clear"
+          size="xs"
+          onClick={(e) => {
+            e.preventDefault()
+            field.handleChange('')
+            field.form.handleSubmit()
+          }}
+          type="submit"
+          className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] hover:text-[white]"
+          style={{ marginLeft: '8px' }}
+        >
+          <IconX size={12} />
+        </ActionIcon>
+      </div>
       <FieldInfo field={field} />
       <div
         style={{
@@ -224,7 +215,7 @@ const NewModelDropdown: React.FC<{
         className="menu z-[30] w-full"
         size="md"
         placeholder="Select a model"
-        // searchable
+        searchable
         value={value?.id || ''}
         onChange={async (modelId) => {
           const selectedModel = allModels.find((model) => model.id === modelId)
@@ -283,9 +274,13 @@ const NewModelDropdown: React.FC<{
         classNames={{
           root: 'w-full',
           wrapper: 'w-full',
-          input: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'} w-full`,
+          input: `${montserrat_paragraph.variable} font-montserratParagraph ${
+            isSmallScreen ? 'text-xs' : 'text-sm'
+          } w-full`,
           rightSection: 'pointer-events-none',
-          item: `${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`,
+          item: `${montserrat_paragraph.variable} font-montserratParagraph ${
+            isSmallScreen ? 'text-xs' : 'text-sm'
+          }`,
         }}
         styles={(theme) => ({
           input: {
@@ -752,7 +747,7 @@ export default function APIKeyInputForm({
       setSidebarCollapsed={setSidebarCollapsed}
     >
       <Head>
-        <title>{projectName}/LLMs</title>
+        <title>{projectName} — LLMs — Illinois Chat</title>
         <meta
           name="UIUC.chat"
           content="The AI teaching assistant built for students at UIUC."
@@ -760,7 +755,12 @@ export default function APIKeyInputForm({
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+      >
+        <h1 className="sr-only">{projectName} LLM Settings</h1>
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <Card
@@ -801,7 +801,7 @@ export default function APIKeyInputForm({
                     </Title>
                     <Title
                       className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading text-[--foreground]`}
-                      order={5}
+                      order={3}
                       px={18}
                       ml={'md'}
                       style={{ textAlign: 'left' }}
@@ -1034,9 +1034,8 @@ export default function APIKeyInputForm({
                                   </Text>
                                   <Text
                                     size="xs"
-                                    color="dimmed"
                                     mt={4}
-                                    className={`pl-1 ${montserrat_paragraph.variable} font-montserratParagraph`}
+                                    className={`pl-1 text-gray-600 ${montserrat_paragraph.variable} font-montserratParagraph`}
                                   >
                                     We recommended using 0.1. Higher values
                                     increase randomness or
@@ -1044,6 +1043,7 @@ export default function APIKeyInputForm({
                                     model to stick to its normal behavior.
                                   </Text>
                                   <Slider
+                                    aria-label="Temperature"
                                     value={
                                       findDefaultModel(llmProviders)
                                         ?.temperature

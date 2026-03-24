@@ -23,11 +23,9 @@ const HeaderStepNavigation = ({
         )} */}
 
         {title && (
-          <h4
-            className={`${montserrat_heading.className} overflow-hidden text-ellipsis whitespace-nowrap text-2xl font-semibold`}
-          >
+          <h2 className="overflow-hidden text-ellipsis whitespace-nowrap text-xl font-semibold">
             {title}
-          </h4>
+          </h2>
         )}
 
         {description && (

@@ -106,6 +106,7 @@ const BrandingForm = ({
               minRows={2}
               maxRows={5}
               placeholder="Enter a greeting to help users get started with your bot, shown before they start chatting."
+              aria-label="Greeting"
               className="w-full"
               value={introMessage}
               rightSlot={

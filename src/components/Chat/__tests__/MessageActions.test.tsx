@@ -49,16 +49,16 @@ describe('MessageActions', () => {
     expect(screen.getByLabelText('Regenerate Response')).toBeInTheDocument()
   })
 
-  it('applies opacity-100 class when isLastMessage is true', () => {
+  it('applies foreground-faded class when isLastMessage is true', () => {
     renderActions({ isLastMessage: true })
     const copyBtn = screen.getByLabelText('Copy message')
-    expect(copyBtn.className).toContain('opacity-100')
+    expect(copyBtn.className).toContain('text-[--foreground-faded]')
   })
 
-  it('applies group-hover opacity class when isLastMessage is false', () => {
+  it('applies foreground-faded class when isLastMessage is false', () => {
     renderActions({ isLastMessage: false })
     const copyBtn = screen.getByLabelText('Copy message')
-    expect(copyBtn.className).toContain('group-hover:opacity-100')
+    expect(copyBtn.className).toContain('text-[--foreground-faded]')
   })
 
   // ---- Copy ---------------------------------------------------------------

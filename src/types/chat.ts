@@ -122,7 +122,6 @@ export interface AgentEvent {
   metadata?: AgentEventMetadata
 }
 
-
 export interface UIUCTool {
   id: string // This is the N8N workflow ID
   invocationId?: string // This is the unique ID for a specific tool *call* from OpenAI
