@@ -99,11 +99,13 @@ const Dashboard = ({
     <>
       <Navbar isPlain={false} />
       <Head>
-        <title>{project_name}</title>
+        <title>{project_name || 'My Chatbots'} — Illinois Chat</title>
         <meta name="description" content="My projects on UIUC.chat." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main
+        id="main-content"
+        tabIndex={-1}
         className="course-page-main mt-20"
         style={{
           minHeight: '100vh',
@@ -113,9 +115,9 @@ const Dashboard = ({
         <div className="mx-auto mt-[2%] min-h-[70vh] w-[96%] md:w-[90%] 2xl:w-[90%]">
           <div className="px-8">
             <Title
-              order={2}
+              order={1}
               className={`
-                text-2xl font-bold sm:pt-2 
+                text-2xl font-bold sm:pt-2
                 ${montserrat_heading.variable} font-montserratHeading
               `}
               style={{ color: 'var(--foreground)' }}

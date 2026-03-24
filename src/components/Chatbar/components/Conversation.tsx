@@ -23,9 +23,13 @@ import ChatbarContext from '@/components/Chatbar/Chatbar.context'
 
 interface Props {
   conversation: Conversation
+  isFirstItem?: boolean
 }
 
-export const ConversationComponent = ({ conversation }: Props) => {
+export const ConversationComponent = ({
+  conversation,
+  isFirstItem = false,
+}: Props) => {
   const {
     state: { selectedConversation, messageIsStreaming },
     handleSelectConversation,
@@ -117,7 +121,7 @@ export const ConversationComponent = ({ conversation }: Props) => {
           <IconMessage size={16} className="text-[--sidebar]" />
           <input
             aria-label="Rename Chat Input"
-            className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar] outline-none"
+            className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar]"
             type="text"
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
@@ -127,7 +131,12 @@ export const ConversationComponent = ({ conversation }: Props) => {
         </div>
       ) : (
         <button
-          tabIndex={0}
+          data-conversation
+          role="option"
+          aria-selected={selectedConversation?.id === conversation.id}
+          tabIndex={
+            selectedConversation?.id === conversation.id || isFirstItem ? 0 : -1
+          }
           aria-label={'Select Chat, ' + conversation.name}
           className={`flex w-full cursor-pointer items-start gap-3 rounded-lg p-3 text-[.75rem] transition-colors duration-200 ${
             messageIsStreaming ? 'disabled:cursor-not-allowed' : ''
