@@ -38,8 +38,8 @@ const CourseMain: NextPage = () => {
     return typeof raw === 'string'
       ? raw
       : Array.isArray(raw)
-        ? raw[0]
-        : undefined
+      ? raw[0]
+      : undefined
   }
   const courseName = getCurrentPageName() as string
 
