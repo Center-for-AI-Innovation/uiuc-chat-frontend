@@ -42,8 +42,8 @@ import {
   type ChatbotCardData,
   type DocumentSummary,
   type DocumentTypeStat,
-  type MaintainerProfile,
 } from './chatbots.types'
+import { useFetchMaintainerProfiles } from '~/hooks/queries/useFetchMaintainerProfiles'
 
 type ChatbotDetailDialogProps = {
   readonly open: boolean
@@ -96,16 +96,8 @@ export function ChatbotDetailDialog({
   // TODO: Replace with useFetchDocumentSummary(course_name) when API exists
   const documentSummary: DocumentSummary | undefined = undefined
 
-  // TODO: Replace with useFetchMaintainerProfiles(course_name) when API exists
-  const maintainerProfiles: MaintainerProfile[] = useMemo(
-    () =>
-      buildMaintainerProfiles(
-        resolvedMetadata?.course_owner,
-        resolvedMetadata?.course_admins,
-        currentUserEmail,
-      ),
-    [resolvedMetadata, currentUserEmail],
-  )
+  const { data: maintainerProfiles = [] } =
+    useFetchMaintainerProfiles(course_name)
 
   // TODO: Replace with real timestamps from API
   const createdAt = card.created_at
@@ -186,7 +178,7 @@ export function ChatbotDetailDialog({
           </div>
 
           {/* Maintained By */}
-          {maintainerProfiles.length > 0 && (
+          {maintainerProfiles && maintainerProfiles.length > 0 && (
             <div className="px-6 py-3">
               <h3 className="mb-3 text-base font-semibold">Maintained By</h3>
               <div className="space-y-3">
@@ -386,30 +378,6 @@ function DocumentTypeRow({ stat }: { readonly stat: DocumentTypeStat }) {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function buildMaintainerProfiles(
-  courseOwner: string | undefined,
-  courseAdmins: string[] | undefined,
-  _currentUserEmail: string | undefined,
-): MaintainerProfile[] {
-  const seen = new Set<string>()
-  const result: MaintainerProfile[] = []
-
-  if (courseOwner) {
-    seen.add(courseOwner)
-    result.push({ email: courseOwner })
-  }
-  if (courseAdmins) {
-    for (const admin of courseAdmins) {
-      if (!seen.has(admin)) {
-        seen.add(admin)
-        result.push({ email: admin })
-      }
-    }
-  }
-
-  return result
-}
 
 function extractNameFromEmail(email: string): string {
   const local = email.split('@')[0] ?? email
