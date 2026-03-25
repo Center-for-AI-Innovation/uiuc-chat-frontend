@@ -128,16 +128,18 @@ export function ChatbotHubCard(card: ChatbotCardData) {
             </div>
             {metadata && (
               <div className="flex items-center gap-1">
-                <Link href={`/${course_name}/dashboard`}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9"
-                    aria-label={`Settings for ${title}`}
-                  >
-                    <Settings className="h-4 w-4 text-[--illinois-blue] dark:text-white" />
-                  </Button>
-                </Link>
+                {isOwnerCard && (
+                  <Link href={`/${course_name}/dashboard`}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      aria-label={`Settings for ${title}`}
+                    >
+                      <Settings className="h-4 w-4 text-[--illinois-blue] dark:text-white" />
+                    </Button>
+                  </Link>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"

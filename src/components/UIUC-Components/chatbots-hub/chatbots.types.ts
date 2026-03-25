@@ -14,6 +14,27 @@ export type KnowledgeSource = {
   doc_count: number
 }
 
+/** Per-type document statistics returned by the document-stats API */
+export type DocumentTypeStat = {
+  type: string
+  file_count: number
+  total_size_bytes: number
+}
+
+/** Aggregate document summary for a project */
+export type DocumentSummary = {
+  total_file_count: number
+  total_size_bytes: number
+  by_type: DocumentTypeStat[]
+}
+
+/** Profile info for a project maintainer */
+export type MaintainerProfile = {
+  email: string
+  display_name?: string
+  avatar_url?: string
+}
+
 export type ChatbotCardData = {
   course_name: string
   title: string
@@ -28,6 +49,8 @@ export type ChatbotCardData = {
   bannerImageS3?: string
   metadata?: CourseMetadata
   knowledgeSources?: KnowledgeSource[]
+  created_at?: string
+  last_updated_at?: string
 }
 
 export type ChatbotSectionData = {
