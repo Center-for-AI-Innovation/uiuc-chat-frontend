@@ -202,6 +202,71 @@ export default function ShareSettingsModal({
     setTimeout(() => setIsCopied(false), 2000)
   }
 
+  const modalRef = React.useRef<HTMLDivElement>(null)
+  const previousFocusRef = React.useRef<HTMLElement | null>(null)
+  const onCloseRef = React.useRef(onClose)
+  onCloseRef.current = onClose
+
+  const getFocusableElements = () => {
+    return modalRef.current?.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )
+  }
+
+  // Focus first element only when modal opens
+  useEffect(() => {
+    if (!opened) return
+    previousFocusRef.current = document.activeElement as HTMLElement
+    const timer = setTimeout(() => {
+      const focusable = getFocusableElements()
+      if (focusable && focusable.length > 0) {
+        focusable[0]!.focus()
+      }
+    }, 50)
+    return () => {
+      clearTimeout(timer)
+      previousFocusRef.current?.focus()
+    }
+  }, [opened])
+
+  // Keyboard handler (Escape + focus trap)
+  useEffect(() => {
+    if (!opened) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCloseRef.current()
+        return
+      }
+
+      // Focus trap: always keep Tab within modal
+      if (e.key === 'Tab') {
+        const focusable = getFocusableElements()
+        if (!focusable || focusable.length === 0) return
+
+        const focusArray = Array.from(focusable)
+        const currentIndex = focusArray.indexOf(
+          document.activeElement as HTMLElement,
+        )
+
+        e.preventDefault()
+
+        if (e.shiftKey) {
+          const prevIndex =
+            currentIndex <= 0 ? focusArray.length - 1 : currentIndex - 1
+          focusArray[prevIndex]!.focus()
+        } else {
+          const nextIndex =
+            currentIndex >= focusArray.length - 1 ? 0 : currentIndex + 1
+          focusArray[nextIndex]!.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [opened])
+
   // Don't render if modal is not opened
   if (!opened) return null
 
@@ -213,11 +278,16 @@ export default function ShareSettingsModal({
       }}
     >
       <motion.div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-modal-title"
+        tabIndex={-1}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[--modal] text-[--modal-text] shadow-2xl ring-1 ring-white/10"
+        className="relative mx-4 max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[--modal] text-[--modal-text] shadow-2xl ring-1 ring-white/10 focus:outline-none"
         style={{ scrollbarGutter: 'stable' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -228,9 +298,10 @@ export default function ShareSettingsModal({
         <div className="flex items-center justify-between border-b border-[--modal-border] px-6 py-4">
           <div className="flex flex-col">
             <h2
+              id="share-modal-title"
               className={`${montserrat_heading.variable} font-montserratHeading text-xl font-semibold`}
             >
-              Share your chatbot
+              Sharing and Access
             </h2>
             <p
               className={`${montserrat_paragraph.variable} mt-1 font-montserratParagraph text-sm text-[--foreground-faded]`}
@@ -240,6 +311,7 @@ export default function ShareSettingsModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="rounded-full p-2  transition-colors hover:bg-[--background-faded]"
           >
             <div className="flex h-5 w-5 items-center justify-center rounded-full">
@@ -264,6 +336,7 @@ export default function ShareSettingsModal({
                   type="text"
                   value={shareUrl}
                   readOnly
+                  aria-label="Share link"
                   className={`${montserrat_paragraph.variable} w-full rounded-lg bg-[--background-faded] px-4 py-2.5 font-montserratParagraph text-sm text-[--foreground] ring-1 ring-[--background-dark] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[--illinois-orange]`}
                 />
               </div>
@@ -327,7 +400,7 @@ export default function ShareSettingsModal({
                     align="end"
                     side="bottom"
                     sideOffset={8}
-                    className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 w-72 rounded-lg border-[--background-dark] bg-[--modal] p-1.5 text-[--foreground] sm:w-80"
+                    className="w-72 rounded-lg border-[--background-dark] bg-[--modal] p-1.5 text-[--foreground] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 sm:w-80"
                     style={{
                       animationDuration: '100ms',
                       willChange: 'transform, opacity',
@@ -369,10 +442,12 @@ export default function ShareSettingsModal({
             <div className="space-y-3">
               <motion.div
                 animate={{
-                  opacity: currentAccessLevel === 'invited' ? 1 : 0.5,
+                  opacity: 1,
                 }}
                 transition={{ duration: 0.2 }}
-                className="relative"
+                className={`relative ${
+                  currentAccessLevel !== 'invited' ? 'text-[#8b8b8b]' : ''
+                }`}
               >
                 {currentAccessLevel === 'invited' ? (
                   <motion.div

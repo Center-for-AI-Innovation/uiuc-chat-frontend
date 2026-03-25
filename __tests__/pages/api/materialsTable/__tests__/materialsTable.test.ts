@@ -40,6 +40,7 @@ vi.mock('~/db/dbClient', () => ({
     error: { name: 'error' },
   },
   documents: {
+    id: { name: 'id' },
     course_name: { name: 'course_name' },
     readable_filename: { name: 'readable_filename' },
     base_url: { name: 'base_url' },
@@ -66,6 +67,7 @@ vi.mock('drizzle-orm', () => {
 })
 
 import docsInProgressHandler from '~/pages/api/materialsTable/docsInProgress'
+import fetchIfDocumentExistsHandler from '~/pages/api/materialsTable/fetchIfDocumentExists'
 import fetchFailedDocumentsHandler from '~/pages/api/materialsTable/fetchFailedDocuments'
 import fetchProjectMaterialsHandler from '~/pages/api/materialsTable/fetchProjectMaterials'
 import successDocsHandler from '~/pages/api/materialsTable/successDocs'
@@ -123,6 +125,91 @@ describe('materialsTable API handlers', () => {
         { readable_filename: 'Doc A', base_url: '', url: '' },
       ],
     })
+  })
+
+  it('fetchIfDocumentExists validates method and course_name', async () => {
+    const badMethodRes = createMockRes()
+    await fetchIfDocumentExistsHandler(
+      createMockReq({ method: 'POST' }) as any,
+      badMethodRes as any,
+    )
+    expect(badMethodRes.status).toHaveBeenCalledWith(405)
+    expect(badMethodRes.json).toHaveBeenCalledWith({
+      error: 'Method not allowed',
+    })
+
+    const missingQueryRes = createMockRes()
+    await fetchIfDocumentExistsHandler(
+      createMockReq({ method: 'GET', query: {} }) as any,
+      missingQueryRes as any,
+    )
+    expect(missingQueryRes.status).toHaveBeenCalledWith(400)
+    expect(missingQueryRes.json).toHaveBeenCalledWith({
+      error: 'Missing required query parameter: course_name',
+    })
+  })
+
+  it('fetchIfDocumentExists returns 1 when a document exists and 0 otherwise', async () => {
+    hoisted.select
+      .mockImplementationOnce(() => ({
+        from: () => ({
+          where: () => ({
+            limit: vi.fn().mockResolvedValueOnce([{ id: 'doc-1' }]),
+          }),
+        }),
+      }))
+      .mockImplementationOnce(() => ({
+        from: () => ({
+          where: () => ({
+            limit: vi.fn().mockResolvedValueOnce([]),
+          }),
+        }),
+      }))
+
+    const existsRes = createMockRes()
+    await fetchIfDocumentExistsHandler(
+      createMockReq({
+        method: 'GET',
+        query: { course_name: 'CS101' },
+      }) as any,
+      existsRes as any,
+    )
+    expect(existsRes.status).toHaveBeenCalledWith(200)
+    expect(existsRes.json).toHaveBeenCalledWith({ total_count: 1 })
+
+    const missingRes = createMockRes()
+    await fetchIfDocumentExistsHandler(
+      createMockReq({
+        method: 'GET',
+        query: { course_name: 'CS102' },
+      }) as any,
+      missingRes as any,
+    )
+    expect(missingRes.status).toHaveBeenCalledWith(200)
+    expect(missingRes.json).toHaveBeenCalledWith({ total_count: 0 })
+  })
+
+  it('fetchIfDocumentExists returns 500 when the lookup fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    hoisted.select.mockImplementationOnce(() => ({
+      from: () => ({
+        where: () => ({
+          limit: vi.fn().mockRejectedValueOnce(new Error('db down')),
+        }),
+      }),
+    }))
+
+    const res = createMockRes()
+    await fetchIfDocumentExistsHandler(
+      createMockReq({
+        method: 'GET',
+        query: { course_name: 'CS101' },
+      }) as any,
+      res as any,
+    )
+
+    expect(res.status).toHaveBeenCalledWith(500)
+    expect(res.json).toHaveBeenCalledWith({ error: 'db down' })
   })
 
   it('successDocs returns mapped documents (or empty) and 405 for non-GET', async () => {

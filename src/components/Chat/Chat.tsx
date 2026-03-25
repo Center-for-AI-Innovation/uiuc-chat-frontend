@@ -36,6 +36,10 @@ import { ErrorMessageDiv } from './ErrorMessageDiv'
 import { MemoizedChatMessage } from './MemoizedChatMessage'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
+import {
+  deriveAgentModeEnabled,
+  shouldShowChatLoader,
+} from '~/utils/app/agentMode'
 
 import { SourcesSidebarProvider } from './ChatMessage'
 
@@ -44,7 +48,7 @@ interface Props {
   courseMetadata: CourseMetadata
   courseName: string
   currentEmail: string
-  documentCount: number | null
+  documentExists: boolean | null
 }
 
 import { notifications } from '@mantine/notifications'
@@ -60,6 +64,7 @@ import { useAuth } from 'react-oidc-context'
 import { useFetchEnabledDocGroups } from '@/hooks/queries/useFetchEnabledDocGroups'
 import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { useDeleteMessages } from '@/hooks/queries/useDeleteMessages'
+import { saveConversationToLocalStorage } from '~/hooks/__internal__/conversation'
 import { useLogConversation } from '@/hooks/queries/useLogConversation'
 import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
@@ -86,6 +91,8 @@ import {
   processChunkWithStateMachine,
 } from '~/utils/streamProcessing'
 import { createLogConversationPayload } from '@/hooks/__internal__/conversation'
+import { useRunAgent } from '@/hooks/queries/useRunAgent'
+import { runServerAgentMode } from './runServerAgentMode'
 
 const montserrat_med = Montserrat({
   weight: '500',
@@ -104,7 +111,7 @@ export const Chat = memo(
     courseMetadata,
     courseName,
     currentEmail,
-    documentCount,
+    documentExists,
   }: Props) => {
     const { t } = useTranslation('chat')
     const auth = useAuth()
@@ -115,6 +122,7 @@ export const Chat = memo(
     })
     const { mutateAsync: runQueryRewriteAsync } = useQueryRewrite()
     const { mutateAsync: routeChatAsync } = useRouteChat()
+    const { mutateAsync: runAgentAsync, abort: abortAgent } = useRunAgent()
     // const
     const [bannerUrl, setBannerUrl] = useState<string | null>(null)
     const getCurrentPageName = () => {
@@ -180,6 +188,8 @@ export const Chat = memo(
       handleFeedbackUpdate,
       dispatch: homeDispatch,
     } = useContext(HomeContext)
+
+    const agentModeEnabled = deriveAgentModeEnabled(selectedConversation)
 
     useEffect(() => {
       const loadModel = async () => {
@@ -313,16 +323,16 @@ export const Chat = memo(
     const handleSend = useCallback(
       async (
         message: Message,
-        // if user edit any messages in the conversation,
-        // messages after the edited message will be deleted
         deleteCount = 0,
-
         plugin: Plugin | null = null,
         tools: UIUCTool[],
         documentGroups: string[],
         llmProviders: AllLLMProviders,
       ) => {
         const startOfHandleSend = performance.now()
+        // Clear agent events at the start of a new generation
+        message.agentEvents = undefined
+        message.agentStepNumber = undefined
         setCurrentMessage(message)
         resetMessageStates()
 
@@ -348,7 +358,6 @@ export const Chat = memo(
           }
         }
 
-        // TODO(BG): should it be written here?
         let searchQuery = Array.isArray(message.content)
           ? message.content.map((content) => content.text).join(' ')
           : message.content
@@ -358,7 +367,6 @@ export const Chat = memo(
         }
 
         // Add this type guard function
-        // TODO(BG): move to a different file
         function isValidModel(
           model: any,
         ): model is { id: string; name: string } {
@@ -409,14 +417,10 @@ export const Chat = memo(
             : message.content
 
           const updatedMessages = [...(selectedConversation.messages || [])]
-
-          //????
           const messagesToDelete = updatedMessages.slice(0, deleteCount)
           for (let i = 0; i < deleteCount; i++) {
             updatedMessages.pop()
           }
-          //????
-
           updatedConversation = {
             ...selectedConversation,
             messages: [...updatedMessages, message],
@@ -434,7 +438,6 @@ export const Chat = memo(
             messages: [...(selectedConversation.messages || []), message],
           }
           // Update the name of the conversation if it's the first message
-          // TODO(BG): can be written as a helper function
           if (updatedConversation.messages?.length === 1) {
             const { content } = message
             // Use only text content, exclude file content
@@ -457,6 +460,11 @@ export const Chat = memo(
             }
           }
         }
+        updatedConversation = {
+          ...updatedConversation,
+          agentModeEnabled,
+        }
+
         handleUpdateConversation(updatedConversation, {
           key: 'messages',
           value: updatedConversation.messages,
@@ -526,7 +534,7 @@ export const Chat = memo(
           message.contexts.length > 0
         // Updated condition to include conversation files AND current file upload message with contexts
         const hasAnyDocuments =
-          (documentCount || 0) > 0 ||
+          documentExists === true ||
           hasConversationFiles(selectedConversation) ||
           isFileUploadMessageWithContexts
 
@@ -547,7 +555,7 @@ export const Chat = memo(
           if (
             courseMetadata?.vector_search_rewrite_disabled ||
             updatedConversation.messages.length <= 1 ||
-            documentCount === 0
+            documentExists === false
           ) {
             console.log(
               'Query rewrite skipped: disabled for course, first message, or no documents',
@@ -642,7 +650,6 @@ export const Chat = memo(
                   {
                     id: uuidv4(),
                     role: 'user',
-                    // what the fuck?
                     content: `Previous conversation:\n${contextMessages
                       .map((msg) => {
                         const contentText = Array.isArray(msg.content)
@@ -663,8 +670,6 @@ export const Chat = memo(
                         '\n',
                       )}\n\nCurrent query: "${searchQuery}"\n\nEnhanced query:`,
                     latestSystemMessage: QUERY_REWRITE_PROMPT,
-
-                    // what the fuck?
                     finalPromtEngineeredMessage: `\n<User Query>\nPrevious conversation:\n${contextMessages
                       .map((msg) => {
                         const contentText = Array.isArray(msg.content)
@@ -721,9 +726,6 @@ export const Chat = memo(
                 mode: 'chat',
               }
 
-              console.log('queryRewriteBody:', queryRewriteBody)
-
-              // TODO(BG): should be removed
               if (!queryRewriteBody.model || !queryRewriteBody.model.id) {
                 queryRewriteBody.model = selectedConversation.model
               }
@@ -851,28 +853,123 @@ export const Chat = memo(
             }
           }
 
-          homeDispatch({ field: 'isRetrievalLoading', value: true })
+          // In agent mode, skip retrieval here - let the agent decide if/when to search
+          if (!agentModeEnabled) {
+            homeDispatch({ field: 'isRetrievalLoading', value: true })
 
-          // Use enhanced query for context search
-          await handleContextSearch(
-            message,
-            courseName,
-            selectedConversation,
-            rewrittenQuery,
-            enabledDocumentGroups,
-          )
+            // Use enhanced query for context search
+            await handleContextSearch(
+              message,
+              courseName,
+              selectedConversation,
+              rewrittenQuery,
+              enabledDocumentGroups,
+            )
 
-          homeDispatch({ field: 'isRetrievalLoading', value: false })
+            homeDispatch({ field: 'isRetrievalLoading', value: false })
+          } else {
+            console.log(
+              '[Agent Mode] Skipping hard-coded retrieval, agent will decide',
+            )
+          }
         }
 
-        // Action 3: Tool Execution
-        if (tools.length > 0) {
+        const agentMessageIndex =
+          updatedConversation.messages.length > 0
+            ? updatedConversation.messages.length - 1
+            : -1
+
+        const syncAgentMessage = () => {
+          if (
+            agentMessageIndex < 0 ||
+            agentMessageIndex >= updatedConversation.messages.length
+          ) {
+            return
+          }
+
+          const updatedMessages = [...updatedConversation.messages]
+          updatedMessages[agentMessageIndex] = { ...message }
+
+          updatedConversation = {
+            ...updatedConversation,
+            messages: updatedMessages,
+            agentModeEnabled,
+          }
+
+          homeDispatch({
+            field: 'selectedConversation',
+            value: updatedConversation,
+          })
+
+          if (conversations && conversations.length > 0) {
+            const exists = conversations.some(
+              (c) => c.id === updatedConversation.id,
+            )
+            const updatedConversationList = exists
+              ? conversations.map((c) =>
+                  c.id === updatedConversation.id ? updatedConversation : c,
+                )
+              : [updatedConversation, ...conversations]
+
+            homeDispatch({
+              field: 'conversations',
+              value: updatedConversationList,
+            })
+          }
+        }
+
+        // Action 3: Tool Execution (with Agent Mode support)
+        if (tools.length > 0 || agentModeEnabled) {
+          if (agentModeEnabled) {
+            if (courseMetadata?.agent_mode_enabled !== true) {
+              handleUpdateConversation(updatedConversation, {
+                key: 'agentModeEnabled',
+                value: false,
+              })
+              errorToast({
+                title: 'Agent Mode disabled',
+                message:
+                  'Agent Mode is not enabled for this project. Ask a project admin to enable it in the Prompt settings.',
+              })
+              return
+            }
+
+            await runServerAgentMode({
+              abortAgent,
+              conversations,
+              courseName,
+              enabledDocumentGroups,
+              errorToast,
+              homeDispatch,
+              message,
+              queryClient,
+              runAgentAsync,
+              selectedConversation,
+              stopConversationRef,
+              updatedConversation,
+            })
+
+            return
+          }
+
+          // ========================================
+          // CLIENT-SIDE NON-AGENT MODE (single-pass tool execution)
+          // ========================================
           try {
+            // Log which pipeline is being used
+            console.log(
+              `[Non-Agent Mode] Pipeline: REGULAR (single-pass tool execution)`,
+            )
+
+            // Non-agent mode: just use the provided tools directly
+            const toolsToUse = tools
+
             homeDispatch({ field: 'isRouting', value: true })
-            // Check if any tools need to be run
+
+            // Call tool selection API (single pass)
             const uiucToolsToRun = await handleFunctionCall(
               message,
-              tools,
+              toolsToUse,
               imageUrls,
               imgDesc,
               updatedConversation,
@@ -882,17 +979,20 @@ export const Chat = memo(
               llmProviders,
             )
             homeDispatch({ field: 'isRouting', value: false })
+
             if (uiucToolsToRun.length > 0) {
               homeDispatch({ field: 'isRunningTool', value: true })
-              // Run the tools
+
+              // Execute N8N tools
               await handleToolCall(
                 uiucToolsToRun,
                 updatedConversation,
                 courseName,
               )
-            }
+              syncAgentMessage()
 
-            homeDispatch({ field: 'isRunningTool', value: false })
+              homeDispatch({ field: 'isRunningTool', value: false })
+            }
           } catch (error) {
             console.error(
               'Error in chat.tsx running handleFunctionCall():',
@@ -911,7 +1011,7 @@ export const Chat = memo(
           courseMetadata: courseMetadata,
           llmProviders: llmProviders,
           model: selectedConversation.model,
-          skipQueryRewrite: documentCount === 0,
+          skipQueryRewrite: documentExists === false,
           mode: 'chat',
         }
         updatedConversation = finalChatBody.conversation!
@@ -963,9 +1063,6 @@ export const Chat = memo(
                 (error as Error).message ||
                 'In Chat.tsx, we errored when running WebLLM model.',
             })
-            homeDispatch({ field: 'loading', value: false })
-            homeDispatch({ field: 'messageIsStreaming', value: false })
-            return
           }
         } else {
           try {
@@ -1028,8 +1125,8 @@ export const Chat = memo(
 
         let data
         // Only create a stream reader when we actually plan to consume the body as a stream.
-        // Plugin responses are handled via `response.json()` below, which is incompatible with
-        // `getReader()` (it locks the body and makes it unusable for JSON parsing).
+        // For plugin-style JSON responses we call `response.json()`, which would fail if the
+        // body is already locked by a reader.
         if (!plugin && response instanceof Response) {
           data = response.body
           if (!data) {
@@ -1332,8 +1429,12 @@ export const Chat = memo(
         selectedConversation,
         stopConversationRef,
         chat_ui,
+        agentModeEnabled,
+        abortAgent,
+        queryClient,
         refetchLLMProviders,
         routeChatAsync,
+        runAgentAsync,
         runQueryRewriteAsync,
       ],
     )
@@ -1389,6 +1490,8 @@ export const Chat = memo(
             messageToRegenerate.contexts = []
             messageToRegenerate.wasQueryRewritten = undefined
             messageToRegenerate.queryRewriteText = undefined
+            messageToRegenerate.agentEvents = undefined
+            messageToRegenerate.agentStepNumber = undefined
 
             userMessageToRegenerate = {
               ...prevUserMessage,
@@ -1398,6 +1501,8 @@ export const Chat = memo(
               contexts: [], // Clear contexts for fresh search
               wasQueryRewritten: undefined, // Clear previous query rewrite information
               queryRewriteText: undefined, // Clear previous query rewrite text
+              agentEvents: undefined, // Clear agent events for fresh generation
+              agentStepNumber: undefined, // Clear agent step number
             } as Message
           } else {
             // If regenerating a user message
@@ -1409,6 +1514,8 @@ export const Chat = memo(
               contexts: [], // Clear contexts for fresh search
               wasQueryRewritten: undefined, // Clear previous query rewrite information
               queryRewriteText: undefined, // Clear previous query rewrite text
+              agentEvents: undefined, // Clear agent events for fresh generation
+              agentStepNumber: undefined, // Clear agent step number
             } as Message
           }
 
@@ -1865,59 +1972,10 @@ export const Chat = memo(
         }
 
         try {
-          // Update localStorage
-          try {
-            localStorage.setItem(
-              'selectedConversation',
-              JSON.stringify(updatedConversation),
-            )
-          } catch (storageError) {
-            // Handle localStorage quota exceeded error
-            if (
-              storageError instanceof DOMException &&
-              (storageError.name === 'QuotaExceededError' ||
-                storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-                storageError.code === 22 ||
-                storageError.code === 1014)
-            ) {
-              console.warn(
-                'localStorage quota exceeded in handleFeedback, saving minimal conversation data instead',
-              )
-
-              // Create a minimal version of the conversation with just essential data
-              const minimalConversation = {
-                id: updatedConversation.id,
-                name: updatedConversation.name,
-                model: updatedConversation.model,
-                temperature: updatedConversation.temperature,
-                folderId: updatedConversation.folderId,
-                userEmail: updatedConversation.userEmail,
-                projectName: updatedConversation.projectName,
-                createdAt: updatedConversation.createdAt,
-                updatedAt: updatedConversation.updatedAt,
-              }
-
-              try {
-                // Try to save the minimal version
-                localStorage.setItem(
-                  'selectedConversation',
-                  JSON.stringify(minimalConversation),
-                )
-              } catch (minimalError) {
-                // If even minimal version fails, just log the error
-                console.error(
-                  'Failed to save even minimal conversation data to localStorage',
-                  minimalError,
-                )
-              }
-            } else {
-              // Some other error occurred
-              console.error(
-                'Error saving conversation to localStorage:',
-                storageError,
-              )
-            }
-          }
+          saveConversationToLocalStorage(updatedConversation, {
+            allowEmptyMessages: true,
+            logContext: 'handleFeedback',
+          })
 
           // Update the conversation using handleUpdateConversation
           handleFeedbackUpdate(updatedConversation, {
@@ -1971,7 +2029,6 @@ export const Chat = memo(
         conversations,
         homeDispatch,
         updateConversationMutation,
-        logConversationMutation,
       ],
     )
 
@@ -1996,7 +2053,6 @@ export const Chat = memo(
             {permission == 'edit' ? (
               <div className="group absolute right-4 top-4 z-20">
                 <button
-                  aria-label="Open Admin Dashboard"
                   className="rounded-md border border-[--dashboard-border] bg-transparent p-[.35rem] text-[--foreground] hover:border-[--dashboard-button] hover:bg-transparent hover:text-[--dashboard-button]"
                   onClick={() => {
                     if (courseName) router.push(`/${courseName}/dashboard`)
@@ -2010,7 +2066,12 @@ export const Chat = memo(
               </div>
             ) : null}
 
-            <div className="relative max-w-full flex-1 overflow-y-auto overflow-x-hidden pb-32">
+            <div
+              className="relative max-w-full flex-1 overflow-y-auto overflow-x-hidden pb-32"
+              tabIndex={0}
+              role="region"
+              aria-label="Chat messages"
+            >
               {modelError ? (
                 <ErrorMessageDiv error={modelError} />
               ) : (
@@ -2058,7 +2119,10 @@ export const Chat = memo(
                             />
                           ),
                         )}
-                        {loading && <ChatLoader />}
+                        {shouldShowChatLoader(
+                          loading,
+                          selectedConversation,
+                        ) && <ChatLoader />}
                         {/*                          className="h-[162px] bg-gradient-to-t from-transparent to-[rgba(14,14,14,0.4)]"
 //safe to remove in the future- left here in case we want the gradient in dark mode (in light mode, it really sticks
  */}
@@ -2099,6 +2163,9 @@ export const Chat = memo(
                 })()}
                 courseName={courseName}
                 chat_ui={chat_ui}
+                agentModeFeatureEnabled={
+                  courseMetadata?.agent_mode_enabled === true
+                }
               />
             </div>
           </div>

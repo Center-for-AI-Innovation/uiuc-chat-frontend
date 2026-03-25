@@ -150,11 +150,7 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
       >
         <button
           tabIndex={0}
-          className={`text-[--foreground-faded] hover:text-[--foreground] ${
-            isLastMessage
-              ? 'opacity-100'
-              : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
-          }`}
+          className="text-[--foreground-faded] hover:text-[--foreground]"
           onClick={copyOnClick}
           aria-label="Copy message"
         >
@@ -186,20 +182,11 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         <button
           tabIndex={0}
           aria-label={isThumbsUp ? 'Remove Good Response' : 'Good Response'}
-          className={`text-[--foreground-faded] hover:text-[--foreground] ${
-            isLastMessage
-              ? 'opacity-100'
-              : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
-          }`}
+          aria-pressed={isThumbsUp}
+          className="text-[--foreground-faded] hover:text-[--foreground]"
           onClick={handleThumbsUp}
         >
-          <div
-            className={
-              isLastMessage
-                ? ''
-                : 'opacity-0 transition-opacity duration-200 group-hover:opacity-100'
-            }
-          >
+          <div>
             {isThumbsUp ? (
               <IconThumbUpFilled size={20} />
             ) : (
@@ -226,11 +213,8 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
         <button
           tabIndex={0}
           aria-label={isThumbsDown ? 'Remove Bad Response' : 'Bad Response'}
-          className={`text-[--foreground-faded] hover:text-[--foreground] ${
-            isLastMessage
-              ? 'opacity-100'
-              : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
-          }`}
+          aria-pressed={isThumbsDown}
+          className="text-[--foreground-faded] hover:text-[--foreground]"
           onClick={handleThumbsDown}
         >
           {isThumbsDown ? (
@@ -259,10 +243,8 @@ export const MessageActions: React.FC<MessageActionsProps> = ({
           tabIndex={0}
           aria-label="Regenerate Response"
           className={`text-[--foreground-faded] hover:text-[--foreground] ${
-            isLastMessage
-              ? 'opacity-100'
-              : 'opacity-0 transition-opacity duration-200 focus:opacity-100 group-hover:opacity-100'
-          } ${isRegenerating ? 'animate-spin' : ''}`}
+            isRegenerating ? 'animate-spin' : ''
+          }`}
           onClick={handleRegenerate}
           disabled={isRegenerating}
         >

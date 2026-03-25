@@ -36,7 +36,7 @@ export default function NCSAHostedLLmsProviderInput({
         >
           <div>
             <a
-              className="mb-3"
+              className="mb-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
               href="https://ai.ncsa.illinois.edu/"
               target="_blank"
               rel="noopener noreferrer"
@@ -93,7 +93,7 @@ export default function NCSAHostedLLmsProviderInput({
             )}
           </form.Field>
         </div>
-        <Text size="sm" color="dimmed" mb="md">
+        <Text size="sm" className="text-gray-600" mb="md">
           These models are hosted by the Center for AI Innovation at the
           National Center for Supercomputing Applications. They&apos;re free.
         </Text>

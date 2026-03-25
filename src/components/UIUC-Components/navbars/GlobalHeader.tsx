@@ -39,7 +39,7 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
 
   if (!isLoaded) {
     return (
-      <header style={headerStyle} className="py-16">
+      <div style={headerStyle} className="py-16">
         {/* Skeleton placeholders for two icons */}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <div
@@ -52,14 +52,14 @@ export default function Header({ isNavbar = false }: { isNavbar?: boolean }) {
             style={{ width: '35px', height: '35px', borderRadius: '50%' }}
           ></div>
         </div>
-      </header>
+      </div>
     )
   }
 
   return (
-    <header style={headerStyle} className="py-16">
+    <div style={headerStyle} className="py-16">
       <AuthMenu />
-    </header>
+    </div>
   )
 }
 
@@ -237,17 +237,12 @@ export function LandingPageHeader({
 
   if (!isLoaded) {
     return (
-      <header style={headerStyle} className="py-16">
+      <div style={headerStyle} className="py-16">
         {/* Skeleton placeholders for two icons */}
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           {forGeneralPurposeNotLandingpage === false && (
             <>
-              <Link
-                href="/new"
-                className={classes.link}
-                role="button"
-                tabIndex={0}
-              >
+              <Link href="/new" className={classes.link} tabIndex={0}>
                 <span style={{ display: 'flex', alignItems: 'center' }}>
                   <IconSparkles
                     size={20}
@@ -262,7 +257,6 @@ export function LandingPageHeader({
                 </span>
               </Link>
               <Link
-                role="button"
                 tabIndex={0}
                 href="https://docs.uiuc.chat/"
                 className={classes.link}
@@ -290,7 +284,7 @@ export function LandingPageHeader({
             style={{ width: '35px', height: '35px', borderRadius: '50%' }}
           ></div>
         </div>
-      </header>
+      </div>
     )
   }
 
@@ -327,7 +321,6 @@ export function LandingPageHeader({
             <>
               {showDocsInNav && (
                 <Link
-                  role="button"
                   tabIndex={0}
                   href="https://docs.uiuc.chat/"
                   className={classes.link}
@@ -338,6 +331,7 @@ export function LandingPageHeader({
                     <IconClipboardText
                       size={18}
                       strokeWidth={2}
+                      aria-hidden="true"
                       style={{
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
@@ -355,7 +349,6 @@ export function LandingPageHeader({
 
               {showNewsInNav && (
                 <Link
-                  role="button"
                   tabIndex={0}
                   href="http://news.uiuc.chat/"
                   target="_blank"
@@ -365,6 +358,7 @@ export function LandingPageHeader({
                     <IconNews
                       size={18}
                       strokeWidth={2}
+                      aria-hidden="true"
                       style={{
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
@@ -381,16 +375,12 @@ export function LandingPageHeader({
               )}
 
               {showMyChatbotsInNav && (
-                <Link
-                  href="/chatbots"
-                  className={classes.link}
-                  role="button"
-                  tabIndex={0}
-                >
+                <Link href="/chatbots" className={classes.link} tabIndex={0}>
                   <span className="flex items-center">
                     <IconHome
                       size={18}
                       strokeWidth={2}
+                      aria-hidden="true"
                       style={{
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
@@ -407,16 +397,12 @@ export function LandingPageHeader({
               )}
 
               {showNewProjectInNav && (
-                <Link
-                  href="/new"
-                  className={classes.link}
-                  role="button"
-                  tabIndex={0}
-                >
+                <Link href="/new" className={classes.link} tabIndex={0}>
                   <span className="flex items-center">
                     <IconSparkles
                       size={18}
                       strokeWidth={2}
+                      aria-hidden="true"
                       style={{
                         marginRight: '8px',
                         color: 'var(--illinois-orange)',
@@ -448,11 +434,25 @@ export function LandingPageHeader({
               role="button"
               tabIndex={0}
               aria-label="Toggle Menu"
-              className={`${classes.menuIcon} order-2 ${!showDocsInNav ? 'highlight-button' : ''}`}
+              aria-expanded={isMenuOpen}
+              className={`${classes.menuIcon} order-2 ${
+                !showDocsInNav ? 'highlight-button' : ''
+              }`}
               onClick={(e) => toggleMenu(e)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  toggleMenu(e as unknown as React.MouseEvent)
+                }
+              }}
               ref={menuButtonRef as React.RefObject<HTMLDivElement>}
             >
-              <Menu2 size={24} strokeWidth={2} color="var(--illinois-orange)" />
+              <Menu2
+                size={24}
+                strokeWidth={2}
+                color="var(--illinois-orange)"
+                aria-hidden="true"
+              />
             </div>
           )}
         </div>
@@ -467,7 +467,9 @@ export function LandingPageHeader({
             }}
           >
             <div
-              className={`dropdown-menu ${menuVisible ? 'menu-visible' : 'menu-hidden'}`}
+              className={`dropdown-menu ${
+                menuVisible ? 'menu-visible' : 'menu-hidden'
+              }`}
             >
               {/* Menu pointer triangle */}
               <div className="menu-pointer"></div>
@@ -477,7 +479,6 @@ export function LandingPageHeader({
                   {/* Show Docs in dropdown whenever not visible in main nav */}
                   {!showDocsInNav && (
                     <Link
-                      role="button"
                       tabIndex={0}
                       href="https://docs.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
@@ -489,6 +490,7 @@ export function LandingPageHeader({
                         <IconClipboardText
                           size={18}
                           strokeWidth={2}
+                          aria-hidden="true"
                           style={{
                             marginRight: '8px',
                             color: 'var(--illinois-orange)',
@@ -506,7 +508,6 @@ export function LandingPageHeader({
 
                   {/* {!showNewsInNav && (
                     <Link
-                      role="button"
                       tabIndex={0}
                       href="http://news.uiuc.chat/"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
@@ -536,7 +537,6 @@ export function LandingPageHeader({
                   {/* Show My Chatbots in dropdown whenever not visible in main nav */}
                   {!showMyChatbotsInNav && (
                     <Link
-                      role="button"
                       tabIndex={0}
                       href="/chatbots"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
@@ -546,6 +546,7 @@ export function LandingPageHeader({
                         <IconHome
                           size={18}
                           strokeWidth={2}
+                          aria-hidden="true"
                           style={{
                             marginRight: '8px',
                             color: 'var(--illinois-orange)',
@@ -563,7 +564,6 @@ export function LandingPageHeader({
 
                   {!showNewProjectInNav && (
                     <Link
-                      role="button"
                       tabIndex={0}
                       href="/new"
                       className="menu-item rounded transition-colors duration-200 hover:bg-orange-100"
@@ -573,6 +573,7 @@ export function LandingPageHeader({
                         <IconSparkles
                           size={18}
                           strokeWidth={2}
+                          aria-hidden="true"
                           style={{
                             marginRight: '8px',
                             color: 'var(--illinois-orange)',

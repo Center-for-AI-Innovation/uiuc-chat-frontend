@@ -80,7 +80,8 @@ export const getModelLogo = (modelType: string) => {
     case ProviderNames.OpenAICompatible:
       return '/media/llm_icons/OpenAI.png' // Reuse OpenAI icon for OpenAI-compatible models
     default:
-      throw new Error(`Unknown model type: ${modelType}`)
+      console.warn(`Unknown model type: ${modelType}`)
+      return '/media/llm_icons/OpenAI.png'
   }
 }
 export const ModelItem = forwardRef<
@@ -351,6 +352,7 @@ const ModelDropdown: React.FC<
           className="menu z-[50] w-full"
           size="md"
           placeholder="Select a model"
+          aria-label="Select a model"
           searchable
           value={value}
           onChange={async (modelId) => {
