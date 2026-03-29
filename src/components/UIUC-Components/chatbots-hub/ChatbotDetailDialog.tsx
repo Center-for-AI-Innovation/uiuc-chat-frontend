@@ -44,6 +44,7 @@ import {
   type DocumentTypeStat,
 } from './chatbots.types'
 import { useFetchMaintainerProfiles } from '~/hooks/queries/useFetchMaintainerProfiles'
+import { useFetchDocumentSummary } from '~/hooks/queries/useFetchDocumentSummary'
 
 type ChatbotDetailDialogProps = {
   readonly open: boolean
@@ -93,8 +94,8 @@ export function ChatbotDetailDialog({
 
   const aboutText = resolvedMetadata?.project_description || description
 
-  // TODO: Replace with useFetchDocumentSummary(course_name) when API exists
-  const documentSummary: DocumentSummary | undefined = undefined
+  const { data: documentSummary = undefined } =
+    useFetchDocumentSummary(course_name)
 
   const { data: maintainerProfiles = [] } =
     useFetchMaintainerProfiles(course_name)

@@ -13,7 +13,7 @@ async function fetchMaintainerProfiles({
   )
 
   if (!response.ok) {
-    throw new Error(`Error fetching maintenance details: ${response.status}`)
+    throw new Error(`Error fetching maintainer profiles: ${response.status}`)
   }
 
   const data: {
@@ -23,7 +23,7 @@ async function fetchMaintainerProfiles({
   } = await response.json()
 
   if (!data.success) {
-    throw new Error(`Error fetching maintenance details: ${data.error}`)
+    throw new Error(`Error fetching maintainer profiles: ${data.error}`)
   }
 
   return data.profiles || []
