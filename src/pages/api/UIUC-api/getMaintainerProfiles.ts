@@ -61,7 +61,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     )
     res.status(200).json({ success: true, profiles: maintainerProfiles })
   } catch (error) {
-    console.log('Error occurred while fetching courseMetadata', error)
+    console.log('Error occurred while fetching maintainer profiles', error)
     res.status(500).json({ success: false, error: error })
   }
 }
