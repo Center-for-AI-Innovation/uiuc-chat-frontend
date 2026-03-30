@@ -1333,7 +1333,7 @@ export const ChatInput = ({
           </div>
 
           {/* File drop container */}
-          <Dropzone
+          <Dropzone.FullScreen
             multiple
             activateOnClick={false}
             activateOnKeyboard={false}
@@ -1342,7 +1342,7 @@ export const ChatInput = ({
                 handleFileSelection(files)
               }
             }}
-            className={`absolute bottom-0 left-0 -z-10 flex h-[250%] max-h-[calc(100vh/2)] w-full cursor-default items-center justify-center overflow-hidden rounded-t-3xl border-none border-white bg-transparent transition-all duration-300 hover:bg-transparent [&[data-accept]]:z-10 [&[data-accept]]:scale-[1.02] [&[data-accept]]:border-dotted [&[data-accept]]:bg-[--message-background] [&[data-accept]]:shadow-xl [&[data-accept]]:backdrop-blur`}
+            className={`cursor-default overflow-hidden border-none border-white bg-transparent p-0 transition-all duration-300 hover:bg-transparent [&>.mantine-Dropzone-root[data-accept]]:border-dotted [&>.mantine-Dropzone-root[data-accept]]:bg-[--message-background] [&>.mantine-Dropzone-root[data-accept]]:backdrop-blur-sm [&>.mantine-Dropzone-root]:flex [&>.mantine-Dropzone-root]:items-center [&>.mantine-Dropzone-root]:justify-center`}
           >
             <Dropzone.Accept>
               <div className="flex flex-col items-center justify-center gap-2">
@@ -1351,7 +1351,7 @@ export const ChatInput = ({
               </div>
             </Dropzone.Accept>
             <Dropzone.Idle>{null}</Dropzone.Idle>
-          </Dropzone>
+          </Dropzone.FullScreen>
 
           {/* Model picker and Agent Mode pill container */}
           <div className="absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-2">
