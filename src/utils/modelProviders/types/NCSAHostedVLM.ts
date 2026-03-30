@@ -82,8 +82,9 @@ type NCSAHostedVLMApiResponse = {
   data: NCSAHostedVLMApiModel[]
 }
 
-const canUseCurrentNCSADefault = (availableModelIds: Iterable<string>): boolean =>
-  new Set(availableModelIds).has(CURRENT_NCSA_DEFAULT_MODEL_ID)
+const canUseCurrentNCSADefault = (
+  availableModelIds: Iterable<string>,
+): boolean => new Set(availableModelIds).has(CURRENT_NCSA_DEFAULT_MODEL_ID)
 
 const isKnownNCSAHostedVLMModelId = (
   modelId: string,
@@ -214,7 +215,10 @@ export const getNCSAHostedVLMModels = async (
         model.max_tokens ?? model.max_model_len ?? knownModel?.tokenLimit
 
       if (tokenLimit == null) {
-        console.warn('Skipping VLM model without token limit metadata:', model.id)
+        console.warn(
+          'Skipping VLM model without token limit metadata:',
+          model.id,
+        )
         return []
       }
 
