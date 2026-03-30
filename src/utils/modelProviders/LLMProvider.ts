@@ -187,7 +187,11 @@ export const VisionCapableModels: Set<
  * These models can process <think> tags and have extended thinking enabled
  */
 export const ReasoningCapableModels: Set<
-  AnthropicModelID | OpenAIModelID | OllamaModelIDs | OpenAICompatibleModelID
+  | AnthropicModelID
+  | OpenAIModelID
+  | OllamaModelIDs
+  | OpenAICompatibleModelID
+  | NCSAHostedVLMModelID
 > = new Set([
   AnthropicModelID.Claude_3_7_Sonnet_Thinking,
   OpenAIModelID.o3,
@@ -247,6 +251,8 @@ export const ReasoningCapableModels: Set<
   OpenAICompatibleModelID.Ollama_DeepSeek_R1_32B,
   OpenAICompatibleModelID.Ollama_DeepSeek_R1_14B,
   OpenAICompatibleModelID.Ollama_Qwen3_32B,
+  // NCSA-hosted reasoning models
+  NCSAHostedVLMModelID.QWEN3_5_27B,
   // Add other reasoning-capable models as they become available
 ])
 

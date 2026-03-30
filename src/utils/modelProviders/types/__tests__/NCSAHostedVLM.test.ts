@@ -46,7 +46,10 @@ describe('getNCSAHostedVLMModels', () => {
       new Response(
         JSON.stringify({
           data: [
-            { id: NCSAHostedVLMModelID.MOLMO_7B_D_0924, max_tokens: 123 },
+            {
+              id: NCSAHostedVLMModelID.QWEN3_5_27B,
+              max_model_len: 262144,
+            },
             { id: 'unknown/model', max_tokens: 999 },
           ],
         }),
@@ -58,7 +61,7 @@ describe('getNCSAHostedVLMModels', () => {
       enabled: true,
       models: [
         {
-          id: NCSAHostedVLMModelID.MOLMO_7B_D_0924,
+          id: NCSAHostedVLMModelID.QWEN3_5_27B,
           enabled: false,
           default: true,
         },
@@ -70,12 +73,13 @@ describe('getNCSAHostedVLMModels', () => {
     const models = result.models ?? []
     expect(models).toHaveLength(2)
     const known = models.find(
-      (m: any) => m.id === NCSAHostedVLMModelID.MOLMO_7B_D_0924,
+      (m: any) => m.id === NCSAHostedVLMModelID.QWEN3_5_27B,
     )
     expect(known).toMatchObject({
+      name: 'Qwen 3.5 27B',
       enabled: false,
       default: true,
-      tokenLimit: 123,
+      tokenLimit: 262144,
     })
     const unknown = models.find((m: any) => m.id === 'unknown/model')
     expect(unknown).toBeTruthy()

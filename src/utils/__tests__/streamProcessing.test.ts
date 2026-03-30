@@ -1083,8 +1083,8 @@ describe('routeModelRequest', () => {
     expect(runOpenAICompatibleChat).toHaveBeenCalled()
   })
 
-  it('routes NCSAHostedVLM model IDs to runVLLM', async () => {
-    const conv = baseConversation(NCSAHostedVLMModelID.MOLMO_7B_D_0924)
+  it('routes known NCSAHostedVLM enum model IDs to runVLLM', async () => {
+    const conv = baseConversation(NCSAHostedVLMModelID.QWEN3_5_27B)
     const llmProviders: any = { NCSAHostedVLM: { enabled: true, models: [] } }
 
     await routeModelRequest({
