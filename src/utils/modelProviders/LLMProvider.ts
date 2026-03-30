@@ -430,14 +430,14 @@ export const preferredModelIds = [
 ]
 
 export const selectBestModel = (
-  allLLMProviders: AllLLMProviders,
+  allLLMProviders: Partial<AllLLMProviders>,
 ): GenericSupportedModel => {
   // Find default model from the local Storage
   // Currently, if the user ever specified a default model in local storage, this will ALWAYS override the default model specified by the admin,
   // especially for the creation of new chats.
   const enabledProviders = LLM_PROVIDER_ORDER.map(
     (providerName) => allLLMProviders[providerName],
-  ).filter((provider) => provider.enabled)
+  ).filter((provider): provider is LLMProvider => Boolean(provider?.enabled))
 
   const allModels = enabledProviders
     .flatMap((provider) => provider.models || [])

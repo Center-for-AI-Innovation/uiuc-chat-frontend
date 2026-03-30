@@ -45,6 +45,18 @@ describe('selectBestModel', () => {
     expect(selectBestModel(providers).id).toBe(OpenAIModelID.GPT_4o_mini)
   })
 
+  it('handles partial provider maps without crashing', () => {
+    const partialProviders = {
+      [ProviderNames.OpenAI]: {
+        provider: ProviderNames.OpenAI,
+        enabled: true,
+        models: [{ ...OpenAIModels[OpenAIModelID.GPT_4o_mini], enabled: true }],
+      },
+    } as Partial<AllLLMProviders>
+
+    expect(selectBestModel(partialProviders).id).toBe(OpenAIModelID.GPT_4o_mini)
+  })
+
   it('migrates a legacy Qwen default only after Qwen 3.5 is available', () => {
     localStorage.setItem(
       'defaultModel',
@@ -124,6 +136,24 @@ describe('selectBestModel', () => {
     })
 
     expect(selectBestModel(providers).id).toBe(OpenAIModelID.GPT_4o_mini)
+  })
+
+  it('returns the first available enabled model when no defaults or preferred models match', () => {
+    const customModel = {
+      id: 'custom-openai',
+      name: 'Custom OpenAI',
+      enabled: true,
+      tokenLimit: 4096,
+    }
+
+    const providers = makeAllProviders({
+      [ProviderNames.OpenAI]: {
+        enabled: true,
+        models: [customModel as any],
+      },
+    })
+
+    expect(selectBestModel(providers)).toEqual(customModel)
   })
 
   it('rewrites the legacy NCSA default model in localStorage', () => {
