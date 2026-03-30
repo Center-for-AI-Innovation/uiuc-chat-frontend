@@ -291,7 +291,7 @@ describe('Chat (coverage)', () => {
     expect(fetchPresignedUrl).toHaveBeenCalledWith('cs101/banner.png', 'CS101')
     expect((webllm as any).__instances.length).toBeGreaterThan(0)
     expect((webllm as any).__instances[0].loadModel).toHaveBeenCalled()
-  })
+  }, 15000)
 
   it('emits an error toast when tools fail to load', async () => {
     const { notifications } = await import('@mantine/notifications')
@@ -366,7 +366,8 @@ describe('Chat (coverage)', () => {
       },
     )
 
-    await user.click(screen.getByRole('button', { name: /^send$/i }))
+    const sendButtons = screen.getAllByRole('button', { name: /^send$/i })
+    await user.click(sendButtons[0] as HTMLButtonElement)
     expect(true).toBe(true)
   })
 

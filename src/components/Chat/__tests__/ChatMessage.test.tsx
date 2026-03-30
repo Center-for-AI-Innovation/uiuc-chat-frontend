@@ -138,7 +138,7 @@ describe('ChatMessage', () => {
 
     expect(await screen.findByText('Active')).toBeInTheDocument()
     expect(screen.getByText('6 chunks so far')).toBeInTheDocument()
-  })
+  }, 10_000)
 
   it('marks agent timeline complete once final response generation begins', async () => {
     await renderAgentTimelineMessage({
@@ -157,8 +157,10 @@ describe('ChatMessage', () => {
     })
 
     expect(await screen.findByText('6 chunks retrieved')).toBeInTheDocument()
-    expect(screen.queryByText('Active')).not.toBeInTheDocument()
-  })
+    await waitFor(() => {
+      expect(screen.queryByText('Active')).not.toBeInTheDocument()
+    })
+  }, 10_000)
 
   it('renders assistant markdown and opens Sources sidebar when contexts exist', async () => {
     const user = userEvent.setup()

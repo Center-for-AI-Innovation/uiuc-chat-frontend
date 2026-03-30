@@ -24,9 +24,13 @@ import {
   GeminiModels,
 } from '~/utils/modelProviders/types/gemini'
 import {
+  CURRENT_NCSA_DEFAULT_MODEL_ID,
+  findAvailableNCSAFallbackModel,
+  LEGACY_NCSA_DEFAULT_MODEL_IDS,
   type NCSAHostedVLMModel,
   NCSAHostedVLMModelID,
   NCSAHostedVLMModels,
+  resolveStoredNCSADefaultModelId,
 } from '~/utils/modelProviders/types/NCSAHostedVLM'
 import {
   type OpenAIModel,
@@ -137,6 +141,7 @@ export const VisionCapableModels: Set<
   NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
   NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
   NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
+  NCSAHostedVLMModelID.QWEN3_5_27B,
 
   // Gemini
   GeminiModelID.Gemini_2_5_Pro_Exp_03_25,
@@ -187,7 +192,11 @@ export const VisionCapableModels: Set<
  * These models can process <think> tags and have extended thinking enabled
  */
 export const ReasoningCapableModels: Set<
-  AnthropicModelID | OpenAIModelID | OllamaModelIDs | OpenAICompatibleModelID
+  | AnthropicModelID
+  | OpenAIModelID
+  | OllamaModelIDs
+  | OpenAICompatibleModelID
+  | NCSAHostedVLMModelID
 > = new Set([
   AnthropicModelID.Claude_3_7_Sonnet_Thinking,
   OpenAIModelID.o3,
@@ -247,6 +256,8 @@ export const ReasoningCapableModels: Set<
   OpenAICompatibleModelID.Ollama_DeepSeek_R1_32B,
   OpenAICompatibleModelID.Ollama_DeepSeek_R1_14B,
   OpenAICompatibleModelID.Ollama_Qwen3_32B,
+  // NCSA-hosted reasoning models
+  NCSAHostedVLMModelID.QWEN3_5_27B,
   // Add other reasoning-capable models as they become available
 ])
 
@@ -413,25 +424,38 @@ export const preferredModelIds = [
   OpenAIModelID.GPT_4,
   AzureModelID.GPT_4,
   OpenAIModelID.GPT_3_5,
+  NCSAHostedVLMModelID.QWEN3_5_27B,
   // NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
-  NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
+  // NCSAHostedVLMModelID.QWEN2_VL_72B_INSTRUCT,
 ]
 
 export const selectBestModel = (
-  allLLMProviders: AllLLMProviders,
+  allLLMProviders: Partial<AllLLMProviders>,
 ): GenericSupportedModel => {
   // Find default model from the local Storage
   // Currently, if the user ever specified a default model in local storage, this will ALWAYS override the default model specified by the admin,
   // especially for the creation of new chats.
-  const allModels = Object.values(allLLMProviders)
-    .filter((provider) => provider!.enabled)
-    .flatMap((provider) => provider!.models || [])
+  const enabledProviders = LLM_PROVIDER_ORDER.map(
+    (providerName) => allLLMProviders[providerName],
+  ).filter((provider): provider is LLMProvider => Boolean(provider?.enabled))
+
+  const allModels = enabledProviders
+    .flatMap((provider) => provider.models || [])
     .filter((model) => model.enabled)
 
-  const defaultModelId = localStorage.getItem('defaultModel')
+  const storedDefaultModelId = localStorage.getItem('defaultModel')
+  const availableModelIds = allModels.map((model) => model.id)
+  const defaultModelId = resolveStoredNCSADefaultModelId(
+    storedDefaultModelId,
+    availableModelIds,
+  )
 
-  if (defaultModelId === NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT) {
-    return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
+  if (
+    storedDefaultModelId &&
+    LEGACY_NCSA_DEFAULT_MODEL_IDS.has(storedDefaultModelId) &&
+    defaultModelId === CURRENT_NCSA_DEFAULT_MODEL_ID
+  ) {
+    localStorage.setItem('defaultModel', defaultModelId)
   }
 
   if (defaultModelId && allModels.find((m) => m.id === defaultModelId)) {
@@ -443,9 +467,8 @@ export const selectBestModel = (
     }
   }
   // If the default model that a user specifies is not available, fall back to the admin selected default model.
-  const globalDefaultModel = Object.values(allLLMProviders)
-    .filter((provider) => provider!.enabled)
-    .flatMap((provider) => provider!.models || [])
+  const globalDefaultModel = enabledProviders
+    .flatMap((provider) => provider.models || [])
     .filter((model) => model.default)
   if (globalDefaultModel[0]) {
     // This will always return one record since the default model is unique. If there are two default models (that means default model functionality is broken), this will return the first one.
@@ -462,6 +485,15 @@ export const selectBestModel = (
     }
   }
 
-  // If no preferred models are available, fallback to Qwen2.5-VL-72B-Instruct
-  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT]
+  const ncsaFallbackModel = findAvailableNCSAFallbackModel(allModels)
+  if (ncsaFallbackModel) {
+    return ncsaFallbackModel
+  }
+
+  if (allModels[0]) {
+    return allModels[0]
+  }
+
+  // If no enabled models are available, fallback to the static Qwen 3.5 27B descriptor.
+  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN3_5_27B]
 }

@@ -45,18 +45,61 @@ describe('selectBestModel', () => {
     expect(selectBestModel(providers).id).toBe(OpenAIModelID.GPT_4o_mini)
   })
 
-  it('maps Qwen2.5-VL-32B to Qwen2.5-VL-72B', () => {
+  it('handles partial provider maps without crashing', () => {
+    const partialProviders = {
+      [ProviderNames.OpenAI]: {
+        provider: ProviderNames.OpenAI,
+        enabled: true,
+        models: [{ ...OpenAIModels[OpenAIModelID.GPT_4o_mini], enabled: true }],
+      },
+    } as Partial<AllLLMProviders>
+
+    expect(selectBestModel(partialProviders).id).toBe(OpenAIModelID.GPT_4o_mini)
+  })
+
+  it('migrates a legacy Qwen default only after Qwen 3.5 is available', () => {
     localStorage.setItem(
       'defaultModel',
       NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT,
     )
 
     const providers = makeAllProviders({
-      [ProviderNames.NCSAHostedVLM]: { enabled: true, models: [] },
+      [ProviderNames.NCSAHostedVLM]: {
+        enabled: true,
+        models: [{ ...NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN3_5_27B] }],
+      },
+    })
+
+    expect(selectBestModel(providers)).toEqual(
+      NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN3_5_27B],
+    )
+    expect(localStorage.getItem('defaultModel')).toBe(
+      NCSAHostedVLMModelID.QWEN3_5_27B,
+    )
+  })
+
+  it('keeps the stored legacy Qwen default when Qwen 3.5 is unavailable', () => {
+    localStorage.setItem(
+      'defaultModel',
+      NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
+    )
+
+    const providers = makeAllProviders({
+      [ProviderNames.NCSAHostedVLM]: {
+        enabled: true,
+        models: [
+          {
+            ...NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT],
+          },
+        ],
+      },
     })
 
     expect(selectBestModel(providers)).toEqual(
       NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT],
+    )
+    expect(localStorage.getItem('defaultModel')).toBe(
+      NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
     )
   })
 
@@ -95,14 +138,72 @@ describe('selectBestModel', () => {
     expect(selectBestModel(providers).id).toBe(OpenAIModelID.GPT_4o_mini)
   })
 
-  it('falls back to Qwen2.5-VL-72B when no preferred models are available', () => {
+  it('returns the first available enabled model when no defaults or preferred models match', () => {
+    const customModel = {
+      id: 'custom-openai',
+      name: 'Custom OpenAI',
+      enabled: true,
+      tokenLimit: 4096,
+    }
+
+    const providers = makeAllProviders({
+      [ProviderNames.OpenAI]: {
+        enabled: true,
+        models: [customModel as any],
+      },
+    })
+
+    expect(selectBestModel(providers)).toEqual(customModel)
+  })
+
+  it('rewrites the legacy NCSA default model in localStorage', () => {
+    localStorage.setItem(
+      'defaultModel',
+      NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
+    )
+
+    const providers = makeAllProviders({
+      [ProviderNames.NCSAHostedVLM]: {
+        enabled: true,
+        models: [{ ...NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN3_5_27B] }],
+      },
+    })
+
+    expect(selectBestModel(providers)).toEqual(
+      NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN3_5_27B],
+    )
+    expect(localStorage.getItem('defaultModel')).toBe(
+      NCSAHostedVLMModelID.QWEN3_5_27B,
+    )
+  })
+
+  it('falls back to Qwen 3.5 27B when no preferred models are available', () => {
     const providers = makeAllProviders({
       [ProviderNames.OpenAI]: { enabled: false, models: [] },
       [ProviderNames.NCSAHostedVLM]: { enabled: false, models: [] },
     })
 
     expect(selectBestModel(providers)).toEqual(
-      NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT],
+      NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN3_5_27B],
+    )
+  })
+
+  it('falls back to an available legacy NCSA model before using the static Qwen 3.5 descriptor', () => {
+    const providers = makeAllProviders({
+      [ProviderNames.OpenAI]: { enabled: false, models: [] },
+      [ProviderNames.NCSAHostedVLM]: {
+        enabled: true,
+        models: [
+          {
+            ...NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT],
+            default: false,
+          },
+        ],
+      },
+    })
+
+    expect(selectBestModel(providers)).toMatchObject(
+      NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN2_5VL_32B_INSTRUCT],
     )
   })
 })

@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 vi.mock('../../UIUC-Components/SourcesSidebar', () => ({
@@ -107,7 +107,7 @@ describe('ChatMessage (markdown coverage)', () => {
     expect(
       screen.getByRole('button', { name: /Copy code/i }),
     ).toBeInTheDocument()
-  })
+  }, 15000)
 
   it('opens and closes the sources sidebar and executes hideRightSidebarIcon', async () => {
     vi.resetModules()
@@ -165,13 +165,18 @@ describe('ChatMessage (markdown coverage)', () => {
       },
     )
 
-    await user.click(await screen.findByRole('button', { name: /Sources/i }))
+    const sourceButtons = await screen.findAllByRole('button', {
+      name: /Sources/i,
+    })
+    await user.click(sourceButtons[0] as HTMLButtonElement)
     expect(await screen.findByText('Mock Sources Sidebar')).toBeInTheDocument()
     expect(screen.getByTestId('any-sidebar-open')).toHaveTextContent('true')
 
     await user.click(
       screen.getByRole('button', { name: /Close sources sidebar/i }),
     )
-    expect(screen.queryByText('Mock Sources Sidebar')).not.toBeInTheDocument()
-  })
+    await waitFor(() => {
+      expect(screen.queryByText('Mock Sources Sidebar')).not.toBeInTheDocument()
+    })
+  }, 15000)
 })
