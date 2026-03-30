@@ -8,7 +8,7 @@ import {
 } from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
 import { type Prompt } from '@/types/prompt'
-import { Text } from '@mantine/core'
+import { Group, rem, Text } from '@mantine/core'
 import {
   IconArrowDown,
   IconPlayerStop,
@@ -53,6 +53,7 @@ import React from 'react'
 import { type CSSProperties } from 'react'
 
 import { useMediaQuery } from '@mantine/hooks'
+import { Dropzone } from '@mantine/dropzone'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
@@ -1224,7 +1225,6 @@ export const ChatInput = ({
                   }
                 }}
               />
-
               {/* Textarea for message input */}
               <textarea
                 ref={textareaRef}
@@ -1331,6 +1331,27 @@ export const ChatInput = ({
               </div>
             )}
           </div>
+
+          {/* File drop container */}
+          <Dropzone
+            multiple
+            activateOnClick={false}
+            activateOnKeyboard={false}
+            onDrop={(files) => {
+              if (files) {
+                handleFileSelection(files)
+              }
+            }}
+            className={`absolute bottom-0 left-0 -z-10 flex h-[250%] max-h-[calc(100vh/2)] w-full cursor-default items-center justify-center overflow-hidden rounded-t-3xl border-none border-white bg-transparent transition-all duration-300 hover:bg-transparent [&[data-accept]]:z-10 [&[data-accept]]:scale-[1.02] [&[data-accept]]:border-dotted [&[data-accept]]:bg-[--message-background] [&[data-accept]]:shadow-xl [&[data-accept]]:backdrop-blur`}
+          >
+            <Dropzone.Accept>
+              <div className="flex flex-col items-center justify-center gap-2">
+                <IconPaperclip size={rem(30)} />
+                <Text fz="md">Drop files here</Text>
+              </div>
+            </Dropzone.Accept>
+            <Dropzone.Idle>{null}</Dropzone.Idle>
+          </Dropzone>
 
           {/* Model picker and Agent Mode pill container */}
           <div className="absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-2">
