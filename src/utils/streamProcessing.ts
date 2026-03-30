@@ -808,11 +808,7 @@ export const routeModelRequest = async (
     )
   ) {
     // NCSA Hosted VLM
-    return await runVLLM(
-      selectedConversation,
-      chatBody?.llmProviders?.NCSAHostedVLM as NCSAHostedVLMProvider,
-      chatBody.stream,
-    )
+    return await runVLLM(selectedConversation, chatBody.stream)
   } else if (
     Object.values(OllamaModelIDs).includes(selectedConversation.model.id as any)
   ) {
