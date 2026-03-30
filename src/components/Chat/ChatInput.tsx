@@ -1331,14 +1331,24 @@ export const ChatInput = ({
             )}
           </div>
 
-          {/* File drop container */}
+          {/* Full-screen file drop overlay */}
           <Dropzone.FullScreen
             multiple
             activateOnClick={false}
             activateOnKeyboard={false}
-            onDrop={(files) => {
-              if (files) {
-                handleFileSelection(files)
+            maxSize={15 * 1024 * 1024}
+            onDrop={(files) => handleFileSelection(files)}
+            onReject={(rejections) => {
+              const tooLarge = rejections.some((r) =>
+                r.errors.some((e) => e.code === 'file-too-large'),
+              )
+              if (tooLarge) {
+                showToast({
+                  title: 'File Too Large',
+                  message: 'One or more files exceed the 15MB size limit.',
+                  type: 'error',
+                  autoClose: 6000,
+                })
               }
             }}
             className={`cursor-default overflow-hidden border-none border-white bg-transparent p-0 transition-all duration-300 hover:bg-transparent [&>.mantine-Dropzone-root[data-accept]]:border-dotted [&>.mantine-Dropzone-root[data-accept]]:bg-[--message-background] [&>.mantine-Dropzone-root[data-accept]]:backdrop-blur-sm [&>.mantine-Dropzone-root]:flex [&>.mantine-Dropzone-root]:items-center [&>.mantine-Dropzone-root]:justify-center [&>.mantine-Dropzone-root]:rounded-none [&>.mantine-Dropzone-root]:border-none [&>.mantine-Dropzone-root]:bg-transparent`}
