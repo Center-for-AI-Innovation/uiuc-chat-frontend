@@ -8,7 +8,7 @@ import {
 } from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
 import { type Prompt } from '@/types/prompt'
-import { Group, rem, Text } from '@mantine/core'
+import { rem, Text } from '@mantine/core'
 import {
   IconArrowDown,
   IconPlayerStop,
@@ -265,7 +265,6 @@ export const ChatInput = ({
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [showPluginSelect, setShowPluginSelect] = useState(false)
   const [plugin, setPlugin] = useState<Plugin | null>(null)
-  const [isDragging, setIsDragging] = useState<boolean>(false)
   const promptListRef = useRef<HTMLUListElement | null>(null)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
