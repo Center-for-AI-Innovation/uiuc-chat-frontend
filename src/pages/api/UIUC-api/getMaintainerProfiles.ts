@@ -30,6 +30,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
   const { course_owner = '', course_admins = [] } = course_metadata
   const maintainers = new Set([course_owner, ...course_admins])
+  maintainers.delete('rohan13@illinois.edu') // Exclude the default admin email if present
 
   try {
     const keycloakBaseUrl = getKeycloakBaseUrl()
