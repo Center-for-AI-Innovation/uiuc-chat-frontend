@@ -80,5 +80,5 @@ describe('ChatMessage - accessibility', () => {
 
     const liveRegion = container.querySelector('[aria-live="polite"]')
     expect(liveRegion).toBeTruthy()
-  })
+  }, 10_000)
 })

@@ -165,13 +165,10 @@ describe('ChatMessage (markdown coverage)', () => {
       },
     )
 
-    await user.click(
-      await screen.findByRole(
-        'button',
-        { name: /Sources/i },
-        { timeout: 5000 },
-      ),
-    )
+    const sourceButtons = await screen.findAllByRole('button', {
+      name: /Sources/i,
+    })
+    await user.click(sourceButtons[0] as HTMLButtonElement)
     expect(await screen.findByText('Mock Sources Sidebar')).toBeInTheDocument()
     expect(screen.getByTestId('any-sidebar-open')).toHaveTextContent('true')
 
