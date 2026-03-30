@@ -21,9 +21,7 @@ function normalizeBoolean(value: unknown): boolean | unknown {
   return value
 }
 
-function normalizeCourseMetadata(
-  metadata: CourseMetadata,
-): CourseMetadata {
+function normalizeCourseMetadata(metadata: CourseMetadata): CourseMetadata {
   return {
     ...metadata,
     is_private: Boolean(normalizeBoolean(metadata.is_private)),
