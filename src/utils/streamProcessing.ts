@@ -28,7 +28,6 @@ import {
   type BedrockProvider,
   type GeminiProvider,
   type GenericSupportedModel,
-  type NCSAHostedVLMProvider,
   type OllamaProvider,
   type OpenAICompatibleProvider,
   ProviderNames,

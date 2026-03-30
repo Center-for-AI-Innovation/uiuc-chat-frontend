@@ -2,7 +2,6 @@
 
 import { describe, expect, it } from 'vitest'
 import { buildVLLMResponseContent, normalizeVLLMStreamResponse } from '../vllm'
-import { NCSAHostedVLMModelID } from '~/utils/modelProviders/types/NCSAHostedVLM'
 
 describe('vllm reasoning normalization', () => {
   it('combines reasoning and content into the UI think-tag format', () => {
