@@ -5,6 +5,35 @@ import { withAppRouterAuth } from '~/utils/appRouterAuth'
 import { ensureRedisConnected } from '~/utils/redisClient'
 import { AuthenticatedUser } from '~/middleware'
 
+function normalizeBoolean(value: unknown): boolean | unknown {
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  if (value.toLowerCase() === 'true') {
+    return true
+  }
+
+  if (value.toLowerCase() === 'false') {
+    return false
+  }
+
+  return value
+}
+
+function normalizeCourseMetadata(
+  metadata: CourseMetadata,
+): CourseMetadata {
+  return {
+    ...metadata,
+    is_private: Boolean(normalizeBoolean(metadata.is_private)),
+    allow_logged_in_users: Boolean(
+      normalizeBoolean(metadata.allow_logged_in_users),
+    ),
+    is_frozen: normalizeBoolean(metadata.is_frozen) as boolean | undefined,
+  }
+}
+
 // Helper function to get course metadata from Redis
 export async function getCourseMetadata(
   courseName: string,
@@ -13,10 +42,9 @@ export async function getCourseMetadata(
     const redisClient = await ensureRedisConnected()
     const rawMetadata = await redisClient.hGet('course_metadatas', courseName)
     const course_metadata: CourseMetadata | null = rawMetadata
-      ? JSON.parse(rawMetadata)
+      ? normalizeCourseMetadata(JSON.parse(rawMetadata) as CourseMetadata)
       : null
 
-    // Use value as-is; Redis-stored JSON should already have correct boolean
     return course_metadata
   } catch (error) {
     console.error('Error occurred while fetching courseMetadata', error)

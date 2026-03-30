@@ -5,6 +5,35 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { withAuth } from '~/utils/authMiddleware'
 import { ensureRedisConnected } from '~/utils/redisClient'
 
+function normalizeBoolean(value: unknown): boolean | unknown {
+  if (typeof value !== 'string') {
+    return value
+  }
+
+  if (value.toLowerCase() === 'true') {
+    return true
+  }
+
+  if (value.toLowerCase() === 'false') {
+    return false
+  }
+
+  return value
+}
+
+function normalizeCourseMetadata(
+  metadata: CourseMetadata,
+): CourseMetadata {
+  return {
+    ...metadata,
+    is_private: Boolean(normalizeBoolean(metadata.is_private)),
+    allow_logged_in_users: Boolean(
+      normalizeBoolean(metadata.allow_logged_in_users),
+    ),
+    is_frozen: normalizeBoolean(metadata.is_frozen) as boolean | undefined,
+  }
+}
+
 // Helper function to get course metadata from Redis
 export async function getCourseMetadata(
   courseName: string,
@@ -14,7 +43,7 @@ export async function getCourseMetadata(
     const rawMetadata = await redisClient.hGet('course_metadatas', courseName)
     if (!rawMetadata) return null
     const parsed = JSON.parse(rawMetadata) as CourseMetadata
-    return parsed
+    return normalizeCourseMetadata(parsed)
   } catch (error) {
     console.error('Error fetching course metadata:', error)
     return null

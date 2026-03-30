@@ -79,6 +79,22 @@ describe('app/api authorization helpers', () => {
     })
   })
 
+  it('getCourseMetadata normalizes boolean-like redis strings', async () => {
+    hoisted.hGet.mockResolvedValueOnce(
+      JSON.stringify({
+        is_private: 'false',
+        allow_logged_in_users: 'true',
+        is_frozen: 'false',
+      }),
+    )
+
+    await expect(getCourseMetadata('CS101')).resolves.toMatchObject({
+      is_private: false,
+      allow_logged_in_users: true,
+      is_frozen: false,
+    })
+  })
+
   it('hasCourseAccess checks admins/owners/approved/all-logged-in', () => {
     const user: AuthenticatedUser = {
       email: 'u@example.com',
@@ -146,6 +162,59 @@ describe('app/api authorization helpers', () => {
     }) as unknown as TestRequest
 
     const res = await wrapped(req)
+    expect(handler).toHaveBeenCalled()
+    await expect(res.json()).resolves.toEqual({ ok: true, course: 'CS101' })
+  })
+
+  it('withCourseAccessFromRequest treats string public metadata as public', async () => {
+    hoisted.hGet.mockResolvedValueOnce(JSON.stringify({ is_private: 'false' }))
+
+    const handler = vi.fn(async (req: TestRequest) =>
+      NextResponse.json({ ok: true, course: req.courseName }),
+    )
+    const wrapped = withCourseAccessFromRequest('any')(
+      handler as unknown as (
+        req: AuthenticatedRequest,
+      ) => Promise<NextResponse>,
+    )
+
+    const req = new NextRequest('http://localhost/api?courseName=CS101', {
+      method: 'GET',
+    }) as unknown as TestRequest
+
+    const res = await wrapped(req)
+    expect(res.status).toBe(200)
+    expect(handler).toHaveBeenCalled()
+    await expect(res.json()).resolves.toEqual({ ok: true, course: 'CS101' })
+  })
+
+  it('withCourseAccessFromRequest treats string allow_logged_in_users metadata as allowed', async () => {
+    hoisted.hGet.mockResolvedValueOnce(
+      JSON.stringify({
+        is_private: 'true',
+        course_owner: 'owner@example.com',
+        course_admins: [],
+        approved_emails_list: [],
+        allow_logged_in_users: 'true',
+      }),
+    )
+
+    const handler = vi.fn(async (req: TestRequest) =>
+      NextResponse.json({ ok: true, course: req.courseName }),
+    )
+    const wrapped = withCourseAccessFromRequest('any')(
+      handler as unknown as (
+        req: AuthenticatedRequest,
+      ) => Promise<NextResponse>,
+    )
+
+    const req = new NextRequest('http://localhost/api?courseName=CS101', {
+      method: 'POST',
+    }) as unknown as TestRequest
+    req.user = { email: 'member@example.com' } as AuthenticatedUser
+
+    const res = await wrapped(req)
+    expect(res.status).toBe(200)
     expect(handler).toHaveBeenCalled()
     await expect(res.json()).resolves.toEqual({ ok: true, course: 'CS101' })
   })

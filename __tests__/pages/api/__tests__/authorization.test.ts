@@ -71,6 +71,23 @@ describe('authorization helpers', () => {
     expect(meta?.course_owner).toBe('owner@example.com')
   })
 
+  it('getCourseMetadata normalizes boolean-like metadata values from redis', async () => {
+    hoisted.hGetMock.mockResolvedValueOnce(
+      JSON.stringify({
+        is_private: 'false',
+        allow_logged_in_users: 'true',
+        is_frozen: 'false',
+      }),
+    )
+
+    const meta = await getCourseMetadata('CS101')
+    expect(meta).toMatchObject({
+      is_private: false,
+      allow_logged_in_users: true,
+      is_frozen: false,
+    })
+  })
+
   it('getCourseMetadata returns null when redis access throws', async () => {
     const { ensureRedisConnected } = await import('~/utils/redisClient')
     vi.mocked(ensureRedisConnected).mockRejectedValueOnce(new Error('boom'))
@@ -450,5 +467,35 @@ describe('authorization helpers', () => {
       res2 as any,
     )
     expect(res2.status).toHaveBeenCalledWith(200)
+  })
+
+  it('withCourseAccessFromRequest honors string allow_logged_in_users metadata for private courses', async () => {
+    hoisted.hGetMock.mockResolvedValueOnce(
+      JSON.stringify({
+        is_private: 'true',
+        course_owner: 'owner@example.com',
+        course_admins: [],
+        approved_emails_list: [],
+        allow_logged_in_users: 'true',
+      }),
+    )
+
+    const handler = vi.fn(async (req: any, res: any) =>
+      res.status(200).json({ ok: true, course: req.courseName }),
+    )
+    const wrapped = withCourseAccessFromRequest('any')(handler)
+
+    const res = createMockRes()
+    await wrapped(
+      createMockReq({
+        method: 'POST',
+        query: { courseName: 'CS101' },
+        user: { email: 'user@example.com' },
+      }) as any,
+      res as any,
+    )
+
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(handler).toHaveBeenCalled()
   })
 })
