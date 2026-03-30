@@ -20,6 +20,7 @@ import {
   IconFileTypeDocx,
   IconFile,
   IconPaperclip,
+  IconCloudUpload,
 } from '@tabler/icons-react'
 import { useTranslation } from 'next-i18next'
 import {
@@ -55,7 +56,7 @@ import { type CSSProperties } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import { Dropzone } from '@mantine/dropzone'
 import { IconChevronRight } from '@tabler/icons-react'
-import { montserrat_heading } from 'fonts'
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
 import { fetchPresignedUrl, uploadToS3 } from '~/utils/apiUtils'
 import { UserSettings } from '~/components/Chat/UserSettings'
@@ -1354,9 +1355,22 @@ export const ChatInput = ({
             className={`cursor-default overflow-hidden border-none bg-transparent p-0 hover:bg-transparent [&>.mantine-Dropzone-root[data-accept]]:border-[3px] [&>.mantine-Dropzone-root[data-accept]]:border-dashed [&>.mantine-Dropzone-root[data-accept]]:border-[--illinois-orange] [&>.mantine-Dropzone-root[data-accept]]:bg-black/5 [&>.mantine-Dropzone-root[data-accept]]:backdrop-blur-sm dark:[&>.mantine-Dropzone-root[data-accept]]:bg-white/5 [&>.mantine-Dropzone-root]:flex [&>.mantine-Dropzone-root]:items-center [&>.mantine-Dropzone-root]:justify-center [&>.mantine-Dropzone-root]:rounded-none [&>.mantine-Dropzone-root]:border-none [&>.mantine-Dropzone-root]:bg-transparent`}
           >
             <Dropzone.Accept>
-              <div className="flex flex-col items-center justify-center gap-2">
-                <IconPaperclip size={rem(30)} />
-                <Text fz="md">Drop files here</Text>
+              <div className="flex flex-col items-center justify-center gap-4">
+                <IconCloudUpload
+                  size={rem(52)}
+                  stroke={1.5}
+                  className="text-[--illinois-blue] dark:text-neutral-100"
+                />
+                <p
+                  className={`${montserrat_heading.variable} font-montserratHeading text-2xl tracking-tight text-[--illinois-blue] dark:text-neutral-100`}
+                >
+                  Drop files here
+                </p>
+                <p
+                  className={`${montserrat_paragraph.variable} font-montserratParagraph text-sm text-[--illinois-blue] dark:text-neutral-400`}
+                >
+                  PDF, DOCX, TXT, images, and more
+                </p>
               </div>
             </Dropzone.Accept>
             <Dropzone.Idle>{null}</Dropzone.Idle>
