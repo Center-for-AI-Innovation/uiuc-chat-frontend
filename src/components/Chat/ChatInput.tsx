@@ -1342,7 +1342,7 @@ export const ChatInput = ({
                 handleFileSelection(files)
               }
             }}
-            className={`cursor-default overflow-hidden border-none border-white bg-transparent p-0 transition-all duration-300 hover:bg-transparent [&>.mantine-Dropzone-root[data-accept]]:border-dotted [&>.mantine-Dropzone-root[data-accept]]:bg-[--message-background] [&>.mantine-Dropzone-root[data-accept]]:backdrop-blur-sm [&>.mantine-Dropzone-root]:flex [&>.mantine-Dropzone-root]:items-center [&>.mantine-Dropzone-root]:justify-center`}
+            className={`cursor-default overflow-hidden border-none border-white bg-transparent p-0 transition-all duration-300 hover:bg-transparent [&>.mantine-Dropzone-root[data-accept]]:border-dotted [&>.mantine-Dropzone-root[data-accept]]:bg-[--message-background] [&>.mantine-Dropzone-root[data-accept]]:backdrop-blur-sm [&>.mantine-Dropzone-root]:flex [&>.mantine-Dropzone-root]:items-center [&>.mantine-Dropzone-root]:justify-center [&>.mantine-Dropzone-root]:rounded-none [&>.mantine-Dropzone-root]:border-none [&>.mantine-Dropzone-root]:bg-transparent`}
           >
             <Dropzone.Accept>
               <div className="flex flex-col items-center justify-center gap-2">
