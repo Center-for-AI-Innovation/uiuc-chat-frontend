@@ -8,7 +8,7 @@ import {
 } from '@/types/chat'
 import { type Plugin } from '@/types/plugin'
 import { type Prompt } from '@/types/prompt'
-import { rem, Text } from '@mantine/core'
+import { Text } from '@mantine/core'
 import {
   IconArrowDown,
   IconPlayerStop,
@@ -20,7 +20,6 @@ import {
   IconFileTypeDocx,
   IconFile,
   IconPaperclip,
-  IconCloudUpload,
 } from '@tabler/icons-react'
 import { useTranslation } from 'next-i18next'
 import {
@@ -54,9 +53,9 @@ import React from 'react'
 import { type CSSProperties } from 'react'
 
 import { useMediaQuery } from '@mantine/hooks'
-import { Dropzone } from '@mantine/dropzone'
+import { FileDropOverlay } from './FileDropOverlay'
 import { IconChevronRight } from '@tabler/icons-react'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
+import { montserrat_heading } from 'fonts'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
 import { fetchPresignedUrl, uploadToS3 } from '~/utils/apiUtils'
 import { UserSettings } from '~/components/Chat/UserSettings'
@@ -1332,49 +1331,7 @@ export const ChatInput = ({
             )}
           </div>
 
-          {/* Full-screen file drop overlay */}
-          <Dropzone.FullScreen
-            multiple
-            activateOnClick={false}
-            activateOnKeyboard={false}
-            maxSize={15 * 1024 * 1024}
-            onDrop={(files) => handleFileSelection(files)}
-            onReject={(rejections) => {
-              const tooLarge = rejections.some((r) =>
-                r.errors.some((e) => e.code === 'file-too-large'),
-              )
-              if (tooLarge) {
-                showToast({
-                  title: 'File Too Large',
-                  message: 'One or more files exceed the 15MB size limit.',
-                  type: 'error',
-                  autoClose: 6000,
-                })
-              }
-            }}
-            className={`cursor-default overflow-hidden border-none bg-transparent p-0 hover:bg-transparent [&>.mantine-Dropzone-root[data-accept]]:border-[3px] [&>.mantine-Dropzone-root[data-accept]]:border-dashed [&>.mantine-Dropzone-root[data-accept]]:border-[--illinois-orange] [&>.mantine-Dropzone-root[data-accept]]:bg-black/5 [&>.mantine-Dropzone-root[data-accept]]:backdrop-blur-sm dark:[&>.mantine-Dropzone-root[data-accept]]:bg-white/5 [&>.mantine-Dropzone-root]:flex [&>.mantine-Dropzone-root]:items-center [&>.mantine-Dropzone-root]:justify-center [&>.mantine-Dropzone-root]:rounded-none [&>.mantine-Dropzone-root]:border-none [&>.mantine-Dropzone-root]:bg-transparent`}
-          >
-            <Dropzone.Accept>
-              <div className="flex flex-col items-center justify-center gap-4">
-                <IconCloudUpload
-                  size={rem(52)}
-                  stroke={1.5}
-                  className="text-[--illinois-blue] dark:text-neutral-100"
-                />
-                <p
-                  className={`${montserrat_heading.variable} font-montserratHeading text-2xl tracking-tight text-[--illinois-blue] dark:text-neutral-100`}
-                >
-                  Drop files here
-                </p>
-                <p
-                  className={`${montserrat_paragraph.variable} font-montserratParagraph text-sm text-[--illinois-blue] dark:text-neutral-400`}
-                >
-                  PDF, DOCX, TXT, images, and more
-                </p>
-              </div>
-            </Dropzone.Accept>
-            <Dropzone.Idle>{null}</Dropzone.Idle>
-          </Dropzone.FullScreen>
+          <FileDropOverlay onFilesDropped={handleFileSelection} />
 
           {/* Model picker and Agent Mode pill container */}
           <div className="absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-2">
