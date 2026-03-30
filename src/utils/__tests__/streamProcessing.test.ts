@@ -431,6 +431,23 @@ describe('validateRequestBody', () => {
     ).rejects.toThrow(/does not support vision/i)
   })
 
+  it('allows image content for Qwen 3.5 27B', async () => {
+    await expect(
+      validateRequestBody({
+        model: NCSAHostedVLMModelID.QWEN3_5_27B,
+        messages: [
+          {
+            id: 'm1',
+            role: 'user',
+            content: [{ type: 'image_url', image_url: { url: 'x' } }],
+          } as any,
+        ],
+        course_name: 'CS101',
+        api_key: 'k',
+      }),
+    ).resolves.toBeUndefined()
+  })
+
   it('throws when messages are missing or invalid', async () => {
     await expect(
       validateRequestBody({
@@ -1083,8 +1100,8 @@ describe('routeModelRequest', () => {
     expect(runOpenAICompatibleChat).toHaveBeenCalled()
   })
 
-  it('routes known NCSAHostedVLM enum model IDs to runVLLM', async () => {
-    const conv = baseConversation(NCSAHostedVLMModelID.QWEN3_5_27B)
+  it('routes legacy NCSAHostedVLM model IDs to runVLLM', async () => {
+    const conv = baseConversation(NCSAHostedVLMModelID.MOLMO_7B_D_0924)
     const llmProviders: any = { NCSAHostedVLM: { enabled: true, models: [] } }
 
     await routeModelRequest({
