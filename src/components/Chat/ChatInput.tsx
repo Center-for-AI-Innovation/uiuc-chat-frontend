@@ -277,7 +277,7 @@ export const ChatInput = ({
   const handleFocus = () => {
     setIsFocused(true)
     if (chatInputParentContainerRef.current) {
-      chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
+      chatInputParentContainerRef.current.style.boxShadow = `0 0 0 2px var(--background), 0 0 0 4px var(--illinois-orange)`
     }
   }
 
@@ -832,7 +832,7 @@ export const ChatInput = ({
   useEffect(() => {
     const handleFocus = () => {
       if (chatInputParentContainerRef.current) {
-        chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
+        chatInputParentContainerRef.current.style.boxShadow = `0 0 0 2px var(--background), 0 0 0 4px var(--illinois-orange)`
       }
     }
 

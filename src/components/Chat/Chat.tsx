@@ -1819,13 +1819,15 @@ export const Chat = memo(
                 <p>Start a conversation below or try these examples</p>
               )}
             </h4>
-            <div className="mt-4 flex flex-col items-start space-y-2 overflow-hidden">
+            <div className="mt-4 flex flex-col items-start space-y-2">
               {/* if getCurrentPageName is 'chat' then don't show any example questions */}
               {getCurrentPageName() !== 'chat' &&
                 statements.map((statement, index) => (
                   <div
                     key={index}
-                    className="w-full rounded-lg hover:cursor-pointer hover:bg-[--welcome-button-hover]"
+                    role="button"
+                    tabIndex={0}
+                    className="w-full rounded-lg hover:cursor-pointer hover:bg-[--welcome-button-hover] hover:text-[--background]"
                     onClick={() => {
                       setInputContent('') // First clear the input
                       setTimeout(() => {
@@ -1834,10 +1836,21 @@ export const Chat = memo(
                         textareaRef.current?.focus()
                       }, 0)
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setInputContent('')
+                        setTimeout(() => {
+                          setInputContent(statement)
+                          textareaRef.current?.focus()
+                        }, 0)
+                      }
+                    }}
                   >
                     <Button
                       variant="link"
-                      className={`text-md h-auto p-2 font-bold leading-relaxed text-[--foreground] hover:text-[--background] hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
+                      tabIndex={-1}
+                      className={`text-md h-auto p-2 font-bold leading-relaxed text-inherit hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
                     >
                       <IconArrowRight
                         size={25}
