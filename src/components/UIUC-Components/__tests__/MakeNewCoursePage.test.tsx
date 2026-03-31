@@ -275,7 +275,7 @@ describe('MakeNewCoursePage', () => {
       expect(await screen.findByTestId('step-create')).toBeInTheDocument()
     })
 
-    it('renders Navbar, Continue, Back, and Start Chatting buttons', async () => {
+    it('renders Navbar, Continue, and Back buttons', async () => {
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
         <MakeNewCoursePage
@@ -285,12 +285,11 @@ describe('MakeNewCoursePage', () => {
       )
 
       expect(screen.getByTestId('navbar')).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /Back/i })).toBeInTheDocument()
       expect(
-        screen.getByRole('button', { name: /Continue/i }),
+        screen.getByRole('button', { name: /previous step|Back/i }),
       ).toBeInTheDocument()
       expect(
-        screen.getByRole('button', { name: /Start Chatting/i }),
+        screen.getByRole('button', { name: /Continue/i }),
       ).toBeInTheDocument()
     })
 
@@ -317,7 +316,9 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      expect(screen.getByRole('button', { name: /Back/i })).toBeDisabled()
+      expect(
+        screen.getByRole('button', { name: /previous step|Back/i }),
+      ).toBeDisabled()
     })
 
     it('Continue button is disabled when project name is empty', async () => {
@@ -332,7 +333,7 @@ describe('MakeNewCoursePage', () => {
       expect(screen.getByRole('button', { name: /Continue/i })).toBeDisabled()
     })
 
-    it('Start Chatting button is disabled when project name is empty and not created', async () => {
+    it('Continue button is disabled when project name is empty (acts as Start Chatting on last step)', async () => {
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
         <MakeNewCoursePage
@@ -341,15 +342,14 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      expect(
-        screen.getByRole('button', { name: /Start Chatting/i }),
-      ).toBeDisabled()
+      // Single unified button — disabled on step 1 when no project name
+      expect(screen.getByRole('button', { name: /Continue/i })).toBeDisabled()
     })
 
     // -----------------------------------------------------------------------
     // Creating project & stepping through
     // -----------------------------------------------------------------------
-    it('calls createProject and advances to step 2 on Continue click', async () => {
+    it('calls createProject and advances to step 2 (StepSuccess) on Continue click', async () => {
       const user = userEvent.setup()
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
@@ -376,8 +376,8 @@ describe('MakeNewCoursePage', () => {
         ),
       )
 
-      // Should advance to StepUpload
-      expect(await screen.findByTestId('step-upload')).toBeInTheDocument()
+      // Should advance to StepSuccess (step 2 in the new order)
+      expect(await screen.findByTestId('step-success')).toBeInTheDocument()
       expect(screen.queryByTestId('step-create')).not.toBeInTheDocument()
     })
 
@@ -426,11 +426,13 @@ describe('MakeNewCoursePage', () => {
       })
       await user.click(continueBtn)
 
-      // Wait for step 2
-      await screen.findByTestId('step-upload')
+      // Wait for step 2 (StepSuccess in new order)
+      await screen.findByTestId('step-success')
 
       // Back should be enabled now
-      const backBtn = screen.getByRole('button', { name: /Back/i })
+      const backBtn = screen.getByRole('button', {
+        name: /previous step|Back/i,
+      })
       expect(backBtn).not.toBeDisabled()
 
       await user.click(backBtn)
@@ -454,28 +456,28 @@ describe('MakeNewCoursePage', () => {
         timeout: 3000,
       })
 
-      // Step 0 -> 1 (creates project)
+      // Step 0 -> 1 (creates project, advances to StepSuccess)
       await user.click(continueBtn)
+      await screen.findByTestId('step-success')
+
+      // Step 1 -> 2 (StepUpload)
+      await user.click(screen.getByRole('button', { name: /Continue/i }))
       await screen.findByTestId('step-upload')
 
-      // Step 1 -> 2
+      // Step 2 -> 3 (StepBranding)
       await user.click(screen.getByRole('button', { name: /Continue/i }))
       await screen.findByTestId('step-branding')
 
-      // Step 2 -> 3
+      // Step 3 -> 4 (StepLLM)
       await user.click(screen.getByRole('button', { name: /Continue/i }))
       await screen.findByTestId('step-llm')
 
-      // Step 3 -> 4
+      // Step 4 -> 5 (StepPrompt — last step)
       await user.click(screen.getByRole('button', { name: /Continue/i }))
       await screen.findByTestId('step-prompt')
-
-      // Step 4 -> 5 (last step)
-      await user.click(screen.getByRole('button', { name: /Continue/i }))
-      await screen.findByTestId('step-success')
     })
 
-    it('does not advance past the last step when Continue is clicked', async () => {
+    it('shows Start Chatting on the last step', async () => {
       const user = userEvent.setup()
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
@@ -493,57 +495,24 @@ describe('MakeNewCoursePage', () => {
 
       // Navigate through all steps
       for (let i = 0; i < 5; i++) {
-        await user.click(screen.getByRole('button', { name: /Continue/i }))
+        await user.click(
+          screen.getByRole('button', { name: /Continue|Start Chatting/i }),
+        )
       }
 
-      await screen.findByTestId('step-success')
+      await screen.findByTestId('step-prompt')
 
-      // Continue should be disabled / invisible on last step
-      const lastContinueBtn = screen.getByRole('button', {
-        name: /Continue/i,
-      })
-      expect(lastContinueBtn).toBeDisabled()
-    })
-
-    // -----------------------------------------------------------------------
-    // Start Chatting button
-    // -----------------------------------------------------------------------
-    it('Start Chatting creates project and navigates to chat page', async () => {
-      const pushMock = vi.fn()
-      globalThis.__TEST_ROUTER__ = { push: pushMock }
-
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-        />,
-      )
-
-      const startBtn = screen.getByRole('button', {
+      // On the last step, the button text changes to "Start Chatting"
+      const lastBtn = screen.getByRole('button', {
         name: /Start Chatting/i,
       })
-      await waitFor(() => expect(startBtn).not.toBeDisabled(), {
-        timeout: 3000,
-      })
-
-      await user.click(startBtn)
-
-      await waitFor(() =>
-        expect(mockedCreateProject).toHaveBeenCalledWith(
-          'CS101',
-          '',
-          'owner@example.com',
-          true,
-        ),
-      )
-
-      await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/CS101/chat'))
+      expect(lastBtn).toBeInTheDocument()
     })
 
-    it('Start Chatting navigates directly if project was already created', async () => {
+    // -----------------------------------------------------------------------
+    // Start Chatting (last step button)
+    // -----------------------------------------------------------------------
+    it('Start Chatting navigates to chat page on last step', async () => {
       const pushMock = vi.fn()
       globalThis.__TEST_ROUTER__ = { push: pushMock }
 
@@ -557,16 +526,60 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      // First create the project via Continue
       const continueBtn = screen.getByRole('button', { name: /Continue/i })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
-      await user.click(continueBtn)
-      await screen.findByTestId('step-upload')
 
-      // Now click Start Chatting - should not call createProject again
+      // Navigate to last step
+      for (let i = 0; i < 5; i++) {
+        await user.click(
+          screen.getByRole('button', { name: /Continue|Start Chatting/i }),
+        )
+      }
+
+      await screen.findByTestId('step-prompt')
+
+      // Click Start Chatting on last step
+      const startBtn = screen.getByRole('button', {
+        name: /Start Chatting/i,
+      })
+      await user.click(startBtn)
+
+      await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/CS101/chat'))
+    })
+
+    it('Start Chatting does not call createProject again after initial creation', async () => {
+      const pushMock = vi.fn()
+      globalThis.__TEST_ROUTER__ = { push: pushMock }
+
+      const user = userEvent.setup()
+      const MakeNewCoursePage = await importComponent()
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="CS101"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      const continueBtn = screen.getByRole('button', { name: /Continue/i })
+      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
+        timeout: 3000,
+      })
+
+      // Navigate to last step (project created on step 0 -> 1 transition)
+      for (let i = 0; i < 5; i++) {
+        await user.click(
+          screen.getByRole('button', { name: /Continue|Start Chatting/i }),
+        )
+      }
+
+      await screen.findByTestId('step-prompt')
+
+      // createProject was called once on step 0; clear it
       mockedCreateProject.mockClear()
+
       const startBtn = screen.getByRole('button', {
         name: /Start Chatting/i,
       })
@@ -716,7 +729,7 @@ describe('MakeNewCoursePage', () => {
       await user.click(continueBtn)
 
       // Should still advance - fallback metadata is used
-      await screen.findByTestId('step-upload')
+      await screen.findByTestId('step-success')
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Error fetching course metadata after creation:',
@@ -726,9 +739,9 @@ describe('MakeNewCoursePage', () => {
     })
 
     // -----------------------------------------------------------------------
-    // Start Chatting: does NOT navigate if createProject fails
+    // Continue does NOT navigate if createProject fails
     // -----------------------------------------------------------------------
-    it('Start Chatting does not navigate when createProject fails', async () => {
+    it('Continue does not navigate when createProject fails on step 1', async () => {
       const pushMock = vi.fn()
       globalThis.__TEST_ROUTER__ = { push: pushMock }
       mockedCreateProject.mockRejectedValueOnce(new Error('Server error'))
@@ -743,15 +756,17 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      const startBtn = screen.getByRole('button', {
-        name: /Start Chatting/i,
+      const continueBtn = screen.getByRole('button', {
+        name: /Continue/i,
       })
-      await waitFor(() => expect(startBtn).not.toBeDisabled(), {
+      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
-      await user.click(startBtn)
+      await user.click(continueBtn)
 
       await waitFor(() => expect(notifications.show).toHaveBeenCalled())
+      // Should stay on step 0, not navigate
+      expect(screen.getByTestId('step-create')).toBeInTheDocument()
       expect(pushMock).not.toHaveBeenCalled()
     })
 
@@ -904,7 +919,9 @@ describe('MakeNewCoursePage', () => {
       )
 
       // On first step, back is disabled, so clicking does nothing
-      const backBtn = screen.getByRole('button', { name: /Back/i })
+      const backBtn = screen.getByRole('button', {
+        name: /previous step|Back/i,
+      })
       expect(backBtn).toBeDisabled()
       expect(screen.getByTestId('step-create')).toBeInTheDocument()
     })
@@ -926,11 +943,22 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
+      const continueBtn = screen.getByRole('button', { name: /Continue/i })
+      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
+        timeout: 3000,
+      })
+
+      // Navigate to last step
+      for (let i = 0; i < 5; i++) {
+        await user.click(
+          screen.getByRole('button', { name: /Continue|Start Chatting/i }),
+        )
+      }
+
+      await screen.findByTestId('step-prompt')
+
       const startBtn = screen.getByRole('button', {
         name: /Start Chatting/i,
-      })
-      await waitFor(() => expect(startBtn).not.toBeDisabled(), {
-        timeout: 3000,
       })
       await user.click(startBtn)
 
