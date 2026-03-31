@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 
 import { Card, Flex, Title } from '@mantine/core'
 import { Button } from '@/components/shadcn/ui/button'
@@ -163,12 +163,36 @@ const MakeNewCoursePage = ({
   const isFirstStep = currentStep === 0
   const isLastStep = currentStep === totalSteps - 1
 
+  const stepNames = [
+    'Create a new chatbot',
+    'Success',
+    'Add Content',
+    'Branding',
+    'AI Models',
+    'Prompt',
+  ]
+
+  const [stepAnnouncement, setStepAnnouncement] = useState('')
+  const stepContainerRef = useRef<HTMLDivElement>(null)
+
   const goToPreviousStep = () => {
-    setStep((prevStep) => Math.max(prevStep - 1, 0))
+    setStep((prevStep) => {
+      const next = Math.max(prevStep - 1, 0)
+      setStepAnnouncement(
+        `Step ${next + 1} of ${totalSteps}: ${stepNames[next]}`,
+      )
+      return next
+    })
   }
 
   const goToNextStep = () => {
-    setStep((prevStep) => Math.min(prevStep + 1, totalSteps - 1))
+    setStep((prevStep) => {
+      const next = Math.min(prevStep + 1, totalSteps - 1)
+      setStepAnnouncement(
+        `Step ${next + 1} of ${totalSteps}: ${stepNames[next]}`,
+      )
+      return next
+    })
   }
 
   const handleSubmit = async (
@@ -358,8 +382,17 @@ const MakeNewCoursePage = ({
             radius="lg"
             className="my-8 flex w-[96%] flex-col !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
           >
-            <div className="step_container flex min-h-[24rem] flex-col justify-center">
+            <div
+              ref={stepContainerRef}
+              className="step_container flex min-h-[24rem] flex-col justify-center"
+              aria-label={`Step ${currentStep + 1} of ${totalSteps}: ${
+                stepNames[currentStep]
+              }`}
+            >
               {allSteps[currentStep]}
+            </div>
+            <div className="sr-only" aria-live="polite" aria-atomic="true">
+              {stepAnnouncement}
             </div>
             <UploadNotification
               files={uploadFiles}
@@ -370,25 +403,40 @@ const MakeNewCoursePage = ({
         </div>
 
         {/* Sticky Footer Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[--dashboard-border] bg-[--background]">
+        <nav
+          aria-label="Wizard navigation"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-[--dashboard-border] bg-[--background]"
+        >
           <div className="mx-auto flex max-w-[860px] items-center justify-between px-4 py-4">
             <Button
               variant="outline"
               size="sm"
-              className="border-[#13294B] text-[#13294B] hover:bg-[#13294B]/10 hover:text-[#13294B]"
+              className="hover:bg-[--illinois-blue]/10 border-[--illinois-blue] text-[--illinois-blue] hover:text-[--illinois-blue]"
               onClick={goToPreviousStep}
               disabled={isFirstStep || shouldBlockNavigation}
+              aria-label="Go to previous step"
             >
               Back
             </Button>
 
             {/* Pagination Dots */}
-            <div className="flex items-center gap-2">
+            <div
+              className="flex items-center gap-2"
+              role="list"
+              aria-label="Wizard progress"
+            >
               {allSteps.map((_, index) => (
                 <div
                   key={index}
+                  role="listitem"
+                  aria-label={`Step ${index + 1} of ${totalSteps}: ${
+                    stepNames[index]
+                  }${currentStep === index ? ' (current)' : ''}`}
+                  aria-current={currentStep === index ? 'step' : undefined}
                   className={`h-2 w-2 rounded-full transition-colors ${
-                    currentStep === index ? 'bg-[#13294B]' : 'bg-[#13294B]/40'
+                    currentStep === index
+                      ? 'bg-[--illinois-blue]'
+                      : 'bg-[--illinois-blue]/40'
                   }`}
                 />
               ))}
@@ -397,7 +445,12 @@ const MakeNewCoursePage = ({
             <Button
               variant="outline"
               size="sm"
-              className="border-[#13294B] text-[#13294B] hover:bg-[#13294B]/10 hover:text-[#13294B]"
+              className="hover:bg-[--illinois-blue]/10 border-[--illinois-blue] text-[--illinois-blue] hover:text-[--illinois-blue]"
+              aria-label={
+                isLastStep
+                  ? 'Start chatting with your new chatbot'
+                  : 'Continue to next step'
+              }
               onClick={async () => {
                 if (currentStep === 0) {
                   if (!hasCreatedProject) {
@@ -443,12 +496,18 @@ const MakeNewCoursePage = ({
               }
             >
               {isLoading && currentStep === 0 && (
-                <LoaderCircle className="size-4 animate-spin" />
+                <LoaderCircle
+                  className="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+              )}
+              {isLoading && currentStep === 0 && (
+                <span className="sr-only">Creating project...</span>
               )}
               {isLastStep ? 'Start Chatting' : 'Continue'}
             </Button>
           </div>
-        </div>
+        </nav>
       </main>
     </>
   )

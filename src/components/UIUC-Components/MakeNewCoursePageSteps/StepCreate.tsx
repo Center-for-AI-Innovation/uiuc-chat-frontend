@@ -87,11 +87,31 @@ const StepCreate = ({
                   status={getNameStatus()}
                   rightSlot={
                     isCheckingAvailability ? (
-                      <LoaderCircle className="size-4 animate-spin text-[--foreground-faded]" />
+                      <span role="status">
+                        <LoaderCircle
+                          className="size-4 animate-spin text-[--foreground-faded]"
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">
+                          Checking name availability...
+                        </span>
+                      </span>
                     ) : isCourseAvailable && projectName ? (
-                      <CheckCircle className="size-4 text-green-500" />
+                      <span role="status">
+                        <CheckCircle
+                          className="size-4 text-green-500"
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">Name is available</span>
+                      </span>
                     ) : isCourseAvailable === false && projectName ? (
-                      <XCircle className="size-4 text-red-500" />
+                      <span role="status">
+                        <XCircle
+                          className="size-4 text-red-500"
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">Name is already taken</span>
+                      </span>
                     ) : undefined
                   }
                   onInput={(e) =>

@@ -31,16 +31,20 @@ const StepSuccess = ({
 
           <div className="mt-6 flex w-full items-stretch justify-center gap-4">
             {/* Left Card - Dive Right In */}
-            <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-[--dashboard-border] bg-[--background]">
+            <section
+              aria-label="Start chatting now"
+              className="flex flex-1 flex-col overflow-hidden rounded-lg border border-[--dashboard-border] bg-[--background]"
+            >
               <div className="flex flex-1 flex-col">
                 <div className="flex items-center gap-3 px-5 pb-3 pt-4">
                   <MessageSquare
                     size={24}
+                    aria-hidden="true"
                     className="shrink-0 text-[--foreground]"
                   />
-                  <span className="text-lg font-semibold text-[--foreground]">
+                  <h3 className="text-lg font-semibold text-[--foreground]">
                     Dive Right In!
-                  </span>
+                  </h3>
                 </div>
 
                 <div className="px-5 pb-3">
@@ -54,7 +58,8 @@ const StepSuccess = ({
                   <div className="flex items-center justify-center rounded-md bg-[--background-faded] py-4">
                     <Image
                       src="/media/robot_hatching.svg"
-                      alt="Robot hatching from an egg"
+                      alt=""
+                      role="presentation"
                       width={80}
                       height={100}
                     />
@@ -71,26 +76,36 @@ const StepSuccess = ({
                 onClick={() => router.push(`/${safeName}/chat`)}
               >
                 Start Chatting Now!
-                <ArrowRight size={18} />
+                <ArrowRight size={18} aria-hidden="true" />
               </Button>
-            </div>
+            </section>
 
-            {/* "or" badge */}
-            <div className="flex items-center">
+            {/* "or" separator */}
+            <div className="flex items-center" role="separator" aria-label="or">
               <div className="flex size-10 items-center justify-center rounded-full bg-[--background-faded]">
-                <span className="text-sm font-medium text-[--foreground-faded]">
+                <span
+                  aria-hidden="true"
+                  className="text-sm font-medium text-[--foreground-faded]"
+                >
                   or
                 </span>
               </div>
             </div>
 
             {/* Right Card - Fine Tune */}
-            <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-[--dashboard-border] bg-[--background]">
+            <section
+              aria-label="Customize your chatbot"
+              className="flex flex-1 flex-col overflow-hidden rounded-lg border border-[--dashboard-border] bg-[--background]"
+            >
               <div className="flex items-center gap-3 px-5 pb-3 pt-4">
-                <Settings size={24} className="shrink-0 text-[--foreground]" />
-                <span className="text-lg font-semibold text-[--foreground]">
+                <Settings
+                  size={24}
+                  aria-hidden="true"
+                  className="shrink-0 text-[--foreground]"
+                />
+                <h3 className="text-lg font-semibold text-[--foreground]">
                   Fine Tune
-                </span>
+                </h3>
               </div>
 
               <div className="px-5 pb-3">
@@ -100,7 +115,10 @@ const StepSuccess = ({
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2 px-5 py-2">
+              <ul
+                className="flex flex-col gap-2 px-5 py-2"
+                aria-label="Available customization options"
+              >
                 <FeatureItem
                   icon={<FileSpreadsheet size={18} />}
                   label="Bring your own data!"
@@ -117,7 +135,7 @@ const StepSuccess = ({
                   icon={<PaintbrushVertical size={18} />}
                   label="Chat Identity and Branding"
                 />
-              </div>
+              </ul>
 
               <div className="mt-auto border-t border-[--dashboard-border]" />
 
@@ -128,9 +146,9 @@ const StepSuccess = ({
                 onClick={onContinueDesigning}
               >
                 Continue Designing
-                <ArrowRight size={18} />
+                <ArrowRight size={18} aria-hidden="true" />
               </Button>
-            </div>
+            </section>
           </div>
         </div>
       </div>
@@ -145,10 +163,12 @@ const FeatureItem = ({
   icon: React.ReactNode
   label: string
 }) => (
-  <div className="flex items-center gap-2.5 rounded-md px-2 py-1.5">
-    <span className="shrink-0 text-[--foreground]">{icon}</span>
+  <li className="flex items-center gap-2.5 rounded-md px-2 py-1.5">
+    <span className="shrink-0 text-[--foreground]" aria-hidden="true">
+      {icon}
+    </span>
     <span className="text-sm font-medium text-[--foreground]">{label}</span>
-  </div>
+  </li>
 )
 
 export default StepSuccess

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useQueryClient } from '@tanstack/react-query'
-import { SimpleGrid, Text } from '@mantine/core'
+import { SimpleGrid } from '@mantine/core'
 
 import HeaderStepNavigation from './HeaderStepNavigation'
 
@@ -61,9 +61,9 @@ const StepUpload = ({
         {/* step content - core step information */}
         <div className="step_content">
           {/* Import section */}
-          <Text fw={600} size="md" className="mb-3 mt-6 text-[--foreground]">
+          <h3 className="mb-3 mt-6 text-base font-semibold text-[--foreground]">
             Import from URLs & Platforms
-          </Text>
+          </h3>
           <SimpleGrid
             cols={3}
             spacing="lg"
@@ -100,9 +100,9 @@ const StepUpload = ({
           </SimpleGrid>
 
           {/* Upload section */}
-          <Text fw={600} size="md" className="mb-3 mt-6 text-[--foreground]">
+          <h3 className="mb-3 mt-6 text-base font-semibold text-[--foreground]">
             Upload Files
-          </Text>
+          </h3>
           <LargeDropzone
             courseName={project_name}
             current_user_email={auth.user?.profile.email || ''}

@@ -23,15 +23,21 @@ const HeaderStepNavigation = ({
         )} */}
 
         {title && (
-          <h2 className="overflow-hidden text-ellipsis whitespace-nowrap text-xl font-semibold">
+          <h2
+            className="overflow-hidden text-ellipsis whitespace-nowrap text-xl font-semibold"
+            aria-describedby={description ? 'step-description' : undefined}
+          >
             {title}
           </h2>
         )}
 
         {description && (
-          <div className="mt-2 text-sm text-[--foreground-faded]">
+          <p
+            id="step-description"
+            className="mt-2 text-sm text-[--foreground-faded]"
+          >
             {description}
-          </div>
+          </p>
         )}
       </div>
     </>
