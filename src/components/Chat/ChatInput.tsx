@@ -870,15 +870,8 @@ export const ChatInput = ({
   }, [])
 
   useEffect(() => {
-    // This will focus the div as soon as the component mounts
-    if (chatInputContainerRef.current) {
-      chatInputContainerRef.current.focus()
-    }
-  }, [])
-
-  useEffect(() => {
     setContent(inputContent)
-    if (textareaRef.current) {
+    if (inputContent && textareaRef.current) {
       textareaRef.current.focus()
     }
   }, [inputContent, textareaRef])
