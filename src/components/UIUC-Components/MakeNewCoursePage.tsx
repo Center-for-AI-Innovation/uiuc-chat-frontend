@@ -135,6 +135,11 @@ const MakeNewCoursePage = ({
       onUpdateName={setProjectName}
       onUpdateDescription={setProjectDescription}
     />,
+    <StepSuccess
+      key="success"
+      project_name={projectName}
+      onContinueDesigning={() => setStep((s) => s + 1)}
+    />,
     <StepUpload
       key="upload"
       project_name={projectName}
@@ -152,7 +157,6 @@ const MakeNewCoursePage = ({
     />,
     <StepLLM key="llm" project_name={projectName} />,
     <StepPrompt key="prompt" project_name={projectName} />,
-    <StepSuccess key="success" project_name={projectName} />,
   ]
 
   const totalSteps = allSteps.length
@@ -347,14 +351,14 @@ const MakeNewCoursePage = ({
       >
         <h1 className="sr-only">Create New Project</h1>
         {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
-        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-start py-0 pb-20">
+        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
           <Card
             padding="none"
             withBorder={true}
             radius="lg"
-            className="my-8 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
+            className="my-8 flex w-[96%] flex-col !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
           >
-            <div className="step_container min-h-[24rem]">
+            <div className="step_container flex min-h-[24rem] flex-col justify-center">
               {allSteps[currentStep]}
             </div>
             <UploadNotification
@@ -371,6 +375,7 @@ const MakeNewCoursePage = ({
             <Button
               variant="outline"
               size="sm"
+              className="border-[#13294B] text-[#13294B] hover:bg-[#13294B]/10 hover:text-[#13294B]"
               onClick={goToPreviousStep}
               disabled={isFirstStep || shouldBlockNavigation}
             >
@@ -389,93 +394,59 @@ const MakeNewCoursePage = ({
               ))}
             </div>
 
-            <div className="flex items-center gap-3">
-              <Button
-                variant="dashboard"
-                size="sm"
-                className={isLastStep ? 'pointer-events-none opacity-0' : ''}
-                onClick={async () => {
-                  if (currentStep === 0) {
-                    if (!hasCreatedProject) {
-                      if (
-                        projectName === '' ||
-                        isLoading ||
-                        !isCourseAvailable ||
-                        isWaitingForAvailabilityCheck
-                      ) {
-                        return
-                      }
-
-                      const isCreated = await handleSubmit(
-                        projectName,
-                        projectDescription,
-                        current_user_email,
-                        useIllinoisChatConfig,
-                      )
-
-                      if (!isCreated) {
-                        return
-                      }
-
-                      setHasCreatedProject(true)
-                    }
-                  }
-
-                  if (!isLastStep) {
-                    goToNextStep()
-                  }
-                }}
-                disabled={
-                  isLastStep ||
-                  shouldBlockNavigation ||
-                  (currentStep === 0 &&
-                    !hasCreatedProject &&
-                    (projectName === '' ||
-                      !isCourseAvailable ||
-                      isLoading ||
-                      isWaitingForAvailabilityCheck))
-                }
-              >
-                {isLoading && currentStep === 0 && (
-                  <LoaderCircle className="size-4 animate-spin" />
-                )}
-                Continue
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="hover:text-(--illinois-blue) border-[#13294B] text-[#13294B] hover:bg-[#13294B]/10"
-                disabled={
-                  isLoading ||
-                  (projectName === '' && !hasCreatedProject) ||
-                  (!hasCreatedProject &&
-                    (!isCourseAvailable || isWaitingForAvailabilityCheck))
-                }
-                onClick={async () => {
-                  const chatPath = buildProjectChatPath(projectName)
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-[#13294B] text-[#13294B] hover:bg-[#13294B]/10 hover:text-[#13294B]"
+              onClick={async () => {
+                if (currentStep === 0) {
                   if (!hasCreatedProject) {
+                    if (
+                      projectName === '' ||
+                      isLoading ||
+                      !isCourseAvailable ||
+                      isWaitingForAvailabilityCheck
+                    ) {
+                      return
+                    }
+
                     const isCreated = await handleSubmit(
                       projectName,
                       projectDescription,
                       current_user_email,
                       useIllinoisChatConfig,
                     )
-                    if (isCreated) {
-                      setHasCreatedProject(true)
-                      router.push(chatPath)
+
+                    if (!isCreated) {
+                      return
                     }
-                  } else {
-                    router.push(chatPath)
+
+                    setHasCreatedProject(true)
                   }
-                }}
-              >
-                {isLoading && !hasCreatedProject && (
-                  <LoaderCircle className="size-4 animate-spin" />
-                )}
-                Start Chatting
-              </Button>
-            </div>
+                }
+
+                if (isLastStep) {
+                  const chatPath = buildProjectChatPath(projectName)
+                  router.push(chatPath)
+                } else {
+                  goToNextStep()
+                }
+              }}
+              disabled={
+                shouldBlockNavigation ||
+                (currentStep === 0 &&
+                  !hasCreatedProject &&
+                  (projectName === '' ||
+                    !isCourseAvailable ||
+                    isLoading ||
+                    isWaitingForAvailabilityCheck))
+              }
+            >
+              {isLoading && currentStep === 0 && (
+                <LoaderCircle className="size-4 animate-spin" />
+              )}
+              {isLastStep ? 'Start Chatting' : 'Continue'}
+            </Button>
           </div>
         </div>
       </main>
