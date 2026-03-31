@@ -33,7 +33,7 @@ const StepSuccess = ({
             {/* Left Card - Dive Right In */}
             <section
               aria-label="Start chatting now"
-              className="flex flex-1 flex-col overflow-hidden rounded-lg border border-[--dashboard-border] bg-[--background]"
+              className="flex flex-1 flex-col rounded-lg border border-[--dashboard-border] bg-[--background]"
             >
               <div className="flex flex-1 flex-col">
                 <div className="flex items-center gap-3 px-5 pb-3 pt-4">
@@ -72,7 +72,7 @@ const StepSuccess = ({
               <Button
                 variant="dashboard"
                 size="lg"
-                className="w-full rounded-none"
+                className="w-full rounded-none rounded-b-lg"
                 onClick={() => router.push(`/${safeName}/chat`)}
               >
                 Start Chatting Now!
@@ -95,7 +95,7 @@ const StepSuccess = ({
             {/* Right Card - Fine Tune */}
             <section
               aria-label="Customize your chatbot"
-              className="flex flex-1 flex-col overflow-hidden rounded-lg border border-[--dashboard-border] bg-[--background]"
+              className="flex flex-1 flex-col rounded-lg border border-[--dashboard-border] bg-[--background]"
             >
               <div className="flex items-center gap-3 px-5 pb-3 pt-4">
                 <Settings
@@ -142,7 +142,7 @@ const StepSuccess = ({
               <Button
                 variant="outline"
                 size="lg"
-                className="hover:bg-[--background-faded]/80 w-full rounded-none border-0 bg-[--background-faded]"
+                className="hover:bg-[--background-faded]/80 w-full rounded-none rounded-b-lg border-0 bg-[--background-faded]"
                 onClick={onContinueDesigning}
               >
                 Continue Designing
