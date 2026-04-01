@@ -377,28 +377,19 @@ const MakeNewCoursePage = ({
       <main
         id="main-content"
         tabIndex={-1}
-        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
-        style={
-          {
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-            padding: '1rem',
-          } as React.CSSProperties
-        }
+        className="course-page-main flex min-h-screen w-full flex-col items-center px-4 pb-28 pt-20 sm:px-6"
       >
         <h1 className="sr-only">Create New Project</h1>
-        {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
-        <div className="mt-12 flex w-full flex-col items-center py-0 pb-20">
+        <div className="flex w-full flex-1 flex-col items-center py-6">
           <Card
             padding="none"
             withBorder={true}
             radius="lg"
-            className="my-8 flex w-[96%] flex-col !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
+            className="my-auto flex w-full max-w-[720px] flex-col !border-[--dashboard-border] bg-[--background] px-6 py-8 text-[--foreground] sm:px-10 sm:py-10"
           >
             <div
               ref={stepContainerRef}
-              className="step_container flex min-h-[24rem] flex-col justify-center"
+              className="step_container flex min-h-[22rem] flex-col"
               aria-label={`Step ${currentStep + 1} of ${totalSteps}: ${
                 stepNames[currentStep]
               }`}
@@ -421,7 +412,7 @@ const MakeNewCoursePage = ({
           aria-label="Wizard navigation"
           className="fixed bottom-0 left-0 right-0 z-40 border-t border-[--dashboard-border] bg-[--background]"
         >
-          <div className="mx-auto flex max-w-[860px] items-center justify-between px-4 py-4">
+          <div className="mx-auto flex max-w-[720px] items-center justify-between px-4 py-3 sm:px-6">
             <Button
               variant="outline"
               size="sm"
@@ -447,7 +438,7 @@ const MakeNewCoursePage = ({
                     stepNames[index]
                   }${currentStep === index ? ' (current)' : ''}`}
                   aria-current={currentStep === index ? 'step' : undefined}
-                  className={`h-2 w-2 rounded-full bg-[--illinois-blue] transition-colors ${currentStep === index ? 'opacity-100' : 'opacity-20'}`}
+                  className={`rounded-full bg-[--illinois-blue] transition-all duration-200 ${currentStep === index ? 'h-2.5 w-2.5 opacity-100' : 'h-2 w-2 opacity-25'}`}
                 />
               ))}
             </div>
