@@ -447,11 +447,7 @@ const MakeNewCoursePage = ({
                     stepNames[index]
                   }${currentStep === index ? ' (current)' : ''}`}
                   aria-current={currentStep === index ? 'step' : undefined}
-                  className={`h-2 w-2 rounded-full transition-colors ${
-                    currentStep === index
-                      ? 'bg-[--illinois-blue]'
-                      : 'bg-[--illinois-blue]/40'
-                  }`}
+                  className={`h-2 w-2 rounded-full bg-[--illinois-blue] transition-colors ${currentStep === index ? 'opacity-100' : 'opacity-20'}`}
                 />
               ))}
             </div>
