@@ -28,12 +28,14 @@ import GlobalFooter from './GlobalFooter'
  * Build a safe relative URL for navigating to a project's chat page.
  * Guards against open-redirect attacks by stripping protocol-relative
  * prefixes and ensuring the result is a plain path segment.
+ * Falls back to '/chat' when the sanitised segment is empty.
  */
 const buildProjectChatPath = (name: string): string => {
   // encodeURIComponent handles special chars, but also strip leading
   // slashes/backslashes to prevent protocol-relative URLs (//evil.com).
   const encoded = encodeURIComponent(name).replace(/^(%2F|%5C)+/gi, '')
-  return `/${encoded}/chat`
+  // Use empty string as the safe segment: redirect to /chat when segment is empty.
+  return encoded ? `/${encoded}/chat` : '/chat'
 }
 
 const MakeNewCoursePage = ({

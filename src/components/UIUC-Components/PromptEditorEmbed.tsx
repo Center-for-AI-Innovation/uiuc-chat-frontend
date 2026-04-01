@@ -266,6 +266,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
   const [documentsOnly, setDocumentsOnly] = useState(false)
   const [systemPromptOnly, setSystemPromptOnly] = useState(false)
   const [vectorSearchRewrite, setVectorSearchRewrite] = useState(false)
+  const [agentModeFeatureEnabled, setAgentModeFeatureEnabled] = useState(false)
 
   const courseMetadataRef = useRef<CourseMetadata | null>(null)
   const initialSwitchStateRef = useRef<{
@@ -273,11 +274,13 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
     documentsOnly: boolean
     systemPromptOnly: boolean
     vectorSearchRewrite: boolean
+    agentModeFeatureEnabled: boolean
   }>({
     guidedLearning: false,
     documentsOnly: false,
     systemPromptOnly: false,
     vectorSearchRewrite: false,
+    agentModeFeatureEnabled: false,
   })
 
   const removeThinkSections = (text: string): string => {
@@ -354,12 +357,14 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
           setDocumentsOnly(metadata.documentsOnly || false)
           setSystemPromptOnly(metadata.systemPromptOnly || false)
           setVectorSearchRewrite(!metadata.vector_search_rewrite_disabled)
+          setAgentModeFeatureEnabled(metadata.agent_mode_enabled ?? false)
           courseMetadataRef.current = metadata
           initialSwitchStateRef.current = {
             guidedLearning: metadata.guidedLearning || false,
             documentsOnly: metadata.documentsOnly || false,
             systemPromptOnly: metadata.systemPromptOnly || false,
             vectorSearchRewrite: !metadata.vector_search_rewrite_disabled,
+            agentModeFeatureEnabled: metadata.agent_mode_enabled ?? false,
           }
         }
 
@@ -401,6 +406,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         documentsOnly: courseMetadata.documentsOnly || false,
         systemPromptOnly: courseMetadata.systemPromptOnly || false,
         vectorSearchRewrite: !courseMetadata.vector_search_rewrite_disabled,
+        agentModeFeatureEnabled: courseMetadata.agent_mode_enabled ?? false,
       }
     }
   }, [courseMetadata])
@@ -499,6 +505,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
       documentsOnly,
       systemPromptOnly,
       vectorSearchRewrite,
+      agentModeFeatureEnabled,
     }
 
     const initialSwitchState = initialSwitchStateRef.current
@@ -517,6 +524,7 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
       documentsOnly,
       systemPromptOnly,
       vector_search_rewrite_disabled: !vectorSearchRewrite,
+      agent_mode_enabled: agentModeFeatureEnabled,
     } as CourseMetadata
 
     try {
@@ -558,6 +566,14 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
       ) {
         changes.push(
           `Bypass Illinois Chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
+        )
+      }
+      if (
+        initialSwitchState.agentModeFeatureEnabled !==
+        currentSwitchState.agentModeFeatureEnabled
+      ) {
+        changes.push(
+          `Agent Mode ${currentSwitchState.agentModeFeatureEnabled ? 'enabled' : 'disabled'}`,
         )
       }
 
@@ -607,6 +623,9 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
 
     if ('vector_search_rewrite_disabled' in updates) {
       setVectorSearchRewrite(!updates.vector_search_rewrite_disabled)
+    }
+    if ('agent_mode_enabled' in updates) {
+      setAgentModeFeatureEnabled(updates.agent_mode_enabled ?? false)
     }
 
     courseMetadataRef.current = {
@@ -1606,6 +1625,19 @@ CRITICAL: The optimized prompt must:
                     </div>
                   )}
 
+                  <Switch
+                    size="lg"
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
+                    label="Enable Agent Mode"
+                    tooltip="Runs a multi-step server-side agent loop that can iteratively search documents and execute tools before generating the final answer."
+                    checked={agentModeFeatureEnabled}
+                    onCheckedChange={(value: boolean) =>
+                      handleSettingChange({ agent_mode_enabled: value })
+                    }
+                  />
+
                   {/* Reset Modal for embedded mode */}
                   <Modal
                     opened={resetModalOpened}
@@ -1901,6 +1933,18 @@ CRITICAL: The optimized prompt must:
                       />
                     </Flex>
                   )}
+
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
+                    label="Enable Agent Mode"
+                    tooltip="Runs a multi-step server-side agent loop that can iteratively search documents and execute tools before generating the final answer."
+                    checked={agentModeFeatureEnabled}
+                    onCheckedChange={(value: boolean) =>
+                      handleSettingChange({ agent_mode_enabled: value })
+                    }
+                  />
 
                   {/* Reset Modal */}
                   <Modal

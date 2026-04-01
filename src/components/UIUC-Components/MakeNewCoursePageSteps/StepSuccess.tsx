@@ -19,7 +19,8 @@ const StepSuccess = ({
   project_name: string
   onContinueDesigning: () => void
 }) => {
-  const safeName = encodeURIComponent(project_name)
+  const encoded = encodeURIComponent(project_name).replace(/^(%2F|%5C)+/gi, '')
+  const chatPath = encoded ? `/${encoded}/chat` : '/chat'
 
   return (
     <div className="step">
@@ -73,7 +74,7 @@ const StepSuccess = ({
                 variant="dashboard"
                 size="lg"
                 className="w-full rounded-none rounded-b-lg"
-                onClick={() => router.push(`/${safeName}/chat`)}
+                onClick={() => router.push(chatPath)}
               >
                 Start Chatting Now!
                 <ArrowRight size={18} aria-hidden="true" />
