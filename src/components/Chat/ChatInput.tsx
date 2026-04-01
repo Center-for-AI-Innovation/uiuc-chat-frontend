@@ -1180,6 +1180,7 @@ export const ChatInput = ({
               <textarea
                 ref={textareaRef}
                 aria-label="Message input"
+                autoFocus
                 className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-12 text-white outline-none"
                 style={{
                   resize: 'none',
