@@ -33,19 +33,23 @@ describe('StepCreate', () => {
   it('renders the header with title and description', () => {
     render(<StepCreate {...defaultProps} />)
     expect(screen.getByText('Create a new chatbot')).toBeInTheDocument()
-    expect(screen.getByText("What's it all about?")).toBeInTheDocument()
+    expect(
+      screen.getByText("Give your chatbot a name and tell us what it's about."),
+    ).toBeInTheDocument()
   })
 
   it('renders the name input with label and placeholder', () => {
     render(<StepCreate {...defaultProps} />)
     expect(screen.getByText('Name')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('example-project')).toBeInTheDocument()
+    expect(
+      screen.getByPlaceholderText('my-awesome-chatbot'),
+    ).toBeInTheDocument()
   })
 
   it('renders the description textarea', () => {
     render(<StepCreate {...defaultProps} />)
     expect(
-      screen.getByPlaceholderText(/describe your project/i),
+      screen.getByPlaceholderText(/describe your chatbot/i),
     ).toBeInTheDocument()
   })
 
@@ -66,7 +70,7 @@ describe('StepCreate', () => {
     const onUpdateName = vi.fn()
     render(<StepCreate {...defaultProps} onUpdateName={onUpdateName} />)
 
-    const input = screen.getByPlaceholderText('example-project')
+    const input = screen.getByPlaceholderText('my-awesome-chatbot')
     await userEvent.type(input, 'test')
 
     await waitFor(() => expect(onUpdateName).toHaveBeenCalledWith('test'))
@@ -76,7 +80,7 @@ describe('StepCreate', () => {
     const onUpdateName = vi.fn()
     render(<StepCreate {...defaultProps} onUpdateName={onUpdateName} />)
 
-    const input = screen.getByPlaceholderText('example-project')
+    const input = screen.getByPlaceholderText('my-awesome-chatbot')
     await userEvent.type(input, 'my project')
 
     await waitFor(() => expect(onUpdateName).toHaveBeenCalledWith('my-project'))
@@ -91,7 +95,7 @@ describe('StepCreate', () => {
       />,
     )
 
-    const textarea = screen.getByPlaceholderText(/describe your project/i)
+    const textarea = screen.getByPlaceholderText(/describe your chatbot/i)
     await userEvent.type(textarea, 'desc')
 
     await waitFor(() =>
@@ -101,7 +105,7 @@ describe('StepCreate', () => {
 
   it('disables name input when is_new_course is false', () => {
     render(<StepCreate {...defaultProps} is_new_course={false} />)
-    const input = screen.getByPlaceholderText('example-project')
+    const input = screen.getByPlaceholderText('my-awesome-chatbot')
     expect(input).toHaveAttribute('disabled')
   })
 
@@ -173,69 +177,5 @@ describe('StepCreate', () => {
     expect(
       screen.queryByText(/this name is already taken/i),
     ).not.toBeInTheDocument()
-  })
-
-  // -------------------------------------------------------------------------
-  // Hidden URL preview section
-  // -------------------------------------------------------------------------
-  it('renders hidden URL preview with project name', () => {
-    const { container } = render(
-      <StepCreate {...defaultProps} project_name="my-bot" />,
-    )
-    // The hidden section contains the URL preview
-    const hiddenDiv = container.querySelector('.hidden')
-    expect(hiddenDiv).toBeInTheDocument()
-  })
-
-  it('shows checking status in hidden URL section', () => {
-    const { container } = render(
-      <StepCreate
-        {...defaultProps}
-        project_name="test"
-        isCheckingAvailability={true}
-      />,
-    )
-    const hiddenDiv = container.querySelector('.hidden')
-    expect(hiddenDiv?.textContent).toContain('checking...')
-  })
-
-  it('shows url available in hidden section when available', () => {
-    const { container } = render(
-      <StepCreate
-        {...defaultProps}
-        project_name="test"
-        isCourseAvailable={true}
-        isCheckingAvailability={false}
-      />,
-    )
-    const hiddenDiv = container.querySelector('.hidden')
-    expect(hiddenDiv?.textContent).toContain('url available')
-  })
-
-  it('shows url not available in hidden section when taken', () => {
-    const { container } = render(
-      <StepCreate
-        {...defaultProps}
-        project_name="test"
-        isCourseAvailable={false}
-        isCheckingAvailability={false}
-      />,
-    )
-    const hiddenDiv = container.querySelector('.hidden')
-    expect(hiddenDiv?.textContent).toContain('url not available')
-  })
-
-  it('shows url not available when project name is empty', () => {
-    const { container } = render(
-      <StepCreate
-        {...defaultProps}
-        project_name=""
-        isCourseAvailable={undefined}
-        isCheckingAvailability={false}
-      />,
-    )
-    // Hidden section should not show anything since projectName is empty
-    const hiddenDiv = container.querySelector('.hidden')
-    expect(hiddenDiv).toBeInTheDocument()
   })
 })
