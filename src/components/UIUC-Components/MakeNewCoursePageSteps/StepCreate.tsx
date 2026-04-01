@@ -122,7 +122,7 @@ const StepCreate = ({
                 />
               </TooltipTrigger>
               <TooltipContent
-                side="bottom"
+                side="right"
                 className="border-red-500 bg-red-500 text-white"
               >
                 This name is already taken. Please choose a different name.

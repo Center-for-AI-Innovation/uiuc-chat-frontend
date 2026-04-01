@@ -34,7 +34,7 @@ const buildProjectChatPath = (name: string): string => {
   // encodeURIComponent handles special chars, but also strip leading
   // slashes/backslashes to prevent protocol-relative URLs (//evil.com).
   const encoded = encodeURIComponent(name).replace(/^(%2F|%5C)+/gi, '')
-  // Use empty string as the safe segment: redirect to /chat when segment is empty.
+  // Return /chat when the sanitised segment is empty to avoid a protocol-relative //chat URL.
   return encoded ? `/${encoded}/chat` : '/chat'
 }
 
@@ -377,7 +377,7 @@ const MakeNewCoursePage = ({
       >
         <h1 className="sr-only">Create New Project</h1>
         {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
-        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-center py-0 pb-20">
+        <div className="mt-12 flex w-full flex-col items-center py-0 pb-20">
           <Card
             padding="none"
             withBorder={true}

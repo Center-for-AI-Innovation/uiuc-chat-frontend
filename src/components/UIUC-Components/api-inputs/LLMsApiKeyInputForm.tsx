@@ -327,6 +327,7 @@ const NewModelDropdown: React.FC<{
         })}
         dropdownPosition="bottom"
         withinPortal
+        zIndex={40}
       />
     </>
   )

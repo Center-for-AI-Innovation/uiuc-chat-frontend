@@ -1331,6 +1331,7 @@ CRITICAL: The optimized prompt must:
                       }
                       dropdownPosition="bottom"
                       withinPortal
+                      zIndex={40}
                     />
                     <Tooltip
                       label="The selected model will be used when Optimizing System Prompt"
