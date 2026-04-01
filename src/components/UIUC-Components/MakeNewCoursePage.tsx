@@ -26,16 +26,28 @@ import GlobalFooter from './GlobalFooter'
 
 /**
  * Build a safe relative URL for navigating to a project's chat page.
- * Guards against open-redirect attacks by stripping protocol-relative
- * prefixes and ensuring the result is a plain path segment.
- * Falls back to '/chat' when the sanitised segment is empty.
+ * Guards against open-redirect attacks by ensuring the project name
+ * is converted into a single, safe path segment and cannot influence
+ * the host, protocol, or parent path.
  */
 const buildProjectChatPath = (name: string): string => {
-  // encodeURIComponent handles special chars, but also strip leading
-  // slashes/backslashes to prevent protocol-relative URLs (//evil.com).
-  const encoded = encodeURIComponent(name).replace(/^(%2F|%5C)+/gi, '')
-  // Return /chat when the sanitised segment is empty to avoid a protocol-relative //chat URL.
-  return encoded ? `/${encoded}/chat` : '/chat'
+  // Normalize to string and trim whitespace
+  const raw = String(name || '').trim()
+
+  // Allow only URL-safe characters for a single path segment:
+  // letters, numbers, dash, underscore. Replace others with '-'.
+  let safeSegment = raw.replace(/[^a-zA-Z0-9_-]+/g, '-')
+
+  // Remove any leading dots or slashes to avoid path traversal or
+  // protocol-relative URL patterns like "../" or "//evil.com".
+  safeSegment = safeSegment.replace(/^[./\\]+/, '')
+
+  // Fallback to a safe placeholder if nothing remains
+  if (!safeSegment) {
+    return '/chat'
+  }
+
+  return `/${safeSegment}/chat`
 }
 
 const MakeNewCoursePage = ({

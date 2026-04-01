@@ -19,8 +19,10 @@ const StepSuccess = ({
   project_name: string
   onContinueDesigning: () => void
 }) => {
-  const encoded = encodeURIComponent(project_name).replace(/^(%2F|%5C)+/gi, '')
-  const chatPath = encoded ? `/${encoded}/chat` : '/chat'
+  const raw = String(project_name || '').trim()
+  let safeSegment = raw.replace(/[^a-zA-Z0-9_-]+/g, '-')
+  safeSegment = safeSegment.replace(/^[./\\]+/, '')
+  const chatPath = safeSegment ? `/${safeSegment}/chat` : '/chat'
 
   return (
     <div className="step">
