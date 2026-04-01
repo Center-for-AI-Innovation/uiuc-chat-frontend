@@ -963,7 +963,7 @@ describe('MakeNewCoursePage', () => {
       await user.click(startBtn)
 
       await waitFor(() =>
-        expect(pushMock).toHaveBeenCalledWith('/My%20Project/chat'),
+        expect(pushMock).toHaveBeenCalledWith('/My-Project/chat'),
       )
     })
   })
