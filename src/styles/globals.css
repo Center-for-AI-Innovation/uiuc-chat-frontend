@@ -402,6 +402,13 @@
   outline: none !important;
 }
 
+html[data-input-modality='keyboard']
+  .chat_input_container:has(textarea.chat-input:focus) {
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 4px var(--illinois-orange);
+}
+
 /* use existing formulas dark/light as described above as much as possible and only change the primary colors as needed */
 .dark {
   --foreground: var(--illinois-white);

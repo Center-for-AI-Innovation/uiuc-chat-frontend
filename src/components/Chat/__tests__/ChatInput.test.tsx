@@ -126,6 +126,34 @@ describe('ChatInput', () => {
     expect(alertSpy).toHaveBeenCalled()
   })
 
+  it('does not manage the parent focus ring inline', () => {
+    const { container } = renderWithProviders(
+      <ChatInput
+        onSend={vi.fn()}
+        onScrollDownClick={vi.fn()}
+        stopConversationRef={{ current: false }}
+        textareaRef={{ current: null }}
+        showScrollDownButton={false}
+        inputContent=""
+        setInputContent={vi.fn()}
+        user_id="u1"
+        courseName="CS101"
+      />,
+      { homeContext: { dispatch: vi.fn() } },
+    )
+
+    const textarea = screen.getByPlaceholderText(
+      'Message Illinois Chat',
+    ) as HTMLTextAreaElement
+    const wrapper = container.querySelector('.chat_input_container')
+
+    expect(wrapper).not.toHaveAttribute('tabindex')
+    expect(wrapper?.style.boxShadow).toBe('')
+
+    fireEvent.focus(textarea)
+    expect(wrapper?.style.boxShadow).toBe('')
+  })
+
   it('warns when attempting to send while files are still processing', async () => {
     const user = userEvent.setup()
     const { showWarningToast } = await import('~/utils/toastUtils')
