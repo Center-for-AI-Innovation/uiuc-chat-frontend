@@ -247,6 +247,7 @@ export function LandingPageHeader({
                   <IconSparkles
                     size={20}
                     strokeWidth={2}
+                    aria-hidden="true"
                     style={{ marginRight: '5px' }}
                   />
                   <span
@@ -264,7 +265,7 @@ export function LandingPageHeader({
                 rel="noopener noreferrer"
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>
-                  <IconClipboardTexts />
+                  <IconClipboardTexts aria-hidden="true" />
                   <span
                     className={`${montserrat_heading.variable} font-montserratHeading`}
                   >
@@ -755,6 +756,7 @@ export function IconClipboardTexts() {
     <IconClipboardText
       size={20}
       strokeWidth={2}
+      aria-hidden="true"
       style={{ marginRight: '5px' }}
     />
   )

@@ -113,11 +113,25 @@ const ListProjectTable: React.FC = () => {
 
   const getSortIcon = (column: SortableColumn) => {
     if (sortColumn !== column)
-      return <IconSelector size={14} color="var(--illinois-blue)" />
+      return (
+        <IconSelector
+          size={14}
+          color="var(--illinois-blue)"
+          aria-hidden="true"
+        />
+      )
     return sortDirection === 'asc' ? (
-      <IconChevronUp size={14} color="var(--illinois-blue)" />
+      <IconChevronUp
+        size={14}
+        color="var(--illinois-blue)"
+        aria-hidden="true"
+      />
     ) : (
-      <IconChevronDown size={14} color="var(--illinois-blue)" />
+      <IconChevronDown
+        size={14}
+        color="var(--illinois-blue)"
+        aria-hidden="true"
+      />
     )
   }
 
@@ -180,7 +194,7 @@ const ListProjectTable: React.FC = () => {
 
         return (
           <StyledRow
-            role="button"
+            role="row"
             tabIndex={0}
             aria-label={courseName}
             key={courseName}
@@ -262,7 +276,7 @@ const ListProjectTable: React.FC = () => {
                         <th
                           key={key}
                           tabIndex={0}
-                          role="columnheader button"
+                          role="columnheader"
                           aria-sort={
                             sortColumn === key
                               ? sortDirection === 'asc'

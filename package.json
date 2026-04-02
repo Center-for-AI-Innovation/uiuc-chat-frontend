@@ -26,7 +26,9 @@
     "db:push": "npx drizzle-kit push",
     "db:pull": "npx drizzle-kit pull",
     "db:populate": "tsx src/db/custom-functions.ts",
-    "shadcn:add": "npx shadcn@latest add"
+    "shadcn:add": "npx shadcn@latest add",
+    "a11y:audit": "npx unlighthouse --site http://localhost:3000",
+    "a11y:audit:ci": "npx unlighthouse-ci --site http://localhost:3000 --build-static"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^1.0.7",
@@ -98,6 +100,7 @@
     "@tiptap/starter-kit": "^2.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/sanitize-html": "^2.13.0",
+    "@unlighthouse/cli": "^0.17.7",
     "@vercel/analytics": "^1.4.1",
     "@vercel/edge-config": "^0.2.0",
     "@vercel/kv": "^0.2.1",
