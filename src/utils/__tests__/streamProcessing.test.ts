@@ -96,6 +96,29 @@ describe('processChunkWithStateMachine', () => {
     )
   })
 
+  it('passes serverPresignedUrlFn through to replaceCitationLinks for cite tags', async () => {
+    const ctx = { state: State.Normal, buffer: '' }
+    const lastMessage: any = { id: 'm1', role: 'assistant', content: '' }
+    const serverPresignedUrlFn = vi.fn()
+
+    await processChunkWithStateMachine(
+      'Hello <cite>1</cite>!',
+      lastMessage,
+      ctx,
+      new Map(),
+      'CS101',
+      serverPresignedUrlFn as any,
+    )
+
+    expect(replaceCitationLinks).toHaveBeenCalledWith(
+      '<cite>1</cite>',
+      lastMessage,
+      expect.any(Map),
+      'CS101',
+      serverPresignedUrlFn,
+    )
+  })
+
   it('buffers partial cite tags across chunks', async () => {
     const ctx = { state: State.Normal, buffer: '' }
     const lastMessage: any = { id: 'm1', role: 'assistant', content: '' }
@@ -152,6 +175,29 @@ describe('processChunkWithStateMachine', () => {
       lastMessage,
       expect.any(Map),
       'CS101',
+    )
+  })
+
+  it('passes serverPresignedUrlFn through to replaceCitationLinks for filename citations', async () => {
+    const ctx = { state: State.Normal, buffer: '' }
+    const lastMessage: any = { id: 'm1', role: 'assistant', content: '' }
+    const serverPresignedUrlFn = vi.fn()
+
+    await processChunkWithStateMachine(
+      'See 1. [paper.pdf](http://example.com) for more.',
+      lastMessage,
+      ctx,
+      new Map(),
+      'CS101',
+      serverPresignedUrlFn as any,
+    )
+
+    expect(replaceCitationLinks).toHaveBeenCalledWith(
+      expect.stringContaining('[paper.pdf]'),
+      lastMessage,
+      expect.any(Map),
+      'CS101',
+      serverPresignedUrlFn,
     )
   })
 

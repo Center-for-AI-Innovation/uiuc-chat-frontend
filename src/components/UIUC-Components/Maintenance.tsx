@@ -28,15 +28,19 @@ const Maintenance = ({}: {
 
   return (
     <>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[--background] to-[--background-dark]">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[--background] to-[--background-dark]"
+      >
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 text-center">
           <Link href="/">
-            <h2 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
+            <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
               UIUC. <span className="text-[hsl(280,100%,70%)]">chat</span>
-            </h2>
+            </h1>
           </Link>
 
-          <Title className="mt-8 text-amber-400" order={1}>
+          <Title className="mt-8 text-amber-400" order={2}>
             {maintenanceTitleText}
           </Title>
 

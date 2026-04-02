@@ -155,7 +155,7 @@ describe('Chat', () => {
         courseMetadata={{} as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {

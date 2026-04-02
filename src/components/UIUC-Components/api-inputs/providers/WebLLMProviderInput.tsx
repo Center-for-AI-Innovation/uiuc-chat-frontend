@@ -36,7 +36,7 @@ export default function WebLLMProviderInput({
         >
           <div>
             <a
-              className="mb-3"
+              className="mb-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
               href="https://github.com/mlc-ai/web-llm"
               target="_blank"
               rel="noopener noreferrer"
@@ -93,7 +93,7 @@ export default function WebLLMProviderInput({
             )}
           </form.Field>
         </div>
-        <Text size="sm" color="dimmed" mb="md">
+        <Text size="sm" className="text-gray-600" mb="md">
           WebLLM is a framework for building and deploying LLMs in the browser.
         </Text>
         <form.Field name={`providers.${ProviderNames.WebLLM}.enabled`}>

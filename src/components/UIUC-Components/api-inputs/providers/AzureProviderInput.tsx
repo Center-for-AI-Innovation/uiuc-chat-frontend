@@ -37,7 +37,7 @@ export default function AzureProviderInput({
         >
           <div>
             <a
-              className="mb-3"
+              className="mb-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
               href="https://azure.microsoft.com/en-us/products/cognitive-services/openai-service/"
               target="_blank"
               rel="noopener noreferrer"

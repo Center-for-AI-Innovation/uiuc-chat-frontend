@@ -1,9 +1,8 @@
 import { useAuth } from 'react-oidc-context'
-import { Table, Title, Text } from '@mantine/core'
-import { useEffect, useState } from 'react'
+import { Table, Text } from '@mantine/core'
+import { useMemo, useState } from 'react'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { useRouter } from 'next/router'
-import { DataTable } from 'mantine-datatable'
 import styled from 'styled-components'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import Link from 'next/link'
@@ -13,9 +12,8 @@ import {
   IconChevronUp,
   IconChevronDown,
   IconSelector,
-  IconAlertCircle,
 } from '@tabler/icons-react'
-import { notifications } from '@mantine/notifications'
+import { useQuery } from '@tanstack/react-query'
 
 const StyledRow = styled.tr`
   &:hover {
@@ -77,19 +75,32 @@ type SortableColumn = 'name' | 'privacy' | 'owner' | 'admins'
 
 const ListProjectTable: React.FC = () => {
   const auth = useAuth()
-  const [courses, setProjects] = useState<
-    { [key: string]: CourseMetadata }[] | null
-  >(null)
-  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const [rows, setRows] = useState<JSX.Element[]>([])
-  const [isFullyLoaded, setIsFullyLoaded] = useState<boolean>(false)
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [sortColumn, setSortColumn] = useState<SortableColumn>('name')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
-  const [rawData, setRawData] = useState<{ [key: string]: CourseMetadata }[]>(
-    [],
-  )
+
+  const currUserEmail = auth.isAuthenticated
+    ? auth.user?.profile.email
+    : undefined
+
+  const { data: rawData = [], isLoading: isQueryLoading } = useQuery<
+    { [key: string]: CourseMetadata }[]
+  >({
+    queryKey: ['allCourseMetadata', currUserEmail],
+    queryFn: async () => {
+      if (!currUserEmail) return []
+      const response = await fetch(
+        `/api/UIUC-api/getAllCourseMetadata?currUserEmail=${currUserEmail}`,
+      )
+      if (!response.ok) {
+        throw new Error(`Failed to fetch course metadata: ${response.status}`)
+      }
+      const data = await response.json()
+      return data || []
+    },
+    enabled: !!currUserEmail,
+  })
 
   const handleSort = (column: SortableColumn) => {
     if (sortColumn === column) {
@@ -110,19 +121,8 @@ const ListProjectTable: React.FC = () => {
     )
   }
 
-  const sortData = () => {
-    // Ensure rawData is always an array before proceeding
-    if ((!Array.isArray(rawData) || rawData.length === 0) && isFullyLoaded) {
-      setRows([])
-      console.log('No projects found')
-      notifications.show({
-        title: 'No projects found',
-        message: 'No projects found',
-        color: 'red',
-        icon: <IconAlertCircle />,
-      })
-      return
-    }
+  const rows = useMemo(() => {
+    if (!Array.isArray(rawData) || rawData.length === 0) return []
 
     const sortedData = [...rawData].sort((a, b) => {
       const courseNameA = Object.keys(a)[0] ?? ''
@@ -139,14 +139,12 @@ const ListProjectTable: React.FC = () => {
             .toLowerCase()
             .localeCompare(courseNameB.toLowerCase())
           break
-        case 'privacy':
-          comparison =
-            metadataA.is_private === metadataB.is_private
-              ? 0
-              : metadataA.is_private
-                ? 1
-                : -1
+        case 'privacy': {
+          const privacyLevel = (m: typeof metadataA) =>
+            m.is_private ? (m.allow_logged_in_users ? 1 : 2) : 0
+          comparison = privacyLevel(metadataA) - privacyLevel(metadataB)
           break
+        }
         case 'owner':
           comparison = metadataA.course_owner
             .toLowerCase()
@@ -168,7 +166,7 @@ const ListProjectTable: React.FC = () => {
       return sortDirection === 'asc' ? comparison : -comparison
     })
 
-    const newRows = sortedData
+    return sortedData
       .map((course) => {
         const courseName = Object.keys(course)[0]
         if (!courseName) return null
@@ -196,61 +194,35 @@ const ListProjectTable: React.FC = () => {
                 router.push(`/${courseName}/chat`)
               }
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                if (e.metaKey || e.ctrlKey) {
+                  window.open(`/${courseName}/chat`, '_blank')
+                } else {
+                  router.push(`/${courseName}/chat`)
+                }
+              }
+            }}
             style={{ cursor: 'pointer', color: 'var(--illinois-blue)' }}
           >
             <td>{courseName}</td>
-            <td>{courseMetadata.is_private ? 'Private' : 'Public'}</td>
+            <td>
+              {courseMetadata.is_private
+                ? courseMetadata.allow_logged_in_users
+                  ? 'Logged-in Users'
+                  : 'Private'
+                : 'Public'}
+            </td>
             <td>{courseMetadata.course_owner}</td>
             <td>{filteredAdmins.join(', ')}</td>
           </StyledRow>
         )
       })
       .filter((row): row is JSX.Element => row !== null)
+  }, [rawData, sortColumn, sortDirection, router])
 
-    setRows(newRows)
-  }
-
-  useEffect(() => {
-    sortData()
-  }, [sortColumn, sortDirection, rawData])
-
-  useEffect(() => {
-    const fetchCourses = async () => {
-      console.log('Fetching projects')
-
-      if (auth.isLoading) {
-        return
-      }
-
-      if (auth.isAuthenticated && auth.user?.profile.email) {
-        console.log('Signed')
-
-        const currUserEmail = auth.user.profile.email
-        console.log(currUserEmail)
-        if (!currUserEmail) {
-          throw new Error('No email found for the user')
-        }
-
-        const response = await fetch(
-          `/api/UIUC-api/getAllCourseMetadata?currUserEmail=${currUserEmail}`,
-        )
-        const data = await response.json()
-        if (data) {
-          setRawData(data)
-          setIsFullyLoaded(true)
-        } else {
-          console.log('No project found with the given name')
-          setIsFullyLoaded(true)
-        }
-      } else {
-        console.log('User not signed in')
-        setIsFullyLoaded(true)
-      }
-    }
-    fetchCourses()
-  }, [auth.isLoading, auth.isAuthenticated])
-
-  if (auth.isLoading || !isFullyLoaded) {
+  if (auth.isLoading || isQueryLoading) {
     // Loading screen is actually NOT worth it :/ just return null
     // return <Skeleton animate={true} height={40} width="70%" radius="xl" />
     return null
@@ -275,9 +247,10 @@ const ListProjectTable: React.FC = () => {
                 style={{
                   overflowX: 'auto',
                   width: '100%',
+                  padding: '4px',
                 }}
               >
-                <StyledTable>
+                <StyledTable aria-label="Chatbots list">
                   <thead>
                     <tr>
                       {[
@@ -288,7 +261,22 @@ const ListProjectTable: React.FC = () => {
                       ].map(({ label, key }) => (
                         <th
                           key={key}
+                          tabIndex={0}
+                          role="columnheader button"
+                          aria-sort={
+                            sortColumn === key
+                              ? sortDirection === 'asc'
+                                ? 'ascending'
+                                : 'descending'
+                              : 'none'
+                          }
                           onClick={() => handleSort(key as SortableColumn)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              handleSort(key as SortableColumn)
+                            }
+                          }}
                           style={{ cursor: 'pointer' }}
                         >
                           <div
