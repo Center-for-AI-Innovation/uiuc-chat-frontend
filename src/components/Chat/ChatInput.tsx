@@ -53,7 +53,6 @@ import React from 'react'
 import { type CSSProperties } from 'react'
 
 import { useMediaQuery } from '@mantine/hooks'
-import { FileDropOverlay } from './FileDropOverlay'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
@@ -265,6 +264,7 @@ export const ChatInput = ({
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [showPluginSelect, setShowPluginSelect] = useState(false)
   const [plugin, setPlugin] = useState<Plugin | null>(null)
+  const [isDragging, setIsDragging] = useState<boolean>(false)
   const promptListRef = useRef<HTMLUListElement | null>(null)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
@@ -1224,6 +1224,7 @@ export const ChatInput = ({
                   }
                 }}
               />
+
               {/* Textarea for message input */}
               <textarea
                 ref={textareaRef}
@@ -1330,8 +1331,6 @@ export const ChatInput = ({
               </div>
             )}
           </div>
-
-          <FileDropOverlay onFilesDropped={handleFileSelection} />
 
           {/* Model picker and Agent Mode pill container */}
           <div className="absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-2">

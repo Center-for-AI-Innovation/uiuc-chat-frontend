@@ -52,7 +52,11 @@ const conversationToMessages = (
         } else if (c.type === 'file') {
           // Convert file content to text representation
           textParts.push(
-            `[File: ${c.fileName || 'unknown'} (${c.fileType || 'unknown type'}, ${c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'})]`,
+            `[File: ${c.fileName || 'unknown'} (${
+              c.fileType || 'unknown type'
+            }, ${
+              c.fileSize ? Math.round(c.fileSize / 1024) + 'KB' : 'unknown size'
+            })]`,
           )
         }
       })
@@ -176,7 +180,9 @@ async function handler(req: AuthenticatedRequest): Promise<NextResponse> {
 
   // Add image info if present
   if (imageUrls && imageUrls.length > 0 && imageDescription) {
-    const imageInfo = `Image URL(s): ${imageUrls.join(', ')};\nImage Description: ${imageDescription}`
+    const imageInfo = `Image URL(s): ${imageUrls.join(
+      ', ',
+    )};\nImage Description: ${imageDescription}`
     if (message_to_send.length > 0) {
       const lastMessage = message_to_send[message_to_send.length - 1]
       if (lastMessage) {

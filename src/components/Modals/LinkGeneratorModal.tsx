@@ -3,16 +3,13 @@ import {
   Modal,
   Text,
   Flex,
-  Divider,
-  TextInput,
   Group,
   Button,
   CopyButton,
   Paper,
 } from '@mantine/core'
-import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { IconCheck, IconCopy } from '@tabler/icons-react'
-import CustomSwitch from '~/components/Switches/CustomSwitch'
+import { Switch } from '@/components/shadcn/ui/switch'
 
 interface LinkGeneratorModalProps {
   opened: boolean
@@ -78,11 +75,7 @@ export const LinkGeneratorModal = ({
       opened={opened}
       onClose={onClose}
       title={
-        <Text
-          className={`${montserrat_heading.variable} font-montserratHeading`}
-          size="lg"
-          weight={700}
-        >
+        <Text size="lg" weight={700}>
           Generate Shareable Link
         </Text>
       }
@@ -115,11 +108,7 @@ export const LinkGeneratorModal = ({
       }}
     >
       <Flex direction="column" gap="xl">
-        <Text
-          className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-          size="sm"
-          style={{ lineHeight: 1.5 }}
-        >
+        <Text size="sm" style={{ lineHeight: 1.5 }}>
           Configure AI behavior settings for your shareable link. These settings
           will enable specific behaviors when users access the chat through this
           link. Note: If a setting is enabled course-wide, enabling it here will
@@ -128,7 +117,11 @@ export const LinkGeneratorModal = ({
         </Text>
 
         <Flex direction="column" gap="md">
-          <CustomSwitch
+          <Switch
+            variant="labeled"
+            size="lg"
+            showLabels
+            showThumbIcon
             label="Guided Learning"
             tooltip={
               currentSettings.guidedLearning
@@ -136,12 +129,14 @@ export const LinkGeneratorModal = ({
                 : 'Enable guided learning mode for this link. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers.'
             }
             checked={linkSettings.guidedLearning}
-            onChange={(checked) =>
-              handleSettingChange('guidedLearning')(checked)
-            }
+            onCheckedChange={handleSettingChange('guidedLearning')}
           />
 
-          <CustomSwitch
+          <Switch
+            variant="labeled"
+            size="lg"
+            showLabels
+            showThumbIcon
             label="Document-Based References Only"
             tooltip={
               currentSettings.documentsOnly
@@ -149,31 +144,27 @@ export const LinkGeneratorModal = ({
                 : "Restrict AI to only use information from provided documents. The AI will not use external knowledge or make assumptions beyond the documents' content."
             }
             checked={linkSettings.documentsOnly}
-            onChange={(checked) =>
-              handleSettingChange('documentsOnly')(checked)
-            }
+            onCheckedChange={handleSettingChange('documentsOnly')}
           />
 
-          <CustomSwitch
-            label="Bypass UIUC.chat's internal prompting"
+          <Switch
+            variant="labeled"
+            size="lg"
+            showLabels
+            showThumbIcon
+            label="Bypass Illinois Chat's internal prompting"
             tooltip={
               currentSettings.systemPromptOnly
                 ? 'This setting is currently enabled course-wide. Enabling it here will ensure it stays active even if course settings change.'
-                : "Use raw system prompt without additional internal prompting. This bypasses UIUC.chat's built-in prompts for citations and helpfulness."
+                : "Use raw system prompt without additional internal prompting. This bypasses Illinois Chat's built-in prompts for citations and helpfulness."
             }
             checked={linkSettings.systemPromptOnly}
-            onChange={(checked) =>
-              handleSettingChange('systemPromptOnly')(checked)
-            }
+            onCheckedChange={handleSettingChange('systemPromptOnly')}
           />
         </Flex>
 
         <Flex direction="column" gap="md">
-          <Text
-            size="sm"
-            weight={600}
-            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-          >
+          <Text size="sm" weight={600}>
             Generated Link
           </Text>
 
@@ -188,7 +179,7 @@ export const LinkGeneratorModal = ({
           >
             <Text
               size="sm"
-              className={`${montserrat_paragraph.variable} font-montserratParagraph text-[--modal-text]`}
+              className={`text-[--modal-text]`}
               style={{
                 lineHeight: 1.5,
               }}
@@ -204,7 +195,6 @@ export const LinkGeneratorModal = ({
                   variant="filled"
                   radius="md"
                   onClick={copy}
-                  className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                   leftIcon={
                     copied ? <IconCheck size={16} /> : <IconCopy size={16} />
                   }

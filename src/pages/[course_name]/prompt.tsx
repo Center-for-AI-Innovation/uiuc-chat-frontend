@@ -38,8 +38,8 @@ const CourseMain: NextPage = () => {
     return typeof raw === 'string'
       ? raw
       : Array.isArray(raw)
-        ? raw[0]
-        : undefined
+      ? raw[0]
+      : undefined
   }
   const courseName = getCurrentPageName() as string
 
@@ -120,6 +120,7 @@ const CourseMain: NextPage = () => {
     )
   }
 
+  // Don't edit certain special pages (no context allowed)
   if (
     courseName &&
     (courseName.toLowerCase() == 'gpt4' ||

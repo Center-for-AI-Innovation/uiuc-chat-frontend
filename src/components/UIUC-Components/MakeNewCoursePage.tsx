@@ -1,7 +1,10 @@
 import Head from 'next/head'
-import React, { useMemo, useState } from 'react'
+import { useRouter } from 'next/router'
+import React, { useMemo, useRef, useState } from 'react'
 
-import { Button, Card, Flex, Title } from '@mantine/core'
+import { Card, Flex, Title } from '@mantine/core'
+import { Button } from '@/components/shadcn/ui/button'
+import { LoaderCircle } from 'lucide-react'
 import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -21,6 +24,32 @@ import { useAuth } from 'react-oidc-context'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from './GlobalFooter'
 
+/**
+ * Build a safe relative URL for navigating to a project's chat page.
+ * Guards against open-redirect attacks by ensuring the project name
+ * is converted into a single, safe path segment and cannot influence
+ * the host, protocol, or parent path.
+ */
+const buildProjectChatPath = (name: string): string => {
+  // Normalize to string and trim whitespace
+  const raw = String(name || '').trim()
+
+  // Allow only URL-safe characters for a single path segment:
+  // letters, numbers, dash, underscore. Replace others with '-'.
+  let safeSegment = raw.replace(/[^a-zA-Z0-9_-]+/g, '-')
+
+  // Remove any leading dots or slashes to avoid path traversal or
+  // protocol-relative URL patterns like "../" or "//evil.com".
+  safeSegment = safeSegment.replace(/^[./\\]+/, '')
+
+  // Fallback to a safe placeholder if nothing remains
+  if (!safeSegment) {
+    return '/chat'
+  }
+
+  return `/${safeSegment}/chat`
+}
+
 const MakeNewCoursePage = ({
   project_name,
   current_user_email,
@@ -33,6 +62,7 @@ const MakeNewCoursePage = ({
   project_description?: string
 }) => {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const auth = useAuth()
   const user_id = auth.user?.profile.email || current_user_email
 
@@ -50,7 +80,7 @@ const MakeNewCoursePage = ({
   }, [])
 
   // Debounce project name input to avoid excessive API calls
-  const [debouncedProjectName] = useDebouncedValue(projectName, 500)
+  const [debouncedProjectName] = useDebouncedValue(projectName, 1000)
 
   // Check project name availability using React Query
   const { data: courseExists, isFetching: isCheckingAvailability } =
@@ -119,6 +149,11 @@ const MakeNewCoursePage = ({
       onUpdateName={setProjectName}
       onUpdateDescription={setProjectDescription}
     />,
+    <StepSuccess
+      key="success"
+      project_name={projectName}
+      onContinueDesigning={() => setStep((s) => s + 1)}
+    />,
     <StepUpload
       key="upload"
       project_name={projectName}
@@ -129,26 +164,49 @@ const MakeNewCoursePage = ({
           | undefined
       }
     />,
-    <StepLLM key="llm" project_name={projectName} />,
-    <StepPrompt key="prompt" project_name={projectName} />,
     <StepBranding
       key="branding"
       project_name={projectName}
       user_id={user_id}
     />,
-    <StepSuccess key="success" project_name={projectName} />,
+    <StepLLM key="llm" project_name={projectName} />,
+    <StepPrompt key="prompt" project_name={projectName} />,
   ]
 
   const totalSteps = allSteps.length
   const isFirstStep = currentStep === 0
   const isLastStep = currentStep === totalSteps - 1
 
+  const stepNames = [
+    'Create a new chatbot',
+    'Success',
+    'Add Content',
+    'Branding',
+    'AI Models',
+    'Prompt',
+  ]
+
+  const [stepAnnouncement, setStepAnnouncement] = useState('')
+  const stepContainerRef = useRef<HTMLDivElement>(null)
+
   const goToPreviousStep = () => {
-    setStep((prevStep) => Math.max(prevStep - 1, 0))
+    setStep((prevStep) => {
+      const next = Math.max(prevStep - 1, 0)
+      setStepAnnouncement(
+        `Step ${next + 1} of ${totalSteps}: ${stepNames[next]}`,
+      )
+      return next
+    })
   }
 
   const goToNextStep = () => {
-    setStep((prevStep) => Math.min(prevStep + 1, totalSteps - 1))
+    setStep((prevStep) => {
+      const next = Math.min(prevStep + 1, totalSteps - 1)
+      setStepAnnouncement(
+        `Step ${next + 1} of ${totalSteps}: ${stepNames[next]}`,
+      )
+      return next
+    })
   }
 
   const handleSubmit = async (
@@ -319,25 +377,27 @@ const MakeNewCoursePage = ({
       <main
         id="main-content"
         tabIndex={-1}
-        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          padding: '1rem',
-        }}
+        className="course-page-main flex min-h-screen w-full flex-col items-center px-4 pb-28 pt-20 sm:px-6"
       >
         <h1 className="sr-only">Create New Project</h1>
-        {/* TODO change wrapper and card mt- settings to not have to skip past the top header...will require change to global nav and page structure  */}
-        <div className="mt-12 flex w-full flex-1 flex-col items-center justify-start py-0 pb-20">
+        <div className="flex w-full flex-1 flex-col items-center py-6">
           <Card
             padding="none"
             withBorder={true}
-            radius="md"
-            className="mt-16 w-[96%] !border-[--dashboard-border] bg-[--background] p-8 text-[--foreground] md:w-[90%] lg:max-w-[860px]"
+            radius="lg"
+            className="my-auto flex w-full max-w-[720px] flex-col !border-[--dashboard-border] bg-[--background] px-6 py-8 text-[--foreground] sm:px-10 sm:py-10"
           >
-            <div className="step_container min-h-[16rem]">
+            <div
+              ref={stepContainerRef}
+              className="step_container flex min-h-[22rem] flex-col"
+              aria-label={`Step ${currentStep + 1} of ${totalSteps}: ${
+                stepNames[currentStep]
+              }`}
+            >
               {allSteps[currentStep]}
+            </div>
+            <div className="sr-only" aria-live="polite" aria-atomic="true">
+              {stepAnnouncement}
             </div>
             <UploadNotification
               files={uploadFiles}
@@ -348,35 +408,50 @@ const MakeNewCoursePage = ({
         </div>
 
         {/* Sticky Footer Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[--dashboard-border] bg-[--background]">
-          <div className="mx-auto flex max-w-[860px] items-center justify-between px-4 py-4">
+        <nav
+          aria-label="Wizard navigation"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-[--dashboard-border] bg-[--background]"
+        >
+          <div className="mx-auto flex max-w-[720px] items-center justify-between px-4 py-3 sm:px-6">
             <Button
+              variant="outline"
               size="sm"
-              radius="sm"
-              classNames={componentClasses.button}
+              className="hover:bg-[--illinois-blue]/10 border-[--illinois-blue] text-[--illinois-blue] hover:text-[--illinois-blue]"
               onClick={goToPreviousStep}
               disabled={isFirstStep || shouldBlockNavigation}
+              aria-label="Go to previous step"
             >
               Back
             </Button>
 
             {/* Pagination Dots */}
-            <div className="flex items-center gap-2">
+            <div
+              className="flex items-center gap-2"
+              role="list"
+              aria-label="Wizard progress"
+            >
               {allSteps.map((_, index) => (
                 <div
                   key={index}
-                  className={`h-2 w-2 rounded-full transition-colors ${
-                    currentStep === index ? 'bg-[#13294B]' : 'bg-[#13294B]/40'
-                  }`}
+                  role="listitem"
+                  aria-label={`Step ${index + 1} of ${totalSteps}: ${
+                    stepNames[index]
+                  }${currentStep === index ? ' (current)' : ''}`}
+                  aria-current={currentStep === index ? 'step' : undefined}
+                  className={`rounded-full bg-[--illinois-blue] transition-all duration-200 ${currentStep === index ? 'h-2.5 w-2.5 opacity-100' : 'h-2 w-2 opacity-25'}`}
                 />
               ))}
             </div>
 
             <Button
+              variant="outline"
               size="sm"
-              radius="sm"
-              className={isLastStep ? 'opacity-0' : ''}
-              classNames={componentClasses.buttonPrimary}
+              className="hover:bg-[--illinois-blue]/10 border-[--illinois-blue] text-[--illinois-blue] hover:text-[--illinois-blue]"
+              aria-label={
+                isLastStep
+                  ? 'Start chatting with your new chatbot'
+                  : 'Continue to next step'
+              }
               onClick={async () => {
                 if (currentStep === 0) {
                   if (!hasCreatedProject) {
@@ -404,12 +479,14 @@ const MakeNewCoursePage = ({
                   }
                 }
 
-                if (!isLastStep) {
+                if (isLastStep) {
+                  const chatPath = buildProjectChatPath(projectName)
+                  router.push(chatPath)
+                } else {
                   goToNextStep()
                 }
               }}
               disabled={
-                isLastStep ||
                 shouldBlockNavigation ||
                 (currentStep === 0 &&
                   !hasCreatedProject &&
@@ -418,46 +495,23 @@ const MakeNewCoursePage = ({
                     isLoading ||
                     isWaitingForAvailabilityCheck))
               }
-              loading={isLoading && currentStep === 0}
             >
-              Continue
+              {isLoading && currentStep === 0 && (
+                <LoaderCircle
+                  className="size-4 animate-spin"
+                  aria-hidden="true"
+                />
+              )}
+              {isLoading && currentStep === 0 && (
+                <span className="sr-only">Creating project...</span>
+              )}
+              {isLastStep ? 'Start Chatting' : 'Continue'}
             </Button>
           </div>
-        </div>
+        </nav>
       </main>
     </>
   )
-}
-
-const componentClasses = {
-  button: {
-    root: `
-      !text-[#13294B]
-      bg-transparent
-      border-[#13294B]
-
-      hover:!text-[#13294B]
-      hover:bg-[#13294B]/10
-      hover:border-[#13294B]
-
-      disabled:bg-transparent
-      disabled:border-[--button-disabled]
-      disabled:!text-[--button-disabled-text-color]
-    `,
-  },
-
-  buttonPrimary: {
-    root: `
-      !text-white
-      bg-[#13294B]
-
-      hover:!text-white
-      hover:bg-[#13294B]/90
-
-      disabled:bg-[#13294B]/50
-      disabled:!text-white/50
-    `,
-  },
 }
 
 export default MakeNewCoursePage
