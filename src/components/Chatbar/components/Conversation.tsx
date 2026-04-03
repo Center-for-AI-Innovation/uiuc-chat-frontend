@@ -118,7 +118,11 @@ export const ConversationComponent = ({
           }
         `}
         >
-          <IconMessage size={16} className="text-[--sidebar]" />
+          <IconMessage
+            size={16}
+            aria-hidden="true"
+            className="text-[--sidebar]"
+          />
           <input
             aria-label="Rename Chat Input"
             className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-0 bg-transparent text-left text-[.75rem] leading-3 text-[--sidebar]"
@@ -150,7 +154,11 @@ export const ConversationComponent = ({
           draggable="true"
           onDragStart={(e) => handleDragStart(e, conversation)}
         >
-          <IconMessage size={16} className="text-[--sidebar]" />
+          <IconMessage
+            size={16}
+            aria-hidden="true"
+            className="text-[--sidebar]"
+          />
           {/* <div
             className={`relative max-h-5 flex-1 overflow-hidden text-ellipsis whitespace-nowrap break-all text-left text-[12.5px] leading-3 ${selectedConversation?.id === conversation.id ? 'pr-12' : 'pr-1'
               }`}
@@ -163,7 +171,9 @@ export const ConversationComponent = ({
             {conversation.name}
             {/* Add a new div to display the course_name */}
             {courseName && (
-              <div className="text-xs opacity-50">{courseName.trim()}</div>
+              <div className="text-xs text-[--foreground-faded]">
+                {courseName.trim()}
+              </div>
             )}
           </div>
         </button>
@@ -178,12 +188,14 @@ export const ConversationComponent = ({
             >
               <IconCheck
                 size={16}
+                aria-hidden="true"
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>
             <SidebarActionButton ariaLabel="Cancel" handleClick={handleCancel}>
               <IconX
                 size={16}
+                aria-hidden="true"
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>
@@ -200,6 +212,7 @@ export const ConversationComponent = ({
             >
               <IconPencil
                 size={16}
+                aria-hidden="true"
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>
@@ -209,6 +222,7 @@ export const ConversationComponent = ({
             >
               <IconTrash
                 size={16}
+                aria-hidden="true"
                 className="text-[--sidebar] opacity-50 hover:opacity-100"
               />
             </SidebarActionButton>

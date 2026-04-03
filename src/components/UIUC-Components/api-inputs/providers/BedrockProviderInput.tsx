@@ -86,7 +86,7 @@ const CredentialInput = ({
           className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground]"
           style={{ marginLeft: '8px' }}
         >
-          <IconX size={12} />
+          <IconX size={12} aria-hidden="true" />
         </ActionIcon>
       </div>
       <FieldInfo field={field} />
@@ -148,7 +148,11 @@ export default function BedrockProviderInput({
                 >
                   Amazon Bedrock
                 </Text>
-                <IconExternalLink size={16} className="mb-3" />
+                <IconExternalLink
+                  size={16}
+                  className="mb-3"
+                  aria-hidden="true"
+                />
               </div>
             </a>
           </div>
@@ -172,9 +176,15 @@ export default function BedrockProviderInput({
                       size="0.8rem"
                       color="var(--dashboard-button)"
                       stroke={3}
+                      aria-hidden="true"
                     />
                   ) : (
-                    <IconX size="0.8rem" color="grey" stroke={3} />
+                    <IconX
+                      size="0.8rem"
+                      color="grey"
+                      stroke={3}
+                      aria-hidden="true"
+                    />
                   )
                 }
                 styles={{

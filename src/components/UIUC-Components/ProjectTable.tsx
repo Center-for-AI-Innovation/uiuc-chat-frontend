@@ -264,7 +264,7 @@ const ListProjectTable: React.FC = () => {
                   padding: '4px',
                 }}
               >
-                <StyledTable aria-label="Chatbots list">
+                <StyledTable role="table" aria-label="Chatbots list">
                   <thead>
                     <tr>
                       {[
@@ -276,7 +276,6 @@ const ListProjectTable: React.FC = () => {
                         <th
                           key={key}
                           tabIndex={0}
-                          role="columnheader"
                           aria-sort={
                             sortColumn === key
                               ? sortDirection === 'asc'

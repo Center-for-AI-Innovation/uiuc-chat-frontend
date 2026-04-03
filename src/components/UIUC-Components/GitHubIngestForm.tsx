@@ -132,7 +132,9 @@ export default function GitHubIngestForm({
       // setMaxDepth(value)
     }
   }
-  const [icon, setIcon] = useState(<IconWorldDownload size={'50%'} />)
+  const [icon, setIcon] = useState(
+    <IconWorldDownload size={'50%'} aria-hidden="true" />,
+  )
   const [scrapeStrategy, setScrapeStrategy] =
     useState<string>('equal-and-below')
   const [open, setOpen] = useState(false)
@@ -357,7 +359,7 @@ export default function GitHubIngestForm({
         ),
         color: 'red',
         radius: 'lg',
-        icon: <IconAlertCircle />,
+        icon: <IconAlertCircle aria-hidden="true" />,
         className: 'my-notification-class',
         style: {
           backgroundColor: 'rgba(42,42,64,0.3)',
@@ -404,7 +406,7 @@ export default function GitHubIngestForm({
             <div className="-ml-2 mb-2 flex items-center justify-between">
               <div className="flex items-center space-x-1">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full">
-                  <IconBrandGithub className="h-8 w-8" />
+                  <IconBrandGithub className="h-8 w-8" aria-hidden="true" />
                 </div>
                 <Text className="text-xl font-semibold">GitHub</Text>
               </div>
@@ -417,6 +419,7 @@ export default function GitHubIngestForm({
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
+                aria-hidden="true"
                 className="ml-2 transition-transform group-hover:translate-x-1"
               />
             </div>

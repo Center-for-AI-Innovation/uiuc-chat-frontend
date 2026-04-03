@@ -1503,6 +1503,9 @@ function errorStateForProjectFilesTable() {
       striped
       highlightOnHover
       height="80vh"
+      noRecordsText={
+        <span style={{ color: 'var(--foreground-faded)' }}>No records</span>
+      }
       // Error state:
       noRecordsIcon={
         <Stack align="center" p={30}>

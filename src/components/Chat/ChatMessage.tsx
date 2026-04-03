@@ -215,9 +215,17 @@ const FileCard: React.FC<{
         {truncateFileName(fileName)}
       </span>
       {isPreviewable ? (
-        <IconEye size={16} style={{ color: 'var(--illinois-orange)' }} />
+        <IconEye
+          size={16}
+          aria-hidden="true"
+          style={{ color: 'var(--illinois-orange)' }}
+        />
       ) : (
-        <IconFile size={16} style={{ color: 'var(--illinois-orange)' }} />
+        <IconFile
+          size={16}
+          aria-hidden="true"
+          style={{ color: 'var(--illinois-orange)' }}
+        />
       )}
     </div>
   )
@@ -1776,11 +1784,15 @@ export const ChatMessage = memo(
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
-                  <IconRobot size={30} />
+                  <IconRobot size={30} aria-hidden="true" />
                   <Timer timerVisible={timerVisible} />
                 </>
               ) : (
-                <IconUser size={30} color="var(--chat-user)" />
+                <IconUser
+                  size={30}
+                  aria-hidden="true"
+                  color="var(--chat-user)"
+                />
               )}
             </div>
 
@@ -1812,7 +1824,7 @@ export const ChatMessage = memo(
                             setIsEditing(false)
                           }}
                         >
-                          <IconX size={16} />
+                          <IconX size={16} aria-hidden="true" />
                           {t('Cancel')}
                         </button>
                         <button
@@ -1820,7 +1832,7 @@ export const ChatMessage = memo(
                           onClick={handleEditMessage}
                           disabled={messageContent.trim().length <= 0}
                         >
-                          <IconCheck size={16} />
+                          <IconCheck size={16} aria-hidden="true" />
                           {t('Save & Submit')}
                         </button>
                       </div>

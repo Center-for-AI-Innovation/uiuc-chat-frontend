@@ -330,7 +330,7 @@ function NavigationContent({
 
 // Icon Components
 export function DashboardIcon() {
-  return <IconHome size={20} strokeWidth={2} />
+  return <IconHome size={20} strokeWidth={2} aria-hidden="true" />
 }
 
 export function FileIcon() {
@@ -339,6 +339,7 @@ export function FileIcon() {
       color="var(--foreground)"
       size={20}
       strokeWidth={2}
+      aria-hidden="true"
       style={{ margin: '0' }}
     />
   )
@@ -350,6 +351,7 @@ export function ClipboardIcon() {
       color="var(--foreground)"
       size={20}
       strokeWidth={2}
+      aria-hidden="true"
       style={{ margin: '0' }}
     />
   )
@@ -384,7 +386,7 @@ export default function Navbar({
     // },
     {
       name: <NavText>Create Your Own Bot</NavText>,
-      icon: <IconSparkles />,
+      icon: <IconSparkles aria-hidden="true" />,
       link: '/new',
     },
   ]
