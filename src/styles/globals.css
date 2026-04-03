@@ -1212,8 +1212,9 @@ button.css-s37qmw {
   @apply bg-purple-100 text-gray-900 dark:bg-purple-900/30 dark:text-gray-100;
 }
 
-.think-tag-header:focus {
-  @apply outline-none ring-2 ring-[--accent];
+.think-tag-header:focus-visible {
+  @apply outline-none;
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 .think-tag-icon {
