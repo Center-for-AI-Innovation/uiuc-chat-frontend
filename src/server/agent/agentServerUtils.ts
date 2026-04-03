@@ -20,7 +20,7 @@ import {
   getUIUCToolFromSim,
 } from '~/utils/functionCalling/handleFunctionCalling'
 import { conversationToMessages as baseConversationToMessages } from '~/utils/functionCalling/conversationToMessages'
-import { resolveSimCredentials } from '~/utils/simConfig'
+import { resolveSimCredentials, validateSimBaseUrl } from '~/utils/simConfig'
 import {
   type SimWorkflow,
   type SimWorkflowListItem,
@@ -262,8 +262,13 @@ export async function executeToolServer(
     return toolCopy
   }
 
-  const simBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
-  const url = `${simBaseUrl}/api/workflows/${tool.id}/execute`
+  const rawBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
+  const simBaseUrl = validateSimBaseUrl(rawBaseUrl)
+  if (!simBaseUrl) {
+    toolCopy.error = 'Invalid Sim base URL'
+    return toolCopy
+  }
+  const url = `${simBaseUrl}/api/workflows/${encodeURIComponent(tool.id)}/execute`
 
   const timeStart = Date.now()
   const controller = new AbortController()
@@ -466,7 +471,9 @@ export async function fetchToolsServer(
     return []
   }
 
-  const simBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
+  const rawBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
+  const simBaseUrl = validateSimBaseUrl(rawBaseUrl)
+  if (!simBaseUrl) return []
   const headers = { 'X-API-Key': creds.api_key }
 
   try {

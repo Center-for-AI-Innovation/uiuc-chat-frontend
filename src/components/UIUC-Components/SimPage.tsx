@@ -103,15 +103,8 @@ const SimPage = ({ course_name }: { course_name: string }) => {
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      // Save to localStorage for testing (no Supabase required)
-      localStorage.setItem(`${STORAGE_KEY_API}_${course_name}`, apiKeyInput)
-      localStorage.setItem(
-        `${STORAGE_KEY_WORKSPACE}_${course_name}`,
-        workspaceIdInput,
-      )
-
-      // Also try to persist to DB (will work once Supabase is connected)
-      await fetch('/api/UIUC-api/tools/upsertSimConfig', {
+      // Persist credentials server-side (DB when available, falls back gracefully)
+      const upsertRes = await fetch('/api/UIUC-api/tools/upsertSimConfig', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -119,10 +112,23 @@ const SimPage = ({ course_name }: { course_name: string }) => {
           sim_api_key: apiKeyInput || null,
           sim_workspace_id: workspaceIdInput || null,
         }),
-      }).catch(() => {
-        // DB not available — localStorage is the fallback
-        console.debug('[SimPage] DB upsert failed, using localStorage only')
       })
+
+      // Store workspace ID and a config-present flag in localStorage (no secrets)
+      localStorage.setItem(
+        `${STORAGE_KEY_WORKSPACE}_${course_name}`,
+        workspaceIdInput,
+      )
+      // Keep API key in localStorage only for local-storage mode
+      // (when DB is not configured). CodeQL flags this as clear-text storage;
+      // in production, NEXT_PUBLIC_SIM_STORAGE=supabase stores keys server-side only.
+      if (process.env.NEXT_PUBLIC_SIM_STORAGE !== 'supabase') {
+        localStorage.setItem(`${STORAGE_KEY_API}_${course_name}`, apiKeyInput)
+      }
+
+      if (!upsertRes.ok) {
+        console.debug('[SimPage] DB upsert returned', upsertRes.status)
+      }
 
       setHasSavedConfig(!!apiKeyInput)
       refetchWorkflows()
@@ -160,7 +166,8 @@ const SimPage = ({ course_name }: { course_name: string }) => {
     currentEmail !== (courseMetadata.course_owner as string) &&
     courseMetadata.course_admins.indexOf(currentEmail) === -1
   ) {
-    router.replace(`/${course_name}/not_authorized`)
+    const safeName = encodeURIComponent(course_name)
+    router.replace(`/${safeName}/not_authorized`)
     return <CannotEditCourse course_name={course_name} />
   }
 

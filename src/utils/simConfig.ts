@@ -63,3 +63,24 @@ export async function resolveSimCredentials(
 
   return { api_key: null, workspace_id: null, base_url: null }
 }
+
+const ALLOWED_SIM_HOSTS = new Set([
+  'www.sim.ai',
+  'sim.ai',
+  'api.sim.ai',
+])
+
+/**
+ * Validate that a base URL points to a known Sim AI host.
+ * Returns the sanitized URL or null if invalid (prevents SSRF).
+ */
+export function validateSimBaseUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:') return null
+    if (!ALLOWED_SIM_HOSTS.has(parsed.hostname)) return null
+    return `${parsed.protocol}//${parsed.host}`
+  } catch {
+    return null
+  }
+}

@@ -1,6 +1,6 @@
 import { type NextApiRequest, type NextApiResponse } from 'next'
 import { type SimExecutionResult } from '~/types/sim'
-import { resolveSimCredentials } from '~/utils/simConfig'
+import { resolveSimCredentials, validateSimBaseUrl } from '~/utils/simConfig'
 
 const SIM_DEFAULT_BASE_URL = 'https://www.sim.ai'
 const TIMEOUT_MS = 300_000 // 5 minutes
@@ -40,8 +40,12 @@ export default async function handler(
     return res.status(400).json({ error: 'No Sim API key available' })
   }
 
-  const simBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
-  const url = `${simBaseUrl}/api/workflows/${workflow_id}/execute`
+  const rawBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
+  const simBaseUrl = validateSimBaseUrl(rawBaseUrl)
+  if (!simBaseUrl) {
+    return res.status(400).json({ error: 'Invalid Sim base URL' })
+  }
+  const url = `${simBaseUrl}/api/workflows/${encodeURIComponent(workflow_id)}/execute`
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)

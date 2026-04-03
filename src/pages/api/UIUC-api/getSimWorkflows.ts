@@ -4,7 +4,7 @@ import {
   type SimWorkflowListItem,
   type SimInputField,
 } from '~/types/sim'
-import { resolveSimCredentials } from '~/utils/simConfig'
+import { resolveSimCredentials, validateSimBaseUrl } from '~/utils/simConfig'
 
 const SIM_DEFAULT_BASE_URL = 'https://www.sim.ai'
 
@@ -40,7 +40,11 @@ export default async function handler(
     return res.status(200).json({ workflows: [] })
   }
 
-  const simBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
+  const rawBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
+  const simBaseUrl = validateSimBaseUrl(rawBaseUrl)
+  if (!simBaseUrl) {
+    return res.status(400).json({ error: 'Invalid Sim base URL' })
+  }
   const headers = { 'X-API-Key': creds.api_key }
 
   try {
