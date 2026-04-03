@@ -48,7 +48,7 @@ export async function resolveSimCredentials(
             WHERE course_name = ${course_name}
             LIMIT 1`,
       )
-      const row = rows.rows?.[0]
+      const row = rows[0]
       if (row?.sim_api_key) {
         return {
           api_key: row.sim_api_key,
