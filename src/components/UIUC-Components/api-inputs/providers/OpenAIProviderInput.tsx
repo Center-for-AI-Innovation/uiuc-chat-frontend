@@ -40,7 +40,7 @@ export default function OpenAIProviderInput({
         >
           <div>
             <a
-              className="mb-3"
+              className="mb-3 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
               href="https://platform.openai.com/account/api-keys"
               target="_blank"
               rel="noopener noreferrer"

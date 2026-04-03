@@ -15,8 +15,9 @@ import {
   IconChevronDown,
   IconInfoCircle,
 } from '@tabler/icons-react'
-import { useGetProjectLLMProviders } from '~/hooks/useProjectAPIKeys'
+import { useFetchLLMProviders } from '@/hooks/queries/useFetchLLMProviders'
 import { findDefaultModel } from './api-inputs/LLMsApiKeyInputForm'
+import { type AnySupportedModel } from '~/utils/modelProviders/LLMProvider'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 
 interface APIRequestBuilderProps {
@@ -46,7 +47,7 @@ export default function APIRequestBuilder({
   const [streamEnabled, setStreamEnabled] = useState(true)
   const [temperature, setTemperature] = useState(0.1)
 
-  const { data: llmProviders } = useGetProjectLLMProviders({
+  const { data: llmProviders } = useFetchLLMProviders({
     projectName: course_name,
   })
 
@@ -76,8 +77,8 @@ export default function APIRequestBuilder({
     ? Object.entries(llmProviders).flatMap(([provider, config]) =>
         config.enabled && config.models && provider !== 'WebLLM'
           ? config.models
-              .filter((model) => model.enabled)
-              .map((model) => ({
+              .filter((model: AnySupportedModel) => model.enabled)
+              .map((model: AnySupportedModel) => ({
                 group: provider,
                 value: model.id,
                 label: model.name,
@@ -387,6 +388,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
           <Select
             placeholder="Select language"
+            aria-label="Select language"
             data={languageOptions}
             value={selectedLanguage}
             radius={'md'}
@@ -440,6 +442,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           <div className="flex w-full items-center gap-2">
             <Select
               placeholder="Select model"
+              aria-label="Select model"
               data={modelOptions}
               value={selectedModel}
               onChange={(value) => setSelectedModel(value || '')}
@@ -490,12 +493,13 @@ fetch('${baseUrl}/api/chat-api/chat', {
               rightSection={<IconChevronDown size={14} />}
             />
             <Button
+              aria-label="Copy Code Snippet"
               onClick={() =>
                 handleCopyCodeSnippet(codeSnippets[selectedLanguage])
               }
               variant="subtle"
               size="xs"
-              className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
+              className="h-[36px] w-[50px] flex-shrink-0 transform rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
             >
               {copiedCodeSnippet ? <IconCheck /> : <IconCopy />}
             </Button>
@@ -511,6 +515,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           </Title>
           <Textarea
             placeholder="System Prompt"
+            aria-label="System Prompt"
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.currentTarget.value)}
             minRows={2}
@@ -539,6 +544,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           </Title>
           <Textarea
             placeholder="User Query"
+            aria-label="User Query"
             value={userQuery}
             onChange={(e) => setUserQuery(e.currentTarget.value)}
             minRows={2}
@@ -566,6 +572,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
             Temperature
           </Title>
           <Slider
+            aria-label="Temperature"
             value={temperature}
             onChange={setTemperature}
             min={0}
@@ -702,7 +709,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
               href="https://docs.uiuc.chat/api/endpoints#image-input-example"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[--dashboard-button] hover:text-[--dashboard-button-hover]"
+              className="text-[--dashboard-button] underline hover:text-[--dashboard-button-hover]"
             >
               Using image inputs (docs) →
             </a>
@@ -713,6 +720,7 @@ fetch('${baseUrl}/api/chat-api/chat', {
           value={codeSnippets[selectedLanguage]}
           autosize
           variant="unstyled"
+          aria-label="Code snippet"
           readOnly
           className="relative mt-4 w-full min-w-0 overflow-x-auto rounded-xl bg-[--background] pl-4 text-sm sm:min-w-[20rem] sm:pl-8 sm:text-base"
           styles={{

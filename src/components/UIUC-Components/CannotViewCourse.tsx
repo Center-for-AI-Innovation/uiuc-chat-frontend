@@ -88,16 +88,20 @@ export const CannotViewCourse = ({
   return (
     <>
       <GlobalHeader />
-      <main className="justify-center; course-page-main flex min-h-screen flex-col items-center">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="justify-center; course-page-main flex min-h-screen flex-col items-center"
+      >
         <div className="container flex flex-col items-center justify-center gap-8 px-4 py-8 ">
           <Link href="/">
-            <h2 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
+            <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
               {' '}
               UIUC.
               <span className="${inter.style.fontFamily} text-[hsl(280,100%,70%)]">
                 chat
               </span>{' '}
-            </h2>
+            </h1>
           </Link>
         </div>
         <div className="items-left container flex flex-col justify-center gap-2 py-0">
@@ -127,7 +131,7 @@ export const CannotViewCourse = ({
                   className={`${montserrat_heading.variable} font-montserratHeading`}
                   variant="gradient"
                   gradient={{ from: 'gold', to: 'white', deg: 50 }}
-                  order={2}
+                  order={3}
                   p="lg"
                   // size={20}
                 >
@@ -194,8 +198,9 @@ export const CannotViewCourse = ({
             </Title>
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </>
   )
 }

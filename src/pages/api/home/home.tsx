@@ -26,24 +26,19 @@ import { v4 as uuidv4 } from 'uuid'
 import { selectBestTemperature } from '~/components/Chat/Temperature'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import {
-  useFetchConversationHistory,
-  useFetchLastConversation,
-  useUpdateConversation,
-} from '~/hooks/conversationQueries'
-import {
-  useCreateFolder,
-  useDeleteFolder,
-  useFetchFolders,
-  useUpdateFolder,
-} from '~/hooks/folderQueries'
+import { useFetchLastConversation } from '~/hooks/queries/useFetchLastConversation'
+import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
+import { useCreateFolder } from '~/hooks/queries/useCreateFolder'
+import { useDeleteFolder } from '~/hooks/queries/useDeleteFolder'
+import { useFetchFolders } from '~/hooks/queries/useFetchFolders'
+import { useUpdateFolder } from '~/hooks/queries/useUpdateFolder'
+import { saveConversationToLocalStorage } from '~/hooks/__internal__/conversation'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
 import {
   selectBestModel,
   VisionCapableModels,
 } from '~/utils/modelProviders/LLMProvider'
-import { type OpenAIModelID } from '~/utils/modelProviders/types/openai'
 
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
@@ -51,13 +46,13 @@ const Home = ({
   current_email,
   course_metadata,
   course_name,
-  document_count,
+  document_exists,
   link_parameters,
 }: {
   current_email: string
   course_metadata: CourseMetadata | null
   course_name: string
-  document_count: number | null
+  document_exists: boolean | null
   link_parameters: {
     guidedLearning: boolean
     documentsOnly: boolean
@@ -289,53 +284,10 @@ const Home = ({
       field: 'selectedConversation',
       value: conversation,
     })
-
-    try {
-      localStorage.setItem('selectedConversation', JSON.stringify(conversation))
-    } catch (error) {
-      // Handle localStorage quota exceeded error
-      if (
-        error instanceof DOMException &&
-        (error.name === 'QuotaExceededError' ||
-          error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-          error.code === 22 ||
-          error.code === 1014)
-      ) {
-        console.warn(
-          'localStorage quota exceeded in handleSelectConversation, saving minimal conversation data instead',
-        )
-
-        // Create a minimal version of the conversation with just essential data
-        const minimalConversation = {
-          id: conversation.id,
-          name: conversation.name,
-          model: conversation.model,
-          temperature: conversation.temperature,
-          folderId: conversation.folderId,
-          userEmail: conversation.userEmail,
-          projectName: conversation.projectName,
-          createdAt: conversation.createdAt,
-          updatedAt: conversation.updatedAt,
-        }
-
-        try {
-          // Try to save the minimal version
-          localStorage.setItem(
-            'selectedConversation',
-            JSON.stringify(minimalConversation),
-          )
-        } catch (minimalError) {
-          // If even minimal version fails, just log the error
-          console.error(
-            'Failed to save even minimal conversation data to localStorage',
-            minimalError,
-          )
-        }
-      } else {
-        // Some other error occurred
-        console.error('Error saving conversation to localStorage:', error)
-      }
-    }
+    saveConversationToLocalStorage(conversation, {
+      allowEmptyMessages: true,
+      logContext: 'handleSelectConversation',
+    })
     // await saveConversationToServer(conversation)
   }
 
@@ -377,22 +329,17 @@ const Home = ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       linkParameters: newLinkParameters,
+      agentModeEnabled: false,
     }
 
     // Only update selectedConversation, don't add to conversations list yet
     dispatch({ field: 'selectedConversation', value: newConversation })
     dispatch({ field: 'loading', value: false })
 
-    try {
-      localStorage.setItem(
-        'selectedConversation',
-        JSON.stringify(newConversation),
-      )
-    } catch (error) {
-      // Since this is a new conversation, it should be small enough to fit in localStorage
-      // But we'll handle the error just in case
-      console.error('Error saving new conversation to localStorage:', error)
-    }
+    saveConversationToLocalStorage(newConversation, {
+      allowEmptyMessages: true,
+      logContext: 'handleNewConversation',
+    })
   }
 
   const handleUpdateConversation = (
@@ -404,57 +351,10 @@ const Home = ({
       [data.key]: data.value,
     }
 
-    // Save to localStorage with error handling
-    try {
-      localStorage.setItem(
-        'selectedConversation',
-        JSON.stringify(updatedConversation),
-      )
-    } catch (error) {
-      // Handle localStorage quota exceeded error
-      if (
-        error instanceof DOMException &&
-        (error.name === 'QuotaExceededError' ||
-          error.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
-          error.code === 22 ||
-          error.code === 1014)
-      ) {
-        console.warn(
-          'localStorage quota exceeded, saving minimal conversation data instead',
-        )
-
-        // Create a minimal version of the conversation with just essential data
-        const minimalConversation = {
-          id: updatedConversation.id,
-          name: updatedConversation.name,
-          model: updatedConversation.model,
-          temperature: updatedConversation.temperature,
-          folderId: updatedConversation.folderId,
-          userEmail: updatedConversation.userEmail,
-          projectName: updatedConversation.projectName,
-          createdAt: updatedConversation.createdAt,
-          updatedAt: updatedConversation.updatedAt,
-          // Don't include messages or contexts which are likely the largest parts
-        }
-
-        try {
-          // Try to save the minimal version
-          localStorage.setItem(
-            'selectedConversation',
-            JSON.stringify(minimalConversation),
-          )
-        } catch (minimalError) {
-          // If even minimal version fails, just log the error
-          console.error(
-            'Failed to save even minimal conversation data to localStorage',
-            minimalError,
-          )
-        }
-      } else {
-        // Some other error occurred
-        console.error('Error saving conversation to localStorage:', error)
-      }
-    }
+    saveConversationToLocalStorage(updatedConversation, {
+      allowEmptyMessages: true,
+      logContext: 'handleUpdateConversation',
+    })
 
     dispatch({ field: 'selectedConversation', value: updatedConversation })
 
@@ -476,7 +376,13 @@ const Home = ({
       // Add new conversation to the list
       updatedConversations = [updatedConversation, ...conversations]
     }
-    updateConversationMutation.mutate(updatedConversation)
+    const latestMessage =
+      updatedConversation.messages?.[updatedConversation.messages.length - 1] ??
+      null
+    updateConversationMutation.mutate({
+      conversation: updatedConversation,
+      message: latestMessage,
+    })
     dispatch({ field: 'conversations', value: updatedConversations })
   }
 
@@ -538,8 +444,6 @@ const Home = ({
     )
     dispatch({ field: 'tools', value: tools })
   }
-  const [isDragging, setIsDragging] = useState<boolean>(false)
-  const [dragEnterCounter, setDragEnterCounter] = useState(0)
 
   const GradientIconPhoto = () => (
     <svg
@@ -567,62 +471,6 @@ const Home = ({
       <path d="M14 14l1 -1a3 5 0 0 1 3 0l2 2" />
     </svg>
   )
-
-  // EFFECTS for file drag and drop --------------------------------------------
-  useEffect(() => {
-    const handleDocumentDragOver = (e: DragEvent) => {
-      e.preventDefault()
-    }
-
-    const handleDocumentDragEnter = (e: DragEvent) => {
-      setDragEnterCounter((prev) => prev + 1)
-      setIsDragging(true)
-    }
-
-    const handleDocumentDragLeave = (e: DragEvent) => {
-      e.preventDefault()
-      setDragEnterCounter((prev) => prev - 1)
-      if (dragEnterCounter === 1 || e.relatedTarget === null) {
-        setIsDragging(false)
-      }
-    }
-
-    const handleDocumentDrop = (e: DragEvent) => {
-      e.preventDefault()
-      setIsDragging(false)
-      setDragEnterCounter(0)
-    }
-
-    const handleDocumentKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsDragging(false)
-        setDragEnterCounter(0)
-      }
-    }
-
-    const handleMouseOut = (e: MouseEvent) => {
-      if (!e.relatedTarget) {
-        setIsDragging(false)
-        setDragEnterCounter(0)
-      }
-    }
-
-    document.addEventListener('dragover', handleDocumentDragOver)
-    document.addEventListener('dragenter', handleDocumentDragEnter)
-    document.addEventListener('dragleave', handleDocumentDragLeave)
-    document.addEventListener('drop', handleDocumentDrop)
-    document.addEventListener('keydown', handleDocumentKeyDown)
-    window.addEventListener('mouseout', handleMouseOut)
-
-    return () => {
-      document.removeEventListener('dragover', handleDocumentDragOver)
-      document.removeEventListener('dragenter', handleDocumentDragEnter)
-      document.removeEventListener('dragleave', handleDocumentDragLeave)
-      document.removeEventListener('drop', handleDocumentDrop)
-      document.removeEventListener('keydown', handleDocumentKeyDown)
-      window.removeEventListener('mouseout', handleMouseOut)
-    }
-  }, [])
 
   useEffect(() => {
     if (window.innerWidth < 640) {
@@ -744,33 +592,26 @@ const Home = ({
         }}
       >
         <Head>
-          <title>UIUC.chat</title>
+          <title>Illinois Chat</title>
           <meta name="description" content="ChatGPT but better." />
           <meta
             name="viewport"
-            content="height=device-height ,width=device-width, initial-scale=1, user-scalable=no"
+            content="height=device-height, width=device-width, initial-scale=1"
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
         {selectedConversation && (
-          <main
-            className={`flex h-screen w-screen flex-col pt-20  text-sm text-white dark:text-white`}
+          <div
+            className={`flex h-screen w-screen flex-col pt-20 text-sm text-white dark:text-white`}
           >
+            <h1 className="sr-only">{course_name} — Illinois Chat</h1>
             <Navbar isPlain={false} />
 
-            <div className="flex h-full w-full overflow-y-auto sm:pt-0">
-              {isDragging &&
-                VisionCapableModels.has(
-                  selectedConversation?.model.id as OpenAIModelID,
-                ) && (
-                  <div className="absolute inset-0 z-10 flex h-full w-full flex-col items-center justify-center bg-[--background-dark] opacity-90">
-                    <GradientIconPhoto />
-                    <span className="text-3xl font-extrabold text-[--foreground]">
-                      Drop your image here!
-                    </span>
-                  </div>
-                )}
-
+            <main
+              id="main-content"
+              tabIndex={-1}
+              className="flex h-full w-full overflow-y-auto sm:pt-0"
+            >
               <Chatbar
                 current_email={current_email}
                 courseName={course_name}
@@ -783,11 +624,11 @@ const Home = ({
                   courseMetadata={course_metadata}
                   courseName={course_name}
                   currentEmail={current_email}
-                  documentCount={document_count}
+                  documentExists={document_exists}
                 />
               )}
-            </div>
-          </main>
+            </main>
+          </div>
         )}
       </HomeContext.Provider>
     </div>

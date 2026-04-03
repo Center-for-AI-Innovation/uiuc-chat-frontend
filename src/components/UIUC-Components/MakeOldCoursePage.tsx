@@ -78,14 +78,19 @@ const MakeOldCoursePage = ({
       setSidebarCollapsed={setSidebarCollapsed}
     >
       <Head>
-        <title>{course_name} - Admin page - UIUC.chat</title>
+        <title>{course_name} — Dashboard — Illinois Chat</title>
         <meta
           name="description"
           content="The AI teaching assistant built for students at UIUC."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+      >
+        <h1 className="sr-only">{course_name} Dashboard</h1>
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             {/* Upload Card Section */}
@@ -112,8 +117,9 @@ const MakeOldCoursePage = ({
             {/* <NomicDocumentsCard course_name={course_name} metadata={metadata} /> */}
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }

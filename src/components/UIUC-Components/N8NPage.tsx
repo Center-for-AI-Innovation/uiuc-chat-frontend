@@ -339,7 +339,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       setSidebarCollapsed={setSidebarCollapsed}
     >
       <Head>
-        <title>{course_name}</title>
+        <title>{course_name} — Tools — Illinois Chat</title>
         <meta
           name="description"
           content="The AI teaching assistant built for students at UIUC."
@@ -347,7 +347,12 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         <link rel="icon" href="/favicon.ico" />
         {/* <Header /> */}
       </Head>
-      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+      >
+        <h1 className="sr-only">{course_name} Tools</h1>
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             {useIllinoisChatConfig && (
@@ -406,7 +411,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                       <div className="flex flex-col lg:flex-row">
                         <Title
                           className={`${montserrat_heading.variable} flex-[1_1_50%] font-montserratHeading`}
-                          order={5}
+                          order={3}
                           w={'100%'}
                           ml={'md'}
                           style={{
@@ -421,7 +426,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                             href="https://n8n.io"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-[--dashboard-button] hover:text-[--dashboard-button-hover] ${montserrat_heading.variable} font-montserratHeading`}
+                            className={`text-[--dashboard-button] underline hover:text-[--dashboard-button-hover] ${montserrat_heading.variable} font-montserratHeading`}
                           >
                             n8n.io&apos;s{' '}
                             <IconExternalLink
@@ -586,7 +591,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                                   onboarding
                                 </List.Item>
                                 <Title
-                                  order={5}
+                                  order={3}
                                   className={`${montserrat_heading.variable} ps-5 text-center font-montserratHeading font-semibold`}
                                 >
                                   If your workflow is working as expected,
@@ -637,7 +642,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           Your n8n API Key
                         </Title>
                         <TextInput
-                          // label="n8n API Key"
+                          aria-label="n8n API Key"
                           type="password"
                           description="We use this to run your workflows. You can find your n8n API Key in your n8n account settings."
                           placeholder="Enter your n8n API Key here"
@@ -650,6 +655,9 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                               color: 'var(--foreground)',
                               backgroundColor: 'var(--background)',
                               margin: '1rem 0rem .1rem 0rem',
+                            },
+                            description: {
+                              color: '#4b5563',
                             },
                           }}
                           className={`${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -714,8 +722,9 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
             />
           </Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }

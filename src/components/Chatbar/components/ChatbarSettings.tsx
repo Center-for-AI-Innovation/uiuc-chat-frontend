@@ -39,6 +39,7 @@ export const ChatbarSettings = () => {
       ) : null}
 
       <SidebarButton
+        ariaLabel={t('Export history')}
         text={t('Export history')}
         icon={<IconFileExport size={18} />}
         onClick={() => handleExportData()}

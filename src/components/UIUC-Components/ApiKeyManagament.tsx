@@ -368,17 +368,27 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                   className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
                   p="md"
                   sx={{
-                    cursor: 'pointer',
                     transition: 'all 0.2s ease',
                   }}
-                  onClick={() => setInsightsOpen(!insightsOpen)}
                 >
                   <Flex
+                    role="button"
+                    tabIndex={0}
+                    aria-expanded={insightsOpen}
                     align="center"
                     justify="space-between"
                     sx={{
+                      cursor: 'pointer',
                       padding: '4px 8px',
                       borderRadius: '8px',
+                    }}
+                    className="focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
+                    onClick={() => setInsightsOpen(!insightsOpen)}
+                    onKeyDown={(e: React.KeyboardEvent) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setInsightsOpen(!insightsOpen)
+                      }
                     }}
                   >
                     <Flex align="center" gap="md">
@@ -440,7 +450,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         >
                           <List.Item>
                             <a
-                              className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                              className={`text-sm text-[--dashboard-button] underline transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
                               href="https://platform.openai.com/docs/api-reference/chat/create"
                               target="_blank"
                               rel="noopener noreferrer"
@@ -456,7 +466,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                           </List.Item>
                           <List.Item>
                             <a
-                              className={`text-sm text-[--dashboard-button] transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                              className={`text-sm text-[--dashboard-button] underline transition-colors duration-200 hover:text-[--dashboard-button-hover] ${montserrat_paragraph.variable} font-montserratParagraph`}
                               href="https://docs.uiuc.chat/api/endpoints"
                               target="_blank"
                               rel="noopener noreferrer"
@@ -474,7 +484,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         <Title
                           className={`label ${montserrat_paragraph.variable} inline-block select-text font-montserratParagraph`}
                           size="md"
-                          order={5}
+                          order={4}
                           style={{ marginTop: '1.5rem' }}
                         >
                           Notes:
@@ -552,17 +562,19 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
               {apiKey && (
                 <Input
                   value={apiKey}
+                  aria-label="Your API Key"
                   className={`${montserrat_paragraph.variable} mt-4 w-full font-montserratParagraph`}
                   radius={'md'}
                   size={'md'}
                   readOnly
                   rightSection={
                     <Button
+                      aria-label="Copy API Key"
                       onClick={() => handleCopyApiKey(apiKey)}
                       variant="subtle"
                       size="sm"
                       radius={'md'}
-                      className="min-w-[5rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
+                      className="min-w-[5rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
                     >
                       {copiedApiKey ? <IconCheck /> : <IconCopy />}
                     </Button>
@@ -594,7 +606,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 disabled={loading || apiKey !== null}
                 size="lg"
                 radius={'xl'}
-                className="min-w-[5rem] self-center rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
+                className="min-w-[5rem] self-center rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
                 // w={'60%'}
               >
                 Generate API Key
@@ -614,7 +626,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     disabled={loading || apiKey === null}
                     size="md"
                     radius={'xl'}
-                    className="min-w-[5rem] rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
+                    className="min-w-[5rem] rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
                     w={'auto'}
                   >
                     Rotate API Key
@@ -624,7 +636,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     disabled={loading || apiKey === null}
                     size="md"
                     radius={'xl'}
-                    className="min-w-[5rem] rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none"
+                    className="min-w-[5rem] rounded-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
                     w={'auto'}
                   >
                     Delete API Key

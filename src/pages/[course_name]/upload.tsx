@@ -8,7 +8,7 @@ import { useAuth } from 'react-oidc-context'
 import SettingsLayout, {
   getInitialCollapsedState,
 } from '~/components/Layout/SettingsLayout'
-import { AuthComponent } from '~/components/UIUC-Components/AuthToEditCourse'
+import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import { CannotEditCourse } from '~/components/UIUC-Components/CannotEditCourse'
 import { CannotEditGPT4Page } from '~/components/UIUC-Components/CannotEditGPT4'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -66,7 +66,7 @@ const CourseMain: NextPage = () => {
 
   if (!isSignedIn) {
     console.log('User not logged in', isSignedIn, isLoaded, projectName)
-    return <AuthComponent course_name={projectName as string} />
+    return <PermissionGate course_name={projectName as string} />
   }
 
   // Don't edit certain special pages (no context allowed)
@@ -85,14 +85,19 @@ const CourseMain: NextPage = () => {
       setSidebarCollapsed={setSidebarCollapsed}
     >
       <Head>
-        <title>{projectName}/upload</title>
+        <title>{projectName} — Materials — Illinois Chat</title>
         <meta
           name="UIUC.chat"
           content="The AI teaching assistant built for students at UIUC."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+      >
+        <h1 className="sr-only">{projectName} Materials</h1>
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex
             direction="column"
@@ -101,8 +106,9 @@ const CourseMain: NextPage = () => {
             className="mt-8 lg:mt-4"
           ></Flex>
         </div>
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </SettingsLayout>
   )
 }

@@ -28,27 +28,32 @@ export const ClearConversations: FC<Props> = ({ onClearConversations }) => {
       </div>
 
       <div className="flex w-[40px]">
-        <IconCheck
-          className="ml-auto mr-1 min-w-[20px] text-neutral-400 hover:text-neutral-100"
-          size={18}
+        <button
+          className="ml-auto mr-1 border-none bg-transparent p-0 text-neutral-400 hover:text-neutral-100"
+          aria-label="Confirm clear conversations"
           onClick={(e) => {
             e.stopPropagation()
             handleClearConversations()
           }}
-        />
+        >
+          <IconCheck size={18} />
+        </button>
 
-        <IconX
-          className="ml-auto min-w-[20px] text-neutral-400 hover:text-neutral-100"
-          size={18}
+        <button
+          className="ml-auto border-none bg-transparent p-0 text-neutral-400 hover:text-neutral-100"
+          aria-label="Cancel"
           onClick={(e) => {
             e.stopPropagation()
             setIsConfirming(false)
           }}
-        />
+        >
+          <IconX size={18} />
+        </button>
       </div>
     </div>
   ) : (
     <SidebarButton
+      ariaLabel={t('Clear conversations')}
       text={t('Clear conversations')}
       icon={<IconTrash size={18} />}
       onClick={() => setIsConfirming(true)}

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import router from 'next/router'
-import { createProject } from '~/pages/api/UIUC-api/createProject'
+import { createProject } from '~/utils/apiUtils'
 import Navbar from './navbars/Navbar'
 
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
@@ -97,17 +97,20 @@ const Dashboard = ({
     <>
       <Navbar isPlain={false} />
       <Head>
-        <title>{project_name}</title>
+        <title>Explore — Illinois Chat</title>
         <meta name="description" content="My projects on UIUC.chat." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main
+        id="main-content"
+        tabIndex={-1}
         className="course-page-main mt-20"
         style={{
           minHeight: '100vh',
           padding: '1rem',
         }}
       >
+        <h1 className="sr-only">Explore Chatbots</h1>
         <Card
           withBorder
           padding="none"
@@ -128,9 +131,9 @@ const Dashboard = ({
             </div>
           </div>
         </Card>
-
-        <GlobalFooter />
       </main>
+
+      <GlobalFooter />
     </>
   )
 }

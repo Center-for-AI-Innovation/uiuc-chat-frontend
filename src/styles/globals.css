@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * WCAG 2.4.7 – Focus Visible (Level AA)
+ * Ensure all interactive elements show a visible focus indicator on keyboard
+ * navigation. Uses :focus-visible so mouse clicks do not trigger the ring.
+ * !important overrides component-level focus:outline-none / focus:ring-0.
+ */
+*:focus-visible {
+  outline: 2px solid var(--illinois-orange) !important;
+  outline-offset: 2px !important;
+}
+
+/* Skip navigation link for keyboard/screen reader users */
+.skip-nav-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background-color: var(--illinois-orange);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-nav-link:focus {
+  top: 0;
+}
+
+/* WCAG 1.4.10 Reflow — ensure modals and popups remain accessible at all zoom levels */
+.mantine-Modal-content,
+.mantine-Modal-body {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.mantine-Modal-inner {
+  padding: 1rem;
+}
+
 /* .grid-container {
   display: inline-grid;
   gap: 20rem 0rem;
@@ -10,11 +51,12 @@
 
 :root {
   /* Primary Colors */
-  --illinois-orange: #ff5f05;
+  --illinois-orange: #ff5f05; /* will override below to be accessible orange, left here for reference */
+  --illinois-orange-branding: #ff5f05; /* official logo color for branding ONLY - used for illinois chat logo / branding to match I logo */
   --illinois-blue: #13294b;
 
   /* Secondary Colors (Storm) */
-  --illinois-storm-dark: #707372;
+  --illinois-storm-dark: #636563;
   --illinois-storm-medium: #9c9a9d;
   --illinois-storm-light: #c8c6c7;
   --illinois-white: #ffffff;
@@ -32,6 +74,9 @@
   /* Accessibility Colors */
   --illinois-altgeld: #c84113;
 
+  /* change illinois-orange to accessibility orange */
+  --illinois-orange: var(--illinois-altgeld);
+
   /* Background Colors */
   --illinois-storm-95: #f4f4f4;
   --illinois-storm-10: #252525;
@@ -48,7 +93,11 @@
 
   /* Gradients */
   --illinois-blue-gradient: linear-gradient(135deg, #1d58a7, #13294b);
-  --illinois-orange-gradient: linear-gradient(-135deg, #fcb316, #ff5f05);
+  --illinois-orange-gradient: linear-gradient(
+    -135deg,
+    #b57f0e,
+    var(--illinois-orange)
+  );
 
   /* Scrollbar Colors */
   --illinois-scrollbar-track: transparent;
@@ -71,7 +120,12 @@
   --foreground-faded: color-mix(
     in srgb,
     var(--foreground),
-    var(--background) 50%
+    var(--background) 25%
+  );
+  --foreground-subtle: color-mix(
+    in srgb,
+    var(--foreground),
+    var(--background) 15%
   );
 
   --background-dark: color-mix(in srgb, var(--background), black 25%);
@@ -98,7 +152,7 @@
 
   --border: var(--illinois-storm-light);
   --input: var(--illinois-storm-light);
-  
+
   /* Font Variables */
   --font-montserrat-heading: 'Montserrat', sans-serif;
   --ring: var(--illinois-blue);
@@ -329,6 +383,15 @@
   animation: icon_scrolling 20s linear 0s infinite;
 }
 
+/* Global focus-visible styles for keyboard accessibility */
+*:focus-visible {
+  outline: 3px solid var(--illinois-orange);
+  outline-offset: 2px;
+}
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* use existing formulas dark/light as described above as much as possible and only change the primary colors as needed */
 .dark {
   --foreground: var(--illinois-white);
@@ -359,6 +422,11 @@
 ::selection {
   color: var(--background);
   background-color: var(--foreground);
+}
+
+.chat-input::selection {
+  color: #ffffff;
+  background-color: #3a7bd5;
 }
 
 /* Scrollbar Styles - Clean gray theme with hover effects */
@@ -544,12 +612,10 @@ li {
 /* 👇 FOR EmailChips.tsx -- to make nice email input fields. 👇 */
 .input:focus {
   border-color: cornflowerblue;
-  outline: none;
 }
 
 .input.has-error {
   border-color: tomato;
-  outline: none;
 }
 
 .error {
@@ -930,7 +996,11 @@ a[data-footnote-backref] {
   background: 'white' !important;
 }
 
-.codeBlock pre:has(> code) {
+:root:not(.dark) .codeBlock pre:has(> code) {
+  background-color: transparent !important;
+}
+
+.dark .codeBlock pre:has(> code) {
   background-color: var(--dashboard-background-dark) !important;
 }
 
@@ -992,7 +1062,7 @@ button.css-s37qmw {
 }
 
 .think-tag-header {
-  @apply flex cursor-pointer items-center justify-between p-4 text-gray-700 transition-colors duration-200 hover:bg-[--dashboard-button];
+  @apply flex cursor-pointer items-center justify-between p-4 text-gray-700 transition-colors duration-200 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800;
   border-radius: 0.5rem;
 }
 
@@ -1094,10 +1164,9 @@ button.css-s37qmw {
   background-color: transparent;
 }
 
-/* Remove hover background effect on the content area */
+/* Keep content area background neutral on hover */
 .think-tag-content.expanded:hover {
-  @apply bg-[--dashboard-button] text-[--dashboard-button-foreground];
-  /* Match the default background instead of transparent */
+  @apply bg-white/80 dark:bg-black/20;
 }
 
 /* Add subtle highlight to the container on hover instead */
@@ -1160,6 +1229,17 @@ button.css-s37qmw {
   pointer-events: all !important;
   user-select: all !important;
   -webkit-user-drag: element;
+}
+
+/* Ensure non-citation links have underline (not color-only indication) */
+.linkMarkDown a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.linkMarkDown a:hover,
+.linkMarkDown a:focus {
+  text-decoration-thickness: 2px;
 }
 
 .linkMarkDown a:active,
@@ -1300,7 +1380,9 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   background-color: var(--modal);
   color: var(--modal-text);
   border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .modal-header-common {
@@ -1442,4 +1524,141 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   color: var(--foreground);
   margin: 0;
   line-height: 1.5;
+}
+
+@layer base {
+  :root {
+    /* HSL versions for Tailwind - WARNING: These override the hex values above */
+    /* Existing components using var(--background) etc. will break if they expect hex values */
+    /* Consider migrating to Tailwind classes or using separate HSL variable names */
+    /* Illinois Blue (#13294b) -> hsl(214, 58%, 19%) */
+    --foreground: 214 58% 19%;
+    /* Illinois White (#ffffff) -> hsl(0, 0%, 100%) */
+    --background: 0 0% 100%;
+    /* Illinois Orange (#ff5f05) -> hsl(18, 100%, 51%) */
+    --primary: 18 100% 51%;
+    --primary-foreground: 0 0% 100%;
+    /* Using foreground for secondary */
+    --secondary: 214 58% 19%;
+    --secondary-foreground: 0 0% 100%;
+    /* Illinois Berry (#5c0e41) -> hsl(323, 75%, 21%) */
+    --destructive: 323 75% 21%;
+    --destructive-foreground: 0 0% 100%;
+    /* Illinois Storm 95 (#f4f4f4) -> hsl(0, 0%, 96%) */
+    --muted: 0 0% 96%;
+    /* Illinois Storm Dark (#707372) -> hsl(150, 1%, 44%) */
+    --muted-foreground: 150 1% 44%;
+    /* Illinois Industrial (#1d58a7) -> hsl(214, 71%, 37%) */
+    --accent: 214 71% 37%;
+    --accent-foreground: 0 0% 100%;
+    /* Illinois Storm Light (#c8c6c7) -> hsl(300, 2%, 78%) */
+    --border: 300 2% 78%;
+    --input: 300 2% 78%;
+    /* Illinois Blue (#13294b) -> hsl(214, 58%, 19%) */
+    --ring: 214 58% 19%;
+    --ring-offset-background: 0 0% 100%;
+
+    /* Card colors - typically same as background */
+    --card: 0 0% 100%;
+    --card-foreground: 214 58% 19%;
+
+    /* Popover colors - typically same as card */
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 58% 19%;
+
+    /* Sidebar colors */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .dark {
+    /* Dark mode HSL values */
+    /* Illinois White -> hsl(0, 0%, 100%) */
+    --foreground: 0 0% 100%;
+    /* Illinois Blue -> hsl(214, 58%, 19%) */
+    --background: 214 58% 19%;
+    /* Illinois Orange -> hsl(18, 100%, 51%) */
+    --primary: 18 100% 51%;
+    --primary-foreground: 214 58% 19%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 214 58% 19%;
+    --destructive: 323 75% 21%;
+    --destructive-foreground: 0 0% 100%;
+    --muted: 214 58% 25%;
+    --muted-foreground: 0 0% 96%;
+    --accent: 214 71% 37%;
+    --accent-foreground: 0 0% 100%;
+    --border: 214 58% 30%;
+    --input: 214 58% 30%;
+    --ring: 214 58% 19%;
+    --ring-offset-background: 214 58% 19%;
+
+    /* Card colors - dark mode */
+    --card: 214 58% 19%;
+    --card-foreground: 0 0% 100%;
+
+    /* Popover colors - dark mode */
+    --popover: 214 58% 19%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Sidebar dark mode */
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.agent-thinking-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.agent-thinking-dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 9999px;
+  background-color: currentColor;
+  opacity: 0.2;
+  animation: agent-thinking-dot 1.2s infinite ease-in-out both;
+}
+
+.agent-thinking-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.agent-thinking-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes agent-thinking-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

@@ -174,7 +174,9 @@ export const UploadCard = memo(function UploadCard({
                 <Text className="text-[--foreground]">/</Text>
                 <Title
                   order={3}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
+                  className={`${
+                    montserrat_heading.variable
+                  } min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
                     projectName.length > 40
                       ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
                       : ''
@@ -189,15 +191,15 @@ export const UploadCard = memo(function UploadCard({
                   variant="subtle"
                   size="xs"
                   onClick={() => setIsShareModalOpen(true)}
-                  className={`relative transform rounded-3xl bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none
+                  className={`relative transform rounded-3xl bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]
                     ${montserrat_paragraph.variable} min-h-[2rem]
                     px-2 font-montserratParagraph
                     text-sm sm:min-h-[2.5rem]
                     sm:px-4 sm:text-base
                   `}
                 >
-                  <span className="hidden sm:inline">Share Chatbot</span>
-                  <span className="inline sm:hidden">Share</span>
+                  <span className="hidden sm:inline">Sharing and Access</span>
+                  <span className="inline sm:hidden">Access</span>
                   <IconShare size={12} className="ml-1 inline sm:hidden" />
                   <IconShare size={20} className="ml-2 hidden sm:inline" />
                 </Button>
@@ -281,6 +283,7 @@ export const UploadCard = memo(function UploadCard({
               </Title>
               <Textarea
                 placeholder="Describe your project, goals, expected impact etc..."
+                aria-label="Project Description"
                 radius={'sm'}
                 value={projectDescription}
                 onChange={(e) => setProjectDescription(e.target.value)}
@@ -297,6 +300,7 @@ export const UploadCard = memo(function UploadCard({
                 className={`${montserrat_paragraph.variable} font-montserratParagraph`}
               />
               <Button
+                tabIndex={0}
                 className="mt-3 w-24 self-end bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
                 onClick={async () => {
                   if (metadata) {
@@ -328,6 +332,7 @@ export const UploadCard = memo(function UploadCard({
 
               <div className="form-control relative">
                 <label
+                  htmlFor="greeting-textarea"
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   <span className="label-text-unused text-lg">
@@ -341,6 +346,7 @@ export const UploadCard = memo(function UploadCard({
                   Shown before users send their first chat.
                 </Text>
                 <Textarea
+                  id="greeting-textarea"
                   autosize
                   minRows={2}
                   maxRows={4}
@@ -361,6 +367,7 @@ export const UploadCard = memo(function UploadCard({
                 {isIntroMessageUpdated && (
                   <>
                     <Button
+                      tabIndex={0}
                       className="relative m-1 w-[30%] self-end bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
                       type="submit"
                       onClick={async () => {
@@ -387,13 +394,13 @@ export const UploadCard = memo(function UploadCard({
                   </>
                 )}
               </div>
-              <label
+              <p
                 className={`label !mt-8 ${montserrat_heading.variable} pt-0 font-montserratHeading`}
               >
                 <span className="label-text-unused text-lg">
                   Set example questions
                 </span>
-              </label>
+              </p>
               <Text
                 className={`label !mt-0 ${montserrat_light.className} pb-0`}
                 mb={-3}
@@ -407,6 +414,7 @@ export const UploadCard = memo(function UploadCard({
               />
               <div className="form-control">
                 <label
+                  htmlFor="upload-logo-input"
                   className={`label ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   <span className="label-text-unused text-lg">
@@ -420,8 +428,10 @@ export const UploadCard = memo(function UploadCard({
                   This logo will appear in the header of the chat page.
                 </Text>
                 <input
+                  id="upload-logo-input"
+                  tabIndex={0}
                   type="file"
-                  className={`file-input-bordered file-input w-full cursor-pointer border-[--foreground] bg-[--background] text-sm text-[--foreground] shadow-inner hover:border-[--dashboard-button] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] ${montserrat_paragraph.variable} font-montserratParagraph`}
+                  className={`file-input file-input-bordered w-full cursor-pointer border-2 border-[--foreground] bg-[--background] text-sm text-[--foreground] shadow-inner hover:border-[--dashboard-button] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] focus:border-[--dashboard-button] ${montserrat_paragraph.variable} font-montserratParagraph`}
                   onChange={async (e) => {
                     // Assuming the file is converted to a URL somewhere else
                     if (e.target.files?.length) {

@@ -20,16 +20,25 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
 }) => {
   const [isContainerHovered, setIsContainerHovered] = useState(false)
 
-  const handleToggle = (event: React.MouseEvent) => {
+  const handleContainerClick = (event: React.MouseEvent) => {
     if (disabled) return
-    // Prevent the event from bubbling up to avoid double triggers
-    event.preventDefault()
+    // Only toggle if clicking the container (not the switch itself)
+    const target = event.target as HTMLElement
+    if (target.closest('input[type="checkbox"]') || target.tagName === 'INPUT')
+      return
     onChange(!checked)
+  }
+
+  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return
+    onChange(event.currentTarget.checked)
   }
 
   return (
     <div
-      className={`flex items-center rounded-lg p-2 transition-all duration-200 ease-in-out ${disabled ? 'opacity-60' : 'cursor-pointer'}`}
+      className={`flex items-center rounded-lg p-2 transition-all duration-200 ease-in-out ${
+        disabled ? 'opacity-60' : 'cursor-pointer'
+      }`}
       style={{
         backgroundColor:
           !disabled && isContainerHovered
@@ -38,20 +47,27 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
       }}
       onMouseEnter={() => !disabled && setIsContainerHovered(true)}
       onMouseLeave={() => !disabled && setIsContainerHovered(false)}
-      onClick={handleToggle}
+      onClick={handleContainerClick}
     >
       <Switch
+        aria-label={label}
         checked={checked}
-        onClick={handleToggle}
+        onChange={handleSwitchChange}
         size="lg"
         onLabel="ON"
         offLabel="OFF"
         disabled={disabled}
         classNames={{
           root: `flex items-center ${disabled ? '' : 'cursor-pointer'}`,
-          track: `bg-gray-700 ${disabled ? '' : 'hover:bg-gray-600 cursor-pointer'}`,
+          track: `bg-gray-700 ${
+            disabled ? '' : 'hover:bg-gray-600 cursor-pointer'
+          }`,
           thumb: `bg-white ${disabled ? '' : 'cursor-pointer'}`,
-          label: `ml-2 ${montserrat_paragraph.variable} font-montserratParagraph text-md ${disabled ? '' : 'cursor-pointer'}`,
+          label: `ml-2 ${
+            montserrat_paragraph.variable
+          } font-montserratParagraph text-md ${
+            disabled ? '' : 'cursor-pointer'
+          }`,
         }}
         thumbIcon={
           checked ? (
@@ -70,12 +86,6 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           },
           input: {
             cursor: disabled ? 'not-allowed' : 'pointer',
-            '&:focus': {
-              outline: 'none',
-            },
-            '&:focus + *': {
-              boxShadow: 'none',
-            },
           },
           track: {
             backgroundColor: checked
@@ -97,7 +107,9 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
         }}
       />
       <span
-        className={`${montserrat_paragraph.variable} text-md ml-3 flex items-center font-montserratParagraph transition-colors duration-200 ease-in-out ${
+        className={`${
+          montserrat_paragraph.variable
+        } text-md ml-3 flex items-center font-montserratParagraph transition-colors duration-200 ease-in-out ${
           !disabled && isContainerHovered
             ? 'text-[--dashboard-foreground]'
             : 'text-[--dashboard-foreground]'

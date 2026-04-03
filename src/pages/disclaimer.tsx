@@ -1,16 +1,25 @@
 import { Group } from '@mantine/core'
 import { IconExternalLink } from '@tabler/icons-react'
 import { type NextPage } from 'next'
+import Head from 'next/head'
 import Link from 'next/link'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import GlobalFooter from '~/components/UIUC-Components/GlobalFooter'
 
 const DisclaimerPage: NextPage = () => {
   return (
-    <MainPageBackground>
-      <p style={{ whiteSpace: 'pre-line' }}>{disclaimer_string}</p>
+    <>
+      <Head>
+        <title>Disclaimer — Illinois Chat</title>
+      </Head>
+      <MainPageBackground>
+        <p style={{ whiteSpace: 'pre-line' }} className="text-[--foreground]">
+          {disclaimer_string}
+        </p>
+      </MainPageBackground>
+
       <GlobalFooter />
-    </MainPageBackground>
+    </>
   )
 }
 

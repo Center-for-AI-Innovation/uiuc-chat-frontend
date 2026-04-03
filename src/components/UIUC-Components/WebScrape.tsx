@@ -42,15 +42,6 @@ interface WebScrapeProps {
   current_user_email: string
 }
 
-const shouldShowFields = (inputUrl: string) => {
-  return !(
-    inputUrl.includes('coursera.org') ||
-    inputUrl.includes('ocw.mit.edu') ||
-    inputUrl.includes('github.com') ||
-    inputUrl.includes('canvas.illinois.edu')
-  )
-}
-
 const validateUrl = (url: string) => {
   const courseraRegex = /^https?:\/\/(www\.)?coursera\.org\/learn\/.+/
   const mitRegex = /^https?:\/\/ocw\.mit\.edu\/.+/
@@ -92,14 +83,6 @@ export const WebScrape = ({
     'discussions',
   ])
 
-  const handleCanvasOptionChange = (value: string) => {
-    if (selectedCanvasOptions.includes(value)) {
-      setSelectedCanvasOptions((prev) => prev.filter((item) => item !== value))
-    } else {
-      setSelectedCanvasOptions((prev) => [...prev, value])
-    }
-  }
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     variable: string,
@@ -133,6 +116,8 @@ export const WebScrape = ({
           guidedLearning: undefined,
           systemPromptOnly: undefined,
           vector_search_rewrite_disabled: undefined,
+          allow_logged_in_users: undefined,
+          is_frozen: undefined,
         })
         if (!response) {
           throw new Error('Error while setting course metadata')
@@ -320,6 +305,7 @@ export const WebScrape = ({
         withBorder: true,
         loading: false,
       })
+      throw error
     }
   }
 
@@ -372,6 +358,7 @@ export const WebScrape = ({
         <>
           <Input
             icon={icon}
+            aria-label="Enter URL to scrape"
             // I can't figure out how to change the background colors.
             className={`mt-4 w-[80%] min-w-[20rem] disabled:bg-[--background-faded] lg:w-[75%]`}
             // wrapperProps={{ borderRadius: 'xl' }}
@@ -453,7 +440,7 @@ export const WebScrape = ({
                   isUrlUpdated
                     ? 'text-[--dashboard-button-foreground]'
                     : 'text-[--dashboard-button-foreground]'
-                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none`}
+                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
@@ -486,6 +473,7 @@ export const WebScrape = ({
           <Input
             //! THIS BOX IS DUPLICATED (from above). KEEP BOTH IN SYNC. For Loading states.
             icon={icon}
+            aria-label="Enter URL to scrape"
             // I can't figure out how to change the background colors.
             className={`mt-4 w-[80%] min-w-[20rem] disabled:bg-[--background-faded] lg:w-[75%]`}
             // wrapperProps={{ borderRadius: 'xl' }}
@@ -567,7 +555,7 @@ export const WebScrape = ({
                   isUrlUpdated
                     ? 'text-[--dashboard-button-foreground]'
                     : 'text-[--dashboard-button-foreground]'
-                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus:shadow-none focus:outline-none`}
+                } min-w-[5rem] -translate-x-1 transform hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]`}
                 w={`${isSmallScreen ? 'auto' : 'auto'}`}
                 disabled={isDisabled}
               >
@@ -606,6 +594,7 @@ export const WebScrape = ({
                   <TextInput
                     styles={{ input: { backgroundColor: '#1A1B1E' } }}
                     name="maximumUrls"
+                    aria-label="Max URLs (1 to 500)"
                     radius="md"
                     placeholder="Default 50"
                     value={maxUrls}

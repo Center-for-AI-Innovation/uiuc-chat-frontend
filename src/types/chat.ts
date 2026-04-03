@@ -1,7 +1,7 @@
 import {
   type AllLLMProviders,
   type AnySupportedModel,
-} from '../utils/modelProviders/LLMProvider'
+} from '@/utils/modelProviders/LLMProvider'
 import { type CourseMetadata } from './courseMetadata'
 import { type N8NParameter } from './tools'
 
@@ -23,6 +23,7 @@ export interface Conversation {
   projectName?: string
   createdAt?: string
   updatedAt?: string
+  agentModeEnabled?: boolean
   linkParameters?: {
     guidedLearning: boolean
     documentsOnly: boolean
@@ -33,24 +34,92 @@ export interface Conversation {
 export interface Message {
   id: string
   role: Role
+
+  // content is a list of array for
+  // - text content: input by user through textarea
+  // - file content:
+  //   - file metadata for non-image file
+  //   - image URL for image file
   content: string | Content[]
+
+  // contexts are for non-image file,
+  // returned from fileUploadContexts endpoint per uploaded non-image file
+  // enhanced query then updates contexts using context search service
   contexts?: ContextWithMetadata[]
+
   tools?: UIUCTool[]
   latestSystemMessage?: string
   finalPromtEngineeredMessage?: string // after all prompt enginering, to generate final response.
   responseTimeSec?: number
+  imageDescription?: string
+  imageUrls?: string[]
   conversation_id?: string
   created_at?: string
   updated_at?: string
   feedback?: MessageFeedback
   wasQueryRewritten?: boolean
   queryRewriteText?: string
+  agentStepNumber?: number // Track which agent iteration this message belongs to
+  agentEvents?: AgentEvent[]
+}
+
+export interface ConversationMeta {
+  id: string
+  name: string
+  modelId: string
+  prompt: string
+  temperature: number
+  projectName?: string
+  folderId: string | null
+  userEmail?: string | null
+  agentModeEnabled?: boolean
+}
+
+export interface SaveConversationDelta {
+  conversation: ConversationMeta
+  messagesDelta: Message[]
+  earliestEditedMessageId?: string
 }
 
 export type MessageFeedback = {
   isPositive: boolean | null
   category: string | null
   details: string | null
+}
+
+export type AgentEventStatus = 'pending' | 'running' | 'done' | 'error'
+
+export type AgentEventType =
+  | 'initializing'
+  | 'action_selection'
+  | 'retrieval'
+  | 'tool'
+  | 'final_response'
+
+export interface AgentEventMetadata {
+  toolName?: string
+  readableToolName?: string
+  arguments?: Record<string, unknown>
+  outputText?: string
+  outputData?: Record<string, unknown>
+  outputImageUrls?: string[]
+  contextQuery?: string
+  contextsRetrieved?: number
+  selectedToolNames?: string[]
+  info?: string
+  errorMessage?: string
+}
+
+export interface AgentEvent {
+  id: string
+  stepNumber: number
+  type: AgentEventType
+  status: AgentEventStatus
+  title: string
+  description?: string
+  createdAt: string
+  updatedAt?: string
+  metadata?: AgentEventMetadata
 }
 
 export interface UIUCTool {
@@ -102,6 +171,7 @@ export interface OpenAIChatMessage {
   content: Content[]
 }
 
+// BG: used in citations - context created from context search service
 export interface ContextWithMetadata {
   id: number
   text: string

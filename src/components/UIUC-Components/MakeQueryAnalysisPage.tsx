@@ -50,7 +50,6 @@ import ModelUsageChart from './ModelUsageChart'
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
     fontFamily: 'var(--font-montserratHeading)',
-    outline: 'none',
     color: 'var(--dashboard-button-foreground)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -428,7 +427,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         setSidebarCollapsed={setSidebarCollapsed}
       >
         <Head>
-          <title>{course_name}</title>
+          <title>{course_name} — Analytics — Illinois Chat</title>
           <meta
             name="description"
             content="The AI teaching assistant built for students at UIUC."
@@ -436,7 +435,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           <link rel="icon" href="/favicon.ico" />
           {/* <Header /> */}
         </Head>
-        <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+        >
+          <h1 className="sr-only">{course_name} Analytics</h1>
           <div className="items-left flex w-full flex-col justify-center py-0">
             <Flex direction="column" align="center" w="100%">
               <div className="pt-5"></div>
@@ -900,6 +904,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         <Select
                           size="sm"
                           w={200}
+                          aria-label="Date range filter"
                           value={dateRangeType}
                           onChange={(value) => {
                             setDateRangeType(value || 'all')
@@ -957,6 +962,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             type="range"
                             size="sm"
                             w={200}
+                            aria-label="Custom date range picker"
                             value={dateRange}
                             onChange={setDateRange}
                             // TODO fix me type error complaining placeholder doesn't exist for mantine/date v6
@@ -1083,6 +1089,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           </div>
                           <Select
                             value={view}
+                            aria-label="View by hour or day"
                             onChange={(value) => setView(value || 'hour')}
                             data={[
                               { value: 'hour', label: 'By Hour' },
@@ -1165,8 +1172,9 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           </div>
 
           {/*<NomicDocumentMap course_name={course_name as string} />*/}
-          <GlobalFooter />
         </main>
+
+        <GlobalFooter />
       </SettingsLayout>
     </>
   )

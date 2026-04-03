@@ -1,6 +1,5 @@
 import {
   Burger,
-  Container,
   createStyles,
   Flex,
   Paper,
@@ -136,7 +135,7 @@ const useStyles = createStyles((theme) => ({
     zIndex: 2,
     border: '1px solid var(--navbar-border)',
     borderRadius: '10px',
-    overflow: 'hidden',
+    overflow: 'visible',
     width: 'calc(100% - 1rem)',
     maxWidth: '330px',
     backgroundColor: 'var(--background-faded)',
@@ -194,9 +193,9 @@ const styles = {
 function Logo() {
   return (
     <div className="flex-1">
-      <Link href="/">
+      <Link href="/" tabIndex={0} aria-label="Home Page">
         <div
-          className={`ms-4 flex items-center gap-1 font-bold ${montserrat_heading.variable} font-montserratHeading`}
+          className={`ms-4 flex items-center gap-0 font-bold ${montserrat_heading.variable} font-montserratHeading`}
         >
           <div style={{ width: '2.5rem', height: '2.5rem' }}>
             <img
@@ -206,12 +205,9 @@ function Logo() {
               alt="Illinois Logo"
             />
           </div>
-          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange] sm:ml-2 sm:text-[1.8rem]">
-            Illinois
-          </div>
-          <br />
-          <div className="text-2xl font-extrabold tracking-tight text-[--foreground] sm:text-[1.8rem]">
-            Chat
+
+          <div className="text-2xl font-extrabold tracking-tight text-[--illinois-orange-branding] sm:ml-2 sm:text-[1.8rem]">
+            Illinois <span className="text-[--foreground]">Chat</span>
           </div>
         </div>
       </Link>
@@ -219,7 +215,14 @@ function Logo() {
   )
 }
 
-function BannerImage({ url }: { url: string }) {
+function BannerImage({
+  url,
+  courseName,
+}: {
+  url: string
+  courseName?: string
+}) {
+  const altText = courseName ? `${courseName} logo` : 'Course chatbot logo'
   return (
     <div style={styles.logoContainerBox}>
       <Image
@@ -227,8 +230,8 @@ function BannerImage({ url }: { url: string }) {
         style={styles.thumbnailImage}
         width={2000}
         height={2000}
-        alt="Course chatbot logo"
-        aria-label="The course creator uploaded a logo for this chatbot."
+        alt={altText}
+        aria-label={altText}
         onError={(e) => (e.currentTarget.style.display = 'none')}
       />
     </div>
@@ -266,9 +269,15 @@ function NavigationContent({
     <>
       <Transition transition="pop-top-right" duration={200} mounted={opened}>
         {(styles) => (
-          <Paper className={classes.dropdown} style={styles}>
+          <Paper
+            component="nav"
+            className={classes.dropdown}
+            style={styles}
+            aria-label="Mobile navigation"
+          >
             {items.map((item, index) => (
               <Link
+                tabIndex={0}
                 key={index}
                 href={item.link}
                 onClick={() => onLinkClick()}
@@ -283,10 +292,15 @@ function NavigationContent({
         )}
       </Transition>
 
-      <Container className={classes.inner} style={{ paddingLeft: '0px' }}>
+      <nav
+        className={classes.inner}
+        style={{ paddingLeft: '0px' }}
+        aria-label="Main navigation"
+      >
         <div className={classes.links}>
           {items.map((item, index) => (
             <Link
+              tabIndex={0}
               key={index}
               href={item.link}
               onClick={() => onLinkClick()}
@@ -298,9 +312,12 @@ function NavigationContent({
             </Link>
           ))}
         </div>
-      </Container>
+      </nav>
 
       <Burger
+        tabIndex={0}
+        aria-label="Toggle Menu"
+        aria-expanded={opened}
         opened={opened}
         onClick={onToggle}
         className={classes.burger}
@@ -373,11 +390,12 @@ export default function Navbar({
   ]
 
   return (
-    <div className="fixed left-0 right-0 top-0 z-[999] bg-[--navbar-background]">
+    <div className="fixed left-0 right-0 top-0 z-[50] bg-[--navbar-background]">
+      {/* TODO: determine z-index values for major elements (nav, modals, tooltips, etc). for now, changed z-[999] to z-[50] to avoid modals being under the top navigation */}
       {/***************** top navigation for all pages *****************/}
 
       <Flex direction="row" align="center" justify="center">
-        <div className="navbar h-20 w-full border-b border-[--navbar-border] bg-[--navbar-background]">
+        <header className="navbar h-20 w-full border-b border-[--navbar-border] bg-[--navbar-background]">
           <Logo />
 
           {/* TODO determine where to show the uploaded banner logo image (assume on the chat sidebar above or replace the project name?)
@@ -426,7 +444,7 @@ export default function Navbar({
               <GlobalHeader isNavbar={true} />
             </div>
           </div>
-        </div>
+        </header>
       </Flex>
     </div>
   )

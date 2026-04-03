@@ -3,7 +3,7 @@
 import {
   type LLMProvider,
   type ProviderNames,
-} from '../utils/modelProviders/LLMProvider'
+} from '@/utils/modelProviders/LLMProvider'
 
 // courseMetadata.ts
 export interface CourseMetadata {
@@ -22,7 +22,9 @@ export interface CourseMetadata {
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
+  agent_mode_enabled?: boolean
   allow_logged_in_users: boolean | undefined
+  is_frozen: boolean | undefined
 }
 
 export type ProjectWideLLMProviders = {
@@ -49,4 +51,7 @@ export interface CourseMetadataOptionalForUpsert {
   guidedLearning: boolean | undefined
   systemPromptOnly: boolean | undefined
   vector_search_rewrite_disabled: boolean | undefined
+  agent_mode_enabled?: boolean
+  allow_logged_in_users: boolean | undefined
+  is_frozen: boolean | undefined
 }

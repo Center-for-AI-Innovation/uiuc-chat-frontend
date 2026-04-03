@@ -15,7 +15,9 @@ let kcAdminClient: KcAdminClient | null = null
 /**
  * Initialize Keycloak Admin Client
  */
-export async function initializeKeycloakAdmin(keycloakBaseUrl: string): Promise<KcAdminClient> {
+export async function initializeKeycloakAdmin(
+  keycloakBaseUrl: string,
+): Promise<KcAdminClient> {
   if (kcAdminClient) {
     return kcAdminClient
   }
@@ -40,7 +42,11 @@ export async function initializeKeycloakAdmin(keycloakBaseUrl: string): Promise<
 /**
  * Get signing key from Keycloak's JWKS endpoint
  */
-export function getSigningKey(keycloakBaseUrl: string, header: any, callback: any) {
+export function getSigningKey(
+  keycloakBaseUrl: string,
+  header: any,
+  callback: any,
+) {
   // JWKS client for fetching public keys
   const jwksClientInstance = jwksClient({
     jwksUri: `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`,
@@ -64,7 +70,9 @@ export function getSigningKey(keycloakBaseUrl: string, header: any, callback: an
  * Fetch realm public key directly from Keycloak Admin API
  * Note: This requires admin access and may not be available in all Keycloak versions
  */
-export async function fetchRealmPublicKey(keycloakBaseUrl:string): Promise<string | null> {
+export async function fetchRealmPublicKey(
+  keycloakBaseUrl: string,
+): Promise<string | null> {
   try {
     // Try to get the public key from the JWKS endpoint instead
     const jwksResponse = await fetch(getJwksUri(keycloakBaseUrl))
@@ -119,7 +127,7 @@ export async function getOpenIdConfig(keycloakBaseUrl: string): Promise<any> {
  * Verify token using JWKS (recommended approach)
  */
 export function createTokenVerifier(keycloakBaseUrl?: string) {
-  if (!keycloakBaseUrl) throw new Error('keycloakBaseUrl is required');
+  if (!keycloakBaseUrl) throw new Error('keycloakBaseUrl is required')
 
   return {
     // Bind baseUrl so signature becomes (header, callback)
@@ -134,7 +142,10 @@ export function createTokenVerifier(keycloakBaseUrl?: string) {
 /**
  * Async wrapper for JWT verification
  */
-export function verifyTokenAsync(token: string, keycloakBaseUrl: string): Promise<any> {
+export function verifyTokenAsync(
+  token: string,
+  keycloakBaseUrl: string,
+): Promise<any> {
   return new Promise((resolve, reject) => {
     const verifier = createTokenVerifier(keycloakBaseUrl)
     jwt.verify(
@@ -155,7 +166,10 @@ export function verifyTokenAsync(token: string, keycloakBaseUrl: string): Promis
 /**
  * Get user information from Keycloak Admin API
  */
-export async function getUserInfo(keycloakBaseUrl: string, userId: string): Promise<any> {
+export async function getUserInfo(
+  keycloakBaseUrl: string,
+  userId: string,
+): Promise<any> {
   try {
     const adminClient = await initializeKeycloakAdmin(keycloakBaseUrl)
     const user = await adminClient.users.findOne({ id: userId })
@@ -169,7 +183,10 @@ export async function getUserInfo(keycloakBaseUrl: string, userId: string): Prom
 /**
  * Get user roles from Keycloak Admin API
  */
-export async function getUserRoles(keycloakBaseUrl: string, userId: string): Promise<any> {
+export async function getUserRoles(
+  keycloakBaseUrl: string,
+  userId: string,
+): Promise<any> {
   try {
     const adminClient = await initializeKeycloakAdmin(keycloakBaseUrl)
     const roles = await adminClient.users.listRoleMappings({ id: userId })
