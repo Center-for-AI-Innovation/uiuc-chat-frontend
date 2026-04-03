@@ -39,14 +39,25 @@ export function ModelToggles({
                       size="0.8rem"
                       color="var(--dashboard-button)"
                       stroke={3}
+                      aria-hidden="true"
                     />
                   ) : (
-                    <IconX size="0.8rem" color="grey" stroke={3} />
+                    <IconX
+                      size="0.8rem"
+                      color="grey"
+                      stroke={3}
+                      aria-hidden="true"
+                    />
                   )
                 }
                 styles={{
                   label: {
                     color: 'var(--dashboard-foreground)',
+                  },
+                  trackLabel: {
+                    color: field.state.value
+                      ? 'white'
+                      : 'var(--foreground-faded)',
                   },
                   track: {
                     backgroundColor: field.state.value

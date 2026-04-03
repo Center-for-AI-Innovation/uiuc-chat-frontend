@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import Image from 'next/image'
+/* eslint-disable @next/next/no-img-element */
 import { ThemeToggle } from './ThemeToggle'
 
 export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
@@ -58,7 +58,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
           and{' '}
           <Link
             tabIndex={0}
-            href="https://github.com/Center-for-AI-Innovation/ai-ta-backendhttps://github.com/UIUC-Chatbot/ai-ta-backend"
+            href="https://github.com/Center-for-AI-Innovation/ai-ta-backend"
             className="link-hover link text-[--footer-link] hover:text-[--footer-link-hover]"
             target="_blank"
             rel="noopener noreferrer"

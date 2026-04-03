@@ -176,13 +176,13 @@ export const showToastOnPromptUpdate = (
   const title = was_error
     ? 'Error Updating Prompt'
     : isReset
-    ? 'Prompt Reset to Default'
-    : 'Prompt Updated Successfully'
+      ? 'Prompt Reset to Default'
+      : 'Prompt Updated Successfully'
   const message = was_error
     ? 'An error occurred while updating the prompt. Please try again.'
     : isReset
-    ? 'The system prompt has been reset to default settings.'
-    : 'The system prompt has been updated.'
+      ? 'The system prompt has been reset to default settings.'
+      : 'The system prompt has been updated.'
   const isError = was_error
 
   showPromptToast(theme, title, message, isError)

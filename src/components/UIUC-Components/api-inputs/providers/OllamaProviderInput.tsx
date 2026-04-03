@@ -50,7 +50,11 @@ export default function OllamaProviderInput({
                 >
                   Ollama
                 </Text>
-                <IconExternalLink size={16} className="mb-3" />
+                <IconExternalLink
+                  size={16}
+                  className="mb-3"
+                  aria-hidden="true"
+                />
               </div>
             </a>
           </div>
@@ -74,9 +78,15 @@ export default function OllamaProviderInput({
                       size="0.8rem"
                       color="var(--dashboard-button)"
                       stroke={3}
+                      aria-hidden="true"
                     />
                   ) : (
-                    <IconX size="0.8rem" color="grey" stroke={3} />
+                    <IconX
+                      size="0.8rem"
+                      color="grey"
+                      stroke={3}
+                      aria-hidden="true"
+                    />
                   )
                 }
                 styles={{
@@ -139,10 +149,13 @@ export default function OllamaProviderInput({
                   >
                     {(field: any) => (
                       <TextInput
-                        label="Base URL"
+                        label="Ollama Base URL"
                         placeholder="http://your-domain.com"
                         value={field.state.value}
                         styles={{
+                          label: {
+                            color: 'var(--foreground)',
+                          },
                           input: {
                             color: 'var(--foreground)',
                             backgroundColor: 'var(--background)',

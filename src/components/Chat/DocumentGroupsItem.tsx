@@ -72,7 +72,9 @@ export const DocumentGroupsItem = ({}) => {
               aria-label="Search by Document Group"
               my="sm"
               radius="md"
-              icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
+              icon={
+                <IconSearch size={isSmallScreen ? 15 : 20} aria-hidden="true" />
+              }
               value={documentGroupSearch}
               onChange={handleDocumentGroupSearchChange}
               w={'90%'}
@@ -100,7 +102,11 @@ export const DocumentGroupsItem = ({}) => {
             >
               <thead>
                 <tr
-                  className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
+                  className={`${
+                    montserrat_paragraph.variable
+                  } font-montserratParagraph ${
+                    isSmallScreen ? 'text-xs' : 'text-sm'
+                  }`}
                 >
                   <th
                     style={{
@@ -130,7 +136,11 @@ export const DocumentGroupsItem = ({}) => {
                   <tr key={index}>
                     <td style={{ wordWrap: 'break-word' }}>
                       <Text
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
+                        className={`${
+                          montserrat_paragraph.variable
+                        } font-montserratParagraph ${
+                          isSmallScreen ? 'text-xs' : 'text-sm'
+                        }`}
                       >
                         {doc_group_obj.name}
                       </Text>
