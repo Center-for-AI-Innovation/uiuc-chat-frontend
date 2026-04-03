@@ -11,7 +11,6 @@ import { ToolsItem } from './ToolsItem'
 import { ModelParams } from './ModelParams'
 import { useTranslation } from 'react-i18next'
 import { prebuiltAppConfig } from '~/utils/modelProviders/ConfigWebLLM'
-import type * as webllmTypes from '@mlc-ai/web-llm'
 import { type WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
 
 const useStyles = createStyles((theme) => ({
