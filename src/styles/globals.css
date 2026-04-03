@@ -191,7 +191,7 @@
   --button-disabled-text-color: color-mix(
     in srgb,
     var(--foreground),
-    var(--background) 80%
+    var(--background) 55%
   );
 
   --chat-background: color-mix(in srgb, var(--background), black 2%);
@@ -1309,6 +1309,8 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
 
 .n8n_workflows_table .mantine-Center-root,
 .project_files_table .mantine-Center-root {
+  color: var(--foreground-faded);
+
   > div {
     background-color: transparent; /* hack to remove no records icon */
   }
@@ -1323,6 +1325,13 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   background-color: var(--dashboard-background-faded);
 
   border-radius: 0px;
+}
+
+/* Ensure Mantine form labels have sufficient color contrast */
+.mantine-TextInput-label,
+.mantine-Select-label,
+.mantine-PasswordInput-label {
+  color: var(--foreground);
 }
 
 .n8n_workflows_table .mantine-ScrollArea-viewport,

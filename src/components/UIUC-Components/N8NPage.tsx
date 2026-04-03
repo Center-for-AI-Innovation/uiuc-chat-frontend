@@ -142,7 +142,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
           autoClose: 15000,
           color: 'red',
           radius: 'lg',
-          icon: <IconAlertCircle />,
+          icon: <IconAlertCircle aria-hidden="true" />,
           className: 'my-notification-class',
           styles: notificationStyles(true),
           loading: false,
@@ -184,7 +184,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         autoClose: 10000,
         color: 'red',
         radius: 'lg',
-        icon: <IconAlertCircle />,
+        icon: <IconAlertCircle aria-hidden="true" />,
         className: 'my-notification-class',
         styles: notificationStyles(true),
         loading: false,
@@ -200,7 +200,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         autoClose: 10000,
         color: 'green',
         radius: 'lg',
-        icon: <IconCheck />,
+        icon: <IconCheck aria-hidden="true" />,
         className: 'my-notification-class',
         styles: notificationStyles(false),
         loading: false,
@@ -213,7 +213,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
         autoClose: 10000,
         color: 'red',
         radius: 'lg',
-        icon: <IconAlertCircle />,
+        icon: <IconAlertCircle aria-hidden="true" />,
         className: 'my-notification-class',
         styles: notificationStyles(true),
         loading: false,
@@ -295,7 +295,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
       ),
       color: 'red',
       radius: 'lg',
-      icon: <IconAlertCircle />,
+      icon: <IconAlertCircle aria-hidden="true" />,
       className: 'my-notification-class',
       styles: notificationStyles(true),
       withBorder: true,
@@ -432,6 +432,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                             <IconExternalLink
                               className="mr-2 inline-block"
                               style={{ position: 'relative', top: '-3px' }}
+                              aria-hidden="true"
                             />
                           </a>
                           beautiful visual workflow editor to create custom
@@ -458,9 +459,9 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           accordionKey="setup-instructions"
                           chevron={
                             n8nApiKey ? (
-                              <IconCircleCheck />
+                              <IconCircleCheck aria-hidden="true" />
                             ) : (
-                              <IconCircleDashed />
+                              <IconCircleDashed aria-hidden="true" />
                             )
                           }
                           disableChevronRotation
@@ -529,9 +530,9 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           accordionKey="usage-instructions"
                           chevron={
                             n8nApiKey && isEmptyWorkflowTable ? (
-                              <IconCircleDashed />
+                              <IconCircleDashed aria-hidden="true" />
                             ) : (
-                              <IconCircleCheck />
+                              <IconCircleCheck aria-hidden="true" />
                             )
                           }
                           disableChevronRotation
@@ -657,7 +658,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                               margin: '1rem 0rem .1rem 0rem',
                             },
                             description: {
-                              color: '#4b5563',
+                              color: 'var(--dashboard-foreground)',
                             },
                           }}
                           className={`${montserrat_paragraph.variable} font-montserratParagraph`}
@@ -686,22 +687,15 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
               <Flex direction="row" justify="space-between">
                 <div className="flex flex-col items-start justify-start">
                   <Title
-                    className={`${montserrat_heading.variable} font-montserratHeading`}
                     order={3}
+                    className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                     }}
                   >
-                    <Title
-                      order={3}
-                      // w={}
-                      // size={'xl'}
-                      className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
-                    >
-                      Your n8n tools
-                    </Title>
+                    Your n8n tools
                   </Title>
                 </div>
                 <div className=" flex flex-col items-end justify-center">
