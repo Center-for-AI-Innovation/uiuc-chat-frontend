@@ -37,7 +37,6 @@ export const ThinkTagDropdown: React.FC<ThinkTagDropdownProps> = ({
   const contentRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
   const id = useId()
-  const labelId = `think-tag-label-${id}`
   const contentId = `think-tag-content-${id}`
 
   // Function to process the content and preserve formatting
@@ -89,7 +88,6 @@ export const ThinkTagDropdown: React.FC<ThinkTagDropdownProps> = ({
             className="think-tag-brain-icon"
           />
           <span
-            id={labelId}
             className={`text-base font-medium ${montserrat_paragraph.variable} font-montserratParagraph`}
           >
             AI&apos;s Thought Process
@@ -107,9 +105,7 @@ export const ThinkTagDropdown: React.FC<ThinkTagDropdownProps> = ({
       <div
         id={contentId}
         className={`think-tag-content ${isExpanded ? 'expanded' : ''}`}
-        role="region"
         aria-hidden={!isExpanded}
-        aria-labelledby={labelId}
       >
         <div
           ref={contentRef}
