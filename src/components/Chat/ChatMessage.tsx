@@ -2335,7 +2335,7 @@ export const ChatMessage = memo(
                             <button
                               type="button"
                               aria-label="Edit message"
-                              className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
+                              className={`text-[--foreground-faded] hover:text-[--foreground]
                                 ${
                                   Array.isArray(message.content) &&
                                   message.content.some(
