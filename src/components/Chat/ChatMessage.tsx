@@ -119,7 +119,7 @@ const FileCard: React.FC<{
 }> = ({ fileName, fileType, fileUrl, onClick, isPreviewable = true }) => {
   const getFileIcon = (name: string, type?: string) => {
     const extension = name.split('.').pop()?.toLowerCase()
-    const iconProps = { size: 20 }
+    const iconProps = { size: 20, 'aria-hidden': true as const }
 
     if (type?.includes('pdf') || extension === 'pdf') {
       return (
@@ -2348,6 +2348,7 @@ export const ChatMessage = memo(
                             >
                               <IconEdit
                                 size={20}
+                                aria-hidden="true"
                                 className="text-[--button-faded] hover:text-[--button]"
                               />
                             </button>
