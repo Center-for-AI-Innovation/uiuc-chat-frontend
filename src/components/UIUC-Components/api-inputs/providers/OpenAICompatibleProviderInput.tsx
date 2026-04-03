@@ -157,16 +157,13 @@ export default function OpenAICompatibleProviderInput({
                           }}
                           styles={{
                             label: {
-                              color: 'var(--foreground)',
+                              color: 'var(--dashboard-foreground-faded)',
                             },
                             input: {
                               color: 'var(--foreground)',
                               backgroundColor: 'var(--background)',
                               padding: '8px',
                               borderRadius: '4px',
-                            },
-                            label: {
-                              color: 'var(--dashboard-foreground-faded)',
                             },
                           }}
                         />
