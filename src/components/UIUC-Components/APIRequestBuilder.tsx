@@ -698,8 +698,8 @@ fetch('${baseUrl}/api/chat-api/chat', {
                   </code>
                 </li>
                 <li>
-                  Add the JSON config to your MCP client's configuration file
-                  (location depends on your client)
+                  Add the JSON config to your MCP client&apos;s configuration
+                  file (location depends on your client)
                 </li>
                 <li>Restart your MCP client to use the server</li>
               </ol>
