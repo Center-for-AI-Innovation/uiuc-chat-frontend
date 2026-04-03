@@ -2,7 +2,38 @@ import { IconCheck, IconClipboard, IconDownload } from '@tabler/icons-react'
 import { type FC, memo, useEffect, useState } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
-import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import { oneLight as oneLightBase } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+
+// WCAG AA contrast-enhanced overrides for oneLight theme (4.5:1 min against #fff)
+const contrastOverrides: Record<string, React.CSSProperties> = {
+  comment: { color: '#696c77' }, // gray ~5.1:1
+  prolog: { color: '#696c77' },
+  cdata: { color: '#696c77' },
+  string: { color: '#2a7b2f' }, // green ~5.2:1
+  'attr-value': { color: '#2a7b2f' },
+  char: { color: '#2a7b2f' },
+  inserted: { color: '#2a7b2f' },
+  keyword: { color: '#7b1fa2' }, // purple ~6.5:1
+  selector: { color: '#7b1fa2' },
+  function: { color: '#2a5db0' }, // blue ~5.5:1
+  'function-variable': { color: '#2a5db0' },
+  builtin: { color: '#7a5700' }, // gold ~4.9:1
+  number: { color: '#7a5700' },
+  constant: { color: '#7a5700' },
+  'class-name': { color: '#7a5700' },
+  operator: { color: '#383a42' }, // dark ~9.4:1
+  entity: { color: '#383a42' },
+  punctuation: { color: '#383a42' },
+}
+
+const oneLight = Object.fromEntries(
+  Object.entries(oneLightBase).map(([key, value]) => [
+    key,
+    key in contrastOverrides
+      ? { ...(value as React.CSSProperties), ...contrastOverrides[key] }
+      : value,
+  ]),
+)
 
 import { useTranslation } from 'next-i18next'
 
