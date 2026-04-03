@@ -34,8 +34,6 @@ import { CannotEditCourse } from './CannotEditCourse'
 import GlobalFooter from './GlobalFooter'
 import { LoadingPlaceholderForAdminPages } from './MainPageBackground'
 
-const montserrat_med = Montserrat({ weight: '500', subsets: ['latin'] })
-
 const STORAGE_KEY_API = 'sim_api_key'
 const STORAGE_KEY_WORKSPACE = 'sim_workspace_id'
 
@@ -101,7 +99,7 @@ const SimPage = ({ course_name }: { course_name: string }) => {
       }
     }
     fetchData()
-  }, [course_name, auth.isLoading])
+  }, [course_name, auth.isLoading, auth.user?.profile.email])
 
   const handleSave = async () => {
     setIsSaving(true)
