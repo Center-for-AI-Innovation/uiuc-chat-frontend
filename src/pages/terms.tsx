@@ -2,8 +2,6 @@ import { type NextPage } from 'next'
 import Head from 'next/head'
 import { useState } from 'react'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
-import ChatUI from '~/utils/modelProviders/WebLLM'
-import { MLCEngine } from '@mlc-ai/web-llm'
 import { set } from 'zod'
 // import { Card, Image, Text, Title, Badge, Button, Group } from '@mantine/core'
 

@@ -1,12 +1,21 @@
-import { useState } from 'react'
-import { MLCEngine } from '@mlc-ai/web-llm'
+import { useEffect, useState } from 'react'
 import ChatUI from '~/utils/modelProviders/WebLLM'
 
 const ChatComponent = () => {
   const [messages, setMessages] = useState<{ kind: string; text: string }[]>([])
   const [prompt, setPrompt] = useState('')
   const [runtimeStats, setRuntimeStats] = useState('')
-  const [chat_ui] = useState(new ChatUI(new MLCEngine()))
+  const [chat_ui, setChatUi] = useState<ChatUI | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    import('@mlc-ai/web-llm').then(({ MLCEngine }) => {
+      if (!cancelled) {
+        setChatUi(new ChatUI(new MLCEngine()))
+      }
+    })
+    return () => { cancelled = true }
+  }, [])
   const updateMessage = (kind: string, text: string, append: boolean) => {
     if (kind == 'init') {
       text = '[System Initalize] ' + text
@@ -24,7 +33,7 @@ const ChatComponent = () => {
       <button
         className="chatui-btn"
         onClick={() => {
-          chat_ui.asyncInitChat(updateMessage).catch((error) => {
+          chat_ui?.asyncInitChat(updateMessage).catch((error) => {
             console.log(error)
           })
         }}
@@ -52,7 +61,7 @@ const ChatComponent = () => {
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
                 chat_ui
-                  .onGenerate(prompt, updateMessage, setRuntimeStats)
+                  ?.onGenerate(prompt, updateMessage, setRuntimeStats)
                   .catch((error) => console.log(error))
               }
             }}
@@ -63,7 +72,7 @@ const ChatComponent = () => {
             className="chatui-btn"
             onClick={() => {
               chat_ui
-                .onGenerate(prompt, updateMessage, setRuntimeStats)
+                ?.onGenerate(prompt, updateMessage, setRuntimeStats)
                 .catch((error) => console.log(error))
             }}
           >
@@ -77,7 +86,7 @@ const ChatComponent = () => {
           className="chatui-btn"
           onClick={() => {
             chat_ui
-              .onReset(() => {
+              ?.onReset(() => {
                 setMessages([])
               })
               .catch((error) => console.log(error))

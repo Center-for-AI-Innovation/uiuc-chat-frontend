@@ -64,11 +64,7 @@ export async function resolveSimCredentials(
   return { api_key: null, workspace_id: null, base_url: null }
 }
 
-const ALLOWED_SIM_HOSTS = new Set([
-  'www.sim.ai',
-  'sim.ai',
-  'api.sim.ai',
-])
+const ALLOWED_SIM_HOSTS = new Set(['www.sim.ai', 'sim.ai', 'api.sim.ai'])
 
 /**
  * Validate that a base URL points to a known Sim AI host.

@@ -9,7 +9,6 @@ import {
   handleFunctionCall,
   handleToolCall,
   handleToolsServer,
-  useFetchAllWorkflows,
 } from '../handleFunctionCalling'
 
 vi.mock('posthog-js', () => ({
@@ -125,7 +124,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
               id: 'w1',
               name: 'My Flow',
               description: 'desc',
-              inputFields: [{ name: 'q', type: 'string', description: 'Query' }],
+              inputFields: [
+                { name: 'q', type: 'string', description: 'Query' },
+              ],
             },
           ],
         }),
@@ -589,10 +590,10 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     localStorage.setItem('sim_api_key_proj', 'sk-sim-test')
 
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ success: true, output: 'hello' }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
+      new Response(JSON.stringify({ success: true, output: 'hello' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
     )
 
     const tool: any = {
@@ -636,7 +637,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     }
 
     await handleToolCall([tool], conversation, 'proj')
-    expect(conversation.messages[0].tools[0].error).toMatch(/Error running tool/i)
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
   })
 
   it('handleToolCall sets error when runSimWorkflow responds non-ok', async () => {
@@ -644,10 +647,10 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ error: 'bad input' }),
-        { status: 400, headers: { 'content-type': 'application/json' } },
-      ),
+      new Response(JSON.stringify({ error: 'bad input' }), {
+        status: 400,
+        headers: { 'content-type': 'application/json' },
+      }),
     )
 
     const tool: any = {
@@ -664,7 +667,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     }
 
     await handleToolCall([tool], conversation, 'proj')
-    expect(conversation.messages[0].tools[0].error).toMatch(/Error running tool/i)
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
 
     localStorage.clear()
   })
@@ -673,10 +678,10 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     localStorage.setItem('sim_api_key_proj', 'sk-sim-test')
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ success: true, output: { result: 42 } }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
+      new Response(JSON.stringify({ success: true, output: { result: 42 } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
     )
 
     const tool: any = {
@@ -753,10 +758,10 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
       )
       // runSimWorkflow
       .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({ success: true, output: 'hello' }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        ),
+        new Response(JSON.stringify({ success: true, output: 'hello' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
       )
 
     const conversation: any = {

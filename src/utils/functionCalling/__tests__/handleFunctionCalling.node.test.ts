@@ -109,7 +109,9 @@ describe('handleFunctionCalling (node)', () => {
     }
 
     await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].error).toMatch(/Error running tool/i)
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
   })
 
   it('handleToolCall populates tool output via runSimWorkflow on success', async () => {
@@ -121,10 +123,10 @@ describe('handleFunctionCalling (node)', () => {
     vi.stubGlobal('localStorage', mockLocalStorage)
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ success: true, output: 'hello' }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
+      new Response(JSON.stringify({ success: true, output: 'hello' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
     )
 
     const tool: any = {
@@ -180,7 +182,9 @@ describe('handleFunctionCalling (node)', () => {
     }
 
     await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].error).toMatch(/Error running tool/i)
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
 
     vi.unstubAllGlobals()
   })
@@ -199,10 +203,10 @@ describe('handleFunctionCalling (node)', () => {
     })
 
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({ error: 'bad input' }),
-        { status: 400, headers: { 'content-type': 'application/json' } },
-      ),
+      new Response(JSON.stringify({ error: 'bad input' }), {
+        status: 400,
+        headers: { 'content-type': 'application/json' },
+      }),
     )
 
     const tool: any = {
@@ -219,7 +223,9 @@ describe('handleFunctionCalling (node)', () => {
     }
 
     await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].error).toMatch(/Error running tool/i)
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
 
     vi.unstubAllGlobals()
   })
