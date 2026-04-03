@@ -74,7 +74,7 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Image
+            <img
               src="https://status.uiuc.chat/api/badge/1/uptime/24?label=Uptime%2024%20hours"
               alt="Service Uptime Badge"
               width={110}
