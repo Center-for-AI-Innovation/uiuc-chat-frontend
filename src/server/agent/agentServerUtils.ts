@@ -21,7 +21,11 @@ import {
 } from '~/utils/functionCalling/handleFunctionCalling'
 import { conversationToMessages as baseConversationToMessages } from '~/utils/functionCalling/conversationToMessages'
 import { resolveSimCredentials } from '~/utils/simConfig'
-import { type SimWorkflow, type SimWorkflowListItem, type SimInputField } from '~/types/sim'
+import {
+  type SimWorkflow,
+  type SimWorkflowListItem,
+  type SimInputField,
+} from '~/types/sim'
 import { type SimExecutionResult } from '~/types/sim'
 
 /**
@@ -287,11 +291,7 @@ export async function executeToolServer(
     clearTimeout(timeoutId)
 
     const secondsToRun = (Date.now() - timeStart) / 1000
-    console.debug(
-      'Time taken for Sim workflow call:',
-      secondsToRun,
-      'seconds',
-    )
+    console.debug('Time taken for Sim workflow call:', secondsToRun, 'seconds')
 
     if (!simResponse.ok) {
       const errText = await simResponse.text()
@@ -499,7 +499,11 @@ export async function fetchToolsServer(
             }
           }
         } catch (err) {
-          console.debug('[fetchToolsServer] detail fetch failed for', item.id, err)
+          console.debug(
+            '[fetchToolsServer] detail fetch failed for',
+            item.id,
+            err,
+          )
         }
         return {
           id: item.id,
