@@ -137,7 +137,9 @@ export const Chat = memo(
           setChatUi(new ChatUI(new MLCEngine()))
         }
       })
-      return () => { cancelled = true }
+      return () => {
+        cancelled = true
+      }
     }, [])
 
     const [inputContent, setInputContent] = useState<string>('')

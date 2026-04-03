@@ -14,7 +14,9 @@ const ChatComponent = () => {
         setChatUi(new ChatUI(new MLCEngine()))
       }
     })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
   const updateMessage = (kind: string, text: string, append: boolean) => {
     if (kind == 'init') {
