@@ -101,7 +101,11 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
             style={{ color: isDark ? '#fff' : '#24292e' }}
             onClick={copyToClipboard}
           >
-            {isCopied ? <IconCheck size={18} /> : <IconClipboard size={18} />}
+            {isCopied ? (
+              <IconCheck size={18} aria-hidden="true" />
+            ) : (
+              <IconClipboard size={18} aria-hidden="true" />
+            )}
             {isCopied ? t('Copied!') : t('Copy code')}
           </button>
           <button
@@ -110,7 +114,7 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
             onClick={downloadAsFile}
             aria-label="Download code"
           >
-            <IconDownload size={18} />
+            <IconDownload size={18} aria-hidden="true" />
           </button>
         </div>
       </div>

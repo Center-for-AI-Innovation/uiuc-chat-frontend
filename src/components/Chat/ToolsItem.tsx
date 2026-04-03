@@ -62,7 +62,9 @@ export const ToolsItem = ({}) => {
               aria-label="Search Tools"
               my="sm"
               radius="md"
-              icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
+              icon={
+                <IconSearch size={isSmallScreen ? 15 : 20} aria-hidden="true" />
+              }
               value={toolSearch}
               onChange={handleToolSearchChange}
               w={'90%'}
@@ -90,7 +92,11 @@ export const ToolsItem = ({}) => {
             >
               <thead>
                 <tr
-                  className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
+                  className={`${
+                    montserrat_paragraph.variable
+                  } font-montserratParagraph ${
+                    isSmallScreen ? 'text-xs' : 'text-sm'
+                  }`}
                 >
                   <th
                     style={{
@@ -120,7 +126,11 @@ export const ToolsItem = ({}) => {
                   <tr key={index}>
                     <td style={{ wordWrap: 'break-word' }}>
                       <Text
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
+                        className={`${
+                          montserrat_paragraph.variable
+                        } font-montserratParagraph ${
+                          isSmallScreen ? 'text-xs' : 'text-sm'
+                        }`}
                       >
                         {tool_obj.readableName}
                       </Text>

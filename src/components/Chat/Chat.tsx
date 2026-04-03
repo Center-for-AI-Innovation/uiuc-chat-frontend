@@ -1852,7 +1852,11 @@ export const Chat = memo(
                       tabIndex={-1}
                       className={`text-md h-auto p-2 font-bold leading-relaxed text-inherit hover:underline ${montserrat_paragraph.variable} font-montserratParagraph `}
                     >
-                      <IconArrowRight size={25} className="mr-2 min-w-[40px]" />
+                      <IconArrowRight
+                        size={25}
+                        aria-hidden="true"
+                        className="mr-2 min-w-[40px]"
+                      />
                       <p className="whitespace-break-spaces">{statement}</p>
                     </Button>
                   </div>
@@ -2066,12 +2070,13 @@ export const Chat = memo(
             {permission == 'edit' ? (
               <div className="group absolute right-4 top-4 z-20">
                 <button
+                  aria-label="Admin Dashboard"
                   className="rounded-md border border-[--dashboard-border] bg-transparent p-[.35rem] text-[--foreground] hover:border-[--dashboard-button] hover:bg-transparent hover:text-[--dashboard-button]"
                   onClick={() => {
                     if (courseName) router.push(`/${courseName}/dashboard`)
                   }}
                 >
-                  <IconSettings stroke={1.5} size={20} />
+                  <IconSettings stroke={1.5} size={20} aria-hidden="true" />
                 </button>
                 <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-[--background-faded] px-2 py-1 text-sm text-[--foreground] opacity-0 transition-opacity group-hover:opacity-100">
                   Admin Dashboard
@@ -2220,7 +2225,7 @@ export function errorToast({
     ),
     color: '',
     radius: 'lg',
-    icon: <IconAlertCircle color="#fff" />,
+    icon: <IconAlertCircle color="#fff" aria-hidden="true" />,
     className: 'my-notification-class',
     style: {
       backgroundColor: 'var(--notification)',
