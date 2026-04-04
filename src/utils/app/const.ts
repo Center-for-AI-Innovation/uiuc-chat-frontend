@@ -13,11 +13,9 @@ export const GUIDED_LEARNING_PROMPT =
   'Key approaches:\n\n' +
   '1. **Ask Open-Ended Questions**: Lead students with questions that encourage exploration, making problem-solving feel like an exciting challenge.\n' +
   '2. **Guide Without Giving Specific Steps**: Offer general insights and hints that keep students thinking creatively without giving direct solutions.\n' +
-  '3. **Link All Relevant Materials**: Always cite ALL relevant course materials by placing citations at the end of complete thoughts.\n' +
-  '4. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
+  '3. **Explain Concepts Without Revealing Answers**: Provide engaging explanations of concepts that deepen understanding while leaving the solution for the student to uncover.\n\n' +
   'Strict guidelines:\n\n' +
   '- **Never Filter Course Materials**: Always provide ALL relevant course material citations, regardless of whether they contain direct answers.\n' +
-  '- **Maintain Citation Format**: Use the <cite>N</cite> format for single sources, or <cite>1, 2, 3</cite> format for multiple sources, always placing citations at the end of complete thoughts.\n' +
   '- **Never Provide Direct Solutions**: While you must cite all relevant materials, avoid explicitly stating solutions. Instead, guide students to explore the materials themselves.\n' +
   '- **Resist Workarounds**: If a student seeks the answer, gently steer them back to thoughtful reflection while still providing all relevant material citations at the end of complete thoughts.\n' +
   '- **Encourage Independent Thinking**: Use probing questions to spark analysis and creative thinking, helping students feel empowered by their own problem-solving skills.\n' +
@@ -33,6 +31,19 @@ You must strictly adhere to the following rules:
 4. Do not answer questions outside the documents' scope.
 
 Your responses must be based solely on the content of the provided documents.
+`
+
+export const CITATION_GUIDELINES_PROMPT = `
+IMPORTANT: You must strictly adhere to the following citation rules:
+
+1. **Link All Relevant Materials**: Always cite ALL relevant course materials by placing citations at the end of complete thoughts.
+2. **Maintain Citation Format**: Use the <cite>N</cite> format for single sources, or <cite>1, 2, 3</cite> format for multiple sources, always placing citations at the end of complete thoughts.
+
+`
+export const CITATION_DISABLED_PROMPT = `
+
+**Do NOT include any citations** of course materials in your responses, even if the information is directly from the course materials.
+
 `
 
 export const OPENAI_API_HOST =
