@@ -40,6 +40,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const documentsOnly = JSON.parse(
     (req.query.documentsOnly as string) || 'false',
   )
+  const disableCitations = JSON.parse(
+    (req.query.disableCitations as string) || 'false',
+  )
   const guidedLearning = JSON.parse(
     (req.query.guidedLearning as string) || 'false',
   )
@@ -70,6 +73,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       disabled_models,
       project_description,
       documentsOnly,
+      disableCitations,
       guidedLearning,
       systemPromptOnly,
       vector_search_rewrite_disabled,
