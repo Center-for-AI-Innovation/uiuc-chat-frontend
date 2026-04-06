@@ -581,7 +581,7 @@ describe('MITIngestForm', () => {
     const user = userEvent.setup()
     const queryClient = createTestQueryClient()
 
-    let capturedStates: string[] = []
+    const capturedStates: string[] = []
     let uploads: FileUpload[] = []
     const setUploadFiles = vi.fn((updater: any) => {
       uploads = typeof updater === 'function' ? updater(uploads) : updater
