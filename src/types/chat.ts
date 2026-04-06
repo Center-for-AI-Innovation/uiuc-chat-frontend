@@ -3,7 +3,7 @@ import {
   type AnySupportedModel,
 } from '@/utils/modelProviders/LLMProvider'
 import { type CourseMetadata } from './courseMetadata'
-import { type N8NParameter } from './tools'
+import { type ToolParameter } from './tools'
 
 export interface ConversationPage {
   conversations: Conversation[]
@@ -130,7 +130,7 @@ export interface UIUCTool {
   description: string
   inputParameters?: {
     type: 'object'
-    properties: Record<string, N8NParameter>
+    properties: Record<string, ToolParameter>
     required: string[]
   }
   aiGeneratedArgumentValues?: Record<string, string>

@@ -24,7 +24,7 @@ const hoisted = vi.hoisted(() => ({
     } as any,
   })),
   get_user_permission: vi.fn(() => 'edit'),
-  fetchTools: vi.fn(async () => []),
+  fetchSimTools: vi.fn(async () => []),
   handleToolsServer: vi.fn(
     async (_last, _tools, _urls, _imgDesc, convo) => convo,
   ),
@@ -55,7 +55,7 @@ vi.mock('~/components/UIUC-Components/runAuthCheck', () => ({
   get_user_permission: hoisted.get_user_permission,
 }))
 vi.mock('~/utils/functionCalling/handleFunctionCalling', () => ({
-  fetchTools: hoisted.fetchTools,
+  fetchSimTools: hoisted.fetchSimTools,
   handleToolsServer: hoisted.handleToolsServer,
 }))
 vi.mock('~/app/utils/buildPromptUtils', () => ({
@@ -247,8 +247,9 @@ describe('chat-api/chat', () => {
     expect(hoisted.routeModelRequest).not.toHaveBeenCalled()
   })
 
-  it('returns 500 when fetchTools throws', async () => {
-    hoisted.fetchTools.mockRejectedValueOnce(new Error('tools down'))
+  it('continues with empty tools when fetchSimTools throws', async () => {
+    hoisted.fetchSimTools.mockRejectedValueOnce(new Error('tools down'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
     const res = createMockRes()
     await chat(
       createMockReq({
@@ -266,7 +267,9 @@ describe('chat-api/chat', () => {
       }) as any,
       res as any,
     )
-    expect(res.status).toHaveBeenCalledWith(500)
+    // fetchSimTools error is swallowed; chat proceeds without tools
+    expect(hoisted.handleToolsServer).not.toHaveBeenCalled()
+    expect(hoisted.handleNonStreamingResponse).toHaveBeenCalled()
   })
 
   it('returns API error when routeModelRequest is not ok', async () => {
@@ -336,7 +339,7 @@ describe('chat-api/chat', () => {
   })
 
   it('invokes handleImageContent and handleToolsServer when image content and tools are present', async () => {
-    hoisted.fetchTools.mockResolvedValueOnce([{ id: 't1' }])
+    hoisted.fetchSimTools.mockResolvedValueOnce([{ id: 't1' }])
     hoisted.handleContextSearch.mockResolvedValueOnce([{ id: 1 }])
     const res = createMockRes()
 

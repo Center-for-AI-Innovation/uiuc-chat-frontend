@@ -2,288 +2,24 @@
 
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('~/pages/api/UIUC-api/runN8nFlow', () => ({
-  runN8nFlowBackend: vi.fn(),
-}))
-
 vi.mock('~/utils/apiUtils', () => ({
   getBackendUrl: vi.fn(() => undefined),
 }))
 
+vi.mock('posthog-js', () => ({
+  default: { capture: vi.fn() },
+}))
+
 describe('handleFunctionCalling (node)', () => {
-  it('fetchTools returns [] when no api_key exists for project (404)', async () => {
-    const { fetchTools } = await import('../handleFunctionCalling')
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('', { status: 404 }),
-    )
-
-    await expect(
-      fetchTools('proj', 'undefined', 10, 'true', false, 'http://localhost'),
-    ).resolves.toEqual([])
+  it('fetchSimTools returns [] when course_name is missing', async () => {
+    const { fetchSimTools } = await import('../handleFunctionCalling')
+    await expect(fetchSimTools()).resolves.toEqual([])
   })
 
-  it('fetchTools returns [] when fetching the project api_key fails', async () => {
-    const { fetchTools } = await import('../handleFunctionCalling')
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('nope', { status: 500 }),
-    )
-
-    await expect(
-      fetchTools('proj', 'undefined', 10, 'true', false, 'http://localhost'),
-    ).resolves.toEqual([])
-  })
-
-  it('fetchTools returns [] when the fetched api_key is still undefined', async () => {
-    const { fetchTools } = await import('../handleFunctionCalling')
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify('undefined'), { status: 200 }),
-    )
-
-    await expect(
-      fetchTools('proj', 'undefined', 10, 'true', false, 'http://localhost'),
-    ).resolves.toEqual([])
-  })
-
-  it('fetchTools throws when backendUrl is missing on the server', async () => {
-    const { fetchTools } = await import('../handleFunctionCalling')
-    await expect(fetchTools('proj', 'k', 10, 'true', false)).rejects.toThrow(
-      /No backend URL configured/i,
-    )
-  })
-
-  it('fetchTools calls the backend /getworkflows endpoint on the server', async () => {
-    const { fetchTools } = await import('../handleFunctionCalling')
-    const { getBackendUrl } = await import('~/utils/apiUtils')
-
-    ;(getBackendUrl as any).mockReturnValueOnce('http://backend')
-
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify([
-          [
-            {
-              id: 'w1',
-              name: 'My Workflow',
-              active: true,
-              updatedAt: 'u',
-              createdAt: 'c',
-              nodes: [
-                {
-                  type: 'n8n-nodes-base.formTrigger',
-                  parameters: {
-                    formDescription: 'd',
-                    formFields: { values: [] },
-                  },
-                },
-              ],
-            },
-          ],
-        ]),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
-    )
-
-    const tools = await fetchTools('proj', 'k', 10, 'true', false)
-    expect(tools).toHaveLength(1)
-    expect(fetchSpy).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'http://backend/getworkflows?api_key=k&limit=10&pagination=true',
-      ),
-    )
-  })
-
-  it('fetchTools throws when the backend responds non-ok', async () => {
-    const { fetchTools } = await import('../handleFunctionCalling')
-    const { getBackendUrl } = await import('~/utils/apiUtils')
-
-    ;(getBackendUrl as any).mockReturnValueOnce('http://backend')
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('nope', { status: 500, statusText: 'Server Error' }),
-    )
-
-    await expect(fetchTools('proj', 'k', 10, 'true', false)).rejects.toThrow(
-      /Unable to fetch n8n tools/i,
-    )
-  })
-
-  it('handleToolCall populates tool output via runN8nFlowBackend on the server', async () => {
-    const { handleToolCall } = await import('../handleFunctionCalling')
-    const { runN8nFlowBackend } = await import(
-      '~/pages/api/UIUC-api/runN8nFlow'
-    )
-
-    ;(runN8nFlowBackend as any).mockResolvedValueOnce({
-      data: {
-        resultData: {
-          lastNodeExecuted: 'final',
-          runData: {
-            final: [
-              {
-                data: {
-                  main: [[{ json: { response: 'hello' } }]],
-                },
-              },
-            ],
-          },
-        },
-      },
-    })
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify('n8n-key'), { status: 200 }),
-    )
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].output).toEqual({ text: 'hello' })
-  })
-
-  it('handleToolCall sets error when server-side n8n api_key resolves to empty string', async () => {
-    const { handleToolCall } = await import('../handleFunctionCalling')
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify(''), { status: 200 }),
-    )
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].error).toMatch(
-      /N8N API key is required/i,
-    )
-  })
-
-  it('handleToolCall sets timeout error when runN8nFlowBackend throws timed out', async () => {
-    const { handleToolCall } = await import('../handleFunctionCalling')
-    const { runN8nFlowBackend } = await import(
-      '~/pages/api/UIUC-api/runN8nFlow'
-    )
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify('n8n-key'), { status: 200 }),
-    )
-    ;(runN8nFlowBackend as any).mockRejectedValueOnce(new Error('timed out'))
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].error).toMatch(
-      /Request timed out/i,
-    )
-  })
-
-  it('handleToolCall preserves non-timeout errors from runN8nFlowBackend', async () => {
-    const { handleToolCall } = await import('../handleFunctionCalling')
-    const { runN8nFlowBackend } = await import(
-      '~/pages/api/UIUC-api/runN8nFlow'
-    )
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify('n8n-key'), { status: 200 }),
-    )
-    ;(runN8nFlowBackend as any).mockRejectedValueOnce(new Error('boom'))
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].error).toMatch(/boom/i)
-  })
-
-  it('handleToolCall sets empty response error when workflow response is missing json', async () => {
-    const { handleToolCall } = await import('../handleFunctionCalling')
-    const { runN8nFlowBackend } = await import(
-      '~/pages/api/UIUC-api/runN8nFlow'
-    )
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify('n8n-key'), { status: 200 }),
-    )
-    ;(runN8nFlowBackend as any).mockResolvedValueOnce({
-      data: {
-        resultData: {
-          lastNodeExecuted: 'final',
-          runData: {
-            final: [
-              {
-                data: {
-                  main: [[{}]],
-                },
-              },
-            ],
-          },
-        },
-      },
-    })
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].error).toMatch(/empty response/i)
+  it('fetchSimTools returns [] when no api_key/workspace_id in localStorage (server-side)', async () => {
+    const { fetchSimTools } = await import('../handleFunctionCalling')
+    // In node env, typeof window === 'undefined', so localStorage is not accessed
+    await expect(fetchSimTools('proj')).resolves.toEqual([])
   })
 
   it('handleToolCall skips tools missing invocationId', async () => {
@@ -292,7 +28,6 @@ describe('handleFunctionCalling (node)', () => {
 
     const tool: any = {
       id: 'w1',
-      // invocationId intentionally missing
       name: 't',
       readableName: 'Tool',
       description: 'd',
@@ -305,120 +40,6 @@ describe('handleFunctionCalling (node)', () => {
 
     await handleToolCall([tool], conversation, 'proj', 'http://localhost')
     expect(conversation.messages[0].tools[0].output).toBeUndefined()
-  })
-
-  it('handleToolCall sets error when fetching n8n key fails', async () => {
-    const { handleToolCall } = await import('../handleFunctionCalling')
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response('nope', { status: 500 }),
-    )
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].error).toMatch(
-      /Error running tool/i,
-    )
-  })
-
-  it('handleToolCall sets error when n8n workflow returns an error object', async () => {
-    const { handleToolCall } = await import('../handleFunctionCalling')
-    const { runN8nFlowBackend } = await import(
-      '~/pages/api/UIUC-api/runN8nFlow'
-    )
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify('n8n-key'), { status: 200 }),
-    )
-    ;(runN8nFlowBackend as any).mockResolvedValueOnce({
-      data: {
-        resultData: {
-          lastNodeExecuted: 'final',
-          runData: {
-            final: [
-              {
-                error: { message: 'Boom', description: 'Bad input' },
-              },
-            ],
-          },
-        },
-      },
-    })
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].error).toMatch(/Boom/i)
-  })
-
-  it('handleToolCall returns imageUrls output when workflow responds with image_urls only', async () => {
-    const { handleToolCall } = await import('../handleFunctionCalling')
-    const { runN8nFlowBackend } = await import(
-      '~/pages/api/UIUC-api/runN8nFlow'
-    )
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify('n8n-key'), { status: 200 }),
-    )
-    ;(runN8nFlowBackend as any).mockResolvedValueOnce({
-      data: {
-        resultData: {
-          lastNodeExecuted: 'final',
-          runData: {
-            final: [
-              {
-                data: {
-                  main: [[{ json: { image_urls: ['a.png'] } }]],
-                },
-              },
-            ],
-          },
-        },
-      },
-    })
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].output).toEqual({
-      imageUrls: ['a.png'],
-    })
   })
 
   it('handleToolCall skips when last message has no tools array', async () => {
@@ -442,7 +63,7 @@ describe('handleFunctionCalling (node)', () => {
     expect(conversation.messages[0].tools).toBeUndefined()
   })
 
-  it('handleToolCall skips when invocationId is not found on the last message tools list', async () => {
+  it('handleToolCall skips when invocationId not found in last message tools', async () => {
     const { handleToolCall } = await import('../handleFunctionCalling')
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
@@ -470,31 +91,9 @@ describe('handleFunctionCalling (node)', () => {
     expect(conversation.messages[0].tools[0].output).toBeUndefined()
   })
 
-  it('handleToolCall parses JSON "data" output and merges image_urls when present', async () => {
+  it('handleToolCall sets error when callSimFunction throws (no api key on server)', async () => {
     const { handleToolCall } = await import('../handleFunctionCalling')
-    const { runN8nFlowBackend } = await import(
-      '~/pages/api/UIUC-api/runN8nFlow'
-    )
-
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify('n8n-key'), { status: 200 }),
-    )
-    ;(runN8nFlowBackend as any).mockResolvedValueOnce({
-      data: {
-        resultData: {
-          lastNodeExecuted: 'final',
-          runData: {
-            final: [
-              {
-                data: {
-                  main: [[{ json: { data: { a: 1 }, image_urls: ['x.png'] } }]],
-                },
-              },
-            ],
-          },
-        },
-      },
-    })
+    vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const tool: any = {
       id: 'w1',
@@ -510,9 +109,124 @@ describe('handleFunctionCalling (node)', () => {
     }
 
     await handleToolCall([tool], conversation, 'proj', 'http://localhost')
-    expect(conversation.messages[0].tools[0].output).toEqual({
-      data: { a: 1 },
-      imageUrls: ['x.png'],
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
+  })
+
+  it('handleToolCall populates tool output via runSimWorkflow on success', async () => {
+    const { handleToolCall } = await import('../handleFunctionCalling')
+
+    const storage: Record<string, string> = { sim_api_key_proj: 'sk-sim-test' }
+    const mockLocalStorage = { getItem: (k: string) => storage[k] ?? null }
+    vi.stubGlobal('window', { localStorage: mockLocalStorage })
+    vi.stubGlobal('localStorage', mockLocalStorage)
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ success: true, output: 'hello' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+
+    const tool: any = {
+      id: 'w1',
+      invocationId: 'inv1',
+      name: 'sim_t',
+      readableName: 'Tool',
+      description: 'd',
+      aiGeneratedArgumentValues: { a: 1 },
+    }
+    const conversation: any = {
+      id: 'c1',
+      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
+    }
+
+    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
+    expect(conversation.messages[0].tools[0].output).toEqual({ text: 'hello' })
+
+    vi.unstubAllGlobals()
+  })
+
+  it('handleToolCall sets error when runSimWorkflow returns success=false', async () => {
+    const { handleToolCall } = await import('../handleFunctionCalling')
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    vi.stubGlobal('window', {
+      localStorage: {
+        getItem: (key: string) => {
+          if (key === 'sim_api_key_proj') return 'sk-sim-test'
+          return null
+        },
+      },
     })
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ success: false, error: 'workflow failed' }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    )
+
+    const tool: any = {
+      id: 'w1',
+      invocationId: 'inv1',
+      name: 'sim_t',
+      readableName: 'Tool',
+      description: 'd',
+      aiGeneratedArgumentValues: {},
+    }
+    const conversation: any = {
+      id: 'c1',
+      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
+    }
+
+    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
+
+    vi.unstubAllGlobals()
+  })
+
+  it('handleToolCall sets error when runSimWorkflow HTTP response is not ok', async () => {
+    const { handleToolCall } = await import('../handleFunctionCalling')
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    vi.stubGlobal('window', {
+      localStorage: {
+        getItem: (key: string) => {
+          if (key === 'sim_api_key_proj') return 'sk-sim-test'
+          return null
+        },
+      },
+    })
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'bad input' }), {
+        status: 400,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+
+    const tool: any = {
+      id: 'w1',
+      invocationId: 'inv1',
+      name: 'sim_t',
+      readableName: 'Tool',
+      description: 'd',
+      aiGeneratedArgumentValues: {},
+    }
+    const conversation: any = {
+      id: 'c1',
+      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
+    }
+
+    await handleToolCall([tool], conversation, 'proj', 'http://localhost')
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
+
+    vi.unstubAllGlobals()
   })
 })

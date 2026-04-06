@@ -53,7 +53,6 @@ interface Props {
 
 import { notifications } from '@mantine/notifications'
 import type * as webllm from '@mlc-ai/web-llm'
-import { MLCEngine } from '@mlc-ai/web-llm'
 import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import { motion } from 'framer-motion'
@@ -129,7 +128,19 @@ export const Chat = memo(
       // /CS-125/dashboard --> CS-125
       return router.asPath.slice(1).split('/')[0] as string
     }
-    const [chat_ui] = useState(new ChatUI(new MLCEngine()))
+    const [chat_ui, setChatUi] = useState<ChatUI | null>(null)
+
+    useEffect(() => {
+      let cancelled = false
+      import('@mlc-ai/web-llm').then(({ MLCEngine }) => {
+        if (!cancelled) {
+          setChatUi(new ChatUI(new MLCEngine()))
+        }
+      })
+      return () => {
+        cancelled = true
+      }
+    }, [])
 
     const [inputContent, setInputContent] = useState<string>('')
 
@@ -193,13 +204,13 @@ export const Chat = memo(
 
     useEffect(() => {
       const loadModel = async () => {
-        if (selectedConversation?.model && !chat_ui.isModelLoading()) {
+        if (selectedConversation?.model && !chat_ui?.isModelLoading()) {
           homeDispatch({
             field: 'webLLMModelIdLoading',
             value: { id: selectedConversation.model.id, isLoading: true },
           })
-          await chat_ui.loadModel(selectedConversation)
-          if (!chat_ui.isModelLoading()) {
+          await chat_ui?.loadModel(selectedConversation)
+          if (!chat_ui?.isModelLoading()) {
             console.log('Model has finished loading')
             homeDispatch({
               field: 'webLLMModelIdLoading',
@@ -742,11 +753,11 @@ export const Chat = memo(
                 )
               ) {
                 // WebLLM model handling remains the same
-                while (chat_ui.isModelLoading() === true) {
+                while (chat_ui?.isModelLoading() === true) {
                   await new Promise((resolve) => setTimeout(resolve, 10))
                 }
                 try {
-                  rewriteResponse = await chat_ui.runChatCompletion(
+                  rewriteResponse = await chat_ui?.runChatCompletion(
                     queryRewriteBody,
                     getCurrentPageName(),
                     courseMetadata,
@@ -1047,11 +1058,11 @@ export const Chat = memo(
           )
         ) {
           // Is WebLLM model
-          while (chat_ui.isModelLoading() == true) {
+          while (chat_ui?.isModelLoading() == true) {
             await new Promise((resolve) => setTimeout(resolve, 10))
           }
           try {
-            response = await chat_ui.runChatCompletion(
+            response = await chat_ui?.runChatCompletion(
               finalChatBody,
               getCurrentPageName(),
               courseMetadata,
@@ -2162,7 +2173,7 @@ export const Chat = memo(
                   return userId
                 })()}
                 courseName={courseName}
-                chat_ui={chat_ui}
+                chat_ui={chat_ui ?? undefined}
                 agentModeFeatureEnabled={
                   courseMetadata?.agent_mode_enabled === true
                 }

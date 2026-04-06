@@ -1,7 +1,7 @@
-import {
-  type MLCEngineInterface,
-  type ChatCompletionMessageParam,
-  type CompletionUsage,
+import type {
+  MLCEngineInterface,
+  ChatCompletionMessageParam,
+  CompletionUsage,
 } from '@mlc-ai/web-llm'
 import { type ChatBody, Conversation, Message } from '~/types/chat'
 import { type ModelRecord, prebuiltAppConfig } from './ConfigWebLLM'

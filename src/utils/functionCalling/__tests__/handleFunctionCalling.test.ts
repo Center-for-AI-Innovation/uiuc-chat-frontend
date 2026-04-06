@@ -3,14 +3,17 @@ import type { Conversation, Message, UIUCTool } from '~/types/chat'
 import type { AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
 import {
-  fetchTools,
+  fetchSimTools,
   getOpenAIToolFromUIUCTool,
-  getUIUCToolFromN8n,
+  getUIUCToolFromSim,
   handleFunctionCall,
   handleToolCall,
   handleToolsServer,
-  useFetchAllWorkflows,
 } from '../handleFunctionCalling'
+
+vi.mock('posthog-js', () => ({
+  default: { capture: vi.fn() },
+}))
 
 describe('handleFunctionCalling utils (browser/jsdom)', () => {
   it('getOpenAIToolFromUIUCTool maps UIUCTool to OpenAICompatibleTool schema', () => {
@@ -50,46 +53,42 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     })
   })
 
-  it('getUIUCToolFromN8n extracts active formTrigger workflows', () => {
+  it('getUIUCToolFromSim converts SimWorkflow[] to UIUCTool[]', () => {
     const workflows = [
       {
         id: 'w1',
         name: 'My Workflow!',
-        active: true,
-        updatedAt: 'u',
-        createdAt: 'c',
-        nodes: [
-          {
-            type: 'n8n-nodes-base.formTrigger',
-            parameters: {
-              formDescription: 'd',
-              formFields: {
-                values: [
-                  {
-                    fieldLabel: 'First Name',
-                    fieldType: 'string',
-                    requiredField: true,
-                  },
-                ],
-              },
-            },
-          },
+        description: 'does stuff',
+        inputFields: [
+          { name: 'first_name', type: 'string', description: 'First name' },
+          { name: 'count', type: 'number', description: 'Count' },
         ],
       },
-      { id: 'w2', name: 'Inactive', active: false, nodes: [] },
+      {
+        id: 'w2',
+        name: 'No Inputs',
+        description: '',
+        inputFields: [],
+      },
     ] as any
 
-    const tools = getUIUCToolFromN8n(workflows)
-    expect(tools).toHaveLength(1)
+    const tools = getUIUCToolFromSim(workflows)
+    expect(tools).toHaveLength(2)
     expect(tools[0]).toMatchObject({
       id: 'w1',
+      name: 'sim_my_workflow',
       readableName: 'My Workflow!',
       enabled: true,
       inputParameters: expect.objectContaining({
-        required: ['first_name'],
+        required: ['first_name', 'count'],
       }),
     })
-    expect(tools[0]?.name).toBe('My_Workflow_')
+    // No inputs → default 'input' field
+    expect(tools[1]).toMatchObject({
+      id: 'w2',
+      name: 'sim_no_inputs',
+      inputParameters: expect.objectContaining({ required: ['input'] }),
+    })
   })
 
   it('getOpenAIToolFromUIUCTool sets parameters undefined when inputParameters missing', () => {
@@ -104,6 +103,56 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
 
     const out = getOpenAIToolFromUIUCTool(tools)
     expect(out[0]?.function.parameters).toBeUndefined()
+  })
+
+  it('fetchSimTools returns [] when no localStorage credentials', async () => {
+    // jsdom localStorage is empty by default
+    localStorage.clear()
+    const tools = await fetchSimTools('proj')
+    expect(tools).toEqual([])
+  })
+
+  it('fetchSimTools returns UIUCTools when API responds ok', async () => {
+    localStorage.setItem('sim_api_key_proj', 'sk-sim-test')
+    localStorage.setItem('sim_workspace_id_proj', 'ws-123')
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          workflows: [
+            {
+              id: 'w1',
+              name: 'My Flow',
+              description: 'desc',
+              inputFields: [
+                { name: 'q', type: 'string', description: 'Query' },
+              ],
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    )
+
+    const tools = await fetchSimTools('proj')
+    expect(tools).toHaveLength(1)
+    expect(tools[0]?.name).toBe('sim_my_flow')
+
+    localStorage.clear()
+  })
+
+  it('fetchSimTools returns [] on non-ok response', async () => {
+    localStorage.setItem('sim_api_key_proj', 'sk-sim-test')
+    localStorage.setItem('sim_workspace_id_proj', 'ws-123')
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('nope', { status: 500 }),
+    )
+
+    const tools = await fetchSimTools('proj')
+    expect(tools).toEqual([])
+
+    localStorage.clear()
   })
 
   it('handleFunctionCall stores model response on last user message when no tool_calls', async () => {
@@ -537,34 +586,20 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     ).resolves.toEqual([])
   })
 
-  it('handleToolCall runs client-side n8n flow via /api/UIUC-api/runN8nFlow', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch')
-    fetchSpy
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify('n8n-key'), { status: 200 }),
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            data: {
-              resultData: {
-                lastNodeExecuted: 'final',
-                runData: {
-                  final: [
-                    { data: { main: [[{ json: { response: 'hello' } }]] } },
-                  ],
-                },
-              },
-            },
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        ),
-      )
+  it('handleToolCall runs Sim workflow via /api/UIUC-api/runSimWorkflow', async () => {
+    localStorage.setItem('sim_api_key_proj', 'sk-sim-test')
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ success: true, output: 'hello' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
 
     const tool: any = {
       id: 'w1',
       invocationId: 'inv1',
-      name: 't',
+      name: 'sim_t',
       readableName: 'Tool',
       description: 'd',
       aiGeneratedArgumentValues: { a: 1 },
@@ -576,10 +611,98 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
 
     await handleToolCall([tool], conversation, 'proj')
     expect(fetchSpy).toHaveBeenCalledWith(
-      '/api/UIUC-api/runN8nFlow',
+      '/api/UIUC-api/runSimWorkflow',
       expect.objectContaining({ method: 'POST' }),
     )
     expect(conversation.messages[0].tools[0].output).toEqual({ text: 'hello' })
+
+    localStorage.clear()
+  })
+
+  it('handleToolCall sets error when Sim API key is missing', async () => {
+    localStorage.clear()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const tool: any = {
+      id: 'w1',
+      invocationId: 'inv1',
+      name: 'sim_t',
+      readableName: 'Tool',
+      description: 'd',
+      aiGeneratedArgumentValues: { a: 1 },
+    }
+    const conversation: any = {
+      id: 'c1',
+      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
+    }
+
+    await handleToolCall([tool], conversation, 'proj')
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
+  })
+
+  it('handleToolCall sets error when runSimWorkflow responds non-ok', async () => {
+    localStorage.setItem('sim_api_key_proj', 'sk-sim-test')
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'bad input' }), {
+        status: 400,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+
+    const tool: any = {
+      id: 'w1',
+      invocationId: 'inv1',
+      name: 'sim_t',
+      readableName: 'Tool',
+      description: 'd',
+      aiGeneratedArgumentValues: {},
+    }
+    const conversation: any = {
+      id: 'c1',
+      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
+    }
+
+    await handleToolCall([tool], conversation, 'proj')
+    expect(conversation.messages[0].tools[0].error).toMatch(
+      /Error running tool/i,
+    )
+
+    localStorage.clear()
+  })
+
+  it('handleToolCall sets data output when Sim returns object output', async () => {
+    localStorage.setItem('sim_api_key_proj', 'sk-sim-test')
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ success: true, output: { result: 42 } }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+
+    const tool: any = {
+      id: 'w1',
+      invocationId: 'inv1',
+      name: 'sim_t',
+      readableName: 'Tool',
+      description: 'd',
+      aiGeneratedArgumentValues: {},
+    }
+    const conversation: any = {
+      id: 'c1',
+      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
+    }
+
+    await handleToolCall([tool], conversation, 'proj')
+    expect(conversation.messages[0].tools[0].output).toEqual({
+      data: { result: 42 },
+    })
+
+    localStorage.clear()
   })
 
   it('handleToolCall logs when there is no last message', async () => {
@@ -608,136 +731,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
     ).rejects.toBeInstanceOf(TypeError)
   })
 
-  it('handleToolCall sets a timeout error when runN8nFlow fetch aborts', async () => {
-    const abortErr = new Error('aborted') as any
-    abortErr.name = 'AbortError'
+  it('handleToolsServer runs function selection then Sim tool execution', async () => {
+    localStorage.setItem('sim_api_key_proj', 'sk-sim-test')
 
-    const fetchSpy = vi.spyOn(globalThis, 'fetch')
-    fetchSpy
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify('n8n-key'), { status: 200 }),
-      )
-      .mockRejectedValueOnce(abortErr)
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj')
-    expect(conversation.messages[0].tools[0].error).toMatch(
-      /Request timed out/i,
-    )
-  })
-
-  it('handleToolCall preserves unexpected fetch errors from runN8nFlow', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch')
-    fetchSpy
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify('n8n-key'), { status: 200 }),
-      )
-      .mockRejectedValueOnce(new Error('boom'))
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj')
-    expect(conversation.messages[0].tools[0].error).toMatch(/boom/i)
-  })
-
-  it('handleToolCall sets an error when runN8nFlow responds non-ok', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch')
-    fetchSpy
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify('n8n-key'), { status: 200 }),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ error: 'bad input' }), {
-          status: 500,
-          headers: { 'content-type': 'application/json' },
-        }),
-      )
-
-    const tool: any = {
-      id: 'w1',
-      invocationId: 'inv1',
-      name: 't',
-      readableName: 'Tool',
-      description: 'd',
-      aiGeneratedArgumentValues: { a: 1 },
-    }
-    const conversation: any = {
-      id: 'c1',
-      messages: [{ id: 'm1', role: 'user', content: 'hi', tools: [tool] }],
-    }
-
-    await handleToolCall([tool], conversation, 'proj')
-    expect(conversation.messages[0].tools[0].error).toMatch(/bad input/i)
-  })
-
-  it('fetchTools normalizes invalid limit and returns UIUCTools (client-side)', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify([
-          [
-            {
-              id: 'w1',
-              name: 'My Workflow',
-              active: true,
-              updatedAt: 'u',
-              createdAt: 'c',
-              nodes: [
-                {
-                  type: 'n8n-nodes-base.formTrigger',
-                  parameters: {
-                    formDescription: 'd',
-                    formFields: { values: [] },
-                  },
-                },
-              ],
-            },
-          ],
-        ]),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
-    )
-
-    const tools = await fetchTools('proj', 'k', 0, 'false', false)
-    expect(tools).toHaveLength(1)
-    expect(tools[0]?.id).toBe('w1')
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('limit=10'),
-    )
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('pagination=false'),
-    )
-  })
-
-  it('useFetchAllWorkflows throws when neither course_name nor api_key provided', () => {
-    expect(() => useFetchAllWorkflows()).toThrow(
-      /one of course_name OR api_key/i,
-    )
-  })
-
-  it('handleToolsServer runs function selection then tool execution', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy
       // openaiFunctionCall
@@ -760,27 +756,12 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
           { status: 200, headers: { 'content-type': 'application/json' } },
         ),
       )
-      // getN8nKeyFromProject
+      // runSimWorkflow
       .mockResolvedValueOnce(
-        new Response(JSON.stringify('n8n-key'), { status: 200 }),
-      )
-      // runN8nFlow
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            data: {
-              resultData: {
-                lastNodeExecuted: 'final',
-                runData: {
-                  final: [
-                    { data: { main: [[{ json: { response: 'hello' } }]] } },
-                  ],
-                },
-              },
-            },
-          }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        ),
+        new Response(JSON.stringify({ success: true, output: 'hello' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
       )
 
     const conversation: any = {
@@ -803,7 +784,9 @@ describe('handleFunctionCalling utils (browser/jsdom)', () => {
       'proj',
     )
 
-    expect(updated.messages[0].tools[0].output).toEqual({ text: 'hello' })
+    expect(updated.messages[0].tools?.[0]?.output).toEqual({ text: 'hello' })
+
+    localStorage.clear()
   })
 
   it('handleToolsServer returns selectedConversation when tool execution throws', async () => {

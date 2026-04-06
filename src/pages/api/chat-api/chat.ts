@@ -5,6 +5,7 @@ import {
   type Content,
   type Conversation,
   type Message,
+  type UIUCTool,
 } from '~/types/chat'
 import fetchCourseMetadataServer from '~/pages/api/chat-api/util/fetchCourseMetadataServer'
 import { determineAndValidateModelServer } from '~/pages/api/chat-api/util/determineAndValidateModelServer'
@@ -28,7 +29,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { getBaseUrl } from '~/utils/apiUtils'
 
 import {
-  fetchTools,
+  fetchSimTools,
   handleToolsServer,
 } from '~/utils/functionCalling/handleFunctionCalling'
 import {
@@ -181,24 +182,13 @@ export default async function chat(
   const lastMessage = messages[messages.length - 1] as Message
 
   // Fetch tools
-  let availableTools
+  let availableTools: UIUCTool[] = []
   if (!retrieval_only) {
     try {
-      availableTools = await fetchTools(
-        course_name!,
-        '',
-        20,
-        'true',
-        false,
-        getBaseUrl(),
-      )
+      availableTools = await fetchSimTools(course_name!)
     } catch (error) {
       console.error('Error fetching tools.', error)
       availableTools = []
-      res
-        .status(500)
-        .json({ error: `Error fetching tools. ${(error as Error).message}` })
-      return
     }
   }
 

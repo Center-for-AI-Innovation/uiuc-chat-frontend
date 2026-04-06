@@ -13,19 +13,20 @@ import {
   type ToolOutput,
 } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
-import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
 import fetchContextsFromBackend from '~/pages/util/fetchContexts'
-import { getBackendUrl } from '~/utils/apiUtils'
 import { generatePresignedUrl } from '~/pages/api/download'
-// Reuse existing functions instead of duplicating
 import {
   getOpenAIToolFromUIUCTool,
-  getUIUCToolFromN8n,
+  getUIUCToolFromSim,
 } from '~/utils/functionCalling/handleFunctionCalling'
 import { conversationToMessages as baseConversationToMessages } from '~/utils/functionCalling/conversationToMessages'
-import { db } from '~/db/dbClient'
-import { projects } from '~/db/schema'
-import { eq } from 'drizzle-orm'
+import { resolveSimCredentials, validateSimBaseUrl } from '~/utils/simConfig'
+import {
+  type SimWorkflow,
+  type SimWorkflowListItem,
+  type SimInputField,
+} from '~/types/sim'
+import { type SimExecutionResult } from '~/types/sim'
 
 /**
  * Convert conversation to OpenAI message format for agent mode.
@@ -235,93 +236,106 @@ export async function selectToolsServer(
 export interface ExecuteToolServerParams {
   tool: UIUCTool
   projectName: string
-  n8nApiKey?: string
+  simApiKey?: string
   signal?: AbortSignal
 }
 
+const SIM_DEFAULT_BASE_URL = 'https://www.sim.ai'
+const SIM_TIMEOUT_MS = 300_000
+
 /**
- * Server-side tool execution for N8N tools.
+ * Server-side tool execution for Sim AI workflows.
  * Returns the tool with output/error populated.
  */
 export async function executeToolServer(
   params: ExecuteToolServerParams,
 ): Promise<UIUCTool> {
-  const { tool, projectName, n8nApiKey, signal } = params
+  const { tool, projectName, simApiKey, signal } = params
   const toolCopy = { ...tool }
 
-  // Get N8N API key if not provided
-  let apiKey = n8nApiKey
-  if (!apiKey) {
-    apiKey = await getN8nApiKeyFromProject(projectName)
-  }
+  const creds = await resolveSimCredentials(projectName, {
+    api_key: simApiKey,
+  })
 
-  if (!apiKey) {
-    toolCopy.error = 'N8N API key not available'
+  if (!creds.api_key) {
+    toolCopy.error = 'Sim API key not available'
     return toolCopy
   }
 
+  const rawBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
+  const simBaseUrl = validateSimBaseUrl(rawBaseUrl)
+  if (!simBaseUrl) {
+    toolCopy.error = 'Invalid Sim base URL'
+    return toolCopy
+  }
+  const url = `${simBaseUrl}/api/workflows/${encodeURIComponent(tool.id)}/execute`
+
   const timeStart = Date.now()
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), SIM_TIMEOUT_MS)
+
+  // Combine external signal with timeout
+  if (signal) {
+    signal.addEventListener('abort', () => controller.abort(), { once: true })
+  }
 
   try {
-    const n8nResponse = await runN8nFlowBackend(
-      apiKey,
-      tool.readableName,
-      tool.aiGeneratedArgumentValues,
-      signal,
-    )
+    const simResponse = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': creds.api_key,
+      },
+      body: JSON.stringify({
+        ...(tool.aiGeneratedArgumentValues ?? {}),
+        stream: false,
+      }),
+      signal: controller.signal,
+    })
 
-    const timeEnd = Date.now()
-    console.debug(
-      'Time taken for n8n function call:',
-      (timeEnd - timeStart) / 1000,
-      'seconds',
-    )
+    clearTimeout(timeoutId)
 
-    const resultData = n8nResponse.data.resultData
-    const finalNodeType = resultData.lastNodeExecuted
+    const secondsToRun = (Date.now() - timeStart) / 1000
+    console.debug('Time taken for Sim workflow call:', secondsToRun, 'seconds')
 
-    // Check for N8N tool error
-    if (resultData.runData[finalNodeType][0]['error']) {
-      const err = resultData.runData[finalNodeType][0]['error']
-      const formattedErrMessage = `${err.message}. ${err.description || ''}`
-      console.error('N8N tool error:', formattedErrMessage)
-      toolCopy.error = formattedErrMessage
+    if (!simResponse.ok) {
+      const errText = await simResponse.text()
+      let errMessage = `Sim API returned ${simResponse.status}: ${simResponse.statusText}`
+      try {
+        const errJson = JSON.parse(errText) as { error?: string }
+        if (errJson.error) errMessage = errJson.error
+      } catch {
+        // non-JSON error body
+      }
+      console.error('[executeToolServer] Sim API error', errMessage)
+      toolCopy.error = errMessage
       return toolCopy
     }
 
-    // Parse tool output
-    if (
-      !resultData.runData[finalNodeType][0].data ||
-      !resultData.runData[finalNodeType][0].data.main[0][0].json
-    ) {
-      toolCopy.error =
-        'Tool executed successfully, but we got an empty response!'
+    const result = (await simResponse.json()) as SimExecutionResult
+
+    if (!result.success || result.error) {
+      toolCopy.error = result.error ?? 'Sim workflow returned success=false'
       return toolCopy
     }
 
     let toolOutput: ToolOutput
-    const jsonData = resultData.runData[finalNodeType][0].data.main[0][0].json
-
-    if (jsonData['data']) {
-      toolOutput = { data: jsonData['data'] }
-    } else if (jsonData['response'] && Object.keys(jsonData).length === 1) {
-      toolOutput = { text: jsonData['response'] }
+    if (typeof result.output === 'string') {
+      toolOutput = { text: result.output }
+    } else if (result.output != null) {
+      toolOutput = { data: result.output as Record<string, unknown> }
     } else {
-      toolOutput = { data: jsonData }
-    }
-
-    // Check for images
-    if (jsonData['image_urls']) {
-      if (Object.keys(jsonData).length === 1) {
-        toolOutput = { imageUrls: jsonData['image_urls'] }
-      } else {
-        toolOutput = { ...toolOutput, imageUrls: jsonData['image_urls'] }
-      }
+      toolOutput = {}
     }
 
     toolCopy.output = toolOutput
     return toolCopy
   } catch (error: unknown) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      toolCopy.error = 'Sim workflow timed out after 5 minutes'
+      return toolCopy
+    }
     console.error(`Error running tool ${tool.readableName}:`, error)
     toolCopy.error =
       error instanceof Error ? error.message : 'Unknown error running tool'
@@ -330,17 +344,17 @@ export async function executeToolServer(
 }
 
 /**
- * Execute multiple N8N tools in parallel
+ * Execute multiple Sim tools in parallel
  */
 export async function executeToolsServer(
   tools: UIUCTool[],
   projectName: string,
-  n8nApiKey?: string,
+  simApiKey?: string,
   signal?: AbortSignal,
 ): Promise<UIUCTool[]> {
   const results = await Promise.all(
     tools.map((tool) =>
-      executeToolServer({ tool, projectName, n8nApiKey, signal }),
+      executeToolServer({ tool, projectName, simApiKey, signal }),
     ),
   )
   return results
@@ -440,92 +454,95 @@ export async function fetchContextsServer(
 }
 
 /**
- * Get N8N API key for a project directly from database (server-side only)
- */
-async function getN8nApiKeyFromProject(
-  courseName: string,
-): Promise<string | undefined> {
-  try {
-    const data = await db
-      .select({ n8n_api_key: projects.n8n_api_key })
-      .from(projects)
-      .where(eq(projects.course_name, courseName))
-      .limit(1)
-
-    if (data.length === 0) return undefined
-
-    const apiKey = data[0]?.n8n_api_key
-    if (!apiKey || apiKey.trim() === '') return undefined
-
-    return apiKey
-  } catch (error) {
-    console.error(
-      `[Agent] Error fetching N8N API key from database for course ${courseName}:`,
-      error,
-    )
-    return undefined
-  }
-}
-
-/**
- * Fetch available tools for a project
+ * Fetch available Sim AI tools for a project (server-side).
+ * Hits the Sim API directly instead of going through the Next.js API route.
  */
 export async function fetchToolsServer(
   courseName: string,
-  n8nApiKey?: string,
-  limit = 20,
+  simApiKey?: string,
+  _limit = 20,
   signal?: AbortSignal,
 ): Promise<UIUCTool[]> {
-  // Get N8N API key if not provided
-  let apiKey = n8nApiKey
-  if (!apiKey) {
-    apiKey = await getN8nApiKeyFromProject(courseName)
-    if (!apiKey) {
-      return []
-    }
-  }
+  const creds = await resolveSimCredentials(courseName, {
+    api_key: simApiKey,
+  })
 
-  if (!apiKey) {
+  if (!creds.api_key || !creds.workspace_id) {
     return []
   }
 
+  const rawBaseUrl = (creds.base_url ?? SIM_DEFAULT_BASE_URL).replace(/\/$/, '')
+  const simBaseUrl = validateSimBaseUrl(rawBaseUrl)
+  if (!simBaseUrl) return []
+  const headers = { 'X-API-Key': creds.api_key }
+
   try {
-    const backendUrl = getBackendUrl()
-    if (!backendUrl) {
+    const listUrl = `${simBaseUrl}/api/v1/workflows?workspaceId=${encodeURIComponent(creds.workspace_id)}&deployedOnly=true`
+    const listRes = await fetch(listUrl, { headers, signal })
+
+    if (!listRes.ok) {
+      console.error('[fetchToolsServer] Sim list failed', listRes.status)
       return []
     }
 
-    const response = await fetch(
-      `${backendUrl}/getworkflows?api_key=${apiKey}&limit=${limit}&pagination=false`,
-      { signal },
+    const listData = (await listRes.json()) as { data: SimWorkflowListItem[] }
+    const items = listData.data ?? []
+    if (items.length === 0) return []
+
+    const workflows: SimWorkflow[] = await Promise.all(
+      items.map(async (item): Promise<SimWorkflow> => {
+        try {
+          const detailRes = await fetch(
+            `${simBaseUrl}/api/v1/workflows/${item.id}`,
+            { headers, signal },
+          )
+          if (detailRes.ok) {
+            const detail = (await detailRes.json()) as Record<string, unknown>
+            return {
+              id: item.id,
+              name: item.name,
+              description: item.description ?? '',
+              inputFields: extractInputFields(detail),
+            }
+          }
+        } catch (err) {
+          console.debug(
+            '[fetchToolsServer] detail fetch failed for',
+            item.id,
+            err,
+          )
+        }
+        return {
+          id: item.id,
+          name: item.name,
+          description: item.description ?? '',
+          inputFields: [],
+        }
+      }),
     )
 
-    if (!response.ok) {
-      throw new Error(`Unable to fetch n8n tools: ${response.statusText}`)
-    }
-
-    const workflows = await response.json()
-    if (!Array.isArray(workflows) || workflows.length === 0) {
-      return []
-    }
-
-    // Handle response structure: backend may return [[workflows]] or [workflows]
-    const workflowArray = Array.isArray(workflows[0]) ? workflows[0] : workflows
-
-    if (!Array.isArray(workflowArray) || workflowArray.length === 0) {
-      return []
-    }
-
-    // Use the imported conversion function (no dynamic import needed)
-    const uiucTools = getUIUCToolFromN8n(workflowArray)
-    return uiucTools
+    return getUIUCToolFromSim(workflows)
   } catch (error) {
     console.error(
-      `[Agent] Error fetching tools server-side for course ${courseName}:`,
+      `[Agent] Error fetching Sim tools for course ${courseName}:`,
       error,
     )
     return []
   }
+}
+
+function extractInputFields(detail: Record<string, unknown>): SimInputField[] {
+  const inner = (detail.data ?? detail) as Record<string, unknown>
+  const inputs = inner.inputs
+  if (Array.isArray(inputs)) {
+    return inputs.map((f: Record<string, unknown>) => ({
+      name: String(f.name ?? ''),
+      type: String(f.type ?? 'string'),
+      description: f.description ? String(f.description) : undefined,
+      required: Boolean(f.required ?? false),
+    }))
+  }
+  return []
 }
 
 /**

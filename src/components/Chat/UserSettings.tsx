@@ -11,7 +11,6 @@ import { ToolsItem } from './ToolsItem'
 import { ModelParams } from './ModelParams'
 import { useTranslation } from 'react-i18next'
 import { prebuiltAppConfig } from '~/utils/modelProviders/ConfigWebLLM'
-import * as webllm from '@mlc-ai/web-llm'
 import { type WebllmModel, webLLMModels } from '~/utils/modelProviders/WebLLM'
 
 const useStyles = createStyles((theme) => ({
@@ -74,6 +73,7 @@ export const UserSettings = () => {
   const [opened, { open, close }] = useDisclosure(false)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const loadModelCache = async () => {
+    const webllm = await import('@mlc-ai/web-llm')
     for (const model of webLLMModels) {
       const theCachedModel = await webllm.hasModelInCache(model.name, appConfig)
       if (theCachedModel) {

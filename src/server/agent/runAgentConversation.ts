@@ -354,7 +354,7 @@ export async function runAgentConversation(
       const retrievalTools = selectedTools.filter(
         (t) => t.id === 'synthetic-retrieval-tool',
       )
-      const n8nTools = selectedTools.filter(
+      const simTools = selectedTools.filter(
         (t) => t.id !== 'synthetic-retrieval-tool',
       )
 
@@ -500,14 +500,14 @@ export async function runAgentConversation(
         })
       }
 
-      // Execute N8N tools
-      if (n8nTools.length > 0) {
+      // Execute Sim tools
+      if (simTools.length > 0) {
         if (abortIfNeeded()) {
           return cancelledResult
         }
         // Emit running events for each tool
         const toolEventIds: Record<string, string> = {}
-        for (const [idx, tool] of n8nTools.entries()) {
+        for (const [idx, tool] of simTools.entries()) {
           const eventId = `agent-step-${stepNumber}-tool-${
             tool.invocationId || `${tool.id}-${idx}`
           }`
@@ -540,7 +540,7 @@ export async function runAgentConversation(
 
         // Execute tools in parallel
         const executedTools = await executeToolsServer(
-          n8nTools,
+          simTools,
           courseName,
           undefined,
           signal,
