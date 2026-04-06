@@ -113,6 +113,7 @@ export const WebScrape = ({
           disabled_models: undefined,
           project_description: undefined,
           documentsOnly: undefined,
+          disableCitations: undefined,
           guidedLearning: undefined,
           systemPromptOnly: undefined,
           vector_search_rewrite_disabled: undefined,

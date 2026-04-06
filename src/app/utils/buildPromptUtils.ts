@@ -14,6 +14,8 @@ import {
   DEFAULT_SYSTEM_PROMPT,
   GUIDED_LEARNING_PROMPT,
   DOCUMENT_FOCUS_PROMPT,
+  CITATION_DISABLED_PROMPT,
+  CITATION_GUIDELINES_PROMPT,
 } from '@/utils/app/const'
 import { routeModelRequest } from '~/utils/streamProcessing'
 import { NextRequest, NextResponse } from 'next/server'
@@ -381,7 +383,9 @@ const _buildToolsOutputResults = ({
           })),
         )
       } else if (tool.output && tool.output.data) {
-        toolOutput += `Tool: ${tool.readableName}\nOutput: ${JSON.stringify(tool.output.data)}\n`
+        toolOutput += `Tool: ${tool.readableName}\nOutput: ${JSON.stringify(
+          tool.output.data,
+        )}\n`
       } else if (tool.error) {
         toolOutput += `Tool: ${tool.readableName}\n${tool.error}\n`
       }
@@ -398,8 +402,8 @@ const _buildToolsOutputResults = ({
 const _buildConvoHistory = ({
   conversation,
   tokenLimit,
-  // encoding,
-}: {
+}: // encoding,
+{
   conversation: Conversation
   tokenLimit: number
   // encoding: Tiktoken
@@ -544,7 +548,7 @@ const _getSystemPrompt = async ({
   // Start with either user defined prompt or default
   let systemPrompt = userDefinedSystemPrompt ?? DEFAULT_SYSTEM_PROMPT ?? ''
 
-  // If systemPromptOnly is true, don't add additional prompts except for guided learning and documents only
+  // If systemPromptOnly is true, don't add additional prompts except for guided learning, documents only and citation instructions
   if (isSystemPromptOnlyEnabled(conversation, courseMetadata)) {
     // Even with systemPromptOnly, we should still add guided learning if enabled locally but not course-wide
     if (shouldAppendGuidedLearningPrompt(conversation, courseMetadata)) {
@@ -555,6 +559,11 @@ const _getSystemPrompt = async ({
     if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
       systemPrompt += DOCUMENT_FOCUS_PROMPT
     }
+
+    // Add prompt for citation instructions
+    systemPrompt += courseMetadata?.disableCitations
+      ? CITATION_DISABLED_PROMPT
+      : CITATION_GUIDELINES_PROMPT
 
     const agentPrompt =
       conversation.agentModeEnabled &&
@@ -574,6 +583,11 @@ const _getSystemPrompt = async ({
   if (shouldAppendDocumentsOnlyPrompt(conversation, courseMetadata)) {
     systemPrompt += DOCUMENT_FOCUS_PROMPT
   }
+
+  // Add prompt for citation instructions
+  systemPrompt += courseMetadata?.disableCitations
+    ? CITATION_DISABLED_PROMPT
+    : CITATION_GUIDELINES_PROMPT
 
   // Add math notation instructions
   systemPrompt += `\nWhen responding with equations, use MathJax/KaTeX notation. Equations should be wrapped in either:
@@ -621,6 +635,7 @@ export const getSystemPostPrompt = ({
 
   const isGuidedLearning = isGuidedLearningEnabled(conversation, courseMetadata)
   const isDocumentsOnly = isDocumentsOnlyEnabled(conversation, courseMetadata)
+  const isCitationsDisabled = courseMetadata?.disableCitations || false
 
   const postPrompt =
     `Please analyze and respond to the following question using the excerpts from the provided documents. These documents can be PDF files or web pages. You may also see output from API calls (labeled as "tools") and image descriptions. Use this information to craft a detailed and accurate answer.
@@ -640,7 +655,7 @@ Citations should be placed at the end of complete thoughts or sections, immediat
 Note: You may see citations in the conversation history that appear differently due to post-processing formatting. Regardless of how they appear in previous messages, always use the XML-style citation format specified above in your responses.
 
 ${
-  isGuidedLearning
+  isGuidedLearning && !isCitationsDisabled
     ? 'IMPORTANT: While in guided learning mode, you must still cite all relevant course materials using the exact citation format—even if they contain direct answers. Never filter out or omit relevant materials.'
     : ''
 }
@@ -673,6 +688,7 @@ export const getDefaultPostPrompt = (): string => {
     disabled_models: undefined, // TODO: remove
     project_description: undefined,
     documentsOnly: false,
+    disableCitations: false,
     guidedLearning: false,
     systemPromptOnly: false,
     vector_search_rewrite_disabled: false,
