@@ -580,7 +580,6 @@ const _getSystemPrompt = async ({
 
   * Single dollar signs $...$ for inline math
   * Double dollar signs $$...$$ for display/block math
-  * Or \\[...\\] for display math
   
   Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
 

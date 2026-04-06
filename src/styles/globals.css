@@ -1662,3 +1662,8 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
     transform: scale(1);
   }
 }
+
+/* Prevent tailwindCSS styling override for MathJax */
+.math svg {
+  display: unset;
+}
