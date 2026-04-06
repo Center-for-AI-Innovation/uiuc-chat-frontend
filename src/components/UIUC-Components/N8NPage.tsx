@@ -468,7 +468,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           title={
                             <Title
                               style={{ margin: '0 auto', textAlign: 'left' }}
-                              order={4}
+                              order={3}
                               size={'xl'}
                               className={`pb-3 pt-3 ${montserrat_paragraph.variable} font-montserratParagraph`}
                             >
@@ -651,14 +651,14 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           onChange={(event) =>
                             setN8nApiKeyTextbox(event.target.value)
                           }
+                          descriptionProps={{
+                            style: { color: 'var(--foreground)' },
+                          }}
                           styles={{
                             input: {
                               color: 'var(--foreground)',
                               backgroundColor: 'var(--background)',
                               margin: '1rem 0rem .1rem 0rem',
-                            },
-                            description: {
-                              color: 'var(--dashboard-foreground)',
                             },
                           }}
                           className={`${montserrat_paragraph.variable} font-montserratParagraph`}

@@ -191,7 +191,7 @@
   --button-disabled-text-color: color-mix(
     in srgb,
     var(--foreground),
-    var(--background) 55%
+    var(--background) 25%
   );
 
   --chat-background: color-mix(in srgb, var(--background), black 2%);
