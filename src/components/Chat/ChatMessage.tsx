@@ -1258,6 +1258,14 @@ export const ChatMessage = memo(
         contentToRender = remainingContent
       }
 
+      // Handle MathJax not supported by remark-math
+      contentToRender = contentToRender
+        .replace(
+          /\\\[([\s\S]*?)\\\]/g,
+          (_, equation) => `$$\n${equation.trim()}\n$$`,
+        )
+        .replace(/\\\(([\s\S]*?)\\\)/g, (_, equation) => `$${equation.trim()}$`)
+
       return (
         <>
           {thoughtsContent && (
