@@ -165,7 +165,8 @@ const Home: NextPage = () => {
       </Head>
 
       {/* Rebranding announcement header bar */}
-      <div
+      <section
+        aria-label="Site announcement"
         className="relative w-full py-2 text-center"
         style={{
           background: 'var(--illinois-orange)',
@@ -205,7 +206,7 @@ const Home: NextPage = () => {
             </span>
           </div>
         </div>
-      </div>
+      </section>
 
       <LandingPageHeader />
 
