@@ -130,7 +130,7 @@ export const APIKeyInput = ({
           className="text-[--foreground-faded] hover:bg-[--dashboard-button] hover:text-[--dashboard-button-foreground] hover:text-[white]"
           style={{ marginLeft: '8px' }}
         >
-          <IconX size={12} />
+          <IconX size={12} aria-hidden="true" />
         </ActionIcon>
       </div>
       <FieldInfo field={field} />
@@ -211,10 +211,20 @@ const NewModelDropdown: React.FC<{
 
   return (
     <>
+      <label
+        id="default-model-label"
+        htmlFor="default-model-select"
+        className="sr-only"
+      >
+        Select default model
+      </label>
       <Select
         className="menu z-[30] w-full"
         size="md"
+        aria-label="Select default model"
+        aria-labelledby="default-model-label"
         placeholder="Select a model"
+        id="default-model-select"
         searchable
         value={value?.id || ''}
         onChange={async (modelId) => {
@@ -761,7 +771,7 @@ export default function APIKeyInputForm({
         tabIndex={-1}
         className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
       >
-        <h1 className="sr-only">{projectName} LLM Settings</h1>
+        <h1 className="sr-only">{projectName} — LLMs — Illinois Chat</h1>
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <Card

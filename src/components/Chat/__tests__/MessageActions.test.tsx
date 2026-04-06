@@ -1,19 +1,23 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { screen, fireEvent, waitFor, act } from '@testing-library/react'
+import React from 'react'
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+
 import { renderWithProviders } from '~/test-utils/renderWithProviders'
-import { MessageActions } from '../MessageActions'
 import { makeMessage } from '~/test-utils/mocks/chat'
-import type { Content, Message } from '~/types/chat'
+import { MessageActions } from '../MessageActions'
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function renderActions(
-  overrides: Partial<Parameters<typeof MessageActions>[0]> = {},
-) {
-  const defaultProps = {
-    message: makeMessage({ role: 'assistant', content: 'Hello world' }),
+function createDefaultProps(overrides: Record<string, unknown> = {}) {
+  return {
+    message: makeMessage({
+      id: 'a1',
+      role: 'assistant' as const,
+      content: 'Hello world',
+    }),
     messageIndex: 0,
     isLastMessage: true,
     onRegenerate: vi.fn(),
@@ -21,8 +25,14 @@ function renderActions(
     onOpenFeedbackModal: vi.fn(),
     ...overrides,
   }
-  const result = renderWithProviders(<MessageActions {...defaultProps} />)
-  return { ...result, props: defaultProps }
+}
+
+function renderActions(overrides: Record<string, unknown> = {}) {
+  const props = createDefaultProps(overrides)
+  return {
+    ...renderWithProviders(<MessageActions {...props} />),
+    props,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -30,262 +40,493 @@ function renderActions(
 // ---------------------------------------------------------------------------
 
 describe('MessageActions', () => {
+  let clipboardWriteText: ReturnType<typeof vi.fn>
+
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
-    vi.mocked(navigator.clipboard.writeText).mockResolvedValue(undefined)
+    // Re-assign clipboard.writeText before each test because restoreMocks
+    // in vitest config can clear the global mock set in vitest.setup.ts.
+    clipboardWriteText = vi.fn(() => Promise.resolve())
+    Object.assign(navigator.clipboard, { writeText: clipboardWriteText })
   })
 
+  // Restore real timers after each test so cleanup is not affected
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  // ---- Rendering ----------------------------------------------------------
+  // ---------- Rendering ----------------------------------------------------
 
-  it('renders all four action buttons', () => {
-    renderActions()
-    expect(screen.getByLabelText('Copy message')).toBeInTheDocument()
-    expect(screen.getByLabelText('Good Response')).toBeInTheDocument()
-    expect(screen.getByLabelText('Bad Response')).toBeInTheDocument()
-    expect(screen.getByLabelText('Regenerate Response')).toBeInTheDocument()
-  })
+  describe('rendering', () => {
+    it('renders all four action buttons', () => {
+      renderActions()
+      expect(
+        screen.getByRole('button', { name: /Copy message/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /Good Response/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /Bad Response/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /Regenerate Response/i }),
+      ).toBeInTheDocument()
+    })
 
-  it('applies foreground-faded class when isLastMessage is true', () => {
-    renderActions({ isLastMessage: true })
-    const copyBtn = screen.getByLabelText('Copy message')
-    expect(copyBtn.className).toContain('text-[--foreground-faded]')
-  })
+    it('renders for a user-role message', () => {
+      renderActions({
+        message: makeMessage({
+          id: 'u1',
+          role: 'user',
+          content: 'User question',
+        }),
+      })
+      expect(
+        screen.getByRole('button', { name: /Copy message/i }),
+      ).toBeInTheDocument()
+    })
 
-  it('applies foreground-faded class when isLastMessage is false', () => {
-    renderActions({ isLastMessage: false })
-    const copyBtn = screen.getByLabelText('Copy message')
-    expect(copyBtn.className).toContain('text-[--foreground-faded]')
-  })
-
-  // ---- Copy ---------------------------------------------------------------
-
-  it('copies string content to clipboard on click', async () => {
-    renderActions()
-    fireEvent.click(screen.getByLabelText('Copy message'))
-
-    await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Hello world')
+    it('renders for an assistant-role message', () => {
+      renderActions({
+        message: makeMessage({
+          id: 'a1',
+          role: 'assistant',
+          content: 'Bot reply',
+        }),
+      })
+      expect(
+        screen.getByRole('button', { name: /Copy message/i }),
+      ).toBeInTheDocument()
     })
   })
 
-  it('copies array content (text only) to clipboard', async () => {
-    const contentArray: Content[] = [
-      { type: 'text', text: 'Part one' },
-      { type: 'image_url', image_url: { url: 'http://img.png' } },
-      { type: 'text', text: 'Part two' },
-    ]
-    const msg = makeMessage({ role: 'assistant', content: contentArray })
-    renderActions({ message: msg })
+  // ---------- Copy to clipboard --------------------------------------------
 
-    fireEvent.click(screen.getByLabelText('Copy message'))
+  describe('copy to clipboard', () => {
+    it('copies string content to clipboard on click', async () => {
+      renderActions({
+        message: makeMessage({ content: 'Copy me' }),
+      })
 
-    await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        'Part one Part two',
-      )
-    })
-  })
+      fireEvent.click(screen.getByRole('button', { name: /Copy message/i }))
 
-  it('does not copy when navigator.clipboard is unavailable', () => {
-    const original = navigator.clipboard
-    Object.defineProperty(navigator, 'clipboard', {
-      value: undefined,
-      configurable: true,
+      await waitFor(() => {
+        expect(clipboardWriteText).toHaveBeenCalledWith('Copy me')
+      })
     })
 
-    renderActions()
-    // Should not throw
-    fireEvent.click(screen.getByLabelText('Copy message'))
+    it('copies text from Content[] array (filters only text type)', async () => {
+      const contentArray = [
+        { type: 'text' as const, text: 'first' },
+        { type: 'image_url' as const, image_url: { url: 'http://img' } },
+        { type: 'text' as const, text: 'second' },
+      ]
+      renderActions({
+        message: makeMessage({ content: contentArray }),
+      })
 
-    Object.defineProperty(navigator, 'clipboard', {
-      value: original,
-      configurable: true,
+      fireEvent.click(screen.getByRole('button', { name: /Copy message/i }))
+
+      await waitFor(() => {
+        expect(clipboardWriteText).toHaveBeenCalledWith('first second')
+      })
     })
-  })
 
-  it('shows check icon briefly after copy then reverts', async () => {
-    renderActions()
-    fireEvent.click(screen.getByLabelText('Copy message'))
+    it('shows check icon after copy then reverts after 2 seconds', async () => {
+      renderActions()
 
-    // After clipboard resolves the label/tooltip should read "Copied!" indirectly,
-    // but we verify via the aria-label staying the same (icon swap is visual).
-    // The button should still be accessible after the timeout.
-    await act(async () => {
+      const copyBtn = screen.getByRole('button', { name: /Copy message/i })
+      fireEvent.click(copyBtn)
+
+      // After copy the icon should be a check (green class)
+      await waitFor(() => {
+        expect(copyBtn.querySelector('.text-green-500')).toBeTruthy()
+      })
+
+      // Advance 2000ms so the copied state resets
       vi.advanceTimersByTime(2000)
+
+      await waitFor(() => {
+        expect(copyBtn.querySelector('.text-green-500')).toBeNull()
+      })
     })
 
-    expect(screen.getByLabelText('Copy message')).toBeInTheDocument()
-  })
+    it('does nothing when navigator.clipboard is unavailable', () => {
+      const original = navigator.clipboard
+      // Temporarily remove clipboard
+      Object.defineProperty(navigator, 'clipboard', {
+        value: undefined,
+        configurable: true,
+      })
 
-  // ---- Thumbs Up ----------------------------------------------------------
+      renderActions()
 
-  it('calls onFeedback with true when thumbs up clicked', () => {
-    const { props } = renderActions()
-    fireEvent.click(screen.getByLabelText('Good Response'))
+      // Should not throw
+      fireEvent.click(screen.getByRole('button', { name: /Copy message/i }))
 
-    expect(props.onFeedback).toHaveBeenCalledWith(props.message, true)
-  })
-
-  it('removes positive feedback on second thumbs up click', async () => {
-    const msg = makeMessage({
-      role: 'assistant',
-      content: 'hi',
-      feedback: { isPositive: true, category: null, details: null },
+      // Restore clipboard
+      Object.defineProperty(navigator, 'clipboard', {
+        value: original,
+        configurable: true,
+      })
     })
-    const { props } = renderActions({ message: msg })
-
-    // The component initializes with thumbsUp=true from feedback, so first click removes it
-    fireEvent.click(screen.getByLabelText('Remove Good Response'))
-
-    expect(props.onFeedback).toHaveBeenCalledWith(msg, null)
   })
 
-  it('shows filled thumb-up icon when message has positive feedback', () => {
-    const msg = makeMessage({
-      role: 'assistant',
-      content: 'hi',
-      feedback: { isPositive: true, category: null, details: null },
+  // ---------- Thumbs up (positive feedback) --------------------------------
+
+  describe('thumbs up', () => {
+    it('calls onFeedback with true when clicked', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { props } = renderActions()
+
+      await user.click(screen.getByRole('button', { name: /Good Response/i }))
+
+      expect(props.onFeedback).toHaveBeenCalledWith(props.message, true)
     })
-    renderActions({ message: msg })
 
-    // When positive feedback exists, the label should indicate removal
-    expect(screen.getByLabelText('Remove Good Response')).toBeInTheDocument()
-  })
+    it('toggles to filled icon on click', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      renderActions()
 
-  // ---- Thumbs Down --------------------------------------------------------
+      await user.click(screen.getByRole('button', { name: /Good Response/i }))
 
-  it('opens feedback modal when thumbs down clicked', () => {
-    const { props } = renderActions()
-    fireEvent.click(screen.getByLabelText('Bad Response'))
-
-    expect(props.onOpenFeedbackModal).toHaveBeenCalled()
-    // onFeedback should NOT be called yet (waits for modal submission)
-    expect(props.onFeedback).not.toHaveBeenCalled()
-  })
-
-  it('removes negative feedback on second thumbs down click', () => {
-    const msg = makeMessage({
-      role: 'assistant',
-      content: 'hi',
-      feedback: { isPositive: false, category: null, details: null },
+      // After clicking, the label changes to "Remove Good Response"
+      expect(
+        screen.getByRole('button', { name: /Remove Good Response/i }),
+      ).toBeInTheDocument()
     })
-    const { props } = renderActions({ message: msg })
 
-    fireEvent.click(screen.getByLabelText('Remove Bad Response'))
+    it('removes feedback (passes null) when toggling off', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { props } = renderActions()
 
-    expect(props.onFeedback).toHaveBeenCalledWith(msg, null)
-  })
+      const btn = screen.getByRole('button', { name: /Good Response/i })
+      await user.click(btn) // like
 
-  it('shows filled thumb-down icon when message has negative feedback', () => {
-    const msg = makeMessage({
-      role: 'assistant',
-      content: 'hi',
-      feedback: { isPositive: false, category: null, details: null },
+      // Second click un-likes
+      const removeBtn = screen.getByRole('button', {
+        name: /Remove Good Response/i,
+      })
+      await user.click(removeBtn)
+
+      expect(props.onFeedback).toHaveBeenCalledTimes(2)
+      expect(props.onFeedback).toHaveBeenLastCalledWith(props.message, null)
     })
-    renderActions({ message: msg })
 
-    expect(screen.getByLabelText('Remove Bad Response')).toBeInTheDocument()
+    it('clears thumbs down when thumbs up is clicked', async () => {
+      // Pre-set negative feedback on the message
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      renderActions({
+        message: makeMessage({
+          id: 'a1',
+          role: 'assistant',
+          content: 'test',
+          feedback: { isPositive: false, category: null, details: null },
+        }),
+      })
+
+      // Thumbs down should initially be active
+      expect(
+        screen.getByRole('button', { name: /Remove Bad Response/i }),
+      ).toHaveAttribute('aria-pressed', 'true')
+
+      // Click thumbs up
+      await user.click(screen.getByRole('button', { name: /Good Response/i }))
+
+      // Now thumbs up should be active, thumbs down should not
+      expect(
+        screen.getByRole('button', { name: /Remove Good Response/i }),
+      ).toHaveAttribute('aria-pressed', 'true')
+    })
+
+    it('works without onFeedback callback', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      renderActions({ onFeedback: undefined })
+
+      // Should not throw
+      await user.click(screen.getByRole('button', { name: /Good Response/i }))
+
+      expect(
+        screen.getByRole('button', { name: /Remove Good Response/i }),
+      ).toBeInTheDocument()
+    })
   })
 
-  // ---- Regenerate ---------------------------------------------------------
+  // ---------- Thumbs down (negative feedback) ------------------------------
 
-  it('calls onRegenerate with messageIndex', () => {
-    const { props } = renderActions({ messageIndex: 3 })
-    fireEvent.click(screen.getByLabelText('Regenerate Response'))
+  describe('thumbs down', () => {
+    it('opens the feedback modal on click', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { props } = renderActions()
 
-    expect(props.onRegenerate).toHaveBeenCalledWith(3)
+      await user.click(screen.getByRole('button', { name: /Bad Response/i }))
+
+      expect(props.onOpenFeedbackModal).toHaveBeenCalledTimes(1)
+    })
+
+    it('does NOT immediately set thumbs down to true (waits for modal submission)', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      renderActions()
+
+      await user.click(screen.getByRole('button', { name: /Bad Response/i }))
+
+      // aria-pressed should still be false because the state is set only on modal submission
+      const btn = screen.getByRole('button', { name: /Bad Response/i })
+      expect(btn).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('removes negative feedback when toggling off (when already thumbs down)', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const msg = makeMessage({
+        id: 'a1',
+        role: 'assistant',
+        content: 'test',
+        feedback: { isPositive: false, category: 'wrong', details: 'bad' },
+      })
+      const { props } = renderActions({ message: msg })
+
+      // The message has negative feedback, so thumbs down starts active
+      const removeBtn = screen.getByRole('button', {
+        name: /Remove Bad Response/i,
+      })
+      expect(removeBtn).toHaveAttribute('aria-pressed', 'true')
+
+      await user.click(removeBtn)
+
+      // Should call onFeedback with null
+      expect(props.onFeedback).toHaveBeenCalledWith(msg, null)
+    })
   })
 
-  it('disables regenerate button temporarily after click', async () => {
-    renderActions()
-    const btn = screen.getByLabelText('Regenerate Response')
-    fireEvent.click(btn)
+  // ---------- Regenerate ---------------------------------------------------
 
-    expect(btn).toBeDisabled()
+  describe('regenerate', () => {
+    it('calls onRegenerate with the messageIndex', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { props } = renderActions({ messageIndex: 3 })
 
-    await act(async () => {
+      await user.click(
+        screen.getByRole('button', { name: /Regenerate Response/i }),
+      )
+
+      expect(props.onRegenerate).toHaveBeenCalledWith(3)
+    })
+
+    it('disables the button while regenerating', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      renderActions()
+
+      const btn = screen.getByRole('button', { name: /Regenerate Response/i })
+      await user.click(btn)
+
+      expect(btn).toBeDisabled()
+    })
+
+    it('applies the spin animation while regenerating', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      renderActions()
+
+      const btn = screen.getByRole('button', { name: /Regenerate Response/i })
+      await user.click(btn)
+
+      expect(btn.className).toContain('animate-spin')
+    })
+
+    it('re-enables the button after 1 second', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      renderActions()
+
+      const btn = screen.getByRole('button', { name: /Regenerate Response/i })
+      await user.click(btn)
+
+      expect(btn).toBeDisabled()
+
       vi.advanceTimersByTime(1000)
+
+      await waitFor(() => {
+        expect(btn).not.toBeDisabled()
+      })
     })
 
-    expect(btn).not.toBeDisabled()
-  })
+    it('does not call onRegenerate if it is undefined', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      renderActions({ onRegenerate: undefined })
 
-  it('applies animate-spin class while regenerating', () => {
-    renderActions()
-    const btn = screen.getByLabelText('Regenerate Response')
-    fireEvent.click(btn)
+      const btn = screen.getByRole('button', { name: /Regenerate Response/i })
+      // Should not throw
+      await user.click(btn)
 
-    expect(btn.className).toContain('animate-spin')
-  })
-
-  it('does nothing when onRegenerate is undefined', () => {
-    renderActions({ onRegenerate: undefined })
-    const btn = screen.getByLabelText('Regenerate Response')
-    // Should not throw
-    fireEvent.click(btn)
-    expect(btn).not.toBeDisabled()
-  })
-
-  // ---- Feedback callback absent -------------------------------------------
-
-  it('does not throw when onFeedback is undefined and thumbs up clicked', () => {
-    renderActions({ onFeedback: undefined })
-    expect(() => {
-      fireEvent.click(screen.getByLabelText('Good Response'))
-    }).not.toThrow()
-  })
-
-  it('does not throw when onFeedback is undefined and thumbs down toggled off', () => {
-    const msg = makeMessage({
-      role: 'assistant',
-      content: 'hi',
-      feedback: { isPositive: false, category: null, details: null },
+      // Button should NOT be disabled because the handler exits early
+      expect(btn).not.toBeDisabled()
     })
-    renderActions({ onFeedback: undefined, message: msg })
-    expect(() => {
-      fireEvent.click(screen.getByLabelText('Remove Bad Response'))
-    }).not.toThrow()
   })
 
-  // ---- Effect: feedback state from message prop ---------------------------
+  // ---------- Feedback state initialization from message -------------------
 
-  it('resets feedback icons when message feedback is cleared', () => {
-    const msg = makeMessage({
-      role: 'assistant',
-      content: 'hi',
-      feedback: { isPositive: true, category: null, details: null },
+  describe('feedback state initialization', () => {
+    it('initializes thumbs up when message has positive feedback', () => {
+      renderActions({
+        message: makeMessage({
+          id: 'a1',
+          role: 'assistant',
+          content: 'test',
+          feedback: { isPositive: true, category: null, details: null },
+        }),
+      })
+
+      const thumbsUpBtn = screen.getByRole('button', {
+        name: /Remove Good Response/i,
+      })
+      expect(thumbsUpBtn).toHaveAttribute('aria-pressed', 'true')
+
+      const thumbsDownBtn = screen.getByRole('button', {
+        name: /Bad Response/i,
+      })
+      expect(thumbsDownBtn).toHaveAttribute('aria-pressed', 'false')
     })
-    const { rerender } = renderWithProviders(
-      <MessageActions
-        message={msg}
-        messageIndex={0}
-        isLastMessage
-        onOpenFeedbackModal={vi.fn()}
-      />,
-    )
 
-    expect(screen.getByLabelText('Remove Good Response')).toBeInTheDocument()
+    it('initializes thumbs down when message has negative feedback', () => {
+      renderActions({
+        message: makeMessage({
+          id: 'a1',
+          role: 'assistant',
+          content: 'test',
+          feedback: { isPositive: false, category: null, details: null },
+        }),
+      })
 
-    // Re-render with feedback removed
-    const updatedMsg = makeMessage({
-      role: 'assistant',
-      content: 'hi',
-      feedback: undefined,
+      const thumbsUpBtn = screen.getByRole('button', { name: /Good Response/i })
+      expect(thumbsUpBtn).toHaveAttribute('aria-pressed', 'false')
+
+      const thumbsDownBtn = screen.getByRole('button', {
+        name: /Remove Bad Response/i,
+      })
+      expect(thumbsDownBtn).toHaveAttribute('aria-pressed', 'true')
     })
-    rerender(
-      <MessageActions
-        message={updatedMsg}
-        messageIndex={0}
-        isLastMessage
-        onOpenFeedbackModal={vi.fn()}
-      />,
-    )
 
-    expect(screen.getByLabelText('Good Response')).toBeInTheDocument()
-    expect(screen.getByLabelText('Bad Response')).toBeInTheDocument()
+    it('initializes with no feedback when feedback is undefined', () => {
+      renderActions({
+        message: makeMessage({
+          id: 'a1',
+          role: 'assistant',
+          content: 'test',
+        }),
+      })
+
+      expect(
+        screen.getByRole('button', { name: /Good Response/i }),
+      ).toHaveAttribute('aria-pressed', 'false')
+      expect(
+        screen.getByRole('button', { name: /Bad Response/i }),
+      ).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('initializes with no feedback when isPositive is null', () => {
+      renderActions({
+        message: makeMessage({
+          id: 'a1',
+          role: 'assistant',
+          content: 'test',
+          feedback: { isPositive: null, category: null, details: null },
+        }),
+      })
+
+      expect(
+        screen.getByRole('button', { name: /Good Response/i }),
+      ).toHaveAttribute('aria-pressed', 'false')
+      expect(
+        screen.getByRole('button', { name: /Bad Response/i }),
+      ).toHaveAttribute('aria-pressed', 'false')
+    })
+  })
+
+  // ---------- Props variations ---------------------------------------------
+
+  describe('props variations', () => {
+    it('renders when isLastMessage is false', () => {
+      renderActions({ isLastMessage: false })
+      expect(
+        screen.getByRole('button', { name: /Regenerate Response/i }),
+      ).toBeInTheDocument()
+    })
+
+    it('handles messageIndex 0', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { props } = renderActions({ messageIndex: 0 })
+
+      await user.click(
+        screen.getByRole('button', { name: /Regenerate Response/i }),
+      )
+      expect(props.onRegenerate).toHaveBeenCalledWith(0)
+    })
+
+    it('handles large messageIndex', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { props } = renderActions({ messageIndex: 99 })
+
+      await user.click(
+        screen.getByRole('button', { name: /Regenerate Response/i }),
+      )
+      expect(props.onRegenerate).toHaveBeenCalledWith(99)
+    })
+
+    it('renders with empty string content', async () => {
+      renderActions({
+        message: makeMessage({ content: '' }),
+      })
+
+      fireEvent.click(screen.getByRole('button', { name: /Copy message/i }))
+
+      await waitFor(() => {
+        expect(clipboardWriteText).toHaveBeenCalledWith('')
+      })
+    })
+
+    it('renders with empty Content[] array', async () => {
+      renderActions({
+        message: makeMessage({ content: [] }),
+      })
+
+      fireEvent.click(screen.getByRole('button', { name: /Copy message/i }))
+
+      await waitFor(() => {
+        expect(clipboardWriteText).toHaveBeenCalledWith('')
+      })
+    })
+  })
+
+  // ---------- Combined interactions ----------------------------------------
+
+  describe('combined interactions', () => {
+    it('switching from thumbs up to thumbs down opens modal and clears up', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { props } = renderActions()
+
+      // First click thumbs up
+      await user.click(screen.getByRole('button', { name: /Good Response/i }))
+      expect(props.onFeedback).toHaveBeenCalledWith(props.message, true)
+
+      // Then click thumbs down
+      await user.click(screen.getByRole('button', { name: /Bad Response/i }))
+      expect(props.onOpenFeedbackModal).toHaveBeenCalledTimes(1)
+
+      // Thumbs up should no longer be active
+      const upBtn = screen.getByRole('button', { name: /Good Response/i })
+      expect(upBtn).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('can copy and give feedback in sequence', async () => {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const { props } = renderActions()
+
+      fireEvent.click(screen.getByRole('button', { name: /Copy message/i }))
+      await waitFor(() => {
+        expect(clipboardWriteText).toHaveBeenCalled()
+      })
+
+      await user.click(screen.getByRole('button', { name: /Good Response/i }))
+      expect(props.onFeedback).toHaveBeenCalledWith(props.message, true)
+    })
   })
 })

@@ -131,7 +131,13 @@ export const showPromptToast = (
     autoClose: duration,
     title: title,
     message: message,
-    icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
+    icon:
+      icon ||
+      (isError ? (
+        <IconAlertTriangle aria-hidden="true" />
+      ) : (
+        <IconCheck aria-hidden="true" />
+      )),
     styles: {
       root: {
         backgroundColor: 'var(--notification)', // Dark background to match the page
@@ -199,7 +205,11 @@ export const showToastNotification = (
     autoClose: duration,
     title: title,
     message: message,
-    icon: isError ? <IconAlertTriangle /> : <IconCheck />,
+    icon: isError ? (
+      <IconAlertTriangle aria-hidden="true" />
+    ) : (
+      <IconCheck aria-hidden="true" />
+    ),
     styles: {
       root: {
         backgroundColor: 'var(--notification)',
@@ -977,6 +987,7 @@ CRITICAL: The optimized prompt must:
                 <Flex align="center" gap="md">
                   <IconBook
                     size={24}
+                    aria-hidden="true"
                     style={{
                       color: 'var(--dashboard-button)',
                     }}
@@ -998,7 +1009,7 @@ CRITICAL: The optimized prompt must:
                     justifyContent: 'center',
                   }}
                 >
-                  <IconChevronDown size={24} />
+                  <IconChevronDown size={24} aria-hidden="true" />
                 </div>
               </Flex>
 
@@ -1037,6 +1048,7 @@ CRITICAL: The optimized prompt must:
                           The Official OpenAI Prompt Engineering Guide
                           <IconExternalLink
                             size={18}
+                            aria-hidden="true"
                             className="inline-block pl-1"
                             style={{
                               position: 'relative',
@@ -1056,6 +1068,7 @@ CRITICAL: The optimized prompt must:
                           The Official Anthropic Prompt Library
                           <IconExternalLink
                             size={18}
+                            aria-hidden="true"
                             className="inline-block pl-1"
                             style={{
                               position: 'relative',
@@ -1192,6 +1205,7 @@ CRITICAL: The optimized prompt must:
                                     >
                                       <IconSparkles
                                         size="1rem"
+                                        aria-hidden="true"
                                         style={{ marginLeft: '8px' }}
                                       />
                                       <Text
@@ -1214,6 +1228,7 @@ CRITICAL: The optimized prompt must:
                                     >
                                       <IconAlertTriangleFilled
                                         size="1rem"
+                                        aria-hidden="true"
                                         style={{ marginLeft: '8px' }}
                                       />
                                       <Text
@@ -1329,6 +1344,7 @@ CRITICAL: The optimized prompt must:
                       rightSection={
                         <IconChevronDown
                           size={isSmallScreen ? 12 : 14}
+                          aria-hidden="true"
                           style={{ marginRight: '8px' }}
                         />
                       }
@@ -1386,6 +1402,7 @@ CRITICAL: The optimized prompt must:
                       <div>
                         <IconInfoCircle
                           size={18}
+                          aria-hidden="true"
                           className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                           style={{ cursor: 'pointer' }}
                         />
@@ -1397,31 +1414,33 @@ CRITICAL: The optimized prompt must:
                     <>
                       {isRightSideVisible ? (
                         <Tooltip label="Close Prompt Builder" key="close">
-                          <div
-                            className="cursor-pointer p-0 pl-2"
+                          <button
+                            className="cursor-pointer border-none bg-transparent p-0 pl-2"
                             data-right-sidebar-icon
+                            aria-label="Close Prompt Builder"
+                            onClick={() => setIsRightSideVisible(false)}
                           >
                             <IconLayoutSidebarRight
-                              tabIndex={0}
-                              aria-label="Close Prompt Builder"
                               stroke={2}
+                              aria-hidden="true"
                               className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
-                              onClick={() => setIsRightSideVisible(false)}
                             />
-                          </div>
+                          </button>
                         </Tooltip>
                       ) : (
                         <Tooltip label="Open Prompt Builder" key="open">
-                          <div
-                            className="mr-2 cursor-pointer p-0"
+                          <button
+                            className="mr-2 cursor-pointer border-none bg-transparent p-0"
                             data-right-sidebar-icon
+                            aria-label="Open Prompt Builder"
+                            onClick={() => setIsRightSideVisible(true)}
                           >
                             <IconLayoutSidebarRightExpand
                               stroke={2}
+                              aria-hidden="true"
                               className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
-                              onClick={() => setIsRightSideVisible(true)}
                             />
-                          </div>
+                          </button>
                         </Tooltip>
                       )}
                     </>
@@ -1498,6 +1517,7 @@ CRITICAL: The optimized prompt must:
                           ) : (
                             <IconSparkles
                               stroke={1}
+                              aria-hidden="true"
                               color="var(--dashboard-button-foreground)"
                             />
                           )
@@ -1816,6 +1836,7 @@ CRITICAL: The optimized prompt must:
                       <Flex align="flex-start" gap="md">
                         <IconAlertTriangle
                           size={24}
+                          aria-hidden="true"
                           color={theme.colors.red[5]}
                           style={{ marginTop: '2px' }}
                         />
@@ -1946,7 +1967,9 @@ CRITICAL: The optimized prompt must:
                       variant="filled"
                       color="red"
                       radius="md"
-                      leftIcon={<IconAlertTriangle size={16} />}
+                      leftIcon={
+                        <IconAlertTriangle size={16} aria-hidden="true" />
+                      }
                       onClick={openResetModal}
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       sx={(theme) => ({
@@ -1967,7 +1990,7 @@ CRITICAL: The optimized prompt must:
                     <Button
                       variant="filled"
                       radius="md"
-                      leftIcon={<IconLink size={16} />}
+                      leftIcon={<IconLink size={16} aria-hidden="true" />}
                       onClick={openLinkGenerator}
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       sx={() => ({
@@ -2213,6 +2236,7 @@ CRITICAL: The optimized prompt must:
                       <Flex align="flex-start" gap="md">
                         <IconAlertTriangle
                           size={24}
+                          aria-hidden="true"
                           color={theme.colors.red[5]}
                           style={{ marginTop: '2px' }}
                         />
@@ -2347,7 +2371,9 @@ CRITICAL: The optimized prompt must:
                       variant="filled"
                       color="red"
                       radius="md"
-                      leftIcon={<IconAlertTriangle size={16} />}
+                      leftIcon={
+                        <IconAlertTriangle size={16} aria-hidden="true" />
+                      }
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       sx={(theme) => ({
                         backgroundColor: `${theme.colors.red[8]} !important`,
@@ -2369,7 +2395,7 @@ CRITICAL: The optimized prompt must:
                     <Button
                       variant="filled"
                       radius="md"
-                      leftIcon={<IconLink size={16} />}
+                      leftIcon={<IconLink size={16} aria-hidden="true" />}
                       onClick={openLinkGenerator}
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       sx={() => ({

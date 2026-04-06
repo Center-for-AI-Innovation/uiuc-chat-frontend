@@ -1503,6 +1503,7 @@ function errorStateForProjectFilesTable() {
       striped
       highlightOnHover
       height="80vh"
+      noRecordsText="No records"
       // Error state:
       noRecordsIcon={
         <Stack align="center" p={30}>

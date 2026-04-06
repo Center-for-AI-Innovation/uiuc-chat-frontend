@@ -36,7 +36,7 @@ const Search: FC<Props> = ({ placeholder, searchTerm, onSearch }) => {
           aria-label="Clear search"
           onClick={clearSearch}
         >
-          <IconX size={18} />
+          <IconX size={18} aria-hidden="true" />
         </button>
       )}
     </div>

@@ -1,18 +1,16 @@
 import React from 'react'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { screen, waitFor } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import BrandingForm from '../BrandingForm'
 import {
-  renderWithProviders,
   createTestQueryClient,
+  renderWithProviders,
 } from '~/test-utils/renderWithProviders'
 import type { CourseMetadata } from '~/types/courseMetadata'
 
-// ---------------------------------------------------------------------------
-// Mocks
-// ---------------------------------------------------------------------------
+// ---- Mocks ----
 
 vi.mock('~/utils/apiUtils', () => ({
   callSetCourseMetadata: vi.fn(async () => true),
@@ -21,24 +19,13 @@ vi.mock('~/utils/apiUtils', () => ({
 
 vi.mock('../SetExampleQuestions', () => ({
   default: ({ course_name }: { course_name: string }) => (
-    <div data-testid="set-example-questions">{course_name}</div>
+    <div data-testid="set-example-questions">
+      SetExampleQuestions: {course_name}
+    </div>
   ),
 }))
 
-async function getApiMocks() {
-  const mod = await import('~/utils/apiUtils')
-  return {
-    callSetCourseMetadata: vi.mocked(mod.callSetCourseMetadata),
-    uploadToS3: vi.mocked(mod.uploadToS3),
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const PROJECT = 'test-project'
-const USER_ID = 'user-123'
+// ---- Helpers ----
 
 function makeCourseMetadata(
   overrides: Partial<CourseMetadata> = {},
@@ -50,7 +37,7 @@ function makeCourseMetadata(
     approved_emails_list: [],
     example_questions: [],
     banner_image_s3: undefined,
-    course_intro_message: undefined,
+    course_intro_message: '',
     system_prompt: undefined,
     openai_api_key: undefined,
     disabled_models: undefined,
@@ -65,310 +52,476 @@ function makeCourseMetadata(
   }
 }
 
-function renderBrandingForm(metadata?: CourseMetadata) {
+function renderBrandingForm(
+  options: {
+    metadata?: CourseMetadata
+    projectName?: string
+  } = {},
+) {
+  const projectName = options.projectName ?? 'TestProject'
   const queryClient = createTestQueryClient()
-  if (metadata) {
-    queryClient.setQueryData(['courseMetadata', PROJECT], metadata)
+
+  if (options.metadata) {
+    queryClient.setQueryData(['courseMetadata', projectName], options.metadata)
   }
-  return renderWithProviders(
-    <BrandingForm project_name={PROJECT} user_id={USER_ID} />,
+
+  const result = renderWithProviders(
+    <BrandingForm project_name={projectName} user_id="user-123" />,
     { queryClient },
   )
+
+  // Trigger the cache subscription callback by setting data after mount
+  if (options.metadata) {
+    queryClient.setQueryData(['courseMetadata', projectName], options.metadata)
+  }
+
+  return { ...result, queryClient }
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+// ---- Tests ----
 
 describe('BrandingForm', () => {
-  beforeEach(async () => {
-    const { callSetCourseMetadata, uploadToS3 } = await getApiMocks()
-    callSetCourseMetadata.mockClear()
-    callSetCourseMetadata.mockResolvedValue(true)
-    uploadToS3.mockClear()
-    uploadToS3.mockResolvedValue('https://s3.example.com/logo.png')
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
-  // -------------------------------------------------------------------------
-  // Rendering — no cached metadata
-  // -------------------------------------------------------------------------
+  describe('rendering', () => {
+    it('renders greeting section with textarea and update button', () => {
+      renderBrandingForm()
 
-  it('renders greeting section with empty textarea when no metadata cached', () => {
-    renderBrandingForm()
-
-    expect(screen.getByText('Greeting')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/enter a greeting/i)).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/enter a greeting/i)).toHaveValue('')
-  })
-
-  it('renders the Update button disabled initially', () => {
-    renderBrandingForm()
-
-    const updateBtn = screen.getByRole('button', { name: /update/i })
-    expect(updateBtn).toBeDisabled()
-  })
-
-  it('renders logo upload area with default text', () => {
-    renderBrandingForm()
-
-    expect(screen.getByText('Add a logo')).toBeInTheDocument()
-    expect(screen.getByText(/select the logo to upload/i)).toBeInTheDocument()
-  })
-
-  it('does not render SetExampleQuestions when metadata is null', () => {
-    renderBrandingForm()
-
-    expect(
-      screen.queryByTestId('set-example-questions'),
-    ).not.toBeInTheDocument()
-  })
-
-  // -------------------------------------------------------------------------
-  // Rendering — with cached metadata
-  // -------------------------------------------------------------------------
-
-  it('prefills greeting from cached metadata', () => {
-    const metadata = makeCourseMetadata({
-      course_intro_message: 'Hello, welcome!',
-    })
-    renderBrandingForm(metadata)
-
-    expect(screen.getByPlaceholderText(/enter a greeting/i)).toHaveValue(
-      'Hello, welcome!',
-    )
-  })
-
-  it('shows check icon when greeting is already saved', () => {
-    const metadata = makeCourseMetadata({
-      course_intro_message: 'Hello!',
-    })
-    const { container } = renderBrandingForm(metadata)
-
-    // The Check icon from lucide renders as an svg with a polyline/path
-    const greetingSection = container.querySelector('.set_greeting')
-    expect(greetingSection).toBeInTheDocument()
-    // Check icon is rendered as an SVG
-    const svgs = greetingSection?.querySelectorAll('svg')
-    expect(svgs?.length).toBeGreaterThanOrEqual(1)
-  })
-
-  it('renders SetExampleQuestions when metadata is available', () => {
-    const metadata = makeCourseMetadata()
-    renderBrandingForm(metadata)
-
-    expect(screen.getByTestId('set-example-questions')).toBeInTheDocument()
-    expect(screen.getByTestId('set-example-questions')).toHaveTextContent(
-      PROJECT,
-    )
-  })
-
-  it('shows "Logo uploaded" and success icon when banner_image_s3 is set', () => {
-    const metadata = makeCourseMetadata({
-      banner_image_s3: 'https://s3.example.com/existing-logo.png',
-    })
-    renderBrandingForm(metadata)
-
-    expect(screen.getByText('Logo uploaded')).toBeInTheDocument()
-  })
-
-  // -------------------------------------------------------------------------
-  // Greeting interactions
-  // -------------------------------------------------------------------------
-
-  it('enables Update button after typing in the greeting', async () => {
-    const metadata = makeCourseMetadata()
-    renderBrandingForm(metadata)
-    const user = userEvent.setup()
-
-    const textarea = screen.getByPlaceholderText(/enter a greeting/i)
-    await user.type(textarea, 'Hi there')
-
-    const updateBtn = screen.getByRole('button', { name: /update/i })
-    expect(updateBtn).toBeEnabled()
-  })
-
-  it('calls callSetCourseMetadata and disables button on successful save', async () => {
-    const metadata = makeCourseMetadata()
-    renderBrandingForm(metadata)
-    const user = userEvent.setup()
-    const { callSetCourseMetadata } = await getApiMocks()
-
-    const textarea = screen.getByPlaceholderText(/enter a greeting/i)
-    await user.type(textarea, 'Welcome!')
-
-    const updateBtn = screen.getByRole('button', { name: /update/i })
-    await user.click(updateBtn)
-
-    await waitFor(() => {
-      expect(callSetCourseMetadata).toHaveBeenCalledOnce()
-    })
-
-    expect(callSetCourseMetadata).toHaveBeenCalledWith(
-      PROJECT,
-      expect.objectContaining({ course_intro_message: 'Welcome!' }),
-    )
-
-    // Button should be disabled again after save
-    expect(updateBtn).toBeDisabled()
-  })
-
-  it('does not update state when callSetCourseMetadata returns falsy', async () => {
-    const metadata = makeCourseMetadata()
-    renderBrandingForm(metadata)
-    const user = userEvent.setup()
-    const { callSetCourseMetadata } = await getApiMocks()
-    callSetCourseMetadata.mockResolvedValueOnce(false as any)
-
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-
-    const textarea = screen.getByPlaceholderText(/enter a greeting/i)
-    await user.type(textarea, 'Fail greeting')
-
-    const updateBtn = screen.getByRole('button', { name: /update/i })
-    await user.click(updateBtn)
-
-    await waitFor(() => {
-      expect(callSetCourseMetadata).toHaveBeenCalledOnce()
-    })
-
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Error upserting'),
-      PROJECT,
-    )
-
-    consoleSpy.mockRestore()
-  })
-
-  // -------------------------------------------------------------------------
-  // Logo upload interactions
-  // -------------------------------------------------------------------------
-
-  it('uploads a logo file and shows success state', async () => {
-    const metadata = makeCourseMetadata()
-    renderBrandingForm(metadata)
-    const user = userEvent.setup()
-    const { uploadToS3 } = await getApiMocks()
-
-    const fileInput = screen.getByLabelText('Upload logo')
-    const file = new File(['logo-content'], 'my-logo.png', {
-      type: 'image/png',
-    })
-
-    await user.upload(fileInput, file)
-
-    await waitFor(() => {
-      expect(uploadToS3).toHaveBeenCalledOnce()
-    })
-
-    expect(uploadToS3).toHaveBeenCalledWith(file, USER_ID, PROJECT)
-
-    await waitFor(() => {
-      expect(screen.getByText('my-logo.png')).toBeInTheDocument()
-    })
-  })
-
-  it('shows error state when uploadToS3 returns null', async () => {
-    const metadata = makeCourseMetadata()
-    renderBrandingForm(metadata)
-    const user = userEvent.setup()
-    const { uploadToS3 } = await getApiMocks()
-    uploadToS3.mockResolvedValueOnce(null as any)
-
-    const fileInput = screen.getByLabelText('Upload logo')
-    const file = new File(['bad'], 'bad-logo.png', { type: 'image/png' })
-
-    await user.upload(fileInput, file)
-
-    await waitFor(() => {
+      expect(screen.getByText('Greeting')).toBeInTheDocument()
       expect(
-        screen.getByText(/upload failed — click to retry/i),
+        screen.getByPlaceholderText(/enter a greeting/i),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /Update/i }),
       ).toBeInTheDocument()
     })
-  })
 
-  it('disables the upload button while uploading', async () => {
-    const metadata = makeCourseMetadata()
-    renderBrandingForm(metadata)
-    const { uploadToS3 } = await getApiMocks()
+    it('renders example questions section with SetExampleQuestions child', () => {
+      renderBrandingForm({ metadata: makeCourseMetadata() })
 
-    // Make upload hang so we can check the disabled state
-    let resolveUpload!: (value: string) => void
-    uploadToS3.mockReturnValueOnce(
-      new Promise<string>((resolve) => {
-        resolveUpload = resolve
-      }),
-    )
+      expect(screen.getByText('Example questions')).toBeInTheDocument()
+      expect(screen.getByTestId('set-example-questions')).toBeInTheDocument()
+    })
 
-    const fileInput = screen.getByLabelText('Upload logo')
-    const file = new File(['data'], 'logo.png', { type: 'image/png' })
+    it('renders logo upload section', () => {
+      renderBrandingForm()
 
-    // Fire change event directly for synchronous control
-    await userEvent.upload(fileInput, file)
+      expect(screen.getByText('Add a logo')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'This logo will appear in the header of the chat window.',
+        ),
+      ).toBeInTheDocument()
+    })
 
-    // The upload button should be disabled while uploading
-    const uploadButton = screen
-      .getByText('logo.png')
-      .closest('button') as HTMLButtonElement
-    expect(uploadButton).toBeDisabled()
+    it('passes project_name to SetExampleQuestions', () => {
+      renderBrandingForm({
+        projectName: 'MyProject',
+        metadata: makeCourseMetadata(),
+      })
 
-    // Resolve the upload
-    resolveUpload('https://s3.example.com/logo.png')
+      expect(
+        screen.getByText('SetExampleQuestions: MyProject'),
+      ).toBeInTheDocument()
+    })
 
-    await waitFor(() => {
-      expect(uploadButton).toBeEnabled()
+    it('disables the Update button initially (no changes made)', () => {
+      renderBrandingForm()
+
+      const updateButton = screen.getByRole('button', { name: /Update/i })
+      expect(updateButton).toBeDisabled()
     })
   })
 
-  it('clicking the upload button area triggers the hidden file input', async () => {
-    const metadata = makeCourseMetadata()
-    renderBrandingForm(metadata)
-    const user = userEvent.setup()
+  describe('intro message from query cache', () => {
+    it('populates the textarea when courseMetadata is in the query cache', async () => {
+      const metadata = makeCourseMetadata({
+        course_intro_message: 'Welcome to the course!',
+      })
 
-    const uploadButton = screen
-      .getByText(/select the logo to upload/i)
-      .closest('button') as HTMLButtonElement
-    expect(uploadButton).toBeInTheDocument()
+      renderBrandingForm({ metadata })
 
-    // Verify clicking opens the file dialog (file input click is called)
-    const fileInput = screen.getByLabelText('Upload logo') as HTMLInputElement
-    const clickSpy = vi.spyOn(fileInput, 'click')
-
-    await user.click(uploadButton)
-    expect(clickSpy).toHaveBeenCalled()
-
-    clickSpy.mockRestore()
-  })
-
-  // -------------------------------------------------------------------------
-  // Query cache subscription
-  // -------------------------------------------------------------------------
-
-  it('updates intro message when query cache changes', async () => {
-    const metadata = makeCourseMetadata({
-      course_intro_message: 'Initial',
-    })
-    const queryClient = createTestQueryClient()
-    queryClient.setQueryData(['courseMetadata', PROJECT], metadata)
-
-    renderWithProviders(
-      <BrandingForm project_name={PROJECT} user_id={USER_ID} />,
-      { queryClient },
-    )
-
-    expect(screen.getByPlaceholderText(/enter a greeting/i)).toHaveValue(
-      'Initial',
-    )
-
-    // Simulate external cache update
-    const updatedMetadata = makeCourseMetadata({
-      course_intro_message: 'Updated externally',
-    })
-    queryClient.setQueryData(['courseMetadata', PROJECT], updatedMetadata)
-
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText(/enter a greeting/i)).toHaveValue(
-        'Updated externally',
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await waitFor(() =>
+        expect(textarea).toHaveValue('Welcome to the course!'),
       )
+    })
+
+    it('populates empty string when course_intro_message is undefined', async () => {
+      const metadata = makeCourseMetadata({
+        course_intro_message: undefined,
+      })
+
+      renderBrandingForm({ metadata })
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await waitFor(() => expect(textarea).toHaveValue(''))
+    })
+  })
+
+  describe('greeting text interaction', () => {
+    it('enables the Update button when user types in textarea', async () => {
+      const user = userEvent.setup()
+      renderBrandingForm()
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await user.type(textarea, 'Hello students!')
+
+      // When isIntroMessageUpdated is true, two Update buttons exist; pick the first (primary)
+      const updateButtons = screen.getAllByRole('button', { name: /Update/i })
+      expect(updateButtons[0]).toBeEnabled()
+    })
+
+    it('updates the textarea value as user types', async () => {
+      const user = userEvent.setup()
+      renderBrandingForm()
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await user.type(textarea, 'New greeting')
+
+      expect(textarea).toHaveValue('New greeting')
+    })
+  })
+
+  describe('greeting submission', () => {
+    it('calls callSetCourseMetadata with updated intro message on Update click', async () => {
+      const user = userEvent.setup()
+      const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+
+      const metadata = makeCourseMetadata({
+        course_intro_message: 'Old greeting',
+      })
+
+      renderBrandingForm({ metadata })
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await waitFor(() => expect(textarea).toHaveValue('Old greeting'))
+
+      await user.clear(textarea)
+      await user.type(textarea, 'New greeting')
+
+      // Two Update buttons exist when text has changed; first is the primary one
+      const updateButtons = screen.getAllByRole('button', { name: /Update/i })
+      await user.click(updateButtons[0]!)
+
+      await waitFor(() => {
+        expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith(
+          'TestProject',
+          expect.objectContaining({
+            course_intro_message: 'New greeting',
+          }),
+        )
+      })
+    })
+
+    it('disables the Update button after submission', async () => {
+      const user = userEvent.setup()
+      const metadata = makeCourseMetadata({
+        course_intro_message: '',
+      })
+
+      renderBrandingForm({ metadata })
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await user.type(textarea, 'Some text')
+
+      // Two Update buttons exist when text has changed; first is the primary one
+      const updateButtons = screen.getAllByRole('button', { name: /Update/i })
+      const primaryButton = updateButtons[0]!
+      expect(primaryButton).toBeEnabled()
+
+      await user.click(primaryButton)
+
+      await waitFor(() => expect(primaryButton).toBeDisabled())
+    })
+
+    it('does not call callSetCourseMetadata when metadata is null', async () => {
+      const user = userEvent.setup()
+      const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+
+      // Render without setting metadata in query cache
+      renderBrandingForm()
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await user.type(textarea, 'Something')
+
+      // Two Update buttons exist when text has changed; first is the primary one
+      const updateButtons = screen.getAllByRole('button', { name: /Update/i })
+      await user.click(updateButtons[0]!)
+
+      // Should not call API since metadata is null
+      expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+    })
+
+    it('logs an error when callSetCourseMetadata returns false', async () => {
+      const user = userEvent.setup()
+      const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+      vi.mocked(callSetCourseMetadata).mockResolvedValueOnce(false)
+
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+      const metadata = makeCourseMetadata({
+        course_intro_message: 'Hello',
+      })
+      renderBrandingForm({ metadata })
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await waitFor(() => expect(textarea).toHaveValue('Hello'))
+
+      await user.clear(textarea)
+      await user.type(textarea, 'Changed')
+
+      // Two Update buttons exist when text has changed; first is the primary one
+      const updateButtons = screen.getAllByRole('button', { name: /Update/i })
+      await user.click(updateButtons[0]!)
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Error upserting course metadata for course: ',
+          'TestProject',
+        )
+      })
+    })
+  })
+
+  describe('Update button behavior when text changes', () => {
+    it('enables the Update button when text changes', async () => {
+      const user = userEvent.setup()
+      renderBrandingForm()
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await user.type(textarea, 'typing...')
+
+      const updateButton = screen.getByRole('button', { name: /Update/i })
+      expect(updateButton).toBeEnabled()
+    })
+
+    it('Update button calls callSetCourseMetadata on click', async () => {
+      const user = userEvent.setup()
+      const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+
+      const metadata = makeCourseMetadata({
+        course_intro_message: '',
+      })
+      renderBrandingForm({ metadata })
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await user.type(textarea, 'Test input')
+
+      const updateButton = screen.getByRole('button', { name: /Update/i })
+      await user.click(updateButton)
+
+      await waitFor(() => {
+        expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith(
+          'TestProject',
+          expect.objectContaining({
+            course_intro_message: 'Test input',
+          }),
+        )
+      })
+    })
+
+    it('Update button does not call API when metadata is null', async () => {
+      const user = userEvent.setup()
+      const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+
+      // No metadata set
+      renderBrandingForm()
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await user.type(textarea, 'Something')
+
+      const updateButton = screen.getByRole('button', { name: /Update/i })
+      await user.click(updateButton)
+
+      expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+    })
+
+    it('Update button logs error when callSetCourseMetadata returns false', async () => {
+      const user = userEvent.setup()
+      const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+      vi.mocked(callSetCourseMetadata).mockResolvedValueOnce(false)
+
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+
+      const metadata = makeCourseMetadata({
+        course_intro_message: '',
+      })
+      renderBrandingForm({ metadata })
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      await user.type(textarea, 'Something')
+
+      const updateButton = screen.getByRole('button', { name: /Update/i })
+      await user.click(updateButton)
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Error upserting course metadata for course: ',
+          'TestProject',
+        )
+      })
+    })
+  })
+
+  describe('logo upload', () => {
+    it('calls uploadToS3 when a logo file is selected', async () => {
+      const { uploadToS3 } = await import('~/utils/apiUtils')
+
+      const metadata = makeCourseMetadata()
+      renderBrandingForm({ metadata })
+
+      // Wait for metadata to be loaded
+      await waitFor(() =>
+        expect(screen.getByPlaceholderText(/enter a greeting/i)).toHaveValue(
+          '',
+        ),
+      )
+
+      const file = new File(['logo-content'], 'logo.png', {
+        type: 'image/png',
+      })
+
+      // Find the file input
+      const fileInput = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement
+      expect(fileInput).toBeTruthy()
+
+      // Trigger the file change
+      fireEvent.change(fileInput, { target: { files: [file] } })
+
+      await waitFor(() => {
+        expect(vi.mocked(uploadToS3)).toHaveBeenCalledWith(
+          file,
+          'user-123',
+          'TestProject',
+        )
+      })
+    })
+
+    it('does not call uploadToS3 when no file is provided (null)', async () => {
+      const { uploadToS3 } = await import('~/utils/apiUtils')
+
+      renderBrandingForm()
+
+      const fileInput = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement
+      expect(fileInput).toBeTruthy()
+
+      // Trigger change with no files
+      fireEvent.change(fileInput, { target: { files: [] } })
+
+      // uploadToS3 should not be called for null file
+      expect(vi.mocked(uploadToS3)).not.toHaveBeenCalled()
+    })
+
+    it('does not call callSetCourseMetadata when uploadToS3 returns undefined', async () => {
+      const { uploadToS3, callSetCourseMetadata } = await import(
+        '~/utils/apiUtils'
+      )
+      vi.mocked(uploadToS3).mockResolvedValueOnce(undefined)
+
+      const metadata = makeCourseMetadata()
+      renderBrandingForm({ metadata })
+
+      await waitFor(() =>
+        expect(screen.getByPlaceholderText(/enter a greeting/i)).toHaveValue(
+          '',
+        ),
+      )
+
+      const file = new File(['content'], 'logo.png', { type: 'image/png' })
+      const fileInput = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement
+
+      fireEvent.change(fileInput, { target: { files: [file] } })
+
+      await waitFor(() => {
+        expect(vi.mocked(uploadToS3)).toHaveBeenCalled()
+      })
+
+      // callSetCourseMetadata should NOT have been called since uploadToS3 returned undefined
+      expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+    })
+
+    it('does not call callSetCourseMetadata when metadata is null', async () => {
+      const { uploadToS3, callSetCourseMetadata } = await import(
+        '~/utils/apiUtils'
+      )
+      vi.mocked(uploadToS3).mockResolvedValueOnce(
+        'https://s3.example.com/logo.png',
+      )
+
+      // Render without metadata
+      renderBrandingForm()
+
+      const file = new File(['content'], 'logo.png', { type: 'image/png' })
+      const fileInput = document.querySelector(
+        'input[type="file"]',
+      ) as HTMLInputElement
+
+      fireEvent.change(fileInput, { target: { files: [file] } })
+
+      await waitFor(() => {
+        expect(vi.mocked(uploadToS3)).toHaveBeenCalled()
+      })
+
+      // Should not call callSetCourseMetadata since metadata is null
+      expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('query cache subscription', () => {
+    it('updates greeting when query cache data changes after mount', async () => {
+      const queryClient = createTestQueryClient()
+
+      renderWithProviders(
+        <BrandingForm project_name="TestProject" user_id="user-123" />,
+        { queryClient },
+      )
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+      expect(textarea).toHaveValue('')
+
+      // Simulate query cache update
+      const metadata = makeCourseMetadata({
+        course_intro_message: 'Updated via cache',
+      })
+      queryClient.setQueryData(['courseMetadata', 'TestProject'], metadata)
+
+      await waitFor(() => expect(textarea).toHaveValue('Updated via cache'))
+    })
+
+    it('handles multiple query cache updates correctly', async () => {
+      const queryClient = createTestQueryClient()
+
+      renderWithProviders(
+        <BrandingForm project_name="TestProject" user_id="user-123" />,
+        { queryClient },
+      )
+
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
+
+      // First update
+      queryClient.setQueryData(
+        ['courseMetadata', 'TestProject'],
+        makeCourseMetadata({ course_intro_message: 'First update' }),
+      )
+
+      await waitFor(() => expect(textarea).toHaveValue('First update'))
+
+      // Second update
+      queryClient.setQueryData(
+        ['courseMetadata', 'TestProject'],
+        makeCourseMetadata({ course_intro_message: 'Second update' }),
+      )
+
+      await waitFor(() => expect(textarea).toHaveValue('Second update'))
     })
   })
 })

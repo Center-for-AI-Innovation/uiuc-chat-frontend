@@ -200,8 +200,16 @@ export const UploadCard = memo(function UploadCard({
                 >
                   <span className="hidden sm:inline">Sharing and Access</span>
                   <span className="inline sm:hidden">Access</span>
-                  <IconShare size={12} className="ml-1 inline sm:hidden" />
-                  <IconShare size={20} className="ml-2 hidden sm:inline" />
+                  <IconShare
+                    size={12}
+                    className="ml-1 inline sm:hidden"
+                    aria-hidden="true"
+                  />
+                  <IconShare
+                    size={20}
+                    className="ml-2 hidden sm:inline"
+                    aria-hidden="true"
+                  />
                 </Button>
               </div>
             </div>

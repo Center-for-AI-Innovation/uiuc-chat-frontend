@@ -66,7 +66,9 @@ export const LinkGeneratorModal = ({
     })
 
     const queryString = queryParams.toString()
-    const chatUrl = `${baseUrl}/${course_name}/chat${queryString ? `?${queryString}` : ''}`
+    const chatUrl = `${baseUrl}/${course_name}/chat${
+      queryString ? `?${queryString}` : ''
+    }`
     setGeneratedLink(chatUrl)
   }, [linkSettings, course_name])
 
@@ -196,7 +198,11 @@ export const LinkGeneratorModal = ({
                   radius="md"
                   onClick={copy}
                   leftIcon={
-                    copied ? <IconCheck size={16} /> : <IconCopy size={16} />
+                    copied ? (
+                      <IconCheck size={16} aria-hidden="true" />
+                    ) : (
+                      <IconCopy size={16} aria-hidden="true" />
+                    )
                   }
                   sx={(theme) => ({
                     background: copied

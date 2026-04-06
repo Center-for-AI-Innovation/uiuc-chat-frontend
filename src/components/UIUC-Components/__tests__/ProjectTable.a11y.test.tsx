@@ -38,7 +38,7 @@ describe('ProjectTable - accessibility', () => {
 
     renderWithProviders(<ProjectTable />)
 
-    const row = await screen.findByRole('button', { name: /CS101/i })
+    const row = await screen.findByRole('row', { name: /CS101/i })
     expect(row).toBeInTheDocument()
     expect(row).toHaveAttribute('tabindex', '0')
 

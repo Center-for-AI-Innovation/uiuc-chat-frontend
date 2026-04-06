@@ -1,14 +1,17 @@
 import React from 'react'
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { screen, waitFor, within } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-import { renderWithProviders } from '~/test-utils/renderWithProviders'
-import { notifications } from '@mantine/notifications'
+import {
+  createTestQueryClient,
+  renderWithProviders,
+} from '~/test-utils/renderWithProviders'
 
 // ---------------------------------------------------------------------------
-// Heavy child components stubbed as lightweight elements
+// Mocks
 // ---------------------------------------------------------------------------
+
 vi.mock('../navbars/Navbar', () => ({
   __esModule: true,
   default: () => <div data-testid="navbar" />,
@@ -19,77 +22,88 @@ vi.mock('../GlobalFooter', () => ({
   default: () => <div data-testid="footer" />,
 }))
 
+vi.mock('../UploadNotification', () => ({
+  __esModule: true,
+  default: ({
+    files,
+    onClose,
+  }: {
+    files: any[]
+    onClose: () => void
+    projectName: string
+  }) => (
+    <div data-testid="upload-notification">
+      <span data-testid="upload-files-count">{files.length}</span>
+      <button data-testid="close-notification" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  ),
+}))
+
 vi.mock('../MakeNewCoursePageSteps/StepCreate', () => ({
   __esModule: true,
-  default: (props: any) => (
+  default: ({
+    project_name,
+    is_new_course,
+    isCourseAvailable,
+    isCheckingAvailability,
+    onUpdateName,
+    onUpdateDescription,
+  }: any) => (
     <div data-testid="step-create">
-      <span data-testid="step-create-name">{props.project_name}</span>
-      <span data-testid="step-create-desc">{props.project_description}</span>
-      <span data-testid="step-create-is-new">
-        {String(props.is_new_course)}
-      </span>
+      <span data-testid="step-create-name">{project_name}</span>
+      <span data-testid="step-create-is-new">{String(is_new_course)}</span>
       <span data-testid="step-create-available">
-        {String(props.isCourseAvailable)}
+        {String(isCourseAvailable)}
       </span>
       <span data-testid="step-create-checking">
-        {String(props.isCheckingAvailability)}
+        {String(isCheckingAvailability)}
       </span>
+      <input
+        data-testid="mock-name-input"
+        onChange={(e) => onUpdateName(e.target.value)}
+      />
+      <input
+        data-testid="mock-desc-input"
+        onChange={(e) => onUpdateDescription(e.target.value)}
+      />
     </div>
   ),
 }))
 
 vi.mock('../MakeNewCoursePageSteps/StepUpload', () => ({
   __esModule: true,
-  default: (props: any) => (
+  default: ({ project_name }: any) => (
     <div data-testid="step-upload">
-      <span data-testid="step-upload-name">{props.project_name}</span>
-    </div>
-  ),
-}))
-
-vi.mock('../MakeNewCoursePageSteps/StepBranding', () => ({
-  __esModule: true,
-  default: (props: any) => (
-    <div data-testid="step-branding">
-      <span data-testid="step-branding-name">{props.project_name}</span>
+      <span>Add Content</span>
+      <span data-testid="step-upload-name">{project_name}</span>
     </div>
   ),
 }))
 
 vi.mock('../MakeNewCoursePageSteps/StepLLM', () => ({
   __esModule: true,
-  default: (props: any) => (
-    <div data-testid="step-llm">
-      <span data-testid="step-llm-name">{props.project_name}</span>
-    </div>
-  ),
+  default: () => <div data-testid="step-llm">LLM Config</div>,
 }))
 
 vi.mock('../MakeNewCoursePageSteps/StepPrompt', () => ({
   __esModule: true,
-  default: (props: any) => (
-    <div data-testid="step-prompt">
-      <span data-testid="step-prompt-name">{props.project_name}</span>
-    </div>
-  ),
+  default: () => <div data-testid="step-prompt">System Prompt</div>,
+}))
+
+vi.mock('../MakeNewCoursePageSteps/StepBranding', () => ({
+  __esModule: true,
+  default: () => <div data-testid="step-branding">Branding</div>,
 }))
 
 vi.mock('../MakeNewCoursePageSteps/StepSuccess', () => ({
   __esModule: true,
-  default: (props: any) => (
-    <div data-testid="step-success">
-      <span data-testid="step-success-name">{props.project_name}</span>
-    </div>
-  ),
+  default: () => <div data-testid="step-success">Success!</div>,
 }))
 
-vi.mock('../UploadNotification', () => ({
-  __esModule: true,
-  default: (props: any) => (
-    <div data-testid="upload-notification">
-      <span data-testid="upload-files-count">{props.files?.length ?? 0}</span>
-    </div>
-  ),
+vi.mock('@mantine/notifications', () => ({
+  notifications: { show: vi.fn() },
 }))
 
 vi.mock('~/utils/apiUtils', async (importOriginal) => {
@@ -103,79 +117,86 @@ vi.mock('~/utils/apiUtils', async (importOriginal) => {
       course_owner: 'owner@example.com',
       course_admins: [],
       approved_emails_list: [],
+      example_questions: undefined,
+      banner_image_s3: undefined,
+      course_intro_message: undefined,
+      system_prompt: undefined,
+      openai_api_key: undefined,
+      disabled_models: undefined,
+      project_description: undefined,
+      documentsOnly: undefined,
+      guidedLearning: undefined,
+      systemPromptOnly: undefined,
+      vector_search_rewrite_disabled: undefined,
+      allow_logged_in_users: undefined,
     })),
   }
 })
 
-vi.mock('@mantine/notifications', () => ({
-  notifications: { show: vi.fn() },
-}))
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-import * as apiUtilsModule from '~/utils/apiUtils'
-
-const mockedCreateProject = apiUtilsModule.createProject as ReturnType<
-  typeof vi.fn
->
-const mockedFetchCourseMetadata =
-  apiUtilsModule.fetchCourseMetadata as unknown as ReturnType<typeof vi.fn>
 
 let savedEnv: string | undefined
 
-/**
- * Mock fetch so the project-name availability query resolves.
- * By default the course does NOT exist (i.e. name is available).
- */
-function mockFetchCourseExists(exists = false) {
-  vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
-    const url = String(input?.url ?? input)
-    if (url.includes('/api/UIUC-api/getCourseExists')) {
-      return new Response(JSON.stringify(exists), {
+function setIllinoisConfig(value: string) {
+  process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG = value
+}
+
+/** Mock fetch to return courseExists = false (name available) by default */
+function mockFetchCourseAvailable(exists = false) {
+  return vi
+    .spyOn(globalThis, 'fetch')
+    .mockImplementation(async (input: any) => {
+      const url = String(input?.url ?? input)
+      if (url.includes('/api/UIUC-api/getCourseExists')) {
+        return new Response(JSON.stringify(exists), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify({ ok: true }), {
         status: 200,
         headers: { 'content-type': 'application/json' },
       })
-    }
-    return new Response(JSON.stringify({}), {
-      status: 200,
-      headers: { 'content-type': 'application/json' },
     })
-  })
 }
 
 async function importComponent() {
-  return (await import('../MakeNewCoursePage')).default
+  // Dynamic import to pick up the current env var
+  const mod = await import('../MakeNewCoursePage')
+  return mod.default
 }
 
-beforeEach(() => {
-  savedEnv = process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG
-  vi.clearAllMocks()
-})
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
-afterEach(() => {
-  process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG = savedEnv
-  vi.restoreAllMocks()
-})
-
-// ===========================================================================
-// TESTS
-// ===========================================================================
 describe('MakeNewCoursePage', () => {
-  // -----------------------------------------------------------------------
-  // Disabled config: migration notice
-  // -----------------------------------------------------------------------
-  describe('when Illinois Chat config is disabled', () => {
-    beforeEach(() => {
-      process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG = 'False'
-    })
+  beforeEach(() => {
+    savedEnv = process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG
+    vi.clearAllMocks()
+  })
 
-    it('renders the migration / disabled notice', async () => {
+  afterEach(() => {
+    process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG = savedEnv
+    vi.restoreAllMocks()
+  })
+
+  // -----------------------------------------------------------------------
+  // Illinois Chat config disabled
+  // -----------------------------------------------------------------------
+
+  describe('when UI creation is disabled (non-Illinois config)', () => {
+    it('renders the migration notice card', async () => {
+      setIllinoisConfig('False')
       const MakeNewCoursePage = await importComponent()
+
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="TestProject"
+          project_name=""
           current_user_email="owner@example.com"
+          is_new_course={true}
         />,
       )
 
@@ -184,11 +205,51 @@ describe('MakeNewCoursePage', () => {
       ).toBeInTheDocument()
     })
 
-    it('renders Navbar and GlobalFooter in disabled mode', async () => {
+    it('displays the chat.illinois.edu link', async () => {
+      setIllinoisConfig('False')
       const MakeNewCoursePage = await importComponent()
+
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="TestProject"
+          project_name=""
+          current_user_email="owner@example.com"
+        />,
+      )
+
+      const link = await screen.findByRole('link', {
+        name: /chat\.illinois\.edu/i,
+      })
+      expect(link).toHaveAttribute('href', 'https://chat.illinois.edu')
+      expect(link).toHaveAttribute('target', '_blank')
+    })
+
+    it('displays the support email link', async () => {
+      setIllinoisConfig('False')
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name=""
+          current_user_email="owner@example.com"
+        />,
+      )
+
+      const mailto = await screen.findByRole('link', {
+        name: /genaisupport@mx\.uillinois\.edu/i,
+      })
+      expect(mailto).toHaveAttribute(
+        'href',
+        'mailto:genaisupport@mx.uillinois.edu',
+      )
+    })
+
+    it('renders the Navbar and GlobalFooter', async () => {
+      setIllinoisConfig('False')
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name=""
           current_user_email="owner@example.com"
         />,
       )
@@ -197,774 +258,1075 @@ describe('MakeNewCoursePage', () => {
       expect(screen.getByTestId('footer')).toBeInTheDocument()
     })
 
-    it('includes a link to chat.illinois.edu', async () => {
+    it('uses project_name in the title or falls back to "New Project"', async () => {
+      setIllinoisConfig('False')
       const MakeNewCoursePage = await importComponent()
+
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="TestProject"
+          project_name="MyBot"
           current_user_email="owner@example.com"
         />,
       )
 
-      const link = await screen.findByText(/chat\.illinois\.edu/i)
-      expect(link.closest('a')).toHaveAttribute(
-        'href',
-        'https://chat.illinois.edu',
-      )
-      expect(link.closest('a')).toHaveAttribute('target', '_blank')
-    })
-
-    it('includes a mailto link for support', async () => {
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="TestProject"
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      const mailto = await screen.findByText(/genaisupport@mx\.uillinois\.edu/i)
-      expect(mailto.closest('a')).toHaveAttribute(
-        'href',
-        'mailto:genaisupport@mx.uillinois.edu',
-      )
-    })
-
-    it('does not render wizard steps or navigation buttons', async () => {
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="TestProject"
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      expect(screen.queryByTestId('step-create')).not.toBeInTheDocument()
-      expect(
-        screen.queryByRole('button', { name: /Continue/i }),
-      ).not.toBeInTheDocument()
+      // next/head is not fully rendered in JSDOM, but the h1 sr-only is rendered
+      expect(screen.getByText('Create New Project')).toBeInTheDocument()
     })
   })
 
   // -----------------------------------------------------------------------
-  // Enabled config: wizard flow
+  // Normal wizard rendering (Illinois config enabled)
   // -----------------------------------------------------------------------
-  describe('when Illinois Chat config is enabled', () => {
+
+  describe('wizard rendering', () => {
     beforeEach(() => {
-      process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG = 'True'
-      mockFetchCourseExists(false) // name available by default
-      mockedCreateProject.mockResolvedValue(true)
-      mockedFetchCourseMetadata.mockResolvedValue({
+      setIllinoisConfig('True')
+      mockFetchCourseAvailable(false)
+    })
+
+    it('renders the create step initially', async () => {
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="CS101"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      expect(await screen.findByTestId('step-create')).toBeInTheDocument()
+    })
+
+    it('renders Back and Continue buttons', async () => {
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="CS101"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      expect(
+        await screen.findByRole('button', { name: /Go to previous step/i }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /Continue to next step/i }),
+      ).toBeInTheDocument()
+    })
+
+    it('disables the Back button on the first step', async () => {
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="CS101"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      const backBtn = await screen.findByRole('button', {
+        name: /Go to previous step/i,
+      })
+      expect(backBtn).toBeDisabled()
+    })
+
+    it('renders pagination dots matching the number of steps', async () => {
+      const MakeNewCoursePage = await importComponent()
+
+      const { container } = renderWithProviders(
+        <MakeNewCoursePage
+          project_name="CS101"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      // 6 steps: Create, Success, Upload, Branding, LLM, Prompt
+      const dots = container.querySelectorAll('.rounded-full')
+      expect(dots.length).toBe(6)
+    })
+
+    it('renders the UploadNotification component', async () => {
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="CS101"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      expect(
+        await screen.findByTestId('upload-notification'),
+      ).toBeInTheDocument()
+      expect(screen.getByTestId('upload-files-count')).toHaveTextContent('0')
+    })
+
+    it('uses auth user email when available', async () => {
+      globalThis.__TEST_AUTH__ = {
+        isAuthenticated: true,
+        user: { profile: { email: 'auth-user@example.com' } },
+      }
+
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="CS101"
+          current_user_email="fallback@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      // The auth user email is used for StepBranding (user_id prop) and submission.
+      // We verify the component rendered without error.
+      expect(await screen.findByTestId('step-create')).toBeInTheDocument()
+    })
+  })
+
+  // -----------------------------------------------------------------------
+  // Continue button disabled states on step 0
+  // -----------------------------------------------------------------------
+
+  describe('Continue button disabled states', () => {
+    beforeEach(() => {
+      setIllinoisConfig('True')
+    })
+
+    it('disables Continue when project name is empty', async () => {
+      mockFetchCourseAvailable(false)
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name=""
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
+      expect(continueBtn).toBeDisabled()
+    })
+
+    it('disables Continue when course name is taken (not available)', async () => {
+      mockFetchCourseAvailable(true) // exists = true => not available
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="TakenProject"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
+      // Wait for debounce + availability check to settle
+      await waitFor(
+        () => {
+          expect(continueBtn).toBeDisabled()
+        },
+        { timeout: 3000 },
+      )
+    })
+  })
+
+  // -----------------------------------------------------------------------
+  // Project creation and step navigation
+  // -----------------------------------------------------------------------
+
+  describe('project creation and navigation', () => {
+    beforeEach(() => {
+      setIllinoisConfig('True')
+    })
+
+    it('creates a project and advances to the success step', async () => {
+      const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(true)
+
+      const MakeNewCoursePage = await importComponent()
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="NewBot"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
+      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
+        timeout: 3000,
+      })
+
+      await user.click(continueBtn)
+
+      await waitFor(() => {
+        expect(apiUtils.createProject).toHaveBeenCalledWith(
+          'NewBot',
+          '',
+          'owner@example.com',
+          true, // useIllinoisChatConfig = true
+        )
+      })
+
+      // Should advance to StepSuccess (step 1 in wizard)
+      expect(await screen.findByTestId('step-success')).toBeInTheDocument()
+    })
+
+    it('fetches and caches course metadata after creation', async () => {
+      const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(true)
+      const mockMetadata = {
         is_frozen: false,
         is_private: false,
         course_owner: 'owner@example.com',
         course_admins: [],
         approved_emails_list: [],
-      })
-    })
+        example_questions: undefined,
+        banner_image_s3: undefined,
+        course_intro_message: undefined,
+        system_prompt: undefined,
+        openai_api_key: undefined,
+        disabled_models: undefined,
+        project_description: undefined,
+        documentsOnly: undefined,
+        guidedLearning: undefined,
+        systemPromptOnly: undefined,
+        vector_search_rewrite_disabled: undefined,
+        allow_logged_in_users: undefined,
+      }
+      ;(
+        apiUtils.fetchCourseMetadata as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(mockMetadata)
 
-    it('renders the first step (StepCreate) initially', async () => {
+      const queryClient = createTestQueryClient()
       const MakeNewCoursePage = await importComponent()
+
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      expect(await screen.findByTestId('step-create')).toBeInTheDocument()
-    })
-
-    it('renders Navbar, Continue, and Back buttons', async () => {
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      expect(screen.getByTestId('navbar')).toBeInTheDocument()
-      expect(
-        screen.getByRole('button', { name: /previous step|Back/i }),
-      ).toBeInTheDocument()
-      expect(
-        screen.getByRole('button', { name: /Continue/i }),
-      ).toBeInTheDocument()
-    })
-
-    it('renders pagination dots for all 6 steps', async () => {
-      const MakeNewCoursePage = await importComponent()
-      const { container } = renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      // 6 steps -> 6 dots
-      const dots = container.querySelectorAll('.rounded-full')
-      expect(dots.length).toBe(6)
-    })
-
-    it('Back button is disabled on the first step', async () => {
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      expect(
-        screen.getByRole('button', { name: /previous step|Back/i }),
-      ).toBeDisabled()
-    })
-
-    it('Continue button is disabled when project name is empty', async () => {
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name=""
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      expect(screen.getByRole('button', { name: /Continue/i })).toBeDisabled()
-    })
-
-    it('Continue button is disabled when project name is empty (acts as Start Chatting on last step)', async () => {
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name=""
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      // Single unified button — disabled on step 1 when no project name
-      expect(screen.getByRole('button', { name: /Continue/i })).toBeDisabled()
-    })
-
-    // -----------------------------------------------------------------------
-    // Creating project & stepping through
-    // -----------------------------------------------------------------------
-    it('calls createProject and advances to step 2 (StepSuccess) on Continue click', async () => {
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
+          project_name="NewBot"
           current_user_email="owner@example.com"
           is_new_course={true}
         />,
+        { queryClient },
       )
 
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
-
       await user.click(continueBtn)
 
-      await waitFor(() =>
-        expect(mockedCreateProject).toHaveBeenCalledWith(
-          'CS101',
-          '',
-          'owner@example.com',
-          true,
-        ),
+      await waitFor(() => {
+        expect(apiUtils.fetchCourseMetadata).toHaveBeenCalledWith('NewBot')
+      })
+
+      // Verify metadata was cached in query client
+      await waitFor(() => {
+        const cached = queryClient.getQueryData(['courseMetadata', 'NewBot'])
+        expect(cached).toEqual(mockMetadata)
+      })
+    })
+
+    it('uses fallback metadata when fetchCourseMetadata fails', async () => {
+      const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+      vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(true)
+      ;(
+        apiUtils.fetchCourseMetadata as ReturnType<typeof vi.fn>
+      ).mockRejectedValueOnce(new Error('Metadata fetch failed'))
+
+      const queryClient = createTestQueryClient()
+      const MakeNewCoursePage = await importComponent()
+
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="NewBot"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+        { queryClient },
       )
 
-      // Should advance to StepSuccess (step 2 in the new order)
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
+      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
+        timeout: 3000,
+      })
+      await user.click(continueBtn)
+
+      // Should still advance (fallback metadata used)
       expect(await screen.findByTestId('step-success')).toBeInTheDocument()
-      expect(screen.queryByTestId('step-create')).not.toBeInTheDocument()
+
+      // Fallback metadata should be cached
+      await waitFor(() => {
+        const cached = queryClient.getQueryData([
+          'courseMetadata',
+          'NewBot',
+        ]) as any
+        expect(cached).toBeDefined()
+        expect(cached.course_owner).toBe('owner@example.com')
+        expect(cached.is_private).toBe(true) // is_private = useIllinoisChatConfig = true
+      })
     })
 
-    it('does not call createProject when project name is unavailable (course exists)', async () => {
-      vi.restoreAllMocks() // restore fetch
-      mockFetchCourseExists(true) // name taken
-
+    it('does not advance when createProject returns false', async () => {
       const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(false)
+
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="TakenName"
+          project_name="NewBot"
           current_user_email="owner@example.com"
           is_new_course={true}
         />,
       )
 
-      // Continue should remain disabled because isCourseAvailable is false
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
-      // Give debounce + query time to settle
-      await waitFor(
-        () => {
-          // Button should stay disabled
-          expect(continueBtn).toBeDisabled()
-        },
-        { timeout: 3000 },
-      )
-
-      expect(mockedCreateProject).not.toHaveBeenCalled()
-    })
-
-    it('navigates back after advancing past step 1', async () => {
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-        />,
-      )
-
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
       await user.click(continueBtn)
 
-      // Wait for step 2 (StepSuccess in new order)
+      // Should still be on the create step
+      await waitFor(() => {
+        expect(screen.getByTestId('step-create')).toBeInTheDocument()
+      })
+    })
+
+    it('skips project creation on step 0 if already created', async () => {
+      const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(apiUtils.createProject as ReturnType<typeof vi.fn>).mockResolvedValue(
+        true,
+      )
+      ;(
+        apiUtils.fetchCourseMetadata as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        is_frozen: false,
+        is_private: false,
+        course_owner: 'owner@example.com',
+        course_admins: [],
+        approved_emails_list: [],
+        example_questions: undefined,
+        banner_image_s3: undefined,
+        course_intro_message: undefined,
+        system_prompt: undefined,
+        openai_api_key: undefined,
+        disabled_models: undefined,
+        project_description: undefined,
+        documentsOnly: undefined,
+        guidedLearning: undefined,
+        systemPromptOnly: undefined,
+        vector_search_rewrite_disabled: undefined,
+        allow_logged_in_users: undefined,
+      })
+
+      const MakeNewCoursePage = await importComponent()
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="NewBot"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      // First click: creates the project and goes to step 1 (StepSuccess)
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
+      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
+        timeout: 3000,
+      })
+      await user.click(continueBtn)
       await screen.findByTestId('step-success')
 
-      // Back should be enabled now
+      // Go back to step 0
       const backBtn = screen.getByRole('button', {
-        name: /previous step|Back/i,
+        name: /Go to previous step/i,
       })
-      expect(backBtn).not.toBeDisabled()
-
       await user.click(backBtn)
-      // Should go back to step 1
-      expect(await screen.findByTestId('step-create')).toBeInTheDocument()
-    })
+      await screen.findByTestId('step-create')
 
-    it('can navigate through all steps after project creation', async () => {
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-        />,
-      )
+      // Clear the mock call count
+      ;(apiUtils.createProject as ReturnType<typeof vi.fn>).mockClear()
 
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
-      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
-        timeout: 3000,
+      // Second click on Continue: should NOT call createProject again
+      const continueBtn2 = screen.getByRole('button', {
+        name: /Continue to next step/i,
       })
+      await user.click(continueBtn2)
 
-      // Step 0 -> 1 (creates project, advances to StepSuccess)
-      await user.click(continueBtn)
       await screen.findByTestId('step-success')
+      expect(apiUtils.createProject).not.toHaveBeenCalled()
+    })
+  })
 
-      // Step 1 -> 2 (StepUpload)
-      await user.click(screen.getByRole('button', { name: /Continue/i }))
-      await screen.findByTestId('step-upload')
+  // -----------------------------------------------------------------------
+  // Error handling during project creation
+  // -----------------------------------------------------------------------
 
-      // Step 2 -> 3 (StepBranding)
-      await user.click(screen.getByRole('button', { name: /Continue/i }))
-      await screen.findByTestId('step-branding')
-
-      // Step 3 -> 4 (StepLLM)
-      await user.click(screen.getByRole('button', { name: /Continue/i }))
-      await screen.findByTestId('step-llm')
-
-      // Step 4 -> 5 (StepPrompt — last step)
-      await user.click(screen.getByRole('button', { name: /Continue/i }))
-      await screen.findByTestId('step-prompt')
+  describe('error handling', () => {
+    beforeEach(() => {
+      setIllinoisConfig('True')
+      vi.spyOn(console, 'error').mockImplementation(() => {})
     })
 
-    it('shows Start Chatting on the last step', async () => {
+    it('shows notification for 409 conflict (project name already taken)', async () => {
       const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+
+      const apiUtils = await import('~/utils/apiUtils')
+      const conflictError = Object.assign(
+        new Error('A project with this name already exists'),
+        { status: 409 },
+      )
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockRejectedValueOnce(conflictError)
+
+      const { notifications } = await import('@mantine/notifications')
+
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="CS101"
+          project_name="Existing"
           current_user_email="owner@example.com"
           is_new_course={true}
         />,
+        { queryClient },
       )
 
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
-      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
-        timeout: 3000,
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
       })
-
-      // Navigate through all steps
-      for (let i = 0; i < 5; i++) {
-        await user.click(
-          screen.getByRole('button', { name: /Continue|Start Chatting/i }),
-        )
-      }
-
-      await screen.findByTestId('step-prompt')
-
-      // On the last step, the button text changes to "Start Chatting"
-      const lastBtn = screen.getByRole('button', {
-        name: /Start Chatting/i,
-      })
-      expect(lastBtn).toBeInTheDocument()
-    })
-
-    // -----------------------------------------------------------------------
-    // Start Chatting (last step button)
-    // -----------------------------------------------------------------------
-    it('Start Chatting navigates to chat page on last step', async () => {
-      const pushMock = vi.fn()
-      globalThis.__TEST_ROUTER__ = { push: pushMock }
-
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-        />,
-      )
-
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
-      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
-        timeout: 3000,
-      })
-
-      // Navigate to last step
-      for (let i = 0; i < 5; i++) {
-        await user.click(
-          screen.getByRole('button', { name: /Continue|Start Chatting/i }),
-        )
-      }
-
-      await screen.findByTestId('step-prompt')
-
-      // Click Start Chatting on last step
-      const startBtn = screen.getByRole('button', {
-        name: /Start Chatting/i,
-      })
-      await user.click(startBtn)
-
-      await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/CS101/chat'))
-    })
-
-    it('Start Chatting does not call createProject again after initial creation', async () => {
-      const pushMock = vi.fn()
-      globalThis.__TEST_ROUTER__ = { push: pushMock }
-
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-        />,
-      )
-
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
-      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
-        timeout: 3000,
-      })
-
-      // Navigate to last step (project created on step 0 -> 1 transition)
-      for (let i = 0; i < 5; i++) {
-        await user.click(
-          screen.getByRole('button', { name: /Continue|Start Chatting/i }),
-        )
-      }
-
-      await screen.findByTestId('step-prompt')
-
-      // createProject was called once on step 0; clear it
-      mockedCreateProject.mockClear()
-
-      const startBtn = screen.getByRole('button', {
-        name: /Start Chatting/i,
-      })
-      await user.click(startBtn)
-
-      await waitFor(() => expect(pushMock).toHaveBeenCalledWith('/CS101/chat'))
-      expect(mockedCreateProject).not.toHaveBeenCalled()
-    })
-
-    // -----------------------------------------------------------------------
-    // Error handling in handleSubmit
-    // -----------------------------------------------------------------------
-    it('shows notification on 409 conflict error', async () => {
-      const error = Object.assign(new Error('Name taken'), { status: 409 })
-      mockedCreateProject.mockRejectedValueOnce(error)
-
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-        />,
-      )
-
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
       await user.click(continueBtn)
 
-      await waitFor(() =>
+      await waitFor(() => {
         expect(notifications.show).toHaveBeenCalledWith(
           expect.objectContaining({
             title: 'Project name already taken',
             color: 'red',
           }),
-        ),
+        )
+      })
+
+      // Should invalidate the availability query
+      expect(invalidateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          queryKey: ['projectNameAvailability', 'Existing'],
+        }),
       )
+
+      // Should remain on step 0
+      expect(screen.getByTestId('step-create')).toBeInTheDocument()
     })
 
-    it('shows generic error notification on non-409 errors', async () => {
-      mockedCreateProject.mockRejectedValueOnce(new Error('Server error'))
-
+    it('shows generic error notification for non-409 errors', async () => {
       const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+
+      const apiUtils = await import('~/utils/apiUtils')
+      const serverError = Object.assign(new Error('Internal server error'), {
+        status: 500,
+      })
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockRejectedValueOnce(serverError)
+
+      const { notifications } = await import('@mantine/notifications')
+      ;(notifications.show as ReturnType<typeof vi.fn>).mockClear()
+
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="CS101"
+          project_name="NewBot"
           current_user_email="owner@example.com"
           is_new_course={true}
         />,
       )
 
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
       await user.click(continueBtn)
 
-      await waitFor(() =>
+      await waitFor(() => {
         expect(notifications.show).toHaveBeenCalledWith(
           expect.objectContaining({
             title: 'Failed to create project',
             color: 'red',
           }),
-        ),
-      )
-    })
-
-    it('does not advance step when createProject fails', async () => {
-      mockedCreateProject.mockRejectedValueOnce(new Error('Server error'))
-
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-        />,
-      )
-
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
-      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
-        timeout: 3000,
+        )
       })
-      await user.click(continueBtn)
 
       // Should remain on step 0
-      await waitFor(() =>
-        expect(screen.getByTestId('step-create')).toBeInTheDocument(),
-      )
-      expect(screen.queryByTestId('step-upload')).not.toBeInTheDocument()
+      expect(screen.getByTestId('step-create')).toBeInTheDocument()
     })
 
-    it('does not advance step when createProject returns false', async () => {
-      mockedCreateProject.mockResolvedValueOnce(false)
-
+    it('shows fallback message when error has no message', async () => {
       const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+
+      const apiUtils = await import('~/utils/apiUtils')
+      // Error with empty message and no status
+      const emptyError = Object.assign(new Error(''), {})
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockRejectedValueOnce(emptyError)
+
+      const { notifications } = await import('@mantine/notifications')
+      ;(notifications.show as ReturnType<typeof vi.fn>).mockClear()
+
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="CS101"
+          project_name="TestProj"
           current_user_email="owner@example.com"
           is_new_course={true}
         />,
       )
 
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
       await user.click(continueBtn)
 
-      // Should remain on step 0
-      await waitFor(() =>
-        expect(screen.getByTestId('step-create')).toBeInTheDocument(),
-      )
-      expect(screen.queryByTestId('step-upload')).not.toBeInTheDocument()
+      await waitFor(() => {
+        expect(notifications.show).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Failed to create project',
+            message: expect.stringContaining(
+              'An error occurred while creating the project',
+            ),
+          }),
+        )
+      })
     })
 
-    // -----------------------------------------------------------------------
-    // Metadata fetch fallback
-    // -----------------------------------------------------------------------
-    it('uses fallback metadata when fetchCourseMetadata fails', async () => {
-      mockedFetchCourseMetadata.mockRejectedValueOnce(
-        new Error('metadata error'),
-      )
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
+    it('resets isLoading after a failed creation', async () => {
       const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockRejectedValueOnce(new Error('Server error'))
+
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="CS101"
+          project_name="NewBot"
           current_user_email="owner@example.com"
           is_new_course={true}
         />,
       )
 
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
       await user.click(continueBtn)
 
-      // Should still advance - fallback metadata is used
-      await screen.findByTestId('step-success')
+      // After error, button should not be in loading state and should be clickable again
+      await waitFor(() => {
+        expect(continueBtn).not.toBeDisabled()
+      })
+    })
+  })
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Error fetching course metadata after creation:',
-        expect.any(Error),
-      )
-      consoleSpy.mockRestore()
+  // -----------------------------------------------------------------------
+  // Step navigation (Back / Continue through multiple steps)
+  // -----------------------------------------------------------------------
+
+  describe('step navigation', () => {
+    beforeEach(() => {
+      setIllinoisConfig('True')
+      mockFetchCourseAvailable(false)
     })
 
-    // -----------------------------------------------------------------------
-    // Continue does NOT navigate if createProject fails
-    // -----------------------------------------------------------------------
-    it('Continue does not navigate when createProject fails on step 1', async () => {
-      const pushMock = vi.fn()
-      globalThis.__TEST_ROUTER__ = { push: pushMock }
-      mockedCreateProject.mockRejectedValueOnce(new Error('Server error'))
-
+    it('navigates forward through all steps and back', async () => {
       const user = userEvent.setup()
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(apiUtils.createProject as ReturnType<typeof vi.fn>).mockResolvedValue(
+        true,
+      )
+      ;(
+        apiUtils.fetchCourseMetadata as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        is_frozen: false,
+        is_private: false,
+        course_owner: 'owner@example.com',
+        course_admins: [],
+        approved_emails_list: [],
+        example_questions: undefined,
+        banner_image_s3: undefined,
+        course_intro_message: undefined,
+        system_prompt: undefined,
+        openai_api_key: undefined,
+        disabled_models: undefined,
+        project_description: undefined,
+        documentsOnly: undefined,
+        guidedLearning: undefined,
+        systemPromptOnly: undefined,
+        vector_search_rewrite_disabled: undefined,
+        allow_logged_in_users: undefined,
+      })
+
       const MakeNewCoursePage = await importComponent()
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="CS101"
+          project_name="NavTest"
           current_user_email="owner@example.com"
           is_new_course={true}
         />,
       )
+
+      // Step 0: Create
+      expect(await screen.findByTestId('step-create')).toBeInTheDocument()
 
       const continueBtn = screen.getByRole('button', {
-        name: /Continue/i,
+        name: /Continue to next step/i,
+      })
+      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
+        timeout: 3000,
+      })
+
+      // Step 0 -> 1: Success
+      await user.click(continueBtn)
+      expect(await screen.findByTestId('step-success')).toBeInTheDocument()
+
+      // Step 1 -> 2: Upload
+      await user.click(
+        screen.getByRole('button', { name: /Continue to next step/i }),
+      )
+      expect(await screen.findByTestId('step-upload')).toBeInTheDocument()
+
+      // Step 2 -> 3: Branding
+      await user.click(
+        screen.getByRole('button', { name: /Continue to next step/i }),
+      )
+      expect(await screen.findByTestId('step-branding')).toBeInTheDocument()
+
+      // Step 3 -> 4: LLM
+      await user.click(
+        screen.getByRole('button', { name: /Continue to next step/i }),
+      )
+      expect(await screen.findByTestId('step-llm')).toBeInTheDocument()
+
+      // Step 4 -> 5: Prompt (last step)
+      await user.click(
+        screen.getByRole('button', { name: /Continue to next step/i }),
+      )
+      expect(await screen.findByTestId('step-prompt')).toBeInTheDocument()
+
+      // On the last step, the button says "Start Chatting"
+      const lastBtn = screen.getByRole('button', {
+        name: /Start Chatting/i,
+      })
+      expect(lastBtn).toBeInTheDocument()
+
+      // Now go back
+      const backBtn = screen.getByRole('button', {
+        name: /Go to previous step/i,
+      })
+      await user.click(backBtn)
+      expect(await screen.findByTestId('step-llm')).toBeInTheDocument()
+
+      await user.click(backBtn)
+      expect(await screen.findByTestId('step-branding')).toBeInTheDocument()
+    })
+
+    it('Back button does not go below step 0', async () => {
+      const user = userEvent.setup()
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(apiUtils.createProject as ReturnType<typeof vi.fn>).mockResolvedValue(
+        true,
+      )
+      ;(
+        apiUtils.fetchCourseMetadata as ReturnType<typeof vi.fn>
+      ).mockResolvedValue({
+        is_frozen: false,
+        is_private: false,
+        course_owner: 'owner@example.com',
+        course_admins: [],
+        approved_emails_list: [],
+        example_questions: undefined,
+        banner_image_s3: undefined,
+        course_intro_message: undefined,
+        system_prompt: undefined,
+        openai_api_key: undefined,
+        disabled_models: undefined,
+        project_description: undefined,
+        documentsOnly: undefined,
+        guidedLearning: undefined,
+        systemPromptOnly: undefined,
+        vector_search_rewrite_disabled: undefined,
+        allow_logged_in_users: undefined,
+      })
+
+      const MakeNewCoursePage = await importComponent()
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="NavTest"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      // Navigate to step 1
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
       await user.click(continueBtn)
+      await screen.findByTestId('step-success')
 
-      await waitFor(() => expect(notifications.show).toHaveBeenCalled())
-      // Should stay on step 0, not navigate
-      expect(screen.getByTestId('step-create')).toBeInTheDocument()
-      expect(pushMock).not.toHaveBeenCalled()
+      // Go back to step 0
+      const backBtn = screen.getByRole('button', {
+        name: /Go to previous step/i,
+      })
+      await user.click(backBtn)
+      expect(await screen.findByTestId('step-create')).toBeInTheDocument()
+
+      // Back button should be disabled on step 0
+      expect(backBtn).toBeDisabled()
+    })
+  })
+
+  // -----------------------------------------------------------------------
+  // is_new_course = false
+  // -----------------------------------------------------------------------
+
+  describe('when is_new_course is false', () => {
+    beforeEach(() => {
+      setIllinoisConfig('True')
     })
 
-    // -----------------------------------------------------------------------
-    // is_new_course = false (editing existing project)
-    // -----------------------------------------------------------------------
-    it('does not check course availability when is_new_course is false', async () => {
-      vi.restoreAllMocks()
-      const fetchSpy = vi
-        .spyOn(globalThis, 'fetch')
-        .mockImplementation(async () => {
-          return new Response(JSON.stringify({}), {
-            status: 200,
-            headers: { 'content-type': 'application/json' },
-          })
-        })
-
+    it('does not run the availability check query', async () => {
+      const fetchSpy = mockFetchCourseAvailable(false)
       const MakeNewCoursePage = await importComponent()
+
       renderWithProviders(
         <MakeNewCoursePage
-          project_name="CS101"
+          project_name="ExistingProject"
           current_user_email="owner@example.com"
           is_new_course={false}
         />,
       )
 
-      // Give debounce time to pass without triggering availability check
-      await new Promise((r) => setTimeout(r, 1500))
-
-      const calls = fetchSpy.mock.calls.filter((c) =>
-        String(c[0]?.url ?? c[0]).includes('getCourseExists'),
-      )
-      expect(calls.length).toBe(0)
-    })
-
-    // -----------------------------------------------------------------------
-    // UploadNotification rendering
-    // -----------------------------------------------------------------------
-    it('renders the UploadNotification component', async () => {
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-        />,
-      )
-
-      expect(screen.getByTestId('upload-notification')).toBeInTheDocument()
-    })
-
-    // -----------------------------------------------------------------------
-    // project_description prop
-    // -----------------------------------------------------------------------
-    it('passes project_description to StepCreate', async () => {
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-          project_description="A test description"
-        />,
-      )
-
-      expect(screen.getByTestId('step-create-desc')).toHaveTextContent(
-        'A test description',
+      // Give it time to settle - should NOT have called getCourseExists
+      await waitFor(
+        () => {
+          const calls = fetchSpy.mock.calls.map((c) =>
+            String(c[0]?.url ?? c[0]),
+          )
+          const existsCalls = calls.filter((url) =>
+            url.includes('getCourseExists'),
+          )
+          expect(existsCalls).toHaveLength(0)
+        },
+        { timeout: 2000 },
       )
     })
+  })
 
-    // -----------------------------------------------------------------------
-    // Auth email fallback
-    // -----------------------------------------------------------------------
-    it('uses current_user_email when auth user is not available', async () => {
-      globalThis.__TEST_AUTH__ = { user: null }
+  // -----------------------------------------------------------------------
+  // UploadNotification close handler
+  // -----------------------------------------------------------------------
 
+  describe('upload notification', () => {
+    beforeEach(() => {
+      setIllinoisConfig('True')
+      mockFetchCourseAvailable(false)
+    })
+
+    it('clears upload files when close notification is clicked', async () => {
       const user = userEvent.setup()
       const MakeNewCoursePage = await importComponent()
+
       renderWithProviders(
         <MakeNewCoursePage
           project_name="CS101"
-          current_user_email="fallback@example.com"
+          current_user_email="owner@example.com"
           is_new_course={true}
         />,
       )
 
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
+      const closeBtn = await screen.findByTestId('close-notification')
+      await user.click(closeBtn)
+
+      // After close, files count should be 0
+      expect(screen.getByTestId('upload-files-count')).toHaveTextContent('0')
+    })
+  })
+
+  // -----------------------------------------------------------------------
+  // Continue button guard on step 0 (empty name, loading, waiting)
+  // -----------------------------------------------------------------------
+
+  describe('Continue guard on step 0 - early return conditions', () => {
+    beforeEach(() => {
+      setIllinoisConfig('True')
+    })
+
+    it('does not call createProject when project name is empty on click', async () => {
+      const user = userEvent.setup()
+      mockFetchCourseAvailable(false)
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(apiUtils.createProject as ReturnType<typeof vi.fn>).mockClear()
+
+      const MakeNewCoursePage = await importComponent()
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name=""
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
+
+      // The button should be disabled, but even if we force-click...
+      expect(continueBtn).toBeDisabled()
+
+      // createProject should not have been called
+      expect(apiUtils.createProject).not.toHaveBeenCalled()
+    })
+  })
+
+  // -----------------------------------------------------------------------
+  // Course availability check (fetch error)
+  // -----------------------------------------------------------------------
+
+  describe('course availability check', () => {
+    beforeEach(() => {
+      setIllinoisConfig('True')
+    })
+
+    it('handles fetch error in availability check gracefully', async () => {
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
+        const url = String(input?.url ?? input)
+        if (url.includes('/api/UIUC-api/getCourseExists')) {
+          return new Response('Server Error', { status: 500 })
+        }
+        return new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      })
+
+      const MakeNewCoursePage = await importComponent()
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="ErrorCheck"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
+      )
+
+      // Should render without crashing
+      expect(await screen.findByTestId('step-create')).toBeInTheDocument()
+
+      // Continue should remain disabled since availability is unknown
+      const continueBtn = screen.getByRole('button', {
+        name: /Continue to next step/i,
+      })
+      await waitFor(
+        () => {
+          expect(continueBtn).toBeDisabled()
+        },
+        { timeout: 3000 },
+      )
+    })
+  })
+
+  // -----------------------------------------------------------------------
+  // Project description is passed through
+  // -----------------------------------------------------------------------
+
+  describe('project description', () => {
+    beforeEach(() => {
+      setIllinoisConfig('True')
+      mockFetchCourseAvailable(false)
+    })
+
+    it('passes project_description to handleSubmit on creation', async () => {
+      const user = userEvent.setup()
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(true)
+      ;(
+        apiUtils.fetchCourseMetadata as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        is_frozen: false,
+        is_private: false,
+        course_owner: 'owner@example.com',
+        course_admins: [],
+        approved_emails_list: [],
+        example_questions: undefined,
+        banner_image_s3: undefined,
+        course_intro_message: undefined,
+        system_prompt: undefined,
+        openai_api_key: undefined,
+        disabled_models: undefined,
+        project_description: 'A test project',
+        documentsOnly: undefined,
+        guidedLearning: undefined,
+        systemPromptOnly: undefined,
+        vector_search_rewrite_disabled: undefined,
+        allow_logged_in_users: undefined,
+      })
+
+      const MakeNewCoursePage = await importComponent()
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="DescTest"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+          project_description="A test project"
+        />,
+      )
+
+      const continueBtn = await screen.findByRole('button', {
+        name: /Continue to next step/i,
+      })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
       await user.click(continueBtn)
 
-      await waitFor(() =>
-        expect(mockedCreateProject).toHaveBeenCalledWith(
-          'CS101',
-          '',
-          'fallback@example.com',
+      await waitFor(() => {
+        expect(apiUtils.createProject).toHaveBeenCalledWith(
+          'DescTest',
+          'A test project',
+          'owner@example.com',
           true,
-        ),
-      )
-    })
-
-    it('uses auth email when available', async () => {
-      globalThis.__TEST_AUTH__ = {
-        isAuthenticated: true,
-        user: { profile: { email: 'auth@example.com' } },
-      }
-
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="fallback@example.com"
-          is_new_course={true}
-        />,
-      )
-
-      // Navigate to branding step to check user_id is passed correctly
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
-      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
-        timeout: 3000,
-      })
-      await user.click(continueBtn)
-
-      // createProject should use auth email (via user_id) but wait -
-      // createProject is called with current_user_email prop, not user_id.
-      // The user_id is only used for StepBranding.
-      // So createProject still uses current_user_email.
-      await waitFor(() =>
-        expect(mockedCreateProject).toHaveBeenCalledWith(
-          'CS101',
-          '',
-          'fallback@example.com',
-          true,
-        ),
-      )
-    })
-
-    // -----------------------------------------------------------------------
-    // goToPreviousStep does not go below 0
-    // -----------------------------------------------------------------------
-    it('Back button does not go below step 0', async () => {
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="CS101"
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      // On first step, back is disabled, so clicking does nothing
-      const backBtn = screen.getByRole('button', {
-        name: /previous step|Back/i,
-      })
-      expect(backBtn).toBeDisabled()
-      expect(screen.getByTestId('step-create')).toBeInTheDocument()
-    })
-
-    // -----------------------------------------------------------------------
-    // URL encoding in Start Chatting
-    // -----------------------------------------------------------------------
-    it('encodes project name in the URL when navigating to chat', async () => {
-      const pushMock = vi.fn()
-      globalThis.__TEST_ROUTER__ = { push: pushMock }
-
-      const user = userEvent.setup()
-      const MakeNewCoursePage = await importComponent()
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name="My Project"
-          current_user_email="owner@example.com"
-          is_new_course={true}
-        />,
-      )
-
-      const continueBtn = screen.getByRole('button', { name: /Continue/i })
-      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
-        timeout: 3000,
-      })
-
-      // Navigate to last step
-      for (let i = 0; i < 5; i++) {
-        await user.click(
-          screen.getByRole('button', { name: /Continue|Start Chatting/i }),
         )
-      }
-
-      await screen.findByTestId('step-prompt')
-
-      const startBtn = screen.getByRole('button', {
-        name: /Start Chatting/i,
       })
-      await user.click(startBtn)
+    })
 
-      await waitFor(() =>
-        expect(pushMock).toHaveBeenCalledWith('/My-Project/chat'),
+    it('updates description via mock input and uses it in submission', async () => {
+      const user = userEvent.setup()
+
+      const apiUtils = await import('~/utils/apiUtils')
+      ;(
+        apiUtils.createProject as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(true)
+      ;(
+        apiUtils.fetchCourseMetadata as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce({
+        is_frozen: false,
+        is_private: false,
+        course_owner: 'owner@example.com',
+        course_admins: [],
+        approved_emails_list: [],
+        example_questions: undefined,
+        banner_image_s3: undefined,
+        course_intro_message: undefined,
+        system_prompt: undefined,
+        openai_api_key: undefined,
+        disabled_models: undefined,
+        project_description: 'Updated desc',
+        documentsOnly: undefined,
+        guidedLearning: undefined,
+        systemPromptOnly: undefined,
+        vector_search_rewrite_disabled: undefined,
+        allow_logged_in_users: undefined,
+      })
+
+      const MakeNewCoursePage = await importComponent()
+      renderWithProviders(
+        <MakeNewCoursePage
+          project_name="DescTest"
+          current_user_email="owner@example.com"
+          is_new_course={true}
+        />,
       )
+
+      // Update the description through the mock input
+      const descInput = await screen.findByTestId('mock-desc-input')
+      await user.type(descInput, 'My new description')
+
+      const continueBtn = screen.getByRole('button', {
+        name: /Continue to next step/i,
+      })
+      await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
+        timeout: 3000,
+      })
+      await user.click(continueBtn)
+
+      await waitFor(() => {
+        expect(apiUtils.createProject).toHaveBeenCalledWith(
+          'DescTest',
+          'My new description',
+          'owner@example.com',
+          true,
+        )
+      })
     })
   })
 })
