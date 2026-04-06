@@ -92,6 +92,7 @@ const ChatPage: NextPage = () => {
           console.log('Course metadata settings:', {
             guidedLearning: metadataData.course_metadata.guidedLearning,
             documentsOnly: metadataData.course_metadata.documentsOnly,
+            disableCitations: metadataData.course_metadata.disableCitations,
             systemPromptOnly: metadataData.course_metadata.systemPromptOnly,
             system_prompt: metadataData.course_metadata.system_prompt,
           })
