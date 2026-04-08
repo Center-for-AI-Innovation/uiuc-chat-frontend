@@ -268,25 +268,10 @@ export const ChatInput = ({
   const promptListRef = useRef<HTMLUListElement | null>(null)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
-  const [isFocused, setIsFocused] = useState(false)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
   const fileUploadRef = useRef<HTMLInputElement | null>(null)
   const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
-
-  const handleFocus = () => {
-    setIsFocused(true)
-    if (chatInputParentContainerRef.current) {
-      chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
-    }
-  }
-
-  const handleBlur = () => {
-    setIsFocused(false)
-    if (chatInputParentContainerRef.current) {
-      chatInputParentContainerRef.current.style.boxShadow = 'none'
-    }
-  }
 
   const handleTextClick = () => {
     homeDispatch({
@@ -830,29 +815,6 @@ export const ChatInput = ({
   }, [content])
 
   useEffect(() => {
-    const handleFocus = () => {
-      if (chatInputParentContainerRef.current) {
-        chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
-      }
-    }
-
-    const handleBlur = () => {
-      if (chatInputParentContainerRef.current) {
-        chatInputParentContainerRef.current.style.boxShadow = 'none'
-      }
-    }
-
-    const textArea = textareaRef.current
-    textArea?.addEventListener('focus', handleFocus)
-    textArea?.addEventListener('blur', handleBlur)
-
-    return () => {
-      textArea?.removeEventListener('focus', handleFocus)
-      textArea?.removeEventListener('blur', handleBlur)
-    }
-  }, [textareaRef, chatInputParentContainerRef, isFocused])
-
-  useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (
         promptListRef.current &&
@@ -870,15 +832,8 @@ export const ChatInput = ({
   }, [])
 
   useEffect(() => {
-    // This will focus the div as soon as the component mounts
-    if (chatInputContainerRef.current) {
-      chatInputContainerRef.current.focus()
-    }
-  }, [])
-
-  useEffect(() => {
     setContent(inputContent)
-    if (textareaRef.current) {
+    if (inputContent && textareaRef.current) {
       textareaRef.current.focus()
     }
   }, [inputContent, textareaRef])
@@ -963,9 +918,6 @@ export const ChatInput = ({
           <div
             ref={chatInputContainerRef}
             className="chat-input-container rbg-[--message-background] m-0 w-full resize-none p-0"
-            tabIndex={0}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
             onClick={() => textareaRef.current?.focus()}
             style={{
               ...chatInputContainerStyle,
@@ -1228,6 +1180,7 @@ export const ChatInput = ({
               <textarea
                 ref={textareaRef}
                 aria-label="Message input"
+                autoFocus
                 className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-12 text-white outline-none"
                 style={{
                   resize: 'none',
@@ -1244,8 +1197,6 @@ export const ChatInput = ({
                 onCompositionEnd={() => setIsTyping(false)}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
               />
 
               {/* Send button */}

@@ -392,6 +392,23 @@
   outline: none;
 }
 
+/*
+ * Chat input area: suppress the default outline so the parent container's
+ * rounded box-shadow serves as the focus indicator (WCAG 2.4.7).
+ */
+.chat-input:focus-visible,
+.chat-input-container:focus-visible,
+.chat_input_container:focus-visible {
+  outline: none !important;
+}
+
+html[data-input-modality='keyboard']
+  .chat_input_container:has(textarea.chat-input:focus) {
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 4px var(--illinois-orange);
+}
+
 /* use existing formulas dark/light as described above as much as possible and only change the primary colors as needed */
 .dark {
   --foreground: var(--illinois-white);
