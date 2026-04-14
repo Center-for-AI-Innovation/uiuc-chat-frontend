@@ -17,11 +17,6 @@ vi.mock('../navbars/Navbar', () => ({
   default: () => <div data-testid="navbar" />,
 }))
 
-vi.mock('../GlobalFooter', () => ({
-  __esModule: true,
-  default: () => <div data-testid="footer" />,
-}))
-
 vi.mock('../UploadNotification', () => ({
   __esModule: true,
   default: ({
@@ -187,8 +182,8 @@ describe('MakeNewCoursePage', () => {
   // Illinois Chat config disabled
   // -----------------------------------------------------------------------
 
-  describe('when UI creation is disabled (non-Illinois config)', () => {
-    it('renders the migration notice card', async () => {
+  describe('when Illinois config is disabled', () => {
+    it('still renders the wizard instead of the migration notice', async () => {
       setIllinoisConfig('False')
       const MakeNewCoursePage = await importComponent()
 
@@ -200,12 +195,13 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
+      expect(await screen.findByTestId('step-create')).toBeInTheDocument()
       expect(
-        await screen.findByText(/New project creation is currently disabled/i),
-      ).toBeInTheDocument()
+        screen.queryByText(/New project creation is currently disabled/i),
+      ).not.toBeInTheDocument()
     })
 
-    it('displays the chat.illinois.edu link', async () => {
+    it('does not display the migration links', async () => {
       setIllinoisConfig('False')
       const MakeNewCoursePage = await importComponent()
 
@@ -216,34 +212,17 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      const link = await screen.findByRole('link', {
-        name: /chat\.illinois\.edu/i,
-      })
-      expect(link).toHaveAttribute('href', 'https://chat.illinois.edu')
-      expect(link).toHaveAttribute('target', '_blank')
+      expect(
+        screen.queryByRole('link', { name: /chat\.illinois\.edu/i }),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('link', {
+          name: /genaisupport@mx\.uillinois\.edu/i,
+        }),
+      ).not.toBeInTheDocument()
     })
 
-    it('displays the support email link', async () => {
-      setIllinoisConfig('False')
-      const MakeNewCoursePage = await importComponent()
-
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name=""
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      const mailto = await screen.findByRole('link', {
-        name: /genaisupport@mx\.uillinois\.edu/i,
-      })
-      expect(mailto).toHaveAttribute(
-        'href',
-        'mailto:genaisupport@mx.uillinois.edu',
-      )
-    })
-
-    it('renders the Navbar and GlobalFooter', async () => {
+    it('renders the Navbar and wizard navigation', async () => {
       setIllinoisConfig('False')
       const MakeNewCoursePage = await importComponent()
 
@@ -255,7 +234,9 @@ describe('MakeNewCoursePage', () => {
       )
 
       expect(screen.getByTestId('navbar')).toBeInTheDocument()
-      expect(screen.getByTestId('footer')).toBeInTheDocument()
+      expect(
+        screen.getByRole('navigation', { name: /Wizard navigation/i }),
+      ).toBeInTheDocument()
     })
 
     it('uses project_name in the title or falls back to "New Project"', async () => {
