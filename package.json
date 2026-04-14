@@ -125,7 +125,7 @@
     "keycloak-js": "^26.2.0",
     "langchain": "^0.2.1",
     "langsmith": "^0.1.25",
-    "lodash": "^4.17.21",
+    "lodash": "^4.18.1",
     "lucide-react": "^0.447.0",
     "mantine-datatable": "^6.0.0",
     "next": "^13.5.6",
