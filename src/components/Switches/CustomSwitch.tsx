@@ -22,10 +22,10 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
 
   const handleContainerClick = (event: React.MouseEvent) => {
     if (disabled) return
-    // Only toggle if clicking the container (not the switch itself)
+    // Only toggle if clicking outside the switch (label text, container padding, etc.)
+    // Clicks on the switch itself are handled by handleSwitchChange
     const target = event.target as HTMLElement
-    if (target.closest('input[type="checkbox"]') || target.tagName === 'INPUT')
-      return
+    if (target.closest('.mantine-Switch-root')) return
     onChange(!checked)
   }
 
@@ -73,11 +73,12 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           checked ? (
             <IconCheck
               size="0.8rem"
+              aria-hidden="true"
               color={disabled ? 'gray' : 'var(--dashboard-button)'}
               stroke={3}
             />
           ) : (
-            <IconX size="0.8rem" color="grey" stroke={3} />
+            <IconX size="0.8rem" aria-hidden="true" color="grey" stroke={3} />
           )
         }
         styles={{
@@ -103,6 +104,11 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
             transition: 'all 0.3s ease',
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
             cursor: disabled ? 'not-allowed' : 'pointer',
+          },
+          trackLabel: {
+            color: checked
+              ? 'var(--dashboard-button-foreground)'
+              : 'var(--foreground)',
           },
         }}
       />
@@ -153,6 +159,7 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           >
             <IconInfoCircle
               size={16}
+              aria-hidden="true"
               className={
                 !disabled && isContainerHovered
                   ? 'text-gray/60'

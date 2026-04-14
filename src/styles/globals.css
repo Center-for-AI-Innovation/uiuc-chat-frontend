@@ -191,7 +191,7 @@
   --button-disabled-text-color: color-mix(
     in srgb,
     var(--foreground),
-    var(--background) 80%
+    var(--background) 25%
   );
 
   --chat-background: color-mix(in srgb, var(--background), black 2%);
@@ -390,6 +390,16 @@
 }
 *:focus:not(:focus-visible) {
   outline: none;
+}
+
+/*
+ * Chat input area: suppress the default outline so the parent container's
+ * rounded box-shadow serves as the focus indicator (WCAG 2.4.7).
+ */
+.chat-input:focus-visible,
+.chat-input-container:focus-visible,
+.chat_input_container:focus-visible {
+  outline: none !important;
 }
 
 /* use existing formulas dark/light as described above as much as possible and only change the primary colors as needed */
@@ -1202,8 +1212,9 @@ button.css-s37qmw {
   @apply bg-purple-100 text-gray-900 dark:bg-purple-900/30 dark:text-gray-100;
 }
 
-.think-tag-header:focus {
-  @apply outline-none ring-2 ring-[--accent];
+.think-tag-header:focus-visible {
+  @apply outline-none;
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 .think-tag-icon {
@@ -1299,6 +1310,8 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
 
 .n8n_workflows_table .mantine-Center-root,
 .project_files_table .mantine-Center-root {
+  color: var(--foreground-faded);
+
   > div {
     background-color: transparent; /* hack to remove no records icon */
   }
@@ -1313,6 +1326,13 @@ https://icflorescu.github.io/mantine-datatable/examples/records-selection/
   background-color: var(--dashboard-background-faded);
 
   border-radius: 0px;
+}
+
+/* Ensure Mantine form labels have sufficient color contrast */
+.mantine-TextInput-label,
+.mantine-Select-label,
+.mantine-PasswordInput-label {
+  color: var(--foreground);
 }
 
 .n8n_workflows_table .mantine-ScrollArea-viewport,

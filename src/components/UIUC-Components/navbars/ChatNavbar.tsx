@@ -335,7 +335,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <IconPlus size={24} />
+                        <IconPlus size={24} aria-hidden="true" />
                         <span
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ marginLeft: '8px' }}
@@ -370,7 +370,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <IconSettings size={24} />
+                        <IconSettings size={24} aria-hidden="true" />
                         <span
                           className={`${montserrat_heading.variable} font-montserratHeading`}
                           style={{ marginLeft: '8px' }}
@@ -405,7 +405,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <IconHome size={24} />
+                          <IconHome size={24} aria-hidden="true" />
                           <span
                             className={`${montserrat_heading.variable} font-montserratHeading`}
                             style={{ marginLeft: '8px' }}
@@ -451,6 +451,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   >
                     <IconPlus
                       size={24}
+                      aria-hidden="true"
                       style={{
                         position: 'relative',
                         top: '-2px',
@@ -500,6 +501,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                   >
                     <IconSettings
                       size={24}
+                      aria-hidden="true"
                       style={{
                         position: 'relative',
                         top: '-2px',
@@ -574,6 +576,7 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
                       <IconHome
                         size={30}
                         strokeWidth={2}
+                        aria-hidden="true"
                         style={{
                           marginRight: '4px',
                           marginLeft: '4px',

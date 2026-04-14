@@ -70,9 +70,15 @@ export default function OpenAICompatibleProviderInput({
                       size="0.8rem"
                       color="var(--dashboard-button)"
                       stroke={3}
+                      aria-hidden="true"
                     />
                   ) : (
-                    <IconX size="0.8rem" color="grey" stroke={3} />
+                    <IconX
+                      size="0.8rem"
+                      color="grey"
+                      stroke={3}
+                      aria-hidden="true"
+                    />
                   )
                 }
                 styles={{
@@ -124,7 +130,7 @@ export default function OpenAICompatibleProviderInput({
                     {(baseUrlField: any) => (
                       <div style={{ marginBottom: '16px' }}>
                         <TextInput
-                          label="Base URL"
+                          label="OpenAI Compatible Base URL"
                           placeholder="https://api.example.com/v1"
                           value={baseUrlField.state.value || ''}
                           onChange={(e) => {
@@ -150,14 +156,14 @@ export default function OpenAICompatibleProviderInput({
                             setTimeout(() => form.handleSubmit(), 0)
                           }}
                           styles={{
+                            label: {
+                              color: 'var(--dashboard-foreground-faded)',
+                            },
                             input: {
                               color: 'var(--foreground)',
                               backgroundColor: 'var(--background)',
                               padding: '8px',
                               borderRadius: '4px',
-                            },
-                            label: {
-                              color: 'var(--dashboard-foreground-faded)',
                             },
                           }}
                         />
