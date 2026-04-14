@@ -431,6 +431,25 @@ export const projectStats = pgTable('project_stats', {
   model_usage_counts: jsonb('model_usage_counts'),
 })
 
+// Project External Connections table
+export const projectExternalConnections = pgTable(
+  'project_external_connections',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    project_id: bigint('project_id', { mode: 'number' })
+      .unique()
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    project_name: text('project_name').unique().notNull(),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    s3_config: jsonb('s3_config'),
+    database_config: jsonb('database_config'),
+    qdrant_config: jsonb('qdrant_config'),
+    is_active: boolean('is_active').default(true),
+  },
+)
+
 // PubMed Daily Update (from schema.sql)
 export const pubmedDailyUpdate = pgTable('pubmed_daily_update', {
   id: serial('id').primaryKey(),
@@ -515,7 +534,21 @@ export const projectsRelations = relations(projects, ({ many, one }) => ({
     fields: [projects.id],
     references: [projectStats.project_id],
   }),
+  externalConnections: one(projectExternalConnections, {
+    fields: [projects.id],
+    references: [projectExternalConnections.project_id],
+  }),
 }))
+
+export const projectExternalConnectionsRelations = relations(
+  projectExternalConnections,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [projectExternalConnections.project_id],
+      references: [projects.id],
+    }),
+  }),
+)
 
 export const docGroupsRelations = relations(docGroups, ({ many }) => ({
   documentsJunction: many(documentsDocGroups),
@@ -625,6 +658,11 @@ export type NewProjectStats = typeof projectStats.$inferInsert
 
 export type PubmedDailyUpdate = typeof pubmedDailyUpdate.$inferSelect
 export type NewPubmedDailyUpdate = typeof pubmedDailyUpdate.$inferInsert
+
+export type ProjectExternalConnections =
+  typeof projectExternalConnections.$inferSelect
+export type NewProjectExternalConnections =
+  typeof projectExternalConnections.$inferInsert
 
 // export types for keycloak users
 export type KeycloakUsers = typeof keycloakUsers.$inferSelect
