@@ -9,6 +9,7 @@ import { cn } from '@/components/shadcn/lib/utils'
 const formInputGroupVariants = cva(
   [
     'flex w-full items-center rounded-md border bg-[--background] transition-colors',
+    'focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[--illinois-orange]',
     'has-[>textarea]:items-stretch',
   ],
   {
@@ -119,7 +120,7 @@ const FormInput = React.forwardRef<
 
     const sharedClasses = cn(
       'w-full bg-transparent px-3 py-2 text-sm text-[--foreground] placeholder:text-[--foreground-faded]',
-      'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
+      'outline-none focus:outline-none focus-visible:!outline-none focus-visible:ring-0',
       'disabled:cursor-not-allowed disabled:opacity-50',
       inputClassName,
     )
