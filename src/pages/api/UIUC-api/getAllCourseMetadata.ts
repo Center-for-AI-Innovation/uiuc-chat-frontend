@@ -3,10 +3,17 @@ import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import type { CourseMetadata } from '~/types/courseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { db } from '~/db/dbClient'
+import { conversations } from '~/db/schema'
+import { eq, max } from 'drizzle-orm'
+
+export type CourseMetadataWithLastAccess = CourseMetadata & {
+  last_accessed_at?: string | null
+}
 
 export const getCoursesByOwnerOrAdmin = async (
   currUserEmail: string,
-): Promise<{ [key: string]: CourseMetadata }[]> => {
+): Promise<{ [key: string]: CourseMetadataWithLastAccess }[]> => {
   let all_course_metadata_raw: { [key: string]: string } | null = null
   try {
     const redisClient = await ensureRedisConnected()
@@ -39,8 +46,43 @@ export const getCoursesByOwnerOrAdmin = async (
         }
         return acc
       },
-      [] as { [key: string]: CourseMetadata }[],
+      [] as { [key: string]: CourseMetadataWithLastAccess }[],
     )
+
+    // Batch-fetch last access timestamps for the current user
+    try {
+      const lastAccessRows = await db
+        .select({
+          projectName: conversations.project_name,
+          lastAccessedAt: max(conversations.updated_at),
+        })
+        .from(conversations)
+        .where(eq(conversations.user_email, currUserEmail))
+        .groupBy(conversations.project_name)
+
+      const lastAccessMap = new Map(
+        lastAccessRows.map((row) => [
+          row.projectName,
+          row.lastAccessedAt?.toISOString() ?? null,
+        ]),
+      )
+
+      for (const entry of course_metadatas) {
+        const courseName = Object.keys(entry)[0]
+        if (courseName) {
+          const metadata = entry[courseName]
+          if (metadata) {
+            entry[courseName] = {
+              ...metadata,
+              last_accessed_at: lastAccessMap.get(courseName) ?? null,
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching last access timestamps:', error)
+      // Non-fatal: return metadata without last_accessed_at
+    }
 
     return course_metadatas
   } catch (error) {

@@ -4,6 +4,9 @@ import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { db } from '~/db/dbClient'
+import { conversations } from '~/db/schema'
+import { and, eq, max } from 'drizzle-orm'
 
 export const getCourseMetadata = async (
   course_name: string,
@@ -23,6 +26,28 @@ export const getCourseMetadata = async (
   }
 }
 
+export const getUserLastAccessForCourse = async (
+  userEmail: string,
+  courseName: string,
+): Promise<string | null> => {
+  try {
+    const result = await db
+      .select({ lastAccessedAt: max(conversations.updated_at) })
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.user_email, userEmail),
+          eq(conversations.project_name, courseName),
+        ),
+      )
+
+    return result[0]?.lastAccessedAt?.toISOString() ?? null
+  } catch (error) {
+    console.error('Error fetching user last access:', error)
+    return null
+  }
+}
+
 export default withCourseAccessFromRequest('any')(handler)
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -35,7 +60,13 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         .status(404)
         .json({ success: false, error: 'Project not found' })
     }
-    res.status(200).json({ course_metadata: course_metadata })
+
+    const userEmail = req.user?.email
+    const last_accessed_at = userEmail
+      ? await getUserLastAccessForCourse(userEmail, course_name)
+      : null
+
+    res.status(200).json({ course_metadata: course_metadata, last_accessed_at })
   } catch (error) {
     console.log('Error occurred while fetching courseMetadata', error)
     res.status(500).json({ success: false, error: error })
