@@ -33,23 +33,22 @@ vi.mock('~/components/Buttons/CustomCopyButton', () => ({
   ),
 }))
 
-vi.mock('~/components/Switches/CustomSwitch', () => ({
-  default: ({
+vi.mock('@/components/shadcn/ui/switch', () => ({
+  Switch: ({
     label,
     checked,
-    onChange,
-    tooltip,
+    onCheckedChange,
   }: {
-    label: string
-    checked: boolean
-    onChange: (value: boolean) => void
-    tooltip?: string
+    label?: string
+    checked?: boolean
+    onCheckedChange?: (value: boolean) => void
+    [key: string]: unknown
   }) => (
-    <label data-testid={`switch-${label}`}>
+    <label data-testid={label ? `switch-${label}` : undefined}>
       <input
         type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
+        checked={checked ?? false}
+        onChange={(e) => onCheckedChange?.(e.target.checked)}
         aria-label={label}
       />
       {label}

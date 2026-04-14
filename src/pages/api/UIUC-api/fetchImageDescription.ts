@@ -1,7 +1,6 @@
 // src/pages/api/UIUC-api/fetchImageDescription.ts
 
 import { type Content, type Conversation, type ImageBody } from '@/types/chat'
-import { getBaseUrl } from '~/utils/apiUtils'
 import { type AllLLMProviders } from '~/utils/modelProviders/LLMProvider'
 
 /**
@@ -43,7 +42,7 @@ export const fetchImageDescription = async (
 
   try {
     // Send the POST request to the API endpoint
-    const response = await fetch(`${getBaseUrl()}/api/imageDescription`, {
+    const response = await fetch('/api/imageDescription', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

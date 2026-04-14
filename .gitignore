@@ -50,3 +50,6 @@ tests_output/
 
 # IDE
 .idea
+
+# create a drafts directory to store draft code/docs for later use
+drafts/

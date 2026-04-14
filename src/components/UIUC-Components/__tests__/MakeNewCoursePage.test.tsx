@@ -17,11 +17,6 @@ vi.mock('../navbars/Navbar', () => ({
   default: () => <div data-testid="navbar" />,
 }))
 
-vi.mock('../GlobalFooter', () => ({
-  __esModule: true,
-  default: () => <div data-testid="footer" />,
-}))
-
 vi.mock('../UploadNotification', () => ({
   __esModule: true,
   default: ({
@@ -187,8 +182,8 @@ describe('MakeNewCoursePage', () => {
   // Illinois Chat config disabled
   // -----------------------------------------------------------------------
 
-  describe('when UI creation is disabled (non-Illinois config)', () => {
-    it('renders the migration notice card', async () => {
+  describe('when Illinois config is disabled', () => {
+    it('still renders the wizard instead of the migration notice', async () => {
       setIllinoisConfig('False')
       const MakeNewCoursePage = await importComponent()
 
@@ -200,12 +195,13 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
+      expect(await screen.findByTestId('step-create')).toBeInTheDocument()
       expect(
-        await screen.findByText(/New project creation is currently disabled/i),
-      ).toBeInTheDocument()
+        screen.queryByText(/New project creation is currently disabled/i),
+      ).not.toBeInTheDocument()
     })
 
-    it('displays the chat.illinois.edu link', async () => {
+    it('does not display the migration links', async () => {
       setIllinoisConfig('False')
       const MakeNewCoursePage = await importComponent()
 
@@ -216,34 +212,17 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      const link = await screen.findByRole('link', {
-        name: /chat\.illinois\.edu/i,
-      })
-      expect(link).toHaveAttribute('href', 'https://chat.illinois.edu')
-      expect(link).toHaveAttribute('target', '_blank')
+      expect(
+        screen.queryByRole('link', { name: /chat\.illinois\.edu/i }),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('link', {
+          name: /genaisupport@mx\.uillinois\.edu/i,
+        }),
+      ).not.toBeInTheDocument()
     })
 
-    it('displays the support email link', async () => {
-      setIllinoisConfig('False')
-      const MakeNewCoursePage = await importComponent()
-
-      renderWithProviders(
-        <MakeNewCoursePage
-          project_name=""
-          current_user_email="owner@example.com"
-        />,
-      )
-
-      const mailto = await screen.findByRole('link', {
-        name: /genaisupport@mx\.uillinois\.edu/i,
-      })
-      expect(mailto).toHaveAttribute(
-        'href',
-        'mailto:genaisupport@mx.uillinois.edu',
-      )
-    })
-
-    it('renders the Navbar and GlobalFooter', async () => {
+    it('renders the Navbar and wizard navigation', async () => {
       setIllinoisConfig('False')
       const MakeNewCoursePage = await importComponent()
 
@@ -255,7 +234,9 @@ describe('MakeNewCoursePage', () => {
       )
 
       expect(screen.getByTestId('navbar')).toBeInTheDocument()
-      expect(screen.getByTestId('footer')).toBeInTheDocument()
+      expect(
+        screen.getByRole('navigation', { name: /Wizard navigation/i }),
+      ).toBeInTheDocument()
     })
 
     it('uses project_name in the title or falls back to "New Project"', async () => {
@@ -310,10 +291,10 @@ describe('MakeNewCoursePage', () => {
       )
 
       expect(
-        await screen.findByRole('button', { name: /^Back$/i }),
+        await screen.findByRole('button', { name: /Go to previous step/i }),
       ).toBeInTheDocument()
       expect(
-        screen.getByRole('button', { name: /^Continue$/i }),
+        screen.getByRole('button', { name: /Continue to next step/i }),
       ).toBeInTheDocument()
     })
 
@@ -328,7 +309,9 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      const backBtn = await screen.findByRole('button', { name: /^Back$/i })
+      const backBtn = await screen.findByRole('button', {
+        name: /Go to previous step/i,
+      })
       expect(backBtn).toBeDisabled()
     })
 
@@ -343,7 +326,7 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      // 6 steps: Create, Upload, LLM, Prompt, Branding, Success
+      // 6 steps: Create, Success, Upload, Branding, LLM, Prompt
       const dots = container.querySelectorAll('.rounded-full')
       expect(dots.length).toBe(6)
     })
@@ -409,7 +392,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       expect(continueBtn).toBeDisabled()
     })
@@ -427,7 +410,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       // Wait for debounce + availability check to settle
       await waitFor(
@@ -448,7 +431,7 @@ describe('MakeNewCoursePage', () => {
       setIllinoisConfig('True')
     })
 
-    it('creates a project and advances to the upload step', async () => {
+    it('creates a project and advances to the success step', async () => {
       const user = userEvent.setup()
       mockFetchCourseAvailable(false)
 
@@ -467,7 +450,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
@@ -484,8 +467,8 @@ describe('MakeNewCoursePage', () => {
         )
       })
 
-      // Should advance to StepUpload
-      expect(await screen.findByTestId('step-upload')).toBeInTheDocument()
+      // Should advance to StepSuccess (step 1 in wizard)
+      expect(await screen.findByTestId('step-success')).toBeInTheDocument()
     })
 
     it('fetches and caches course metadata after creation', async () => {
@@ -532,7 +515,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
@@ -576,7 +559,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
@@ -584,7 +567,7 @@ describe('MakeNewCoursePage', () => {
       await user.click(continueBtn)
 
       // Should still advance (fallback metadata used)
-      expect(await screen.findByTestId('step-upload')).toBeInTheDocument()
+      expect(await screen.findByTestId('step-success')).toBeInTheDocument()
 
       // Fallback metadata should be cached
       await waitFor(() => {
@@ -617,7 +600,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
@@ -669,18 +652,20 @@ describe('MakeNewCoursePage', () => {
         />,
       )
 
-      // First click: creates the project and goes to step 1
+      // First click: creates the project and goes to step 1 (StepSuccess)
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
       await user.click(continueBtn)
-      await screen.findByTestId('step-upload')
+      await screen.findByTestId('step-success')
 
       // Go back to step 0
-      const backBtn = screen.getByRole('button', { name: /^Back$/i })
+      const backBtn = screen.getByRole('button', {
+        name: /Go to previous step/i,
+      })
       await user.click(backBtn)
       await screen.findByTestId('step-create')
 
@@ -688,10 +673,12 @@ describe('MakeNewCoursePage', () => {
       ;(apiUtils.createProject as ReturnType<typeof vi.fn>).mockClear()
 
       // Second click on Continue: should NOT call createProject again
-      const continueBtn2 = screen.getByRole('button', { name: /^Continue$/i })
+      const continueBtn2 = screen.getByRole('button', {
+        name: /Continue to next step/i,
+      })
       await user.click(continueBtn2)
 
-      await screen.findByTestId('step-upload')
+      await screen.findByTestId('step-success')
       expect(apiUtils.createProject).not.toHaveBeenCalled()
     })
   })
@@ -735,7 +722,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
@@ -787,7 +774,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
@@ -831,7 +818,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
@@ -869,7 +856,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
@@ -934,45 +921,56 @@ describe('MakeNewCoursePage', () => {
       // Step 0: Create
       expect(await screen.findByTestId('step-create')).toBeInTheDocument()
 
-      const continueBtn = screen.getByRole('button', { name: /^Continue$/i })
+      const continueBtn = screen.getByRole('button', {
+        name: /Continue to next step/i,
+      })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
 
-      // Step 0 -> 1: Upload
+      // Step 0 -> 1: Success
       await user.click(continueBtn)
-      expect(await screen.findByTestId('step-upload')).toBeInTheDocument()
-
-      // Step 1 -> 2: LLM
-      await user.click(screen.getByRole('button', { name: /^Continue$/i }))
-      expect(await screen.findByTestId('step-llm')).toBeInTheDocument()
-
-      // Step 2 -> 3: Prompt
-      await user.click(screen.getByRole('button', { name: /^Continue$/i }))
-      expect(await screen.findByTestId('step-prompt')).toBeInTheDocument()
-
-      // Step 3 -> 4: Branding
-      await user.click(screen.getByRole('button', { name: /^Continue$/i }))
-      expect(await screen.findByTestId('step-branding')).toBeInTheDocument()
-
-      // Step 4 -> 5: Success (last step)
-      await user.click(screen.getByRole('button', { name: /^Continue$/i }))
       expect(await screen.findByTestId('step-success')).toBeInTheDocument()
 
-      // On the last step, Continue should be effectively hidden (opacity-0 class)
-      // and disabled
-      const lastContinueBtn = screen.getByRole('button', {
-        name: /^Continue$/i,
-      })
-      expect(lastContinueBtn).toBeDisabled()
+      // Step 1 -> 2: Upload
+      await user.click(
+        screen.getByRole('button', { name: /Continue to next step/i }),
+      )
+      expect(await screen.findByTestId('step-upload')).toBeInTheDocument()
 
-      // Now go back
-      const backBtn = screen.getByRole('button', { name: /^Back$/i })
-      await user.click(backBtn)
+      // Step 2 -> 3: Branding
+      await user.click(
+        screen.getByRole('button', { name: /Continue to next step/i }),
+      )
       expect(await screen.findByTestId('step-branding')).toBeInTheDocument()
 
-      await user.click(backBtn)
+      // Step 3 -> 4: LLM
+      await user.click(
+        screen.getByRole('button', { name: /Continue to next step/i }),
+      )
+      expect(await screen.findByTestId('step-llm')).toBeInTheDocument()
+
+      // Step 4 -> 5: Prompt (last step)
+      await user.click(
+        screen.getByRole('button', { name: /Continue to next step/i }),
+      )
       expect(await screen.findByTestId('step-prompt')).toBeInTheDocument()
+
+      // On the last step, the button says "Start Chatting"
+      const lastBtn = screen.getByRole('button', {
+        name: /Start Chatting/i,
+      })
+      expect(lastBtn).toBeInTheDocument()
+
+      // Now go back
+      const backBtn = screen.getByRole('button', {
+        name: /Go to previous step/i,
+      })
+      await user.click(backBtn)
+      expect(await screen.findByTestId('step-llm')).toBeInTheDocument()
+
+      await user.click(backBtn)
+      expect(await screen.findByTestId('step-branding')).toBeInTheDocument()
     })
 
     it('Back button does not go below step 0', async () => {
@@ -1015,16 +1013,18 @@ describe('MakeNewCoursePage', () => {
 
       // Navigate to step 1
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })
       await user.click(continueBtn)
-      await screen.findByTestId('step-upload')
+      await screen.findByTestId('step-success')
 
       // Go back to step 0
-      const backBtn = screen.getByRole('button', { name: /^Back$/i })
+      const backBtn = screen.getByRole('button', {
+        name: /Go to previous step/i,
+      })
       await user.click(backBtn)
       expect(await screen.findByTestId('step-create')).toBeInTheDocument()
 
@@ -1126,7 +1126,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
 
       // The button should be disabled, but even if we force-click...
@@ -1171,7 +1171,9 @@ describe('MakeNewCoursePage', () => {
       expect(await screen.findByTestId('step-create')).toBeInTheDocument()
 
       // Continue should remain disabled since availability is unknown
-      const continueBtn = screen.getByRole('button', { name: /^Continue$/i })
+      const continueBtn = screen.getByRole('button', {
+        name: /Continue to next step/i,
+      })
       await waitFor(
         () => {
           expect(continueBtn).toBeDisabled()
@@ -1231,7 +1233,7 @@ describe('MakeNewCoursePage', () => {
       )
 
       const continueBtn = await screen.findByRole('button', {
-        name: /^Continue$/i,
+        name: /Continue to next step/i,
       })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
@@ -1290,7 +1292,9 @@ describe('MakeNewCoursePage', () => {
       const descInput = await screen.findByTestId('mock-desc-input')
       await user.type(descInput, 'My new description')
 
-      const continueBtn = screen.getByRole('button', { name: /^Continue$/i })
+      const continueBtn = screen.getByRole('button', {
+        name: /Continue to next step/i,
+      })
       await waitFor(() => expect(continueBtn).not.toBeDisabled(), {
         timeout: 3000,
       })

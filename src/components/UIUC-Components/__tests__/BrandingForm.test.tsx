@@ -90,14 +90,16 @@ describe('BrandingForm', () => {
       renderBrandingForm()
 
       expect(screen.getByText('Greeting')).toBeInTheDocument()
-      expect(screen.getByLabelText('Greeting')).toBeInTheDocument()
+      expect(
+        screen.getByPlaceholderText(/enter a greeting/i),
+      ).toBeInTheDocument()
       expect(
         screen.getByRole('button', { name: /Update/i }),
       ).toBeInTheDocument()
     })
 
     it('renders example questions section with SetExampleQuestions child', () => {
-      renderBrandingForm()
+      renderBrandingForm({ metadata: makeCourseMetadata() })
 
       expect(screen.getByText('Example questions')).toBeInTheDocument()
       expect(screen.getByTestId('set-example-questions')).toBeInTheDocument()
@@ -115,7 +117,10 @@ describe('BrandingForm', () => {
     })
 
     it('passes project_name to SetExampleQuestions', () => {
-      renderBrandingForm({ projectName: 'MyProject' })
+      renderBrandingForm({
+        projectName: 'MyProject',
+        metadata: makeCourseMetadata(),
+      })
 
       expect(
         screen.getByText('SetExampleQuestions: MyProject'),
@@ -138,7 +143,7 @@ describe('BrandingForm', () => {
 
       renderBrandingForm({ metadata })
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await waitFor(() =>
         expect(textarea).toHaveValue('Welcome to the course!'),
       )
@@ -151,7 +156,7 @@ describe('BrandingForm', () => {
 
       renderBrandingForm({ metadata })
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await waitFor(() => expect(textarea).toHaveValue(''))
     })
   })
@@ -161,7 +166,7 @@ describe('BrandingForm', () => {
       const user = userEvent.setup()
       renderBrandingForm()
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await user.type(textarea, 'Hello students!')
 
       // When isIntroMessageUpdated is true, two Update buttons exist; pick the first (primary)
@@ -173,7 +178,7 @@ describe('BrandingForm', () => {
       const user = userEvent.setup()
       renderBrandingForm()
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await user.type(textarea, 'New greeting')
 
       expect(textarea).toHaveValue('New greeting')
@@ -191,7 +196,7 @@ describe('BrandingForm', () => {
 
       renderBrandingForm({ metadata })
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await waitFor(() => expect(textarea).toHaveValue('Old greeting'))
 
       await user.clear(textarea)
@@ -219,7 +224,7 @@ describe('BrandingForm', () => {
 
       renderBrandingForm({ metadata })
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await user.type(textarea, 'Some text')
 
       // Two Update buttons exist when text has changed; first is the primary one
@@ -239,7 +244,7 @@ describe('BrandingForm', () => {
       // Render without setting metadata in query cache
       renderBrandingForm()
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await user.type(textarea, 'Something')
 
       // Two Update buttons exist when text has changed; first is the primary one
@@ -262,7 +267,7 @@ describe('BrandingForm', () => {
       })
       renderBrandingForm({ metadata })
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await waitFor(() => expect(textarea).toHaveValue('Hello'))
 
       await user.clear(textarea)
@@ -281,20 +286,19 @@ describe('BrandingForm', () => {
     })
   })
 
-  describe('hidden update button (shown when isIntroMessageUpdated is true)', () => {
-    it('renders the hidden Update button when text changes', async () => {
+  describe('Update button behavior when text changes', () => {
+    it('enables the Update button when text changes', async () => {
       const user = userEvent.setup()
       renderBrandingForm()
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await user.type(textarea, 'typing...')
 
-      // There should be two Update buttons when isIntroMessageUpdated is true
-      const buttons = screen.getAllByRole('button', { name: /Update/i })
-      expect(buttons.length).toBeGreaterThanOrEqual(2)
+      const updateButton = screen.getByRole('button', { name: /Update/i })
+      expect(updateButton).toBeEnabled()
     })
 
-    it('hidden Update button also calls callSetCourseMetadata on click', async () => {
+    it('Update button calls callSetCourseMetadata on click', async () => {
       const user = userEvent.setup()
       const { callSetCourseMetadata } = await import('~/utils/apiUtils')
 
@@ -303,18 +307,11 @@ describe('BrandingForm', () => {
       })
       renderBrandingForm({ metadata })
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await user.type(textarea, 'Test input')
 
-      // The second Update button (hidden one, but rendered in DOM)
-      const buttons = screen.getAllByRole('button', { name: /Update/i })
-      const hiddenButton = buttons[1]
-      expect(hiddenButton).toBeDefined()
-
-      // Click the hidden update button
-      if (hiddenButton) {
-        await user.click(hiddenButton)
-      }
+      const updateButton = screen.getByRole('button', { name: /Update/i })
+      await user.click(updateButton)
 
       await waitFor(() => {
         expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith(
@@ -326,26 +323,23 @@ describe('BrandingForm', () => {
       })
     })
 
-    it('hidden Update button does not call API when metadata is null', async () => {
+    it('Update button does not call API when metadata is null', async () => {
       const user = userEvent.setup()
       const { callSetCourseMetadata } = await import('~/utils/apiUtils')
 
       // No metadata set
       renderBrandingForm()
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await user.type(textarea, 'Something')
 
-      const buttons = screen.getAllByRole('button', { name: /Update/i })
-      const hiddenButton = buttons[1]
-      if (hiddenButton) {
-        await user.click(hiddenButton)
-      }
+      const updateButton = screen.getByRole('button', { name: /Update/i })
+      await user.click(updateButton)
 
       expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
     })
 
-    it('hidden Update button logs error when callSetCourseMetadata returns false', async () => {
+    it('Update button logs error when callSetCourseMetadata returns false', async () => {
       const user = userEvent.setup()
       const { callSetCourseMetadata } = await import('~/utils/apiUtils')
       vi.mocked(callSetCourseMetadata).mockResolvedValueOnce(false)
@@ -357,14 +351,11 @@ describe('BrandingForm', () => {
       })
       renderBrandingForm({ metadata })
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       await user.type(textarea, 'Something')
 
-      const buttons = screen.getAllByRole('button', { name: /Update/i })
-      const hiddenButton = buttons[1]
-      if (hiddenButton) {
-        await user.click(hiddenButton)
-      }
+      const updateButton = screen.getByRole('button', { name: /Update/i })
+      await user.click(updateButton)
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
@@ -376,17 +367,17 @@ describe('BrandingForm', () => {
   })
 
   describe('logo upload', () => {
-    it('calls uploadToS3 and callSetCourseMetadata when a logo file is selected', async () => {
-      const { uploadToS3, callSetCourseMetadata } = await import(
-        '~/utils/apiUtils'
-      )
+    it('calls uploadToS3 when a logo file is selected', async () => {
+      const { uploadToS3 } = await import('~/utils/apiUtils')
 
       const metadata = makeCourseMetadata()
       renderBrandingForm({ metadata })
 
       // Wait for metadata to be loaded
       await waitFor(() =>
-        expect(screen.getByLabelText('Greeting')).toHaveValue(''),
+        expect(screen.getByPlaceholderText(/enter a greeting/i)).toHaveValue(
+          '',
+        ),
       )
 
       const file = new File(['logo-content'], 'logo.png', {
@@ -407,15 +398,6 @@ describe('BrandingForm', () => {
           file,
           'user-123',
           'TestProject',
-        )
-      })
-
-      await waitFor(() => {
-        expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith(
-          'TestProject',
-          expect.objectContaining({
-            banner_image_s3: 'https://s3.example.com/logo.png',
-          }),
         )
       })
     })
@@ -447,7 +429,9 @@ describe('BrandingForm', () => {
       renderBrandingForm({ metadata })
 
       await waitFor(() =>
-        expect(screen.getByLabelText('Greeting')).toHaveValue(''),
+        expect(screen.getByPlaceholderText(/enter a greeting/i)).toHaveValue(
+          '',
+        ),
       )
 
       const file = new File(['content'], 'logo.png', { type: 'image/png' })
@@ -501,7 +485,7 @@ describe('BrandingForm', () => {
         { queryClient },
       )
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
       expect(textarea).toHaveValue('')
 
       // Simulate query cache update
@@ -521,7 +505,7 @@ describe('BrandingForm', () => {
         { queryClient },
       )
 
-      const textarea = screen.getByLabelText('Greeting')
+      const textarea = screen.getByPlaceholderText(/enter a greeting/i)
 
       // First update
       queryClient.setQueryData(
