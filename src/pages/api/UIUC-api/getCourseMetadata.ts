@@ -22,8 +22,8 @@ export const getCourseMetadata = async (
     const timestamps = await getProjectTimestamps(course_name)
     return {
       ...course_metadata,
-      created_at: timestamps.created_at ?? undefined,
-      last_updated_at: timestamps.last_updated_at ?? undefined,
+      created_at: timestamps.created_at ?? null,
+      last_updated_at: timestamps.last_updated_at ?? null,
     }
   } catch (error) {
     console.error('Error occurred while fetching courseMetadata', error)

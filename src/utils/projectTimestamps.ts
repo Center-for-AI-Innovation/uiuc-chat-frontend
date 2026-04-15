@@ -9,6 +9,7 @@ export interface ProjectTimestamps {
 /**
  * Fetches created_at from the projects table and derives last_updated_at
  * from MAX(documents.created_at) for a single course.
+ * Falls back to projects.created_at when no documents exist.
  */
 export async function getProjectTimestamps(
   courseName: string,
@@ -25,9 +26,12 @@ export async function getProjectTimestamps(
       .from(documents)
       .where(eq(documents.course_name, courseName))
 
+    const createdAt = projectRow?.created_at?.toISOString() ?? null
+    const lastDocUpdate = docRow?.last_updated_at?.toISOString() ?? null
+
     return {
-      created_at: projectRow?.created_at?.toISOString() ?? null,
-      last_updated_at: docRow?.last_updated_at?.toISOString() ?? null,
+      created_at: createdAt,
+      last_updated_at: lastDocUpdate ?? createdAt,
     }
   } catch (error) {
     console.error(`Error fetching timestamps for project ${courseName}:`, error)
@@ -80,9 +84,11 @@ export async function getBatchProjectTimestamps(
     )
 
     for (const name of courseNames) {
+      const createdAt = projectMap.get(name) ?? null
+      const lastDocUpdate = docMap.get(name) ?? null
       result.set(name, {
-        created_at: projectMap.get(name) ?? null,
-        last_updated_at: docMap.get(name) ?? null,
+        created_at: createdAt,
+        last_updated_at: lastDocUpdate ?? createdAt,
       })
     }
   } catch (error) {

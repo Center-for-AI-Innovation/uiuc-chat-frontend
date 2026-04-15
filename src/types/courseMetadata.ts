@@ -25,8 +25,8 @@ export interface CourseMetadata {
   agent_mode_enabled?: boolean
   allow_logged_in_users: boolean | undefined
   is_frozen: boolean | undefined
-  created_at?: string
-  last_updated_at?: string
+  created_at: string | null
+  last_updated_at: string | null
 }
 
 export type ProjectWideLLMProviders = {

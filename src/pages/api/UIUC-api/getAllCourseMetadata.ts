@@ -56,8 +56,8 @@ export const getCoursesByOwnerOrAdmin = async (
       return {
         [courseName]: {
           ...entry[courseName]!,
-          created_at: ts?.created_at ?? undefined,
-          last_updated_at: ts?.last_updated_at ?? undefined,
+          created_at: ts?.created_at ?? null,
+          last_updated_at: ts?.last_updated_at ?? null,
         },
       }
     })
@@ -111,8 +111,8 @@ export const getAllCourseMetadata = async (): Promise<
       return {
         [courseName]: {
           ...entry[courseName]!,
-          created_at: ts?.created_at ?? undefined,
-          last_updated_at: ts?.last_updated_at ?? undefined,
+          created_at: ts?.created_at ?? null,
+          last_updated_at: ts?.last_updated_at ?? null,
         },
       }
     })
