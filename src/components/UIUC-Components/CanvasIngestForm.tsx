@@ -181,6 +181,7 @@ export default function CanvasIngestForm({
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
+                aria-hidden="true"
                 className="ml-2 transition-transform group-hover:translate-x-1"
               />
             </div>
@@ -195,7 +196,7 @@ export default function CanvasIngestForm({
           </DialogHeader>
 
           <Alert
-            icon={<IconAlertTriangle size={18} />}
+            icon={<IconAlertTriangle size={18} aria-hidden="true" />}
             color="red"
             title="IMPORTANT: Canvas Permission Required"
             className="mb-4 bg-[--background-faded] text-[--illinois-orange]"

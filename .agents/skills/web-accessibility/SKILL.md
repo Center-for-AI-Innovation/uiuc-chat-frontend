@@ -6,9 +6,7 @@ metadata:
   platforms: Claude, ChatGPT, Gemini
 ---
 
-
 # Web Accessibility (A11y)
-
 
 ## When to use this skill
 
@@ -21,11 +19,13 @@ metadata:
 ## Input Format
 
 ### Required Information
+
 - **Framework**: React, Vue, Svelte, Vanilla JS, etc.
 - **Component Type**: Button, Form, Modal, Dropdown, Navigation, etc.
 - **WCAG Level**: A, AA, AAA (default: AA)
 
 ### Optional Information
+
 - **Screen Reader**: NVDA, JAWS, VoiceOver (for testing)
 - **Automated Testing Tool**: axe-core, Pa11y, Lighthouse (default: axe-core)
 - **Browser**: Chrome, Firefox, Safari (default: Chrome)
@@ -50,12 +50,14 @@ Make a React modal component accessible:
 Use meaningful HTML elements to make the structure clear.
 
 **Tasks**:
+
 - Use semantic tags: `<button>`, `<nav>`, `<main>`, `<header>`, `<footer>`, etc.
 - Avoid overusing `<div>` and `<span>`
 - Use heading hierarchy (`<h1>` ~ `<h6>`) correctly
 - Connect `<label>` with `<input>`
 
 **Example** (❌ Bad vs ✅ Good):
+
 ```html
 <!-- ❌ Bad example: using only div and span -->
 <div class="header">
@@ -79,18 +81,19 @@ Use meaningful HTML elements to make the structure clear.
 ```
 
 **Form Example**:
+
 ```html
 <!-- ❌ Bad example: no label -->
-<input type="text" placeholder="Enter your name">
+<input type="text" placeholder="Enter your name" />
 
 <!-- ✅ Good example: label connected -->
 <label for="name">Name:</label>
-<input type="text" id="name" name="name" required>
+<input type="text" id="name" name="name" required />
 
 <!-- Or wrap with label -->
 <label>
   Email:
-  <input type="email" name="email" required>
+  <input type="email" name="email" required />
 </label>
 ```
 
@@ -99,6 +102,7 @@ Use meaningful HTML elements to make the structure clear.
 Ensure all features are usable without a mouse.
 
 **Tasks**:
+
 - Move focus with Tab and Shift+Tab
 - Activate buttons with Enter/Space
 - Navigate lists/menus with arrow keys
@@ -106,66 +110,70 @@ Ensure all features are usable without a mouse.
 - Use `tabindex` appropriately
 
 **Decision Criteria**:
+
 - Interactive elements → `tabindex="0"` (focusable)
 - Exclude from focus order → `tabindex="-1"` (programmatic focus only)
 - Do not change focus order → avoid using `tabindex="1+"`
 
 **Example** (React Dropdown):
+
 ```typescript
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react'
 
 interface DropdownProps {
-  label: string;
-  options: { value: string; label: string }[];
-  onChange: (value: string) => void;
+  label: string
+  options: { value: string; label: string }[]
+  onChange: (value: string) => void
 }
 
 function AccessibleDropdown({ label, options, onChange }: DropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
+  const [isOpen, setIsOpen] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
 
   // Keyboard handler
   const handleKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
       case 'ArrowDown':
-        e.preventDefault();
+        e.preventDefault()
         if (!isOpen) {
-          setIsOpen(true);
+          setIsOpen(true)
         } else {
-          setSelectedIndex((prev) => (prev + 1) % options.length);
+          setSelectedIndex((prev) => (prev + 1) % options.length)
         }
-        break;
+        break
 
       case 'ArrowUp':
-        e.preventDefault();
+        e.preventDefault()
         if (!isOpen) {
-          setIsOpen(true);
+          setIsOpen(true)
         } else {
-          setSelectedIndex((prev) => (prev - 1 + options.length) % options.length);
+          setSelectedIndex(
+            (prev) => (prev - 1 + options.length) % options.length,
+          )
         }
-        break;
+        break
 
       case 'Enter':
       case ' ':
-        e.preventDefault();
+        e.preventDefault()
         if (isOpen) {
-          onChange(options[selectedIndex].value);
-          setIsOpen(false);
-          buttonRef.current?.focus();
+          onChange(options[selectedIndex].value)
+          setIsOpen(false)
+          buttonRef.current?.focus()
         } else {
-          setIsOpen(true);
+          setIsOpen(true)
         }
-        break;
+        break
 
       case 'Escape':
-        e.preventDefault();
-        setIsOpen(false);
-        buttonRef.current?.focus();
-        break;
+        e.preventDefault()
+        setIsOpen(false)
+        buttonRef.current?.focus()
+        break
     }
-  };
+  }
 
   return (
     <div className="dropdown">
@@ -194,8 +202,8 @@ function AccessibleDropdown({ label, options, onChange }: DropdownProps) {
               role="option"
               aria-selected={index === selectedIndex}
               onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
+                onChange(option.value)
+                setIsOpen(false)
               }}
             >
               {option.label}
@@ -204,7 +212,7 @@ function AccessibleDropdown({ label, options, onChange }: DropdownProps) {
         </ul>
       )}
     </div>
-  );
+  )
 }
 ```
 
@@ -213,6 +221,7 @@ function AccessibleDropdown({ label, options, onChange }: DropdownProps) {
 Provide additional context for screen readers.
 
 **Tasks**:
+
 - `aria-label`: Define the element's name
 - `aria-labelledby`: Reference another element as a label
 - `aria-describedby`: Provide additional description
@@ -220,24 +229,26 @@ Provide additional context for screen readers.
 - `aria-hidden`: Hide from screen readers
 
 **Checklist**:
+
 - [x] All interactive elements have clear labels
 - [x] Button purpose is clear (e.g., "Submit form" not "Click")
 - [x] State change announcements (aria-live)
 - [x] Decorative images use alt="" or aria-hidden="true"
 
 **Example** (Modal):
+
 ```tsx
 function AccessibleModal({ isOpen, onClose, title, children }) {
-  const modalRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null)
 
   // Focus trap when modal opens
   useEffect(() => {
     if (isOpen) {
-      modalRef.current?.focus();
+      modalRef.current?.focus()
     }
-  }, [isOpen]);
+  }, [isOpen])
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div
@@ -249,7 +260,7 @@ function AccessibleModal({ isOpen, onClose, title, children }) {
       tabIndex={-1}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
-          onClose();
+          onClose()
         }
       }}
     >
@@ -257,34 +268,39 @@ function AccessibleModal({ isOpen, onClose, title, children }) {
 
       <div className="modal-content">
         <h2 id="modal-title">{title}</h2>
-        <div id="modal-description">
-          {children}
-        </div>
+        <div id="modal-description">{children}</div>
 
         <button onClick={onClose} aria-label="Close modal">
           <span aria-hidden="true">×</span>
         </button>
       </div>
     </div>
-  );
+  )
 }
 ```
 
 **aria-live Example** (Notifications):
+
 ```tsx
-function Notification({ message, type }: { message: string; type: 'success' | 'error' }) {
+function Notification({
+  message,
+  type,
+}: {
+  message: string
+  type: 'success' | 'error'
+}) {
   return (
     <div
       role="alert"
-      aria-live="assertive"  // Immediate announcement (error), "polite" announces in turn
-      aria-atomic="true"     // Read the entire content
+      aria-live="assertive" // Immediate announcement (error), "polite" announces in turn
+      aria-atomic="true" // Read the entire content
       className={`notification notification-${type}`}
     >
       {type === 'error' && <span aria-label="Error">⚠️</span>}
       {type === 'success' && <span aria-label="Success">✅</span>}
       {message}
     </div>
-  );
+  )
 }
 ```
 
@@ -293,17 +309,19 @@ function Notification({ message, type }: { message: string; type: 'success' | 'e
 Ensure sufficient contrast ratios for users with visual impairments.
 
 **Tasks**:
+
 - WCAG AA: text 4.5:1, large text 3:1
 - WCAG AAA: text 7:1, large text 4.5:1
 - Do not convey information by color alone (use icons, patterns alongside)
 - Clearly indicate focus (outline)
 
 **Example** (CSS):
+
 ```css
 /* ✅ Sufficient contrast (text #000 on #FFF = 21:1) */
 .button {
   background-color: #0066cc;
-  color: #ffffff;  /* contrast ratio 7.7:1 */
+  color: #ffffff; /* contrast ratio 7.7:1 */
 }
 
 /* ✅ Focus indicator */
@@ -315,7 +333,7 @@ a:focus {
 
 /* ❌ outline: none is forbidden! */
 button:focus {
-  outline: none;  /* Never use this */
+  outline: none; /* Never use this */
 }
 
 /* ✅ Indicate state with color + icon */
@@ -335,51 +353,49 @@ button:focus {
 Validate accessibility with automated and manual testing.
 
 **Tasks**:
+
 - Automated scan with axe DevTools
 - Check Lighthouse Accessibility score
 - Test all features with keyboard only
 - Screen reader testing (NVDA, VoiceOver)
 
 **Example** (Jest + axe-core):
-```typescript
-import { render } from '@testing-library/react';
-import { axe, toHaveNoViolations } from 'jest-axe';
-import AccessibleButton from './AccessibleButton';
 
-expect.extend(toHaveNoViolations);
+```typescript
+import { render } from '@testing-library/react'
+import { axe, toHaveNoViolations } from 'jest-axe'
+import AccessibleButton from './AccessibleButton'
+
+expect.extend(toHaveNoViolations)
 
 describe('AccessibleButton', () => {
   it('should have no accessibility violations', async () => {
     const { container } = render(
-      <AccessibleButton onClick={() => {}}>
-        Click Me
-      </AccessibleButton>
-    );
+      <AccessibleButton onClick={() => {}}>Click Me</AccessibleButton>,
+    )
 
-    const results = await axe(container);
-    expect(results).toHaveNoViolations();
-  });
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
 
   it('should be keyboard accessible', () => {
-    const handleClick = jest.fn();
+    const handleClick = jest.fn()
     const { getByRole } = render(
-      <AccessibleButton onClick={handleClick}>
-        Click Me
-      </AccessibleButton>
-    );
+      <AccessibleButton onClick={handleClick}>Click Me</AccessibleButton>,
+    )
 
-    const button = getByRole('button');
+    const button = getByRole('button')
 
     // Enter key
-    button.focus();
-    fireEvent.keyDown(button, { key: 'Enter' });
-    expect(handleClick).toHaveBeenCalled();
+    button.focus()
+    fireEvent.keyDown(button, { key: 'Enter' })
+    expect(handleClick).toHaveBeenCalled()
 
     // Space key
-    fireEvent.keyDown(button, { key: ' ' });
-    expect(handleClick).toHaveBeenCalledTimes(2);
-  });
-});
+    fireEvent.keyDown(button, { key: ' ' })
+    expect(handleClick).toHaveBeenCalledTimes(2)
+  })
+})
 ```
 
 ## Output format
@@ -390,29 +406,34 @@ describe('AccessibleButton', () => {
 ## Accessibility Checklist
 
 ### Semantic HTML
+
 - [x] Use semantic HTML tags (`<button>`, `<nav>`, `<main>`, etc.)
 - [x] Heading hierarchy is correct (h1 → h2 → h3)
 - [x] All form labels are connected
 
 ### Keyboard Navigation
+
 - [x] All interactive elements accessible via Tab
 - [x] Buttons activated with Enter/Space
 - [x] Modals/dropdowns closed with ESC
 - [x] Focus indicator is clear (outline)
 
 ### ARIA
+
 - [x] `role` used appropriately
 - [x] `aria-label` or `aria-labelledby` provided
 - [x] `aria-live` used for dynamic content
 - [x] Decorative elements use `aria-hidden="true"`
 
 ### Visual
+
 - [x] Color contrast meets WCAG AA (4.5:1)
 - [x] Information not conveyed by color alone
 - [x] Text size can be adjusted
 - [x] Responsive design
 
 ### Testing
+
 - [x] 0 axe DevTools violations
 - [x] Lighthouse Accessibility score 90+
 - [x] Keyboard test passed
@@ -424,10 +445,12 @@ describe('AccessibleButton', () => {
 ### Mandatory Rules (MUST)
 
 1. **Keyboard Accessibility**: All features must be usable without a mouse
+
    - Support Tab, Enter, Space, arrow keys, and ESC
    - Implement focus trap (for modals)
 
 2. **Alternative Text**: All images must have an `alt` attribute
+
    - Meaningful images: descriptive alt text
    - Decorative images: `alt=""` (screen reader ignores)
 
@@ -438,10 +461,12 @@ describe('AccessibleButton', () => {
 ### Prohibited Actions (MUST NOT)
 
 1. **Do Not Remove Outline**: Never use `outline: none`
+
    - Disastrous for keyboard users
    - Must provide a custom focus style instead
 
 2. **Do Not Use tabindex > 0**: Avoid changing focus order
+
    - Keep DOM order logical
    - Exception: only when there is a special reason
 
@@ -455,13 +480,17 @@ describe('AccessibleButton', () => {
 
 ```tsx
 function AccessibleContactForm() {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [submitStatus, setSubmitStatus] = useState<
+    'idle' | 'success' | 'error'
+  >('idle')
 
   return (
     <form onSubmit={handleSubmit} noValidate>
       <h2 id="form-title">Contact Us</h2>
-      <p id="form-description">Please fill out the form below to get in touch.</p>
+      <p id="form-description">
+        Please fill out the form below to get in touch.
+      </p>
 
       {/* Name */}
       <div className="form-group">
@@ -526,36 +555,40 @@ function AccessibleContactForm() {
         </div>
       )}
     </form>
-  );
+  )
 }
 ```
 
 ### Example 2: Accessible Tab UI
 
 ```tsx
-function AccessibleTabs({ tabs }: { tabs: { id: string; label: string; content: React.ReactNode }[] }) {
-  const [activeTab, setActiveTab] = useState(0);
+function AccessibleTabs({
+  tabs,
+}: {
+  tabs: { id: string; label: string; content: React.ReactNode }[]
+}) {
+  const [activeTab, setActiveTab] = useState(0)
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     switch (e.key) {
       case 'ArrowRight':
-        e.preventDefault();
-        setActiveTab((index + 1) % tabs.length);
-        break;
+        e.preventDefault()
+        setActiveTab((index + 1) % tabs.length)
+        break
       case 'ArrowLeft':
-        e.preventDefault();
-        setActiveTab((index - 1 + tabs.length) % tabs.length);
-        break;
+        e.preventDefault()
+        setActiveTab((index - 1 + tabs.length) % tabs.length)
+        break
       case 'Home':
-        e.preventDefault();
-        setActiveTab(0);
-        break;
+        e.preventDefault()
+        setActiveTab(0)
+        break
       case 'End':
-        e.preventDefault();
-        setActiveTab(tabs.length - 1);
-        break;
+        e.preventDefault()
+        setActiveTab(tabs.length - 1)
+        break
     }
-  };
+  }
 
   return (
     <div>
@@ -591,17 +624,19 @@ function AccessibleTabs({ tabs }: { tabs: { id: string; label: string; content: 
         </div>
       ))}
     </div>
-  );
+  )
 }
 ```
 
 ## Best practices
 
 1. **Semantic HTML First**: ARIA is a last resort
+
    - Using the correct HTML element makes ARIA unnecessary
    - e.g., `<button>` vs `<div role="button">`
 
 2. **Focus Management**: Manage focus on page transitions in SPAs
+
    - Move focus to main content on new page load
    - Provide skip links ("Skip to main content")
 
@@ -619,13 +654,16 @@ function AccessibleTabs({ tabs }: { tabs: { id: string; label: string; content: 
 ## Metadata
 
 ### Version
+
 - **Current Version**: 1.0.0
 - **Last Updated**: 2025-01-01
 - **Compatible Platforms**: Claude, ChatGPT, Gemini
 
 ### Related Skills
+
 - [ui-component-patterns](../ui-component-patterns/SKILL.md): UI component implementation
 - [responsive-design](../responsive-design/SKILL.md): Responsive design
 
 ### Tags
+
 `#accessibility` `#a11y` `#WCAG` `#ARIA` `#screen-reader` `#keyboard-navigation` `#frontend`

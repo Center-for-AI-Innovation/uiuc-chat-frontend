@@ -224,7 +224,7 @@ describe('Provider inputs (coverage)', () => {
       screen.getByRole('switch', { name: /Enable Azure OpenAI provider/i }),
     )
     await user.click(
-      screen.getByRole('switch', { name: /Enable Gemini provider/i }),
+      screen.getByRole('switch', { name: /Enable Google Gemini provider/i }),
     )
     expect(onSubmit).toHaveBeenCalled()
   })

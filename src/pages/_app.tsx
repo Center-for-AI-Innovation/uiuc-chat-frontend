@@ -91,28 +91,34 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
   } else {
     return (
       <>
-        <a
-          href="#main-content"
-          className="skip-nav-link"
-          onClick={(e) => {
-            const target = document.getElementById('main-content')
-            if (target) {
-              e.preventDefault()
-              target.focus()
-              target.scrollIntoView()
-            }
-          }}
-        >
-          Skip to main content
-        </a>
+        <nav aria-label="Skip navigation">
+          <a
+            href="#main-content"
+            className="skip-nav-link"
+            onClick={(e) => {
+              const target = document.getElementById('main-content')
+              if (target) {
+                e.preventDefault()
+                target.focus()
+                target.scrollIntoView()
+              }
+            }}
+          >
+            Skip to main content
+          </a>
+        </nav>
         <KeycloakProvider>
           <QueryClientProvider client={queryClient}>
             <PostHogProvider client={posthog}>
               {/* <SpeedInsights /> */}
               <Analytics />
-              <div aria-live="assertive" aria-atomic="true">
+              <aside
+                aria-label="Notifications"
+                aria-live="assertive"
+                aria-atomic="true"
+              >
                 <Notifications position="bottom-center" zIndex={2077} />
-              </div>
+              </aside>
               <ReactQueryDevtools
                 initialIsOpen={false}
                 position="left"

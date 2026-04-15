@@ -138,7 +138,10 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Illinois Chat</title>
+        <title>
+          Illinois Chat - Create a chatbot with your content. Share it with a
+          click.
+        </title>
         <meta
           name="description"
           content="Chat with your documents, with full support for any format and web scraping."
@@ -162,7 +165,8 @@ const Home: NextPage = () => {
       </Head>
 
       {/* Rebranding announcement header bar */}
-      <div
+      <section
+        aria-label="Site announcement"
         className="relative w-full py-2 text-center"
         style={{
           background: 'var(--illinois-orange)',
@@ -202,7 +206,7 @@ const Home: NextPage = () => {
             </span>
           </div>
         </div>
-      </div>
+      </section>
 
       <LandingPageHeader />
 
@@ -261,7 +265,12 @@ const Home: NextPage = () => {
                 }}
               >
                 Try it out{' '}
-                <ArrowNarrowRight size={32} strokeWidth={1} color={'white'} />
+                <ArrowNarrowRight
+                  size={32}
+                  strokeWidth={1}
+                  color={'white'}
+                  aria-hidden="true"
+                />
               </Button>
             </div>
 
@@ -697,6 +706,7 @@ const Home: NextPage = () => {
                   strokeWidth={1.75}
                   color={'var(--illinois-white)'}
                   className="ml-1"
+                  aria-hidden="true"
                 />
               </Button>
             </div>
@@ -1059,7 +1069,12 @@ function FlagshipChatbots() {
               </div>
 
               <div className="mt-1 flex justify-end sm:ml-auto sm:mt-0">
-                <ArrowNarrowRight size={28} strokeWidth={1.25} color={'#888'} />
+                <ArrowNarrowRight
+                  size={28}
+                  strokeWidth={1.25}
+                  color={'#888'}
+                  aria-hidden="true"
+                />
               </div>
             </div>
           </Card.Section>
