@@ -4,6 +4,7 @@ import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { getProjectTimestamps } from '~/utils/projectTimestamps'
 
 export const getCourseMetadata = async (
   course_name: string,
@@ -15,8 +16,15 @@ export const getCourseMetadata = async (
       ? JSON.parse(rawMetadata)
       : null
 
-    // Use value as-is; Redis-stored JSON should already have correct boolean
-    return course_metadata
+    if (!course_metadata) return null
+
+    // Enrich with timestamps from PostgreSQL
+    const timestamps = await getProjectTimestamps(course_name)
+    return {
+      ...course_metadata,
+      created_at: timestamps.created_at ?? undefined,
+      last_updated_at: timestamps.last_updated_at ?? undefined,
+    }
   } catch (error) {
     console.error('Error occurred while fetching courseMetadata', error)
     return null

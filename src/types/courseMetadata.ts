@@ -25,6 +25,8 @@ export interface CourseMetadata {
   agent_mode_enabled?: boolean
   allow_logged_in_users: boolean | undefined
   is_frozen: boolean | undefined
+  created_at?: string
+  last_updated_at?: string
 }
 
 export type ProjectWideLLMProviders = {
@@ -54,4 +56,6 @@ export interface CourseMetadataOptionalForUpsert {
   agent_mode_enabled?: boolean
   allow_logged_in_users: boolean | undefined
   is_frozen: boolean | undefined
+  created_at?: string
+  last_updated_at?: string
 }
