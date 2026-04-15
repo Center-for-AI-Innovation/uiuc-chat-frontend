@@ -7,9 +7,15 @@ export interface ProjectTimestamps {
 }
 
 /**
- * Fetches created_at from the projects table and derives last_updated_at
- * from MAX(documents.created_at) for a single course.
- * Falls back to projects.created_at when no documents exist.
+ * Fetches project timestamps from PostgreSQL.
+ *
+ * - created_at: from the projects table (set once at project creation).
+ * - last_updated_at: MAX(documents.created_at) — the most recent document
+ *   upload. Falls back to projects.created_at when no documents exist, so this
+ *   field is never null for an existing project.
+ *
+ * NOTE: This only tracks document uploads, not metadata changes (settings,
+ * system prompt, etc.). Metadata lives in Redis and has no timestamp tracking.
  */
 export async function getProjectTimestamps(
   courseName: string,
@@ -40,8 +46,8 @@ export async function getProjectTimestamps(
 }
 
 /**
- * Batch-fetches timestamps for multiple courses at once.
- * Returns a map of course_name -> ProjectTimestamps.
+ * Batch version of getProjectTimestamps. Same semantics:
+ * last_updated_at = latest document upload, falling back to project created_at.
  */
 export async function getBatchProjectTimestamps(
   courseNames: string[],
