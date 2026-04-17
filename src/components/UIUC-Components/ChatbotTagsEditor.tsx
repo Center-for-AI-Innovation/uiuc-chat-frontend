@@ -55,7 +55,9 @@ function TagBadge({
       </span>
       <button
         type="button"
-        aria-label={`Remove tag ${CHATBOT_TAG_CATEGORY_LABEL[tag.category]}: ${tag.value}`}
+        aria-label={`Remove tag ${CHATBOT_TAG_CATEGORY_LABEL[tag.category]}: ${
+          tag.value
+        }`}
         className={removeClass}
         onClick={onRemove}
         disabled={disabled}
@@ -120,10 +122,18 @@ export default function ChatbotTagsEditor({
       return
     }
 
-    const key = chatbotTagKey(candidate)
-    if (tags.some((existing) => chatbotTagKey(existing) === key)) {
+    const existingInCategory = tags.find(
+      (existing) => existing.category === candidate.category,
+    )
+    if (existingInCategory) {
       setStatus('error')
-      setErrorMessage('That tag is already added.')
+      setErrorMessage(
+        existingInCategory.value === candidate.value
+          ? 'That tag is already added.'
+          : `You can only have one ${
+              CHATBOT_TAG_CATEGORY_LABEL[candidate.category]
+            } tag. Remove "${existingInCategory.value}" to change it.`,
+      )
       return
     }
 

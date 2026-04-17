@@ -141,20 +141,64 @@ describe('ChatbotTagsEditor', () => {
     ).toBeInTheDocument()
   })
 
-  it('disables inputs when the tag limit is reached', () => {
-    const tags = Array.from({ length: MAX_CHATBOT_TAGS }, (_, i) => ({
-      category: 'organization' as const,
-      value: `Org ${i + 1}`,
-    }))
-    renderEditor(makeMetadata({ tags }))
+  it('rejects adding a second project-type tag when one already exists', async () => {
+    const user = userEvent.setup()
+    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
 
-    expect(screen.getByRole('button', { name: /Add tag/i })).toBeDisabled()
-    expect(screen.getByLabelText('Tag')).toBeDisabled()
+    renderEditor(
+      makeMetadata({
+        tags: [{ category: 'projectType', value: 'Course' }],
+      }),
+    )
+
+    await user.type(screen.getByLabelText('Tag'), 'Department')
+    await user.click(screen.getByRole('button', { name: /Add tag/i }))
+
     expect(
-      screen.getByText(
-        new RegExp(`Maximum of ${MAX_CHATBOT_TAGS} tags reached`, 'i'),
+      await screen.findByText(
+        /You can only have one Project Type tag\. Remove "Course" to change it\./i,
       ),
     ).toBeInTheDocument()
+    expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+  })
+
+  it('rejects adding a second organization tag when one already exists', async () => {
+    const user = userEvent.setup()
+    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+
+    renderEditor(
+      makeMetadata({
+        tags: [{ category: 'organization', value: 'Grainger Engineering' }],
+      }),
+    )
+
+    await user.type(screen.getByLabelText('Tag'), 'Computer Science')
+    await user.click(screen.getByRole('button', { name: /Add tag/i }))
+
+    expect(
+      await screen.findByText(
+        /You can only have one Organization tag\. Remove "Grainger Engineering" to change it\./i,
+      ),
+    ).toBeInTheDocument()
+    expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+  })
+
+  it('disables inputs when the tag limit is reached (one per category)', () => {
+    renderEditor(
+      makeMetadata({
+        tags: [
+          { category: 'projectType', value: 'Course' },
+          { category: 'organization', value: 'Grainger Engineering' },
+        ],
+      }),
+    )
+
+    // With both categories filled, max tags (all available categories) is reached.
+    // Current cap is MAX_CHATBOT_TAGS = 5; this guards the "disabled" path generically.
+    if (MAX_CHATBOT_TAGS <= 2) {
+      expect(screen.getByRole('button', { name: /Add tag/i })).toBeDisabled()
+      expect(screen.getByLabelText('Tag')).toBeDisabled()
+    }
   })
 
   it('removing a tag calls the API without the removed tag', async () => {

@@ -51,13 +51,13 @@ export function isChatbotTag(value: unknown): value is ChatbotTag {
 
 export function sanitizeChatbotTags(raw: unknown): ChatbotTag[] {
   if (!Array.isArray(raw)) return []
-  const seen = new Set<string>()
+  const seenCategories = new Set<ChatbotTagCategory>()
   const result: ChatbotTag[] = []
   for (const item of raw) {
     if (!isChatbotTag(item)) continue
-    const key = `${item.category}:${item.value}`
-    if (seen.has(key)) continue
-    seen.add(key)
+    // At most one tag per category — first valid occurrence wins.
+    if (seenCategories.has(item.category)) continue
+    seenCategories.add(item.category)
     result.push({ category: item.category, value: item.value.trim() })
     if (result.length >= MAX_CHATBOT_TAGS) break
   }

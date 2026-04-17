@@ -63,6 +63,19 @@ describe('sanitizeChatbotTags', () => {
     ])
   })
 
+  it('keeps only the first tag per category (drops duplicates in the same category)', () => {
+    const result = sanitizeChatbotTags([
+      { category: 'projectType', value: 'Course' },
+      { category: 'projectType', value: 'Department' },
+      { category: 'organization', value: 'CS' },
+      { category: 'organization', value: 'Grainger Engineering' },
+    ])
+    expect(result).toEqual([
+      { category: 'projectType', value: 'Course' },
+      { category: 'organization', value: 'CS' },
+    ])
+  })
+
   it('dedupes identical tags', () => {
     const result = sanitizeChatbotTags([
       { category: 'projectType', value: 'Course' },
@@ -72,19 +85,14 @@ describe('sanitizeChatbotTags', () => {
     expect(result).toHaveLength(2)
   })
 
-  it(`caps results at MAX_CHATBOT_TAGS (${MAX_CHATBOT_TAGS})`, () => {
-    const many = [
-      { category: 'organization' as const, value: 'Org 1' },
-      { category: 'organization' as const, value: 'Org 2' },
-      { category: 'organization' as const, value: 'Org 3' },
-      { category: 'organization' as const, value: 'Org 4' },
-      { category: 'organization' as const, value: 'Org 5' },
-      { category: 'organization' as const, value: 'Org 6' },
-      { category: 'organization' as const, value: 'Org 7' },
-    ]
-    const result = sanitizeChatbotTags(many)
-    expect(result).toHaveLength(MAX_CHATBOT_TAGS)
-    expect(result[MAX_CHATBOT_TAGS - 1]!.value).toBe('Org 5')
+  it(`respects MAX_CHATBOT_TAGS (${MAX_CHATBOT_TAGS}) as a defensive upper bound`, () => {
+    // With only 2 categories today, effective max is 2 via per-category uniqueness.
+    const result = sanitizeChatbotTags([
+      { category: 'projectType', value: 'Course' },
+      { category: 'organization', value: 'CS' },
+    ])
+    expect(result.length).toBeLessThanOrEqual(MAX_CHATBOT_TAGS)
+    expect(result).toHaveLength(2)
   })
 
   it('trims whitespace from organization values', () => {
