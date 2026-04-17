@@ -89,3 +89,17 @@ export const ACCESSIBLE_SECTION_ORDER = [
   'Department Resources',
   'Public Bots',
 ]
+
+/** Query parameters accepted by the searchChatbots API */
+export type SearchChatbotsParams = {
+  q?: string
+  category?: ChatbotProjectType
+  privacy?: 'public' | 'private' | 'logged_in'
+  my_bots?: boolean
+}
+
+/** Response shape from the searchChatbots API */
+export type SearchChatbotsResponse = {
+  results: ChatbotCardData[]
+  total: number
+}

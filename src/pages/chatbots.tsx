@@ -1,16 +1,20 @@
 import { Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Button } from '~/components/shadcn/ui/button'
 import { LoadingSpinner } from '~/components/UIUC-Components/LoadingSpinner'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import { ChatbotsGlobalNav } from '~/components/UIUC-Components/chatbots-hub/ChatbotsGlobalNav'
 import { ChatbotsHeroSection } from '~/components/UIUC-Components/chatbots-hub/ChatbotsHeroSection'
+import { ChatbotsSearchBar } from '~/components/UIUC-Components/chatbots-hub/ChatbotsSearchBar'
+import { ChatbotsFilterPanel } from '~/components/UIUC-Components/chatbots-hub/ChatbotsFilterPanel'
+import { ChatbotsSearchResults } from '~/components/UIUC-Components/chatbots-hub/ChatbotsSearchResults'
 import { ChatbotsSection } from '~/components/UIUC-Components/chatbots-hub/ChatbotsSection'
 import {
   type ChatbotSectionData,
+  type SearchChatbotsParams,
   PROJECT_TYPE_TO_SECTION,
   DEFAULT_ACCESSIBLE_SECTION,
   ACCESSIBLE_SECTION_ORDER,
@@ -21,6 +25,7 @@ import {
   type CourseWithMetadata,
 } from '~/hooks/queries/useFetchAllCourseMetadata'
 import { useFetchAccessibleChatbots } from '~/hooks/queries/useFetchAccessibleChatbots'
+import { useSearchChatbots } from '~/hooks/queries/useSearchChatbots'
 
 function transformToCardData(
   course: CourseWithMetadata,
@@ -41,11 +46,19 @@ function transformToCardData(
     collaboratorCount: otherAdmins.length,
     userRole: isOwner ? ('owner' as const) : ('member' as const),
     accessLevel: course.metadata.is_private
-      ? ('private' as const)
+      ? course.metadata.allow_logged_in_users
+        ? ('unlisted' as const)
+        : ('private' as const)
       : ('public' as const),
     bannerImageS3: course.metadata.banner_image_s3,
     metadata: course.metadata,
   }
+}
+
+function hasActiveSearch(params: SearchChatbotsParams): boolean {
+  return Boolean(
+    params.q || params.category || params.privacy || params.my_bots,
+  )
 }
 
 const ChatbotsHubPage = () => {
@@ -54,14 +67,32 @@ const ChatbotsHubPage = () => {
   const { course_name } = router.query
   const currentUserEmail = auth.user?.profile.email as string | undefined
 
+  const [searchParams, setSearchParams] = useState<SearchChatbotsParams>({})
+
+  const isSearchActive = hasActiveSearch(searchParams)
+
+  const handleParamsChange = useCallback((next: SearchChatbotsParams) => {
+    setSearchParams(next)
+  }, [])
+
+  // Server-side search (only fires when a search/filter is active)
+  const {
+    data: searchData,
+    isLoading: isSearchLoading,
+    isError: isSearchError,
+  } = useSearchChatbots(searchParams, {
+    enabled: auth.isAuthenticated && isSearchActive,
+  })
+
+  // Section-based data (default view when no search is active)
   const { data: courses, isLoading: isCoursesLoading } =
     useFetchAllCourseMetadata({
-      enabled: auth.isAuthenticated,
+      enabled: auth.isAuthenticated && !isSearchActive,
     })
 
   const { data: accessibleChatbots, isLoading: isAccessibleLoading } =
     useFetchAccessibleChatbots({
-      enabled: auth.isAuthenticated,
+      enabled: auth.isAuthenticated && !isSearchActive,
     })
 
   // Set page-specific dark background on body (darker than global --illinois-blue)
@@ -83,6 +114,8 @@ const ChatbotsHubPage = () => {
   }, [])
 
   const sections = useMemo(() => {
+    if (isSearchActive) return []
+
     const result: ChatbotSectionData[] = []
 
     if (courses) {
@@ -115,8 +148,12 @@ const ChatbotsHubPage = () => {
       const grouped = new Map<string, ChatbotSectionData>()
 
       for (const bot of accessibleChatbots) {
+        const projectType = bot.projectType as
+          | keyof typeof PROJECT_TYPE_TO_SECTION
+          | undefined
         const sectionTitle =
-          PROJECT_TYPE_TO_SECTION[bot.projectType] ?? DEFAULT_ACCESSIBLE_SECTION
+          (projectType && PROJECT_TYPE_TO_SECTION[projectType]) ??
+          DEFAULT_ACCESSIBLE_SECTION
 
         let section = grouped.get(sectionTitle)
         if (!section) {
@@ -124,19 +161,7 @@ const ChatbotsHubPage = () => {
           grouped.set(sectionTitle, section)
         }
 
-        section.cards.push({
-          course_name: bot.course_name,
-          title: bot.title,
-          description: bot.description,
-          owner: bot.owner,
-          collaboratorCount: bot.collaboratorCount,
-          projectType: bot.projectType,
-          accessLevel: bot.accessLevel,
-          organization: bot.organization,
-          bannerImageS3: bot.bannerImageS3,
-          metadata: bot.metadata,
-          knowledgeSources: bot.knowledgeSources,
-        })
+        section.cards.push(bot)
       }
 
       // Enforce Figma section ordering
@@ -147,7 +172,7 @@ const ChatbotsHubPage = () => {
     }
 
     return result
-  }, [courses, accessibleChatbots, currentUserEmail])
+  }, [courses, accessibleChatbots, currentUserEmail, isSearchActive])
 
   if (auth.isLoading) {
     return (
@@ -165,13 +190,38 @@ const ChatbotsHubPage = () => {
     )
   }
 
+  const isSectionsLoading =
+    !isSearchActive && (isCoursesLoading || isAccessibleLoading)
+
   return (
     <main className="min-h-screen bg-white dark:bg-[#081735]">
       <ChatbotsGlobalNav />
       <div className="mx-auto max-w-[1680px] pt-[72px]">
         <ChatbotsHeroSection />
+
+        {/* Search & Filter Bar */}
+        <div className="space-y-4 px-4 py-6 sm:px-8">
+          <ChatbotsSearchBar
+            params={searchParams}
+            onParamsChange={handleParamsChange}
+          />
+          <ChatbotsFilterPanel
+            params={searchParams}
+            onParamsChange={handleParamsChange}
+          />
+        </div>
+
         <div className="pb-12 dark:bg-[#081735]">
-          {isCoursesLoading || isAccessibleLoading ? (
+          {isSearchActive ? (
+            <div className="px-4 sm:px-8">
+              <ChatbotsSearchResults
+                results={searchData?.results ?? []}
+                total={searchData?.total ?? 0}
+                isLoading={isSearchLoading}
+                isError={isSearchError}
+              />
+            </div>
+          ) : isSectionsLoading ? (
             <div className="flex justify-center py-20">
               <LoadingSpinner />
             </div>
