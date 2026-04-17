@@ -4,6 +4,7 @@ import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { getProjectTimestamps } from '~/utils/projectTimestamps'
 import { db } from '~/db/dbClient'
 import { conversations } from '~/db/schema'
 import { and, eq, max } from 'drizzle-orm'
@@ -18,8 +19,15 @@ export const getCourseMetadata = async (
       ? JSON.parse(rawMetadata)
       : null
 
-    // Use value as-is; Redis-stored JSON should already have correct boolean
-    return course_metadata
+    if (!course_metadata) return null
+
+    // Enrich with timestamps from PostgreSQL
+    const timestamps = await getProjectTimestamps(course_name)
+    return {
+      ...course_metadata,
+      created_at: timestamps.created_at ?? null,
+      last_updated_at: timestamps.last_updated_at ?? null,
+    }
   } catch (error) {
     console.error('Error occurred while fetching courseMetadata', error)
     return null

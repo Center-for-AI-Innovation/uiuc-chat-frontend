@@ -3,6 +3,7 @@ import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import type { CourseMetadata } from '~/types/courseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { getBatchProjectTimestamps } from '~/utils/projectTimestamps'
 import { db } from '~/db/dbClient'
 import { conversations } from '~/db/schema'
 import { eq, max } from 'drizzle-orm'
@@ -83,8 +84,25 @@ export const getCoursesByOwnerOrAdmin = async (
       console.error('Error fetching last access timestamps:', error)
       // Non-fatal: return metadata without last_accessed_at
     }
+    
+    // Enrich with timestamps from PostgreSQL
+    const courseNames = course_metadatas
+      .map((entry) => Object.keys(entry)[0])
+      .filter((name): name is string => !!name)
+    const timestamps = await getBatchProjectTimestamps(courseNames)
 
-    return course_metadatas
+    return course_metadatas.map((entry) => {
+      const courseName = Object.keys(entry)[0]
+      if (!courseName) return entry
+      const ts = timestamps.get(courseName)
+      return {
+        [courseName]: {
+          ...entry[courseName]!,
+          created_at: ts?.created_at ?? null,
+          last_updated_at: ts?.last_updated_at ?? null,
+        },
+      }
+    })
   } catch (error) {
     console.error(
       'Error occurred while fetching courseMetadata',
@@ -121,9 +139,25 @@ export const getAllCourseMetadata = async (): Promise<
       .filter(
         (item): item is { [key: string]: CourseMetadata } => item !== null,
       )
-    console.log('all_course_metadata', all_course_metadata)
 
-    return all_course_metadata
+    // Enrich with timestamps from PostgreSQL
+    const courseNames = all_course_metadata
+      .map((entry) => Object.keys(entry)[0])
+      .filter((name): name is string => !!name)
+    const timestamps = await getBatchProjectTimestamps(courseNames)
+
+    return all_course_metadata.map((entry) => {
+      const courseName = Object.keys(entry)[0]
+      if (!courseName) return entry
+      const ts = timestamps.get(courseName)
+      return {
+        [courseName]: {
+          ...entry[courseName]!,
+          created_at: ts?.created_at ?? null,
+          last_updated_at: ts?.last_updated_at ?? null,
+        },
+      }
+    })
   } catch (error) {
     console.error(
       'Error occurred while fetching courseMetadata',
