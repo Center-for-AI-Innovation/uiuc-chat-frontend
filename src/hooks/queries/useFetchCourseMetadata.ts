@@ -10,9 +10,14 @@ interface UseFetchCourseMetadataOptions extends FetchCourseMetadataVariables {
   enabled?: boolean
 }
 
+interface CourseMetadataResponse {
+  courseMetadata: CourseMetadata
+  lastAccessedAt: string | null
+}
+
 async function fetchCourseMetadata({
   courseName,
-}: FetchCourseMetadataVariables): Promise<CourseMetadata> {
+}: FetchCourseMetadataVariables): Promise<CourseMetadataResponse> {
   const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${courseName}`
   const response = await fetch(endpoint)
 
@@ -38,17 +43,27 @@ async function fetchCourseMetadata({
       data.course_metadata.is_private.toLowerCase() === 'true'
   }
 
-  return data.course_metadata as CourseMetadata
+  return {
+    courseMetadata: data.course_metadata as CourseMetadata,
+    lastAccessedAt: data.last_accessed_at ?? null,
+  }
 }
 
 export function useFetchCourseMetadata({
   courseName,
   enabled = true,
 }: UseFetchCourseMetadataOptions) {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['courseMetadata', courseName],
     queryFn: () => fetchCourseMetadata({ courseName }),
     retry: 1,
     enabled: enabled && Boolean(courseName),
   })
+
+  return {
+    ...query,
+    // Preserve backward compatibility: `data` returns CourseMetadata directly
+    data: query.data?.courseMetadata,
+    lastAccessedAt: query.data?.lastAccessedAt ?? null,
+  }
 }
