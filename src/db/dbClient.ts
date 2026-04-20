@@ -2,6 +2,9 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
 
+/** Max connections per pool. Keep low to avoid "too many clients" on Postgres. */
+const POOL_MAX = Number(process.env.POSTGRES_POOL_MAX) || 10
+
 function createPostgresClient(
   username?: string,
   password?: string,
@@ -11,16 +14,19 @@ function createPostgresClient(
 ) {
   if (!username || !password || !endpoint || !port || !database) {
     return postgres('postgres://postgres:postgres@localhost:5432/postgres', {
-      max: 0,
+      max: 2,
+      idle_timeout: 20,
     })
   }
 
   const connectionString = `postgres://${username}:${password}@${endpoint}:${port}/${database}`
   const isLocal = endpoint === 'localhost' || endpoint === '127.0.0.1'
-  return postgres(
-    connectionString,
-    isLocal ? {} : { ssl: { rejectUnauthorized: false } },
-  )
+  return postgres(connectionString, {
+    max: POOL_MAX,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }),
+  })
 }
 
 export const client = createPostgresClient(
