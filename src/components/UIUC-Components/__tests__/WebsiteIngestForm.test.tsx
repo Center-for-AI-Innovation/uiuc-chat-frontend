@@ -221,7 +221,7 @@ describe('WebsiteIngestForm', () => {
     await user.type(screen.getByPlaceholderText('Default 50'), '0')
 
     expect(
-      await screen.findByText(/Max URLs should be between 1 and 500/i),
+      await screen.findByText(/Max Pages should be between 1 and 500/i),
     ).toBeInTheDocument()
 
     await user.type(
@@ -232,7 +232,7 @@ describe('WebsiteIngestForm', () => {
       screen.getByRole('button', { name: /Ingest the Website/i }),
     )
 
-    expect(alertSpy).toHaveBeenCalledWith('Invalid max URLs input (1 to 500)')
+    expect(alertSpy).toHaveBeenCalledWith('Invalid Max Pages input (1 to 500)')
     expect((axiosMod as any).default.post).not.toHaveBeenCalled()
   })
 
