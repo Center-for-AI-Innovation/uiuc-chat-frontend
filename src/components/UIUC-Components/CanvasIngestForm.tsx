@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../Dialog'
-import { Label } from '@radix-ui/react-label'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { type FileUpload } from './UploadNotification'
@@ -149,6 +148,13 @@ export default function CanvasIngestForm({
           className="focus:bg-[--dashboard-background-dark]"
         >
           <Card
+            role="button"
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                ;(e.currentTarget as HTMLElement).click()
+              }
+            }}
             className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[--dashboard-border] bg-transparent px-6 py-4 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
@@ -175,6 +181,7 @@ export default function CanvasIngestForm({
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
+                aria-hidden="true"
                 className="ml-2 transition-transform group-hover:translate-x-1"
               />
             </div>
@@ -189,7 +196,7 @@ export default function CanvasIngestForm({
           </DialogHeader>
 
           <Alert
-            icon={<IconAlertTriangle size={18} />}
+            icon={<IconAlertTriangle size={18} aria-hidden="true" />}
             color="red"
             title="IMPORTANT: Canvas Permission Required"
             className="mb-4 bg-[--background-faded] text-[--illinois-orange]"
@@ -266,6 +273,7 @@ export default function CanvasIngestForm({
 
               <Input
                 id="canvas-url"
+                aria-label="Canvas course URL"
                 icon={
                   <Image
                     src="/media/canvas_logo.png"
@@ -304,8 +312,17 @@ export default function CanvasIngestForm({
             </div>
 
             <div className="mt-4">
-              <Label className="block ">Select Content to Import</Label>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <p
+                id="content-import-label"
+                className="block text-sm font-medium"
+              >
+                Select Content to Import
+              </p>
+              <div
+                role="group"
+                aria-labelledby="content-import-label"
+                className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3"
+              >
                 {[
                   'Files',
                   'Pages',

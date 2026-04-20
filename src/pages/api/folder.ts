@@ -80,7 +80,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       } catch (error) {
         console.error('Error saving folder:', error)
         res.status(500).json({
-          error: `Failed to save folder: ${error instanceof Error ? error.message : String(error)}`,
+          error: `Failed to save folder: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         })
       }
       break
@@ -100,11 +102,19 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
                     role: true,
                     content_text: true,
                     content_image_url: true,
+                    image_description: true,
                     contexts: true,
                     tools: true,
                     latest_system_message: true,
                     final_prompt_engineered_message: true,
                     response_time_sec: true,
+                    updated_at: true,
+                    feedback_is_positive: true,
+                    feedback_category: true,
+                    feedback_details: true,
+                    was_query_rewritten: true,
+                    query_rewrite_text: true,
+                    processed_content: true,
                     conversation_id: true,
                     created_at: true,
                   },
