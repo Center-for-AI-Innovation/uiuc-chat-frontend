@@ -99,6 +99,114 @@ describe('WebsiteIngestForm', () => {
     })
   })
 
+  it('surfaces already-completed child URLs from successDocs even when docsInProgress is empty', async () => {
+    vi.spyOn(globalThis, 'setInterval').mockImplementation((fn: any) => {
+      fn()
+      // @ts-expect-error - minimal timer handle for tests
+      return 0
+    })
+
+    server.use(
+      http.get('*/api/materialsTable/docsInProgress*', async () => {
+        return HttpResponse.json({ documents: [] })
+      }),
+      http.get('*/api/materialsTable/successDocs*', async () => {
+        return HttpResponse.json({
+          documents: [
+            {
+              base_url: 'https://example.com',
+              url: 'https://example.com/child1',
+              readable_filename: 'child1',
+            },
+            {
+              base_url: 'https://example.com',
+              url: 'https://example.com/child2',
+              readable_filename: 'child2',
+            },
+          ],
+        })
+      }),
+    )
+
+    const { default: WebsiteIngestForm } = await import('../WebsiteIngestForm')
+    const queryClient = createTestQueryClient()
+    renderWithProviders(
+      <Harness
+        Component={WebsiteIngestForm}
+        queryClient={queryClient}
+        initialFiles={[
+          {
+            name: 'https://example.com',
+            status: 'ingesting',
+            type: 'webscrape',
+            url: 'https://example.com',
+            isBaseUrl: true,
+          },
+        ]}
+      />,
+      { homeContext: { dispatch: vi.fn() }, queryClient },
+    )
+
+    await waitFor(() => {
+      const filesJson = screen.getByTestId('files').textContent ?? ''
+      expect(filesJson).toContain('https://example.com/child1')
+      expect(filesJson).toContain('https://example.com/child2')
+      expect(filesJson).toContain('"status":"complete"')
+    })
+  })
+
+  it('matches docs.base_url to the file URL even when trailing slashes differ', async () => {
+    vi.spyOn(globalThis, 'setInterval').mockImplementation((fn: any) => {
+      fn()
+      // @ts-expect-error - minimal timer handle for tests
+      return 0
+    })
+
+    server.use(
+      http.get('*/api/materialsTable/docsInProgress*', async () => {
+        return HttpResponse.json({
+          documents: [
+            {
+              // backend strips trailing slash
+              base_url: 'https://example.com',
+              url: 'https://example.com/alpha',
+              readable_filename: 'alpha',
+            },
+          ],
+        })
+      }),
+      http.get('*/api/materialsTable/successDocs*', async () => {
+        return HttpResponse.json({ documents: [] })
+      }),
+    )
+
+    const { default: WebsiteIngestForm } = await import('../WebsiteIngestForm')
+    const queryClient = createTestQueryClient()
+    renderWithProviders(
+      <Harness
+        Component={WebsiteIngestForm}
+        queryClient={queryClient}
+        initialFiles={[
+          {
+            // user entered URL with trailing slash
+            name: 'https://example.com/',
+            status: 'uploading',
+            type: 'webscrape',
+            url: 'https://example.com/',
+            isBaseUrl: true,
+          },
+        ]}
+      />,
+      { homeContext: { dispatch: vi.fn() }, queryClient },
+    )
+
+    await waitFor(() => {
+      const filesJson = screen.getByTestId('files').textContent ?? ''
+      expect(filesJson).toContain('https://example.com/alpha')
+      expect(filesJson).toContain('"status":"ingesting"')
+    })
+  })
+
   it('polls ingest status and marks an ingesting file as complete when it shows up in success docs', async () => {
     vi.spyOn(globalThis, 'setInterval').mockImplementation((fn: any) => {
       fn()
