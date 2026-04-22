@@ -50,7 +50,6 @@ import ModelUsageChart from './ModelUsageChart'
 const useStyles = createStyles((theme: MantineTheme) => ({
   downloadButton: {
     fontFamily: 'var(--font-montserratHeading)',
-    outline: 'none',
     color: 'var(--dashboard-button-foreground)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -428,7 +427,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
         setSidebarCollapsed={setSidebarCollapsed}
       >
         <Head>
-          <title>{course_name}</title>
+          <title>{course_name} — Analytics — Illinois Chat</title>
           <meta
             name="description"
             content="The AI teaching assistant built for students at UIUC."
@@ -436,7 +435,12 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
           <link rel="icon" href="/favicon.ico" />
           {/* <Header /> */}
         </Head>
-        <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+        >
+          <h1 className="sr-only">{course_name} Analytics</h1>
           <div className="items-left flex w-full flex-col justify-center py-0">
             <Flex direction="column" align="center" w="100%">
               <div className="pt-5"></div>
@@ -473,7 +477,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                       isLoading ? (
                         <LoadingSpinner size="sm" />
                       ) : (
-                        <IconCloudDownload className="hidden sm:block" />
+                        <IconCloudDownload
+                          className="hidden sm:block"
+                          aria-hidden="true"
+                        />
                       )
                     }
                     onClick={() => handleDownload(course_name)}
@@ -512,7 +519,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           <Text size="sm" weight={500} mb={1}>
                             Total Conversations
                           </Text>
-                          <Text size="xs" opacity={0.7}>
+                          <Text
+                            size="xs"
+                            style={{ color: 'var(--foreground-faded)' }}
+                          >
                             All-time chat sessions
                           </Text>
                         </div>
@@ -520,6 +530,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           <IconMessageCircle2
                             size={24}
                             className="text-[--dashboard-stat]"
+                            aria-hidden="true"
                           />
                         </div>
                       </div>
@@ -554,16 +565,19 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   <IconTrendingUp
                                     size={32}
                                     className="text-green-400"
+                                    aria-hidden="true"
                                   />
                                 ) : trend.percentage_change < 0 ? (
                                   <IconTrendingDown
                                     size={32}
                                     className="text-red-400"
+                                    aria-hidden="true"
                                   />
                                 ) : (
                                   <IconMinus
                                     size={18}
                                     className="text-gray-400"
+                                    aria-hidden="true"
                                   />
                                 )}
                                 <Text
@@ -597,7 +611,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           <Text size="sm" weight={500} mb={1}>
                             Total Users
                           </Text>
-                          <Text size="xs" opacity={0.7}>
+                          <Text
+                            size="xs"
+                            style={{ color: 'var(--foreground-faded)' }}
+                          >
                             All-time unique participants
                           </Text>
                         </div>
@@ -605,6 +622,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           <IconUsers
                             size={24}
                             className="text-[--dashboard-stat]"
+                            aria-hidden="true"
                           />
                         </div>
                       </div>
@@ -637,16 +655,19 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   <IconTrendingUp
                                     size={32}
                                     className="text-green-400"
+                                    aria-hidden="true"
                                   />
                                 ) : trend.percentage_change < 0 ? (
                                   <IconTrendingDown
                                     size={32}
                                     className="text-red-400"
+                                    aria-hidden="true"
                                   />
                                 ) : (
                                   <IconMinus
                                     size={18}
                                     className="text-gray-400"
+                                    aria-hidden="true"
                                   />
                                 )}
                                 <Text
@@ -680,7 +701,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           <Text size="sm" weight={500} mb={1}>
                             Messages
                           </Text>
-                          <Text size="xs" opacity={0.7}>
+                          <Text
+                            size="xs"
+                            style={{ color: 'var(--foreground-faded)' }}
+                          >
                             Total exchanges
                           </Text>
                         </div>
@@ -688,6 +712,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           <IconMessage2
                             size={24}
                             className="text-[--dashboard-stat]"
+                            aria-hidden="true"
                           />
                         </div>
                       </div>
@@ -722,16 +747,19 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                                   <IconTrendingUp
                                     size={32}
                                     className="text-green-400"
+                                    aria-hidden="true"
                                   />
                                 ) : trend.percentage_change < 0 ? (
                                   <IconTrendingDown
                                     size={32}
                                     className="text-red-400"
+                                    aria-hidden="true"
                                   />
                                 ) : (
                                   <IconMinus
                                     size={18}
                                     className="text-gray-400"
+                                    aria-hidden="true"
                                   />
                                 )}
                                 <Text
@@ -788,7 +816,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             <Text size="sm" weight={500} mb={1}>
                               Conversations per User
                             </Text>
-                            <Text size="xs" opacity={0.7}>
+                            <Text
+                              size="xs"
+                              style={{ color: 'var(--foreground-faded)' }}
+                            >
                               Average engagement frequency
                             </Text>
                           </div>
@@ -796,6 +827,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             <IconMessageCircle2
                               size={24}
                               className="text-[--dashboard-stat]"
+                              aria-hidden="true"
                             />
                           </div>
                         </div>
@@ -809,7 +841,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                               1,
                             ) || '0'}
                           </Text>
-                          <Text size="sm" color="dimmed">
+                          <Text
+                            size="sm"
+                            style={{ color: 'var(--foreground-faded)' }}
+                          >
                             conversations / user
                           </Text>
                         </div>
@@ -822,7 +857,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             <Text size="sm" weight={500} mb={1}>
                               Messages per User
                             </Text>
-                            <Text size="xs" opacity={0.7}>
+                            <Text
+                              size="xs"
+                              style={{ color: 'var(--foreground-faded)' }}
+                            >
                               Average interaction depth
                             </Text>
                           </div>
@@ -830,6 +868,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             <IconMessage2
                               size={24}
                               className="text-[--dashboard-stat]"
+                              aria-hidden="true"
                             />
                           </div>
                         </div>
@@ -842,7 +881,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             {courseStats?.avg_messages_per_user?.toFixed(1) ||
                               '0'}
                           </Text>
-                          <Text size="sm" color="dimmed">
+                          <Text
+                            size="sm"
+                            style={{ color: 'var(--foreground-faded)' }}
+                          >
                             messages / user
                           </Text>
                         </div>
@@ -855,7 +897,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             <Text size="sm" weight={500} mb={1}>
                               Messages per Conversation
                             </Text>
-                            <Text size="xs" opacity={0.7}>
+                            <Text
+                              size="xs"
+                              style={{ color: 'var(--foreground-faded)' }}
+                            >
                               Average conversation length
                             </Text>
                           </div>
@@ -863,6 +908,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                             <IconChartBar
                               size={24}
                               className="text-[--dashboard-stat]"
+                              aria-hidden="true"
                             />
                           </div>
                         </div>
@@ -876,7 +922,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                               1,
                             ) || '0'}
                           </Text>
-                          <Text size="sm" color="dimmed">
+                          <Text
+                            size="sm"
+                            style={{ color: 'var(--foreground-faded)' }}
+                          >
                             messages / conversation
                           </Text>
                         </div>
@@ -900,6 +949,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         <Select
                           size="sm"
                           w={200}
+                          aria-label="Date range filter"
                           value={dateRangeType}
                           onChange={(value) => {
                             setDateRangeType(value || 'all')
@@ -953,10 +1003,17 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                         {dateRangeType === 'custom' && (
                           <DatePickerInput
                             firstDayOfWeek={0}
-                            icon={<IconCalendar size="1.1rem" stroke={1.5} />}
+                            icon={
+                              <IconCalendar
+                                size="1.1rem"
+                                stroke={1.5}
+                                aria-hidden="true"
+                              />
+                            }
                             type="range"
                             size="sm"
                             w={200}
+                            aria-label="Custom date range picker"
                             value={dateRange}
                             onChange={setDateRange}
                             // TODO fix me type error complaining placeholder doesn't exist for mantine/date v6
@@ -1014,7 +1071,10 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           />
                         )}
                         {totalCount > 0 && (
-                          <Text size="sm" color="dimmed">
+                          <Text
+                            size="sm"
+                            style={{ color: 'var(--foreground-faded)' }}
+                          >
                             {totalCount} conversations in selected range
                           </Text>
                         )}
@@ -1083,6 +1143,7 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
                           </div>
                           <Select
                             value={view}
+                            aria-label="View by hour or day"
                             onChange={(value) => setView(value || 'hour')}
                             data={[
                               { value: 'hour', label: 'By Hour' },
@@ -1232,7 +1293,7 @@ const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
       message: was_error
         ? "An error occurred while deleting the file. Please try again and I'd be so grateful if you email rohan13@illinois.edu to report this bug."
         : 'The file is being deleted in the background.',
-      icon: <IconCheck />,
+      icon: <IconCheck aria-hidden="true" />,
       // className: 'my-notification-class',
       styles: {
         root: {
@@ -1301,7 +1362,7 @@ export const showToastOnUpdate = (
     ),
     color: 'green',
     radius: 'lg',
-    icon: <IconCheck />,
+    icon: <IconCheck aria-hidden="true" />,
     className: 'my-notification-class',
     style: {
       backgroundColor: 'rgba(42,42,64,0.6)',
