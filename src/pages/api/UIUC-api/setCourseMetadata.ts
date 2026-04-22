@@ -2,7 +2,7 @@ import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { NextResponse } from 'next/server'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import { ensureRedisConnected } from '~/utils/redisClient'
+import { writeCourseMetadata } from '~/utils/courseMetadataStore'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -77,11 +77,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       allow_logged_in_users,
       is_frozen,
     }
-    console.log('Right before setting course_metadata with: ', course_metadata)
-    const redisClient = await ensureRedisConnected()
-    await redisClient.hSet('course_metadatas', {
-      [course_name]: JSON.stringify(course_metadata),
-    })
+    await writeCourseMetadata(course_name, course_metadata)
 
     return res.status(200).json({ success: true })
   } catch (error) {

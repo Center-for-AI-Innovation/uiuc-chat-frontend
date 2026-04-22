@@ -2,10 +2,12 @@ import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import type { CourseMetadata } from '~/types/courseMetadata'
 import type { ChatbotCardData } from '~/components/UIUC-Components/chatbots-hub/chatbots.types'
-import { ensureRedisConnected } from '~/utils/redisClient'
+import { db, courseMetadata } from '~/db/dbClient'
+import { sql } from 'drizzle-orm'
 
 const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL ?? ''
 const MAX_QUERY_LENGTH = 200
+const MAX_RESULTS = 500
 
 const VALID_PRIVACY_VALUES = new Set(['public', 'private', 'logged_in'])
 
@@ -19,26 +21,6 @@ function getAccessLevel(
   return 'private'
 }
 
-function matchesPrivacyFilter(
-  metadata: CourseMetadata,
-  privacy: PrivacyFilter,
-): boolean {
-  return getAccessLevel(metadata) === privacy
-}
-
-function matchesTextQuery(
-  courseName: string,
-  metadata: CourseMetadata,
-  query: string,
-): boolean {
-  const lowerQuery = query.toLowerCase()
-  return (
-    courseName.toLowerCase().includes(lowerQuery) ||
-    (metadata.project_description ?? '').toLowerCase().includes(lowerQuery) ||
-    (metadata.course_owner ?? '').toLowerCase().includes(lowerQuery)
-  )
-}
-
 function isUserBot(metadata: CourseMetadata, userEmail: string): boolean {
   return (
     metadata.course_owner === userEmail ||
@@ -46,19 +28,7 @@ function isUserBot(metadata: CourseMetadata, userEmail: string): boolean {
   )
 }
 
-/** Check whether the user is allowed to see this bot at all. */
-function canUserView(metadata: CourseMetadata, userEmail: string): boolean {
-  // Public bots are visible to everyone
-  if (!metadata.is_private) return true
-  // "Logged-in users" bots are visible to any authenticated user
-  if (metadata.allow_logged_in_users) return true
-  // Private bots: only owner, admins, or approved users
-  if (isUserBot(metadata, userEmail)) return true
-  if ((metadata.approved_emails_list ?? []).includes(userEmail)) return true
-  return false
-}
-
-/** Build a safe card payload — never include raw metadata or secrets. */
+/** Build a safe card payload — never include raw secrets. */
 function toCardData(
   courseName: string,
   metadata: CourseMetadata,
@@ -86,17 +56,6 @@ function toCardData(
     isPrivate: metadata.is_private,
     bannerImageS3: metadata.banner_image_s3,
   }
-}
-
-function normalizeIsPrivate(metadata: CourseMetadata): CourseMetadata {
-  if (typeof metadata.is_private === 'string') {
-    return {
-      ...metadata,
-      is_private:
-        (metadata.is_private as unknown as string).toLowerCase() === 'true',
-    }
-  }
-  return metadata
 }
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -128,59 +87,104 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
   const myBots = req.query.my_bots === 'true'
 
+  // Tags filter: comma-separated list of tag values (e.g., "Course,Grainger Engineering").
+  // Matches any row whose tags jsonb array contains at least one of the given values.
+  const rawTags = typeof req.query.tags === 'string' ? req.query.tags : ''
+  const tagValues = rawTags
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, 10)
+
   try {
-    const redisClient = await ensureRedisConnected()
-    const allRaw = await redisClient.hGetAll('course_metadatas')
+    // Access predicate: user can see bots where
+    //   is_frozen = false AND (
+    //     is_private = false OR allow_logged_in_users = true
+    //     OR course_owner = :email OR :email = ANY(course_admins)
+    //     OR :email = ANY(approved_emails_list)
+    //   )
+    const accessPredicate = sql`
+      ${courseMetadata.is_frozen} = false
+      AND (
+        ${courseMetadata.is_private} = false
+        OR ${courseMetadata.allow_logged_in_users} = true
+        OR ${courseMetadata.course_owner} = ${userEmail}
+        OR ${userEmail} = ANY(${courseMetadata.course_admins})
+        OR ${userEmail} = ANY(${courseMetadata.approved_emails_list})
+      )
+    `
 
-    if (!allRaw) {
-      return res.status(200).json({ results: [], total: 0 })
-    }
+    const textPredicate = q
+      ? sql`AND (
+          ${courseMetadata.course_name} ILIKE ${'%' + q + '%'}
+          OR ${courseMetadata.project_description} ILIKE ${'%' + q + '%'}
+          OR ${courseMetadata.course_owner} ILIKE ${'%' + q + '%'}
+        )`
+      : sql``
 
-    const results: ChatbotCardData[] = []
+    const privacyPredicate = privacy
+      ? sql`AND (
+          (${privacy} = 'public' AND ${courseMetadata.is_private} = false)
+          OR (${privacy} = 'logged_in' AND ${courseMetadata.is_private} = true AND ${courseMetadata.allow_logged_in_users} = true)
+          OR (${privacy} = 'private' AND ${courseMetadata.is_private} = true AND ${courseMetadata.allow_logged_in_users} = false)
+        )`
+      : sql``
 
-    for (const [courseName, rawValue] of Object.entries(allRaw)) {
-      let metadata: CourseMetadata
-      try {
-        metadata = normalizeIsPrivate(JSON.parse(rawValue) as CourseMetadata)
-      } catch {
-        continue
-      }
+    const myBotsPredicate = myBots
+      ? sql`AND (
+          ${courseMetadata.course_owner} = ${userEmail}
+          OR ${userEmail} = ANY(${courseMetadata.course_admins})
+        )`
+      : sql``
 
-      // Skip frozen/archived
-      if (metadata.is_frozen === true) continue
+    // Tag predicate: ANY of the provided values matches ANY tag in the array.
+    // Uses jsonb_array_elements to flatten tags, then checks t->>'value'.
+    const tagsPredicate =
+      tagValues.length > 0
+        ? sql`AND EXISTS (
+            SELECT 1 FROM jsonb_array_elements(${courseMetadata.tags}) t
+            WHERE (t->>'value') = ANY(${tagValues}::text[])
+          )`
+        : sql``
 
-      // Access control: only show bots the user is authorized to view
-      if (!canUserView(metadata, userEmail)) continue
+    // Category maps to tags with category='projectType' when #598 is merged.
+    // Until then, treat it as a no-op so callers don't break.
+    const categoryPredicate = category
+      ? sql`AND EXISTS (
+          SELECT 1 FROM jsonb_array_elements(${courseMetadata.tags}) t
+          WHERE (t->>'category') = 'projectType' AND (t->>'value') = ${category}
+        )`
+      : sql``
 
-      // Filter: my_bots
-      if (myBots && !isUserBot(metadata, userEmail)) continue
+    // Ranked ordering: user's own bots first (owner=0, admin=1), then alphabetical.
+    const rankOrder = sql`
+      CASE
+        WHEN ${courseMetadata.course_owner} = ${userEmail} THEN 0
+        WHEN ${userEmail} = ANY(${courseMetadata.course_admins}) THEN 1
+        ELSE 2
+      END,
+      LOWER(${courseMetadata.course_name})
+    `
 
-      // Filter: privacy
-      if (privacy && !matchesPrivacyFilter(metadata, privacy)) continue
+    const rows = await db
+      .select({
+        course_name: courseMetadata.course_name,
+        raw_metadata: courseMetadata.raw_metadata,
+      })
+      .from(courseMetadata)
+      .where(
+        sql`${accessPredicate} ${textPredicate} ${privacyPredicate} ${myBotsPredicate} ${tagsPredicate} ${categoryPredicate}`,
+      )
+      .orderBy(rankOrder)
+      .limit(MAX_RESULTS)
 
-      // Filter: category (project_type) — ready for when #598 lands.
-      // For now project_type doesn't exist in CourseMetadata,
-      // so this filter will be a no-op until the field is added.
-      if (category) {
-        const projectType = (metadata as unknown as Record<string, unknown>)[
-          'project_type'
-        ] as string | undefined
-        if (projectType && projectType !== category) continue
-      }
-
-      // Filter: text query
-      if (q && !matchesTextQuery(courseName, metadata, q)) continue
-
-      results.push(toCardData(courseName, metadata, userEmail))
-    }
-
-    // Sort: user's own bots first, then alphabetically
-    results.sort((a, b) => {
-      const aRank = a.userRole === 'owner' ? 0 : a.userRole === 'member' ? 1 : 2
-      const bRank = b.userRole === 'owner' ? 0 : b.userRole === 'member' ? 1 : 2
-      if (aRank !== bRank) return aRank - bRank
-      return a.title.toLowerCase().localeCompare(b.title.toLowerCase())
-    })
+    const results: ChatbotCardData[] = rows.map((row) =>
+      toCardData(
+        row.course_name,
+        row.raw_metadata as CourseMetadata,
+        userEmail,
+      ),
+    )
 
     return res.status(200).json({ results, total: results.length })
   } catch (error) {
