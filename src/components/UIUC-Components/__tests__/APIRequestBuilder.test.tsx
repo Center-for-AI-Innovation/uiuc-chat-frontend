@@ -36,8 +36,8 @@ describe('APIRequestBuilder', () => {
     )
   })
 
-  it('escapes multi-line system prompt as \\n in generated snippet so JSON is valid', async () => {
-    const multiLinePrompt = 'line1\nline2'
+  it('keeps curl snippet valid for apostrophes, quotes, newlines, and backslashes', async () => {
+    const multiLinePrompt = `He said "it's fine"\npath: C:\\temp\\file.txt`
     renderWithProviders(
       <APIRequestBuilder
         course_name="CS101"
@@ -47,7 +47,10 @@ describe('APIRequestBuilder', () => {
     )
     const snippet = await screen.findByDisplayValue(/curl -X POST/i)
     const value = String((snippet as HTMLTextAreaElement).value)
-    // Snippet must contain escaped newline (backslash + n), not a literal newline that would break JSON/shell
-    expect(value).toContain('line1\\nline2')
+    expect(value).toContain(`-d '{`)
+    // Apostrophes inside a single-quoted shell string must be escaped as '"'"'
+    expect(value).toContain(
+      `He said \\"it'"'"'s fine\\"\\npath: C:\\\\temp\\\\file.txt`,
+    )
   })
 })
