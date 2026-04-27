@@ -8,10 +8,6 @@ This directory contains GitHub Actions workflows for the UIUC Chat Frontend proj
 
 Automatically deploys the frontend application to AWS ECS Fargate on code changes.
 
-### `e2e-prod-status-test.yml` - E2E Testing
-
-Runs end-to-end tests against the production environment.
-
 ## 🚀 ECS Deployment - How It Works
 
 The `deploy-to-ecs.yml` workflow triggers on pushes to `illinois-chat` and `main` branches when these files change:
@@ -105,7 +101,7 @@ Changes to these files won't trigger ECS deployment:
 - VS Code config (`.vscode/**`)
 - Linting configs (`.eslintrc.*`, `.prettierrc.*`)
 - Git files (`.gitignore`, `.gitattributes`)
-- CI configs for other workflows (`nightwatch/**`)
+- CI configs for other workflows
 
 ## 🔍 ECS Deployment - Troubleshooting
 
