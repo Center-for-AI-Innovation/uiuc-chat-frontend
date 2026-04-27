@@ -182,6 +182,9 @@ export default function MITIngestForm({
             <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
+                  <Text className="mb-2 text-sm font-semibold text-[--illinois-orange]">
+                    Coming soon: MIT ingest is temporarily unavailable.
+                  </Text>
                   <strong>For MIT Open Course Ware</strong>, just enter a URL
                   like{' '}
                   <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
@@ -241,6 +244,7 @@ export default function MITIngestForm({
                   onChange={(e) => {
                     handleUrlChange(e)
                   }}
+                  disabled
                 />
               </div>
             </div>
@@ -248,7 +252,7 @@ export default function MITIngestForm({
           <div className="mt-4">
             <Button
               onClick={handleIngest}
-              disabled={!isUrlValid}
+              disabled
               className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
               Ingest MIT Course

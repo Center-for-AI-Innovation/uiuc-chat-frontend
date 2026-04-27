@@ -92,6 +92,14 @@ export default function APIRequestBuilder({
     setTimeout(() => setCopiedCodeSnippet(false), 2000)
   }
 
+  /** Escape string for safe embedding inside JSON string value (newlines → \\n, quotes escaped). */
+  const escapeForJson = (s: string) => JSON.stringify(s).slice(1, -1)
+  /** Escape apostrophes for safe embedding inside a single-quoted shell string. */
+  const escapeForSingleQuotedShell = (s: string) => s.replace(/'/g, `'\"'\"'`)
+  /** Escape for JSON, then for single-quoted curl -d payload. */
+  const escapeForCurlJson = (s: string) =>
+    escapeForSingleQuotedShell(escapeForJson(s))
+
   // Fix WCAG: Mantine v5 puts aria-label on wrapper div (generic role) instead of
   // the interactive [role=combobox] / [role=slider] elements. We set labels directly
   // on the correct elements via a post-render DOM fix.
@@ -125,11 +133,11 @@ export default function APIRequestBuilder({
     "messages": [
       {
         "role": "system",
-        "content": "${systemPrompt}"
+        "content": "${escapeForCurlJson(systemPrompt)}"
       },
       {
         "role": "user",
-        "content": "${userQuery}"
+        "content": "${escapeForCurlJson(userQuery)}"
       }
     ],
     "api_key": "${apiKey || 'YOUR-API-KEY'}",
@@ -149,11 +157,11 @@ data = {
   "messages": [
     {
       "role": "system",
-      "content": "${systemPrompt}"
+      "content": "${escapeForJson(systemPrompt)}"
     },
     {
       "role": "user",
-      "content": "${userQuery}"
+      "content": "${escapeForJson(userQuery)}"
     }
   ],
   "api_key": "${apiKey || 'YOUR-API-KEY'}",
@@ -180,11 +188,11 @@ print(response.json().get('message'))
   "messages": [
     {
       "role": "system",
-      "content": "${systemPrompt}"
+      "content": "${escapeForJson(systemPrompt)}"
     },
     {
       "role": "user",
-      "content": "${userQuery}"
+      "content": "${escapeForJson(userQuery)}"
     }
   ],
   "api_key": "${apiKey || 'YOUR-API-KEY'}",

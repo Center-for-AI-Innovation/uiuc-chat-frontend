@@ -651,6 +651,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           onChange={(event) =>
                             setN8nApiKeyTextbox(event.target.value)
                           }
+                          disabled
                           descriptionProps={{
                             style: { color: 'var(--foreground)' },
                           }}
@@ -668,7 +669,7 @@ const MakeToolsPage = ({ course_name }: { course_name: string }) => {
                           onClick={(event) => handleSaveApiKey()}
                           className="rounded-lg bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover]"
                           type="submit"
-                          disabled={isLoading}
+                          disabled
                         >
                           {isLoading ? 'Saving...' : 'Save'}
                         </Button>
