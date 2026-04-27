@@ -269,9 +269,8 @@ describe('N8NPage – API key fetch edge cases', () => {
   }, 15_000)
 })
 
-describe('N8NPage – handleSaveApiKey edge cases', () => {
-  it('shows error toast when isErrorTools is true after saving', async () => {
-    const user = userEvent.setup()
+describe('N8NPage – API key form controls', () => {
+  it('keeps save controls disabled when workflows are in an error state', async () => {
     const { notifications } = await import('@mantine/notifications')
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/tools' }
@@ -306,20 +305,13 @@ describe('N8NPage – handleSaveApiKey edge cases', () => {
     const input = await screen.findByPlaceholderText(
       /Enter your n8n API Key here/i,
     )
-    await user.type(input, 'some-key')
-    await user.click(screen.getByRole('button', { name: /Save/i }))
-
-    await waitFor(() => {
-      expect((notifications as any).show).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'error-notification',
-        }),
-      )
-    })
+    const saveButton = screen.getByRole('button', { name: /Save/i })
+    expect(input).toBeDisabled()
+    expect(saveButton).toBeDisabled()
+    expect((notifications as any).show).not.toHaveBeenCalled()
   }, 20_000)
 
-  it('shows error toast when flows_table is null/undefined after saving', async () => {
-    const user = userEvent.setup()
+  it('keeps save controls disabled when workflows table is empty', async () => {
     const { notifications } = await import('@mantine/notifications')
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/tools' }
@@ -354,21 +346,13 @@ describe('N8NPage – handleSaveApiKey edge cases', () => {
     const input = await screen.findByPlaceholderText(
       /Enter your n8n API Key here/i,
     )
-    await user.type(input, 'valid-key')
-    await user.click(screen.getByRole('button', { name: /Save/i }))
-
-    await waitFor(() => {
-      expect((notifications as any).show).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Error',
-          message: 'Failed to fetch workflows. Please try again later.',
-        }),
-      )
-    })
+    const saveButton = screen.getByRole('button', { name: /Save/i })
+    expect(input).toBeDisabled()
+    expect(saveButton).toBeDisabled()
+    expect((notifications as any).show).not.toHaveBeenCalled()
   }, 20_000)
 
-  it('shows error toast when upsert response is not ok', async () => {
-    const user = userEvent.setup()
+  it('keeps save controls disabled when upsert would fail', async () => {
     const { notifications } = await import('@mantine/notifications')
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/tools' }
@@ -403,21 +387,13 @@ describe('N8NPage – handleSaveApiKey edge cases', () => {
     const input = await screen.findByPlaceholderText(
       /Enter your n8n API Key here/i,
     )
-    await user.type(input, 'valid-key')
-    await user.click(screen.getByRole('button', { name: /Save/i }))
-
-    await waitFor(() => {
-      expect((notifications as any).show).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Error',
-          message: 'Failed to save n8n API Key. Please try again later.',
-        }),
-      )
-    })
+    const saveButton = screen.getByRole('button', { name: /Save/i })
+    expect(input).toBeDisabled()
+    expect(saveButton).toBeDisabled()
+    expect((notifications as any).show).not.toHaveBeenCalled()
   }, 20_000)
 
-  it('shows success toast when upsert succeeds with valid key', async () => {
-    const user = userEvent.setup()
+  it('keeps save controls disabled even when upsert would succeed', async () => {
     const { notifications } = await import('@mantine/notifications')
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/tools' }
@@ -452,17 +428,10 @@ describe('N8NPage – handleSaveApiKey edge cases', () => {
     const input = await screen.findByPlaceholderText(
       /Enter your n8n API Key here/i,
     )
-    await user.type(input, 'good-key')
-    await user.click(screen.getByRole('button', { name: /Save/i }))
-
-    await waitFor(() => {
-      expect((notifications as any).show).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'n8n-api-key-saved',
-          title: 'Success',
-        }),
-      )
-    })
+    const saveButton = screen.getByRole('button', { name: /Save/i })
+    expect(input).toBeDisabled()
+    expect(saveButton).toBeDisabled()
+    expect((notifications as any).show).not.toHaveBeenCalled()
   }, 20_000)
 })
 

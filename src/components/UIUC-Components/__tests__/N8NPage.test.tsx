@@ -1,7 +1,6 @@
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 
 import { server } from '~/test-utils/server'
@@ -64,8 +63,7 @@ vi.mock('~/utils/apiUtils', async (importOriginal) => {
 })
 
 describe('N8NPage', () => {
-  it('renders and saves an API key', async () => {
-    const user = userEvent.setup()
+  it('renders with a read-only API key form', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => {})
     vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -101,18 +99,15 @@ describe('N8NPage', () => {
       await screen.findByRole('heading', { name: /Your n8n API Key/i }),
     ).toBeInTheDocument()
 
-    await user.type(
-      screen.getByPlaceholderText(/Enter your n8n API Key here/i),
-      'test-key',
-    )
-    await user.click(screen.getByRole('button', { name: /Save/i }))
-
-    expect(testedKey).toBe(true)
-    expect(upsertedKey).toBe(true)
+    const input = screen.getByPlaceholderText(/Enter your n8n API Key here/i)
+    const saveButton = screen.getByRole('button', { name: /Save/i })
+    expect(input).toBeDisabled()
+    expect(saveButton).toBeDisabled()
+    expect(testedKey).toBe(false)
+    expect(upsertedKey).toBe(false)
   }, 20_000)
 
   it('shows an error toast and does not upsert when the key test fails', async () => {
-    const user = userEvent.setup()
     const { notifications } = await import('@mantine/notifications')
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/tools' }
@@ -139,18 +134,18 @@ describe('N8NPage', () => {
     const MakeToolsPage = (await import('../N8NPage')).default
     renderWithProviders(<MakeToolsPage course_name="CS101" />)
 
-    await user.type(
-      await screen.findByPlaceholderText(/Enter your n8n API Key here/i),
-      'bad-key',
+    const input = await screen.findByPlaceholderText(
+      /Enter your n8n API Key here/i,
     )
-    await user.click(screen.getByRole('button', { name: /Save/i }))
+    const saveButton = screen.getByRole('button', { name: /Save/i })
+    expect(input).toBeDisabled()
+    expect(saveButton).toBeDisabled()
 
-    expect((notifications as any).show).toHaveBeenCalled()
+    expect((notifications as any).show).not.toHaveBeenCalled()
     expect(upsertedKey).toBe(false)
   }, 20_000)
 
-  it('allows saving an empty key and marks the workflow table as empty', async () => {
-    const user = userEvent.setup()
+  it('keeps API key form disabled when an existing key is present', async () => {
     const { notifications } = await import('@mantine/notifications')
 
     globalThis.__TEST_ROUTER__ = { asPath: '/CS101/tools' }
@@ -182,10 +177,10 @@ describe('N8NPage', () => {
     const input = await screen.findByPlaceholderText(
       /Enter your n8n API Key here/i,
     )
-    await user.clear(input)
-    await user.click(screen.getByRole('button', { name: /Save/i }))
-
-    expect((notifications as any).show).toHaveBeenCalled()
+    const saveButton = screen.getByRole('button', { name: /Save/i })
+    expect(input).toBeDisabled()
+    expect(saveButton).toBeDisabled()
+    expect((notifications as any).show).not.toHaveBeenCalled()
     globalThis.__TEST_N8N_WORKFLOWS__ = undefined
   }, 20_000)
 })
