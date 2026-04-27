@@ -14,44 +14,23 @@ describe('test-ece-2', function () {
 
   it('tests test-ece-2', function (browser) {
     browser.timeouts('implicit', 10000)
+    const message = `nightwatch-prod-smoke-${Date.now()}`
 
     browser
       .windowRect({ width: 955, height: 1045 })
       .navigateTo('https://www.uiuc.chat/ece120/chat')
-      .pause(5000)
-      .click('textarea')
-      .setValue('textarea', 'hi')
-      .perform(function () {
-        const actions = this.actions({ async: true })
-
-        return actions.keyDown(this.Keys.ENTER)
-      })
-      .perform(function () {
-        const actions = this.actions({ async: true })
-
-        return actions.keyUp(this.Keys.ENTER)
-      })
-      // Add waitForElementVisible before clicking
+      .waitForElementVisible('textarea.chat-input', 30000)
+      .setValue('textarea.chat-input', message)
+      .waitForElementVisible('button[aria-label="Send message"]', 10000)
+      .click('button[aria-label="Send message"]')
+      .useXpath()
       .waitForElementVisible(
-        'div.bg-gray-50\\/50 div.dark\\:prose-invert > div > div.w-full > div',
-        15000,
+        `//*[contains(normalize-space(.), "${message}")]`,
+        30000,
       )
-      .click(
-        'div.bg-gray-50\\/50 div.dark\\:prose-invert > div > div.w-full > div',
-      )
-      .pause(5000)
-      .getText(
-        'div.bg-gray-50\\/50 div.dark\\:prose-invert > div > div.w-full > div',
-        function (result) {
-          console.log('Text content:', result.value)
-          // this.assert.ok(result.value.length > 0, 'Response text should not be empty');
-          const responseText = String(result.value)
-          this.assert.ok(
-            responseText.length > 0,
-            'Response text should not be empty',
-          )
-        },
-      )
+      .useCss()
+      .waitForElementVisible('div[aria-live="polite"]', 30000)
+      .assert.textMatches('div[aria-live="polite"]', /.+/)
       .end()
   })
 })
