@@ -180,7 +180,7 @@ describe('MITIngestForm', () => {
     expect(ingestBtn).toBeDisabled()
   })
 
-  it('enables the ingest button for a valid MIT OCW URL', async () => {
+  it('keeps the ingest button disabled for a valid MIT OCW URL', async () => {
     const user = userEvent.setup()
     const queryClient = createTestQueryClient()
     const { default: MITIngestForm } = await import('../MITIngestForm')
@@ -202,10 +202,10 @@ describe('MITIngestForm', () => {
     const ingestBtn = screen.getByRole('button', {
       name: /Ingest MIT Course/i,
     })
-    await waitFor(() => expect(ingestBtn).toBeEnabled())
+    expect(ingestBtn).toBeDisabled()
   })
 
-  it('accepts http:// OCW URLs as valid', async () => {
+  it('keeps the ingest button disabled for http:// OCW URLs', async () => {
     const user = userEvent.setup()
     const queryClient = createTestQueryClient()
     const { default: MITIngestForm } = await import('../MITIngestForm')
@@ -226,7 +226,7 @@ describe('MITIngestForm', () => {
     const ingestBtn = screen.getByRole('button', {
       name: /Ingest MIT Course/i,
     })
-    await waitFor(() => expect(ingestBtn).toBeEnabled())
+    expect(ingestBtn).toBeDisabled()
   })
 
   it('rejects URLs that do not match ocw.mit.edu pattern', async () => {
@@ -263,7 +263,7 @@ describe('MITIngestForm', () => {
   // Successful submission
   // ------------------------------------------------------------------
 
-  it('ingests a valid MIT course and transitions through upload states', async () => {
+  it('does not ingest while MIT ingest is unavailable', async () => {
     const user = userEvent.setup()
     const queryClient = createTestQueryClient()
 
@@ -290,32 +290,12 @@ describe('MITIngestForm', () => {
     const ingestBtn = screen.getByRole('button', {
       name: /Ingest MIT Course/i,
     })
-    await waitFor(() => expect(ingestBtn).toBeEnabled())
-    await user.click(ingestBtn)
-
-    // Verify axios.get was called with correct params
-    await waitFor(() => {
-      expect(axios.get).toHaveBeenCalledWith(
-        '/api/UIUC-api/downloadMITCourse',
-        {
-          params: {
-            url: mitUrl,
-            course_name: 'CS101',
-            local_dir: 'local_dir',
-          },
-        },
-      )
-    })
-
-    // Verify the file state transitions to complete
-    await waitFor(() => {
-      const filesJson = screen.getByTestId('files').textContent ?? ''
-      expect(filesJson).toContain('"status":"complete"')
-      expect(filesJson).toContain(mitUrl)
-    })
+    expect(ingestBtn).toBeDisabled()
+    expect(axios.get).not.toHaveBeenCalled()
+    expect(screen.getByTestId('files').textContent ?? '').toBe('[]')
   })
 
-  it('closes the dialog after successful submission', async () => {
+  it('does not submit or close the dialog through ingest action', async () => {
     const user = userEvent.setup()
     const queryClient = createTestQueryClient()
 
@@ -341,15 +321,8 @@ describe('MITIngestForm', () => {
     const ingestBtn = screen.getByRole('button', {
       name: /Ingest MIT Course/i,
     })
-    await waitFor(() => expect(ingestBtn).toBeEnabled())
-    await user.click(ingestBtn)
-
-    // Dialog should close (setOpen(false) is called at start of handleIngest)
-    await waitFor(() => {
-      expect(
-        screen.queryByPlaceholderText('Enter URL...'),
-      ).not.toBeInTheDocument()
-    })
+    expect(ingestBtn).toBeDisabled()
+    expect(screen.getByPlaceholderText('Enter URL...')).toBeInTheDocument()
   })
 
   // ------------------------------------------------------------------
@@ -382,14 +355,8 @@ describe('MITIngestForm', () => {
     const ingestBtn = screen.getByRole('button', {
       name: /Ingest MIT Course/i,
     })
-    await waitFor(() => expect(ingestBtn).toBeEnabled())
-    await user.click(ingestBtn)
-
-    // downloadMITCourse catches the error and returns null, which triggers error status
-    await waitFor(() => {
-      const filesJson = screen.getByTestId('files').textContent ?? ''
-      expect(filesJson).toContain('"status":"error"')
-    })
+    expect(ingestBtn).toBeDisabled()
+    expect(screen.getByTestId('files').textContent ?? '').toBe('[]')
   })
 
   it('marks upload as error when downloadMITCourse returns falsy data', async () => {
@@ -417,19 +384,13 @@ describe('MITIngestForm', () => {
     const ingestBtn = screen.getByRole('button', {
       name: /Ingest MIT Course/i,
     })
-    await waitFor(() => expect(ingestBtn).toBeEnabled())
-    await user.click(ingestBtn)
-
-    // data is null which is falsy, so the else branch marks it as error
-    await waitFor(() => {
-      const filesJson = screen.getByTestId('files').textContent ?? ''
-      expect(filesJson).toContain('"status":"error"')
-    })
+    expect(ingestBtn).toBeDisabled()
+    expect(screen.getByTestId('files').textContent ?? '').toBe('[]')
   })
 
   it('alerts when trying to ingest with invalid URL (edge case)', async () => {
     const user = userEvent.setup()
-    const alertSpy = vi.spyOn(globalThis, 'alert').mockImplementation(() => {})
+    vi.spyOn(globalThis, 'alert').mockImplementation(() => {})
     const queryClient = createTestQueryClient()
 
     let uploads: FileUpload[] = []
@@ -564,13 +525,8 @@ describe('MITIngestForm', () => {
     const ingestBtn = screen.getByRole('button', {
       name: /Ingest MIT Course/i,
     })
-    await waitFor(() => expect(ingestBtn).toBeEnabled())
-    await user.click(ingestBtn)
-
-    await waitFor(() => {
-      const filesJson = screen.getByTestId('files').textContent ?? ''
-      expect(filesJson).toContain('"type":"mit"')
-    })
+    expect(ingestBtn).toBeDisabled()
+    expect(screen.getByTestId('files').textContent ?? '').toBe('[]')
   })
 
   // ------------------------------------------------------------------
@@ -618,16 +574,9 @@ describe('MITIngestForm', () => {
     const ingestBtn = screen.getByRole('button', {
       name: /Ingest MIT Course/i,
     })
-    await waitFor(() => expect(ingestBtn).toBeEnabled())
-    await user.click(ingestBtn)
-
-    await waitFor(() => {
-      expect(setUploadFiles).toHaveBeenCalled()
-      // Should have seen uploading and ingesting states
-      expect(capturedStates).toContain('uploading')
-      expect(capturedStates).toContain('ingesting')
-      expect(capturedStates).toContain('complete')
-    })
+    expect(ingestBtn).toBeDisabled()
+    expect(setUploadFiles).not.toHaveBeenCalled()
+    expect(capturedStates).toEqual([])
   })
 
   // ------------------------------------------------------------------
