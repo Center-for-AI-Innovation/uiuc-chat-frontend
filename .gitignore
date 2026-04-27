@@ -51,5 +51,8 @@ tests_output/
 # IDE
 .idea
 
+# Cursor workspace files
+*.code-workspace
+
 # create a drafts directory to store draft code/docs for later use
 drafts/
