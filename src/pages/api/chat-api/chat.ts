@@ -195,7 +195,6 @@ export default async function chat(
   }
 
   // Fetch document groups
-  // We can fetch custom doc groups here instead, but for now we'll just use the default
   const doc_groups = documentGroups || ['All Documents']
 
   const controller = new AbortController()
