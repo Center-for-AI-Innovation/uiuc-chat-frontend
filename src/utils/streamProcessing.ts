@@ -374,6 +374,19 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
   }
 
   if (
+    body.documentGroups &&
+    (!Array.isArray(body.documentGroups) ||
+      body.documentGroups.length === 0 ||
+      body.documentGroups.some(
+        (group) => typeof group !== 'string' || group.trim() === '',
+      ))
+  ) {
+    throw new Error(
+      'Invalid or empty document groups provided. Document groups must be a list of non-empty strings.',
+    )
+  }
+
+  if (
     body.temperature &&
     (typeof body.temperature !== 'number' ||
       body.temperature < 0 ||

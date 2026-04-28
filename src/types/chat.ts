@@ -219,7 +219,10 @@ export interface ChatApiBody {
   temperature?: number
   course_name: string
   stream?: boolean
+  retrieval_only?: boolean
+  conversation_id?: string
   api_key: string
+  documentGroups?: string[]
 }
 
 export interface Action {
