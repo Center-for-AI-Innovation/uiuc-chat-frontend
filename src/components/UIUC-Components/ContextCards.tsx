@@ -88,15 +88,35 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
   const [presignedUrlPng, setPresignedUrlPng] = useState<string | null>(null)
 
   useEffect(() => {
+    const courseName =
+      context.course_name ||
+      (context as ContextWithMetadata & { 'course_name '?: string })[
+        'course_name '
+      ] ||
+      ''
+
     if (context.url != '' && context.url != null) {
       setPresignedUrl(context.url)
     } else if (context.s3_path) {
       const effectivePageNumber = getEffectivePageNumber(context)
-      fetchPresignedUrl(context.s3_path).then((url) => {
-        setPresignedUrl(
-          url + (effectivePageNumber ? `#page=${effectivePageNumber}` : ''),
+      if (!courseName) {
+        console.warn(
+          'ContextCards: cannot presign without course_name',
+          context.readable_filename,
         )
-      })
+      } else {
+        fetchPresignedUrl(
+          context.s3_path,
+          courseName,
+          undefined,
+          context.readable_filename,
+        ).then((url) => {
+          setPresignedUrl(
+            (url || '') +
+              (effectivePageNumber ? `#page=${effectivePageNumber}` : ''),
+          )
+        })
+      }
     }
 
     // ONLY PDFs have thumbnail images
@@ -105,9 +125,13 @@ function DynamicMaterialsCard(context: ContextWithMetadata) {
         '.pdf',
         '-pg1-thumb.png',
       )
-      fetchPresignedUrl(s3_thumbnail_path).then((url) => {
-        setPresignedUrlPng(url)
-      })
+      if (courseName) {
+        fetchPresignedUrl(s3_thumbnail_path, courseName).then((url) => {
+          setPresignedUrlPng(url)
+        })
+      } else {
+        setPresignedUrlPng(null)
+      }
     } else {
       // No thumbnail for non-PDFs
       setPresignedUrlPng(null)
