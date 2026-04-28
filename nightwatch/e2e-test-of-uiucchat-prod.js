@@ -15,6 +15,9 @@ describe('test-ece-2', function () {
   it('tests test-ece-2', function (browser) {
     browser.timeouts('implicit', 10000)
 
+    const responseSelector =
+      'div.bg-\\[--chat-background\\] div.linkMarkDown > p'
+
     browser
       .windowRect({ width: 955, height: 1045 })
       .navigateTo('https://www.uiuc.chat/ece120/chat')
@@ -32,26 +35,18 @@ describe('test-ece-2', function () {
         return actions.keyUp(this.Keys.ENTER)
       })
       // Add waitForElementVisible before clicking
-      .waitForElementVisible(
-        'div.bg-gray-50\\/50 div.dark\\:prose-invert > div > div.w-full > div',
-        15000,
-      )
-      .click(
-        'div.bg-gray-50\\/50 div.dark\\:prose-invert > div > div.w-full > div',
-      )
+      .waitForElementVisible(responseSelector, 15000)
+      .click(responseSelector)
       .pause(5000)
-      .getText(
-        'div.bg-gray-50\\/50 div.dark\\:prose-invert > div > div.w-full > div',
-        function (result) {
-          console.log('Text content:', result.value)
-          // this.assert.ok(result.value.length > 0, 'Response text should not be empty');
-          const responseText = String(result.value)
-          this.assert.ok(
-            responseText.length > 0,
-            'Response text should not be empty',
-          )
-        },
-      )
+      .getText(responseSelector, function (result) {
+        console.log('Text content:', result.value)
+        // this.assert.ok(result.value.length > 0, 'Response text should not be empty');
+        const responseText = String(result.value)
+        this.assert.ok(
+          responseText.length > 0,
+          'Response text should not be empty',
+        )
+      })
       .end()
   })
 })
