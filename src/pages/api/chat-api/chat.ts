@@ -1,6 +1,7 @@
 // src/pages/api/chat-api/chat.ts
 
 import {
+  type ChatApiBody,
   type ChatBody,
   type Content,
   type Conversation,
@@ -65,7 +66,7 @@ export default async function chat(
   }
 
   // Parse and validate the request body
-  const body = req.body
+  const body: ChatApiBody = req.body
   try {
     await validateRequestBody(body)
   } catch (error: any) {
@@ -88,21 +89,12 @@ export default async function chat(
     messages,
     temperature,
     course_name,
-    stream,
+    stream = true,
     api_key,
     retrieval_only,
     conversation_id,
-  }: {
-    model: string
-    messages: Message[]
-    openai_key: string
-    temperature: number
-    course_name: string
-    stream: boolean
-    api_key: string
-    retrieval_only: boolean
-    conversation_id?: string
-  } = body
+    documentGroups,
+  }: ChatApiBody = body
 
   // Validate the API key and retrieve user data
   const {
@@ -204,7 +196,7 @@ export default async function chat(
 
   // Fetch document groups
   // We can fetch custom doc groups here instead, but for now we'll just use the default
-  const doc_groups = ['All Documents']
+  const doc_groups = documentGroups || ['All Documents']
 
   const controller = new AbortController()
   // Construct the search query
