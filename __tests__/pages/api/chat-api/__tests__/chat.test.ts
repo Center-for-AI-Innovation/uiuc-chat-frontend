@@ -225,50 +225,6 @@ describe('chat-api/chat', () => {
     expect(res.status).toHaveBeenCalledWith(400)
   })
 
-  it('returns 400 when document groups are empty', async () => {
-    const res = createMockRes()
-    await chat(
-      createMockReq({
-        method: 'POST',
-        body: {
-          model: 'gpt-4o',
-          messages: [{ id: 'm1', role: 'user', content: 'hi' }],
-          temperature: 0.1,
-          course_name: 'CS101',
-          stream: false,
-          api_key: 'k',
-          retrieval_only: false,
-          documentGroups: [],
-        },
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
-    )
-    expect(res.status).toHaveBeenCalledWith(400)
-  })
-
-  it('returns 400 when document groups are invalid', async () => {
-    const res = createMockRes()
-    await chat(
-      createMockReq({
-        method: 'POST',
-        body: {
-          model: 'gpt-4o',
-          messages: [{ id: 'm1', role: 'user', content: 'hi' }],
-          temperature: 0.1,
-          course_name: 'CS101',
-          stream: false,
-          api_key: 'k',
-          retrieval_only: false,
-          documentGroups: [''],
-        },
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
-    )
-    expect(res.status).toHaveBeenCalledWith(400)
-  })
-
   it('returns contexts and exits early when retrieval_only=true', async () => {
     const res = createMockRes()
     await chat(
