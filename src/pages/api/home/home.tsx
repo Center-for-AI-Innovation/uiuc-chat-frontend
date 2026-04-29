@@ -30,15 +30,11 @@ import { useFetchLastConversation } from '~/hooks/queries/useFetchLastConversati
 import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
 import { useCreateFolder } from '~/hooks/queries/useCreateFolder'
 import { useDeleteFolder } from '~/hooks/queries/useDeleteFolder'
-import { useFetchFolders } from '~/hooks/queries/useFetchFolders'
 import { useUpdateFolder } from '~/hooks/queries/useUpdateFolder'
 import { saveConversationToLocalStorage } from '~/hooks/__internal__/conversation'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
-import {
-  selectBestModel,
-  VisionCapableModels,
-} from '~/utils/modelProviders/LLMProvider'
+import { selectBestModel } from '~/utils/modelProviders/LLMProvider'
 
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 

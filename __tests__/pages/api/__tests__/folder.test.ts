@@ -110,6 +110,7 @@ describe('folder API', () => {
       createMockReq({
         method: 'GET',
         user: { email: 'u@example.com' },
+        query: { courseName: 'TEST101', searchTerm: '' },
       }) as any,
       res as any,
     )

@@ -5,7 +5,7 @@ import { createHeaders } from '~/utils/httpHeaders'
 
 export async function fetchFolders(
   course_name: string,
-  searchTerm: string,
+  searchTerm?: string,
   userEmail?: string,
 ): Promise<FolderWithConversation[]> {
   let fetchedFolders = []
