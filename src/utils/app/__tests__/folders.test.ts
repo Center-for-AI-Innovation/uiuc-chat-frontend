@@ -19,18 +19,18 @@ describe('folder API helpers', () => {
       new Response('oops', { status: 500 }),
     )
 
-    await expect(fetchFolders('TEST101', 'user@example.com')).resolves.toEqual(
-      [],
-    )
+    await expect(
+      fetchFolders('TEST101', '', 'user@example.com'),
+    ).resolves.toEqual([])
   })
 
   it('fetchFolders returns [] when fetch throws', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new Error('boom'))
 
-    await expect(fetchFolders('TEST101', 'user@example.com')).resolves.toEqual(
-      [],
-    )
+    await expect(
+      fetchFolders('TEST101', '', 'user@example.com'),
+    ).resolves.toEqual([])
     expect(errSpy).toHaveBeenCalled()
   })
 
@@ -42,9 +42,9 @@ describe('folder API helpers', () => {
       }),
     )
 
-    await expect(fetchFolders('TEST101', 'user@example.com')).resolves.toEqual([
-      folder,
-    ])
+    await expect(
+      fetchFolders('TEST101', '', 'user@example.com'),
+    ).resolves.toEqual([folder])
   })
 
   it('saveFolderToServer posts folder payload', async () => {
