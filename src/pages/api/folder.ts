@@ -1,11 +1,11 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { db, folders } from '~/db/dbClient'
+import { db, folders, conversations, messages } from '~/db/dbClient'
 import { type FolderWithConversation } from '@/types/folder'
 import { type Database } from 'database.types'
 import { convertDBToChatConversation } from './conversation'
 import { type NewFolders } from '~/db/schema'
-import { eq, desc, and } from 'drizzle-orm'
+import { eq, desc, and, or, ilike, inArray } from 'drizzle-orm'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import { getUserIdentifier } from '~/pages/api/_utils/userIdentifier'
 
@@ -89,12 +89,77 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
     case 'GET':
       try {
+        const courseName = req.query.courseName as string
+
+        if (!courseName) {
+          return []
+        }
+
+        const searchTerm = req.query.searchTerm as string
+        const searchPattern =
+          searchTerm && searchTerm.trim() !== '' ? `%${searchTerm}%` : undefined
         // Query folders and their related conversations and messages using DrizzleORM
+
+        // conversations matching by name or message content
+        const matchingConversationIds = db
+          .selectDistinct({
+            id: conversations.id,
+          })
+          .from(conversations)
+          .leftJoin(messages, eq(messages.conversation_id, conversations.id))
+          .where(
+            or(
+              ilike(conversations.name, searchPattern!),
+              ilike(messages.content_text, searchPattern!),
+            ),
+          )
+
+        // folders matching by folder name
+        const matchingFolderIds = db
+          .select({
+            id: folders.id,
+          })
+          .from(folders)
+          .where(ilike(folders.name, searchPattern!))
+
         const fetchedFolders = await db.query.folders.findMany({
-          where: eq(folders.user_email, userIdentifier),
+          where: and(
+            eq(folders.user_email, userIdentifier),
+            searchPattern
+              ? or(
+                  // folder matched directly
+                  inArray(folders.id, matchingFolderIds),
+
+                  // folder has matching conversations
+                  inArray(
+                    folders.id,
+                    db
+                      .select({
+                        id: conversations.folder_id,
+                      })
+                      .from(conversations)
+                      .where(
+                        inArray(conversations.id, matchingConversationIds),
+                      ),
+                  ),
+                )
+              : undefined,
+          ),
           orderBy: desc(folders.created_at),
           with: {
             conversations: {
+              where: and(
+                eq(conversations.project_name, courseName),
+                searchPattern
+                  ? or(
+                      // if folder matched -> include all conversations
+                      inArray(conversations.folder_id, matchingFolderIds),
+
+                      // otherwise only matching conversations
+                      inArray(conversations.id, matchingConversationIds),
+                    )
+                  : undefined,
+              ),
               with: {
                 messages: {
                   columns: {
@@ -135,19 +200,21 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         })
 
         // Convert the fetched data to match the expected format
-        const formattedFolders = fetchedFolders.map((folder) => {
-          const conversations = folder.conversations || []
-          // Convert Date objects to ISO strings before passing to convertDBFolderToChatFolder
-          const folderWithStringDates = {
-            ...folder,
-            created_at: folder.created_at.toISOString(),
-            updated_at: folder.updated_at?.toISOString() || null,
-          }
-          return convertDBFolderToChatFolder(
-            folderWithStringDates,
-            conversations,
-          )
-        })
+        const formattedFolders = fetchedFolders
+          .filter((folder) => !!folder.conversations?.length)
+          .map((folder) => {
+            const conversations = folder.conversations || []
+            // Convert Date objects to ISO strings before passing to convertDBFolderToChatFolder
+            const folderWithStringDates = {
+              ...folder,
+              created_at: folder.created_at.toISOString(),
+              updated_at: folder.updated_at?.toISOString() || null,
+            }
+            return convertDBFolderToChatFolder(
+              folderWithStringDates,
+              conversations,
+            )
+          })
 
         res.status(200).json(formattedFolders)
       } catch (error) {

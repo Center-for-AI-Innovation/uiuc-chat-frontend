@@ -91,12 +91,6 @@ const Home = ({
     course_name,
   )
 
-  const {
-    data: foldersData,
-    isFetched: isFoldersFetched,
-    isLoading: isLoadingFolders,
-  } = useFetchFolders(current_email as string, course_name as string)
-
   // fetch last conversation to get the temperature
   const {
     data: lastConversation,
@@ -227,14 +221,6 @@ const Home = ({
     setOpenaiModel()
     setIsLoading(false)
   }, [course_metadata, apiKey])
-
-  useEffect(() => {
-    if (isFoldersFetched && !isLoadingFolders) {
-      // console.log('foldersData: ', foldersData)
-      dispatch({ field: 'folders', value: foldersData })
-      // localStorage.setItem('folders', JSON.stringify(foldersData))
-    }
-  }, [foldersData])
 
   // FOLDER OPERATIONS  --------------------------------------------
   const handleCreateFolder = (name: string, type: FolderType) => {
