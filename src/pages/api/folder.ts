@@ -90,11 +90,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     case 'GET':
       try {
         const courseName = req.query.courseName as string
-
-        if (!courseName) {
-          return []
-        }
-
         const searchTerm = req.query.searchTerm as string
         const searchPattern =
           searchTerm && searchTerm.trim() !== '' ? `%${searchTerm}%` : undefined
