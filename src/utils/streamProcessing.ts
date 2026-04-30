@@ -373,18 +373,18 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
     )
   }
 
-  if (
-    body.doc_groups &&
-    (!Array.isArray(body.doc_groups) ||
-      body.doc_groups.length === 0 ||
-      body.doc_groups.some(
-        (group) => typeof group !== 'string' || group.trim() === '',
-      ))
-  ) {
-    throw new Error(
-      'Invalid or empty document groups provided. Document groups must be a list of non-empty strings.',
-    )
-  }
+  // if (
+  //   body.doc_groups &&
+  //   (!Array.isArray(body.doc_groups) ||
+  //     body.doc_groups.length === 0 ||
+  //     body.doc_groups.some(
+  //       (group) => typeof group !== 'string' || group.trim() === '',
+  //     ))
+  // ) {
+  //   throw new Error(
+  //     'Invalid or empty document groups provided. Document groups must be a list of non-empty strings.',
+  //   )
+  // }
 
   if (
     body.temperature &&
