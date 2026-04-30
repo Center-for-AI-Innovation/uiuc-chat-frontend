@@ -354,9 +354,9 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
   )
   if (!apiSupportedModels.some((model) => model.id === body.model)) {
     throw new Error(
-      `Invalid model provided '${body.model}'. Is not one of our supported models: ${Array.from(
-        apiSupportedModels,
-      )
+      `Invalid model provided '${
+        body.model
+      }'. Is not one of our supported models: ${Array.from(apiSupportedModels)
         .map((model) => model.id)
         .join(', ')}`,
     )
@@ -372,25 +372,6 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
       'Invalid or empty messages provided. Messages must contain at least one user message.',
     )
   }
-
-  // //@ts-ignore - TypeScript is being difficult to narrow the type of content here, but the runtime check ensures it's correct
-  // if (
-  //   //@ts-ignore - TypeScript is being difficult to narrow the type of content here, but the runtime check ensures it's correct
-  //   body.doc_groups &&
-  //   //@ts-ignore - TypeScript is being difficult to narrow the type of content here, but the runtime check ensures it's correct
-  //   (!Array.isArray(body.doc_groups) ||
-  //     //@ts-ignore - TypeScript is being difficult to narrow the type of content here, but the runtime check ensures it's correct
-  //     body.doc_groups.length === 0 ||
-  //     //@ts-ignore - TypeScript is being difficult to narrow the type of content here, but the runtime check ensures it's correct
-  //     body.doc_groups.some(
-  //       //@ts-ignore - TypeScript is being difficult to narrow the type of content here, but the runtime check ensures it's correct
-  //       (group) => typeof group !== 'string' || group.trim() === '',
-  //     ))
-  // ) {
-  //   throw new Error(
-  //     'Invalid or empty document groups provided. Document groups must be a list of non-empty strings.',
-  //   )
-  // }
 
   if (
     body.temperature &&
@@ -418,7 +399,24 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
   )
   if (hasImageContent && !VisionCapableModels.has(body.model as any)) {
     throw new Error(
-      `The selected model '${body.model}' does not support vision capabilities. Use one of these: ${Array.from(VisionCapableModels).join(', ')}`,
+      `The selected model '${
+        body.model
+      }' does not support vision capabilities. Use one of these: ${Array.from(
+        VisionCapableModels,
+      ).join(', ')}`,
+    )
+  }
+
+  if (
+    body.doc_groups !== undefined &&
+    (!Array.isArray(body.doc_groups) ||
+      body.doc_groups.length === 0 ||
+      body.doc_groups.some(
+        (group) => typeof group !== 'string' || group.trim() === '',
+      ))
+  ) {
+    throw new Error(
+      'Invalid or empty document groups provided. Document groups must be a list of non-empty strings.',
     )
   }
 
