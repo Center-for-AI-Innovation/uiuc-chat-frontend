@@ -328,9 +328,9 @@ describe('chat-api/chat', () => {
           api_key: 'k',
           retrieval_only: false,
         },
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
     )
     expect(hoisted.handleStreamingResponse).toHaveBeenCalled()
   })
@@ -350,9 +350,9 @@ describe('chat-api/chat', () => {
           api_key: 'k',
           retrieval_only: false,
         },
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
     )
     expect(hoisted.handleContextSearch).toHaveBeenCalledWith(
       expect.any(Object),
