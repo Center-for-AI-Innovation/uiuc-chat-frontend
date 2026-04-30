@@ -220,8 +220,6 @@ export interface ChatApiBody {
   course_name: string
   stream?: boolean
   api_key: string
-  retrieval_only?: boolean
-  conversation_id?: string
   doc_groups?: string[]
 }
 

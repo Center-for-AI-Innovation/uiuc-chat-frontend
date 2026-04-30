@@ -1,7 +1,6 @@
 // src/pages/api/chat-api/chat.ts
 
 import {
-  type ChatApiBody,
   type ChatBody,
   type Content,
   type Conversation,
@@ -66,7 +65,7 @@ export default async function chat(
   }
 
   // Parse and validate the request body
-  const body: ChatApiBody = req.body
+  const body = req.body
   try {
     await validateRequestBody(body)
   } catch (error: any) {
@@ -94,7 +93,18 @@ export default async function chat(
     retrieval_only,
     conversation_id,
     doc_groups: requestedDocGroups,
-  }: ChatApiBody = body
+  }: {
+    model: string
+    messages: Message[]
+    openai_key: string
+    temperature: number
+    course_name: string
+    stream: boolean
+    api_key: string
+    retrieval_only: boolean
+    conversation_id?: string
+    doc_groups?: string[]
+  } = body
 
   // Validate the API key and retrieve user data
   const {
@@ -328,7 +338,7 @@ export default async function chat(
     conversation: updatedConversation,
     key: llmProviders[ProviderNames.OpenAI]?.apiKey as string,
     course_name,
-    stream: stream || false,
+    stream,
     courseMetadata,
     llmProviders,
     mode: 'chat',
