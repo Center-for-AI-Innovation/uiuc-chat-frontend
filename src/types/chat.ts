@@ -220,6 +220,7 @@ export interface ChatApiBody {
   course_name: string
   stream?: boolean
   api_key: string
+  doc_groups?: string[]
 }
 
 export interface Action {
