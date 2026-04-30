@@ -11,6 +11,7 @@ export interface CourseDocument {
 }
 
 export interface DocumentGroup {
+  id?: number
   name: string
   enabled: boolean
   course_name: string

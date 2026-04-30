@@ -226,4 +226,6 @@ export interface Action {
   id: string
   name: string
   checked: boolean
+  /** Project admin disabled this doc group; user cannot enable it for retrieval */
+  adminDisabled?: boolean
 }

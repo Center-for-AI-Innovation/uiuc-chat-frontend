@@ -110,6 +110,7 @@ vi.mock('~/utils/streamProcessing', async (importOriginal) => {
       searchQuery: 'describe image',
       imgDesc: 'an image',
     })),
+    handleContextSearch: vi.fn(async () => []),
   }
 })
 
@@ -1757,6 +1758,61 @@ describe('Chat component', () => {
           arg?.field === 'isRetrievalLoading' && arg?.value === true,
       )
       expect(retrievalCalls.length).toBe(0)
+    })
+
+    it('uses checked document groups for retrieval instead of stale all-documents state', async () => {
+      const user = userEvent.setup()
+      setupStreamHandler()
+      const { handleContextSearch } = await import('~/utils/streamProcessing')
+      ;(handleContextSearch as any).mockClear()
+
+      const conversation = makeConversation({
+        id: 'conv-1',
+        messages: [makeMessage({ id: 'u1', role: 'user', content: 'Hi' })],
+        model: defaultModel,
+      })
+
+      const { Chat } = await import('../Chat')
+
+      renderWithProviders(
+        <Chat
+          stopConversationRef={{ current: false }}
+          courseMetadata={baseCourseMetadata}
+          courseName="CS101"
+          currentEmail="me@example.com"
+          documentExists={true}
+        />,
+        {
+          homeState: {
+            selectedConversation: conversation as any,
+            conversations: [conversation as any],
+            loading: false,
+            messageIsStreaming: false,
+            llmProviders: defaultLLMProviders,
+            apiKey: 'test-key',
+            documentGroups: [
+              { id: 'DocGroup-all', name: 'All Documents', checked: false },
+              { id: 'DocGroup-1', name: 'Group A', checked: true },
+            ],
+          },
+          homeContext: {
+            dispatch: vi.fn(),
+            handleUpdateConversation: vi.fn(),
+            handleFeedbackUpdate: vi.fn(),
+          },
+        },
+      )
+
+      await user.click(screen.getByRole('button', { name: /^send$/i }))
+      await waitFor(() =>
+        expect(handleContextSearch).toHaveBeenCalledWith(
+          expect.any(Object),
+          'CS101',
+          expect.any(Object),
+          expect.any(String),
+          ['Group A'],
+        ),
+      )
     })
   })
 
