@@ -195,7 +195,14 @@ export default async function chat(
   }
 
   // Preserve caller-provided groups; default to all-documents only when absent.
-  const doc_groups = requestedDocGroups || ['All Documents']
+  let doc_groups = Array.isArray(requestedDocGroups)
+    ? requestedDocGroups.filter(
+        (group) => typeof group === 'string' && group.trim() !== '',
+      )
+    : []
+  if (doc_groups.length === 0) {
+    doc_groups = ['All Documents']
+  }
 
   const controller = new AbortController()
   // Construct the search query

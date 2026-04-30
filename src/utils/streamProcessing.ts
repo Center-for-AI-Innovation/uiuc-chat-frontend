@@ -407,12 +407,6 @@ export async function validateRequestBody(body: ChatApiBody): Promise<void> {
     )
   }
 
-  if (body.doc_groups !== undefined) {
-    throw new Error(
-      'Invalid or empty document groups provided. Document groups must be a list of non-empty strings.',
-    )
-  }
-
   // Additional validation for other fields can be added here if needed
 }
 
