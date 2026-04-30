@@ -1,5 +1,13 @@
 import React from 'react'
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import {
+  describe,
+  expect,
+  it,
+  vi,
+  beforeEach,
+  afterEach,
+  type Mock,
+} from 'vitest'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -1754,7 +1762,7 @@ describe('Chat component', () => {
       )
       // Should NOT dispatch isRetrievalLoading
       const retrievalCalls = dispatch.mock.calls.filter(
-        ([arg]: any) =>
+        ([arg]: [{ field?: string; value?: boolean }]) =>
           arg?.field === 'isRetrievalLoading' && arg?.value === true,
       )
       expect(retrievalCalls.length).toBe(0)
@@ -1764,7 +1772,7 @@ describe('Chat component', () => {
       const user = userEvent.setup()
       setupStreamHandler()
       const { handleContextSearch } = await import('~/utils/streamProcessing')
-      ;(handleContextSearch as any).mockClear()
+      ;(handleContextSearch as Mock).mockClear()
 
       const conversation = makeConversation({
         id: 'conv-1',
@@ -1784,8 +1792,8 @@ describe('Chat component', () => {
         />,
         {
           homeState: {
-            selectedConversation: conversation as any,
-            conversations: [conversation as any],
+            selectedConversation: conversation,
+            conversations: [conversation],
             loading: false,
             messageIsStreaming: false,
             llmProviders: defaultLLMProviders,

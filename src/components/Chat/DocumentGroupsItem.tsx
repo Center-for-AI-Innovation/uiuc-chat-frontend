@@ -49,11 +49,6 @@ export const DocumentGroupsItem = ({}) => {
     })
   }
 
-  const hasAdminDisabledGroups = useMemo(
-    () => documentGroups.some((g) => g.adminDisabled),
-    [documentGroups],
-  )
-
   return (
     <>
       <div

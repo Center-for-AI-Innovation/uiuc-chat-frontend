@@ -89,9 +89,9 @@ describe('chat-api/chat', () => {
     await chat(
       createMockReq({
         method: 'GET',
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
     )
     expect(res.status).toHaveBeenCalledWith(405)
   })
@@ -151,9 +151,9 @@ describe('chat-api/chat', () => {
           api_key: 'k',
           retrieval_only: false,
         },
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
     )
     expect(res.status).toHaveBeenCalledWith(404)
   })
@@ -379,9 +379,9 @@ describe('chat-api/chat', () => {
           retrieval_only: false,
           doc_groups: ['Group A'],
         },
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
     )
     expect(hoisted.handleContextSearch).toHaveBeenCalledWith(
       expect.any(Object),
