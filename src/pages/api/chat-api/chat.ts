@@ -337,6 +337,8 @@ export default async function chat(
     )
   }
 
+  console.log('Final conversation object before sending to model')
+
   const chatBody: ChatBody = {
     conversation: updatedConversation,
     key: llmProviders[ProviderNames.OpenAI]?.apiKey as string,
