@@ -71,8 +71,6 @@ vi.mock('~/pages/api/conversation', () => ({
 }))
 
 import handler from '~/pages/api/folder'
-import conversation from '~/pages/api/conversation'
-import { or } from 'drizzle-orm'
 
 describe('folder API', () => {
   it('returns 400 when no user identifier is present', async () => {
@@ -138,7 +136,7 @@ describe('folder API', () => {
       createMockReq({
         method: 'GET',
         user: { email: 'u@example.com' },
-        query: { courseName: 'TEST101', searchTerm: '' },
+        query: { courseName: 'TEST101' },
       }) as any,
       res as any,
     )

@@ -204,12 +204,19 @@ describe('Chatbar', () => {
       .spyOn(window.URL, 'revokeObjectURL')
       .mockImplementation(() => {})
 
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(new Blob(['zip-content']), {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: any) => {
+      const url = String(input?.url ?? input)
+      if (url.includes('/api/UIUC-api/downloadConvoHistoryUser')) {
+        return new Response(new Blob(['zip-content']), {
+          status: 200,
+          headers: { 'content-type': 'application/zip' },
+        })
+      }
+      return new Response(JSON.stringify({}), {
         status: 200,
-        headers: { 'content-type': 'application/zip' },
-      }),
-    )
+        headers: { 'content-type': 'application/json' },
+      })
+    })
 
     renderWithProviders(
       <Chatbar
