@@ -195,21 +195,19 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
         })
 
         // Convert the fetched data to match the expected format
-        const formattedFolders = fetchedFolders
-          .filter((folder) => !!folder.conversations?.length)
-          .map((folder) => {
-            const conversations = folder.conversations || []
-            // Convert Date objects to ISO strings before passing to convertDBFolderToChatFolder
-            const folderWithStringDates = {
-              ...folder,
-              created_at: folder.created_at.toISOString(),
-              updated_at: folder.updated_at?.toISOString() || null,
-            }
-            return convertDBFolderToChatFolder(
-              folderWithStringDates,
-              conversations,
-            )
-          })
+        const formattedFolders = fetchedFolders.map((folder) => {
+          const conversations = folder.conversations || []
+          // Convert Date objects to ISO strings before passing to convertDBFolderToChatFolder
+          const folderWithStringDates = {
+            ...folder,
+            created_at: folder.created_at.toISOString(),
+            updated_at: folder.updated_at?.toISOString() || null,
+          }
+          return convertDBFolderToChatFolder(
+            folderWithStringDates,
+            conversations,
+          )
+        })
 
         res.status(200).json(formattedFolders)
       } catch (error) {
