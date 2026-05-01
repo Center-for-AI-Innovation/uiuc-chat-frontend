@@ -30,15 +30,11 @@ import { useFetchLastConversation } from '~/hooks/queries/useFetchLastConversati
 import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
 import { useCreateFolder } from '~/hooks/queries/useCreateFolder'
 import { useDeleteFolder } from '~/hooks/queries/useDeleteFolder'
-import { useFetchFolders } from '~/hooks/queries/useFetchFolders'
 import { useUpdateFolder } from '~/hooks/queries/useUpdateFolder'
 import { saveConversationToLocalStorage } from '~/hooks/__internal__/conversation'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
-import {
-  selectBestModel,
-  VisionCapableModels,
-} from '~/utils/modelProviders/LLMProvider'
+import { selectBestModel } from '~/utils/modelProviders/LLMProvider'
 
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
@@ -90,12 +86,6 @@ const Home = ({
     queryClient,
     course_name,
   )
-
-  const {
-    data: foldersData,
-    isFetched: isFoldersFetched,
-    isLoading: isLoadingFolders,
-  } = useFetchFolders(current_email as string, course_name as string)
 
   // fetch last conversation to get the temperature
   const {
@@ -227,14 +217,6 @@ const Home = ({
     setOpenaiModel()
     setIsLoading(false)
   }, [course_metadata, apiKey])
-
-  useEffect(() => {
-    if (isFoldersFetched && !isLoadingFolders) {
-      // console.log('foldersData: ', foldersData)
-      dispatch({ field: 'folders', value: foldersData })
-      // localStorage.setItem('folders', JSON.stringify(foldersData))
-    }
-  }, [foldersData])
 
   // FOLDER OPERATIONS  --------------------------------------------
   const handleCreateFolder = (name: string, type: FolderType) => {
