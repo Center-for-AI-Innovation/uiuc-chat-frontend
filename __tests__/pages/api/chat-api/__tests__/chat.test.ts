@@ -11,6 +11,7 @@ const hoisted = vi.hoisted(() => ({
     isValidApiKey: true,
     authContext: { user: { profile: { email: 'u@example.com' } } },
   })),
+  checkRateLimitMiddleware: vi.fn(),
   fetchCourseMetadataServer: vi.fn(async () => ({ is_private: true })),
   determineAndValidateModelServer: vi.fn(async () => ({
     activeModel: { id: 'gpt-4o', name: 'm', tokenLimit: 1, enabled: true },
@@ -42,6 +43,9 @@ const hoisted = vi.hoisted(() => ({
   getBaseUrl: vi.fn(() => 'http://localhost'),
 }))
 
+vi.mock('~/pages/api/chat-api/util/rateLimiting', () => ({
+  checkRateLimitMiddleware: hoisted.checkRateLimitMiddleware,
+}))
 vi.mock('~/pages/api/chat-api/util/fetchCourseMetadataServer', () => ({
   default: hoisted.fetchCourseMetadataServer,
 }))
@@ -134,6 +138,33 @@ describe('chat-api/chat', () => {
       res as any,
     )
     expect(res.status).toHaveBeenCalledWith(403)
+  })
+
+  it('returns 429 and captures event when rate limit is exceeded', async () => {
+    hoisted.checkRateLimitMiddleware.mockResolvedValueOnce(true)
+
+    const res = createMockRes()
+    const req = createMockReq({
+      method: 'POST',
+      body: {
+        model: 'gpt-4o',
+        messages: [{ id: 'm1', role: 'user', content: 'hi' }],
+        temperature: 0.1,
+        course_name: 'CS101',
+        stream: false,
+        api_key: 'k',
+        retrieval_only: false,
+      },
+      socket: { remoteAddress: '127.0.0.1' } as any,
+    })
+
+    await chat(req as any, res as any)
+
+    expect(res.status).toHaveBeenCalledWith(429)
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Too Many Requests',
+    })
+    expect(hoisted.routeModelRequest).not.toHaveBeenCalled()
   })
 
   it('returns 404 when course metadata is missing', async () => {

@@ -39,6 +39,7 @@ import {
 } from '~/utils/modelProviders/LLMProvider'
 import { buildPrompt } from '~/app/utils/buildPromptUtils'
 import { type AuthContextProps } from 'react-oidc-context'
+import { checkRateLimitMiddleware } from './util/rateLimiting'
 
 /**
  * The chat API endpoint for handling chat requests and streaming/non streaming responses.
@@ -122,6 +123,18 @@ export default async function chat(
       user_id: email,
     })
     res.status(403).json({ error: 'Invalid API key' })
+    return
+  }
+
+  if (await checkRateLimitMiddleware(api_key, res)) {
+    posthog.capture('stream_api_rate_limit_exceeded_api_key', {
+      distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      api_key: api_key,
+      user_id: email,
+    })
+    res.status(429).json({
+      error: 'Too Many Requests',
+    })
     return
   }
 
