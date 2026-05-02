@@ -126,10 +126,7 @@ export default async function chat(
     return
   }
 
-  if (
-    process.env.NODE_ENV === 'production' &&
-    (await checkRateLimitMiddleware(api_key, res))
-  ) {
+  if (await checkRateLimitMiddleware(api_key, res)) {
     posthog.capture('stream_api_rate_limit_exceeded_api_key', {
       distinct_id: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       api_key: api_key,

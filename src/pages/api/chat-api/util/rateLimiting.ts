@@ -29,7 +29,7 @@ export async function checkRateLimitMiddleware(
 
     const results = await txn.exec()
     const requestCount = results[1] as number
-    const remaining = Math.max(0, MAX_REQUESTS - requestCount)
+    const remaining = Math.max(0, MAX_REQUESTS - (requestCount + 1))
 
     res.setHeader('X-RateLimit-Limit', MAX_REQUESTS.toString())
     res.setHeader('X-RateLimit-Remaining', remaining.toString())
