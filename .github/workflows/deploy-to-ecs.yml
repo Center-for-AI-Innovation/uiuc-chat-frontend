@@ -3,6 +3,7 @@ name: Deploy Frontend to AWS ECS Fargate
 on:
   push:
     branches:
+      - restore-qdrant-endpoints
       - illinois-chat
       - main
     paths:
