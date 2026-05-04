@@ -4,6 +4,7 @@ import {
   type LLMProvider,
   type ProviderNames,
 } from '@/utils/modelProviders/LLMProvider'
+import { type ChatbotTag } from '~/types/chatbotTags'
 
 // courseMetadata.ts
 export interface CourseMetadata {
@@ -25,6 +26,7 @@ export interface CourseMetadata {
   agent_mode_enabled?: boolean
   allow_logged_in_users: boolean | undefined
   is_frozen: boolean | undefined
+  tags?: ChatbotTag[]
 }
 
 export type ProjectWideLLMProviders = {
@@ -54,4 +56,5 @@ export interface CourseMetadataOptionalForUpsert {
   agent_mode_enabled?: boolean
   allow_logged_in_users: boolean | undefined
   is_frozen: boolean | undefined
+  tags?: ChatbotTag[]
 }

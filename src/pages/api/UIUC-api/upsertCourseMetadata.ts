@@ -1,4 +1,5 @@
 // upsertCourseMetadata.ts
+import { sanitizeChatbotTags } from '~/types/chatbotTags'
 import { type CourseMetadataOptionalForUpsert } from '~/types/courseMetadata'
 import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
@@ -25,6 +26,11 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
     // Combine the existing metadata with the new metadata, prioritizing the new values (order matters!)
     const combined_metadata = { ...existing_metadata, ...courseMetadata }
+
+    // Validate tags: cap length, drop malformed entries, dedupe.
+    if (combined_metadata.tags !== undefined) {
+      combined_metadata.tags = sanitizeChatbotTags(combined_metadata.tags)
+    }
 
     // Check if combined_metadata doesn't have anything in the field course_admins
     if (
