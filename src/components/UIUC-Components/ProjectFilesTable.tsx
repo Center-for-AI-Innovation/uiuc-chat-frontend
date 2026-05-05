@@ -1237,6 +1237,9 @@ export function ProjectFilesTable({
                         if (!materials.url && materials.s3_path) {
                           const presignedUrl = await fetchPresignedUrl(
                             materials.s3_path,
+                            course_name,
+                            undefined,
+                            materials.readable_filename,
                           )
                           urlToOpen = presignedUrl
                         }

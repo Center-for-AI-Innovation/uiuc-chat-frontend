@@ -39,6 +39,7 @@ describe('ContextCards', () => {
               pagenumber: '2',
               pagenumber_or_timestamp: '',
               s3_path: 'cs101/lecture1.pdf',
+              course_name: 'cs101',
               url: '',
               text: 'snippet',
             } as any,
