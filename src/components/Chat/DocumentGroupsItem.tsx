@@ -1,7 +1,7 @@
-import { Switch, Table, TextInput, Title, Text } from '@mantine/core'
+import { Switch, Table, TextInput, Title, Text, Tooltip } from '@mantine/core'
 import { IconSearch } from '@tabler/icons-react'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useMemo, useState } from 'react'
 import HomeContext from '~/pages/api/home/home.context'
 import { useMediaQuery } from '@mantine/hooks'
 
@@ -35,7 +35,10 @@ export const DocumentGroupsItem = ({}) => {
   }
 
   const handleToggleChecked = (id: string) => {
-    // handleUpdateActions(id)
+    const target = documentGroups.find((docGroup) => docGroup.id === id)
+    if (target?.adminDisabled) {
+      return
+    }
     homeDispatch({
       field: 'documentGroups',
       value: documentGroups.map((docGroup) =>
@@ -45,11 +48,6 @@ export const DocumentGroupsItem = ({}) => {
       ),
     })
   }
-
-  // For testing purposes
-  // useEffect(() => {
-  //   console.log('Document groups updated: ', documentGroups)
-  // }, [documentGroups])
 
   return (
     <>
@@ -133,7 +131,12 @@ export const DocumentGroupsItem = ({}) => {
               </thead>
               <tbody>
                 {filteredDocumentGroups.map((doc_group_obj, index) => (
-                  <tr key={index}>
+                  <tr
+                    key={doc_group_obj.id ?? index}
+                    className={
+                      doc_group_obj.adminDisabled ? 'opacity-[0.72]' : undefined
+                    }
+                  >
                     <td style={{ wordWrap: 'break-word' }}>
                       <Text
                         className={`${
@@ -152,21 +155,43 @@ export const DocumentGroupsItem = ({}) => {
                         wordWrap: 'break-word',
                       }}
                     >
-                      <Switch
-                        checked={doc_group_obj.checked}
-                        onChange={() => handleToggleChecked(doc_group_obj.id)}
-                        className="cursor-pointer"
-                        styles={{
-                          track: {
-                            backgroundColor: doc_group_obj.checked
-                              ? 'var(--dashboard-button) !important'
-                              : 'var(--dashboard-background-dark)',
-                            borderColor: doc_group_obj.checked
-                              ? 'var(--dashboard-button) !important'
-                              : 'var(--dashboard-background-dark)',
-                          },
-                        }}
-                      />
+                      <Tooltip
+                        label="Admin has disabled that doc group"
+                        disabled={!doc_group_obj.adminDisabled}
+                        withinPortal
+                      >
+                        <span
+                          style={{ display: 'inline-flex' }}
+                          className={
+                            doc_group_obj.adminDisabled
+                              ? undefined
+                              : 'cursor-pointer'
+                          }
+                        >
+                          <Switch
+                            checked={doc_group_obj.checked}
+                            disabled={doc_group_obj.adminDisabled}
+                            aria-label={
+                              doc_group_obj.adminDisabled
+                                ? `${doc_group_obj.name}: Admin has disabled that doc group`
+                                : `${doc_group_obj.name}: toggle document group`
+                            }
+                            onChange={() =>
+                              handleToggleChecked(doc_group_obj.id)
+                            }
+                            styles={{
+                              track: {
+                                backgroundColor: doc_group_obj.checked
+                                  ? 'var(--dashboard-button) !important'
+                                  : 'var(--dashboard-background-dark)',
+                                borderColor: doc_group_obj.checked
+                                  ? 'var(--dashboard-button) !important'
+                                  : 'var(--dashboard-background-dark)',
+                              },
+                            }}
+                          />
+                        </span>
+                      </Tooltip>
                     </td>
                   </tr>
                 ))}

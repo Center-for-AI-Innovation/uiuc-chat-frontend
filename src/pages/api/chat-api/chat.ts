@@ -92,6 +92,7 @@ export default async function chat(
     api_key,
     retrieval_only,
     conversation_id,
+    doc_groups: requestedDocGroups,
   }: {
     model: string
     messages: Message[]
@@ -102,6 +103,7 @@ export default async function chat(
     api_key: string
     retrieval_only: boolean
     conversation_id?: string
+    doc_groups?: string[]
   } = body
 
   // Validate the API key and retrieve user data
@@ -202,9 +204,11 @@ export default async function chat(
     }
   }
 
-  // Fetch document groups
-  // We can fetch custom doc groups here instead, but for now we'll just use the default
-  const doc_groups = ['All Documents']
+  // Preserve caller-provided groups; default to all-documents only when absent.
+  const doc_groups =
+    Array.isArray(requestedDocGroups) && requestedDocGroups.length > 0
+      ? requestedDocGroups
+      : ['All Documents']
 
   const controller = new AbortController()
   // Construct the search query

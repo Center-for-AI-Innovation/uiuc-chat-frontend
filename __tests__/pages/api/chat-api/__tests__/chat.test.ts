@@ -89,9 +89,9 @@ describe('chat-api/chat', () => {
     await chat(
       createMockReq({
         method: 'GET',
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
     )
     expect(res.status).toHaveBeenCalledWith(405)
   })
@@ -151,9 +151,9 @@ describe('chat-api/chat', () => {
           api_key: 'k',
           retrieval_only: false,
         },
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
     )
     expect(res.status).toHaveBeenCalledWith(404)
   })
@@ -328,11 +328,68 @@ describe('chat-api/chat', () => {
           api_key: 'k',
           retrieval_only: false,
         },
-        socket: { remoteAddress: '127.0.0.1' } as any,
-      }) as any,
-      res as any,
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
     )
     expect(hoisted.handleStreamingResponse).toHaveBeenCalled()
+  })
+
+  it('defaults doc_groups to All Documents when not provided', async () => {
+    hoisted.handleContextSearch.mockClear()
+    const res = createMockRes()
+    await chat(
+      createMockReq({
+        method: 'POST',
+        body: {
+          model: 'gpt-4o',
+          messages: [{ id: 'm1', role: 'user', content: 'hi' }],
+          temperature: 0.1,
+          course_name: 'CS101',
+          stream: false,
+          api_key: 'k',
+          retrieval_only: false,
+        },
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
+    )
+    expect(hoisted.handleContextSearch).toHaveBeenCalledWith(
+      expect.any(Object),
+      'CS101',
+      expect.any(Object),
+      expect.any(String),
+      ['All Documents'],
+    )
+  })
+
+  it('preserves provided doc_groups instead of overriding to All Documents', async () => {
+    hoisted.handleContextSearch.mockClear()
+    const res = createMockRes()
+    await chat(
+      createMockReq({
+        method: 'POST',
+        body: {
+          model: 'gpt-4o',
+          messages: [{ id: 'm1', role: 'user', content: 'hi' }],
+          temperature: 0.1,
+          course_name: 'CS101',
+          stream: false,
+          api_key: 'k',
+          retrieval_only: false,
+          doc_groups: ['Group A'],
+        },
+        socket: { remoteAddress: '127.0.0.1' } as unknown,
+      }) as Parameters<typeof chat>[0],
+      res as Parameters<typeof chat>[1],
+    )
+    expect(hoisted.handleContextSearch).toHaveBeenCalledWith(
+      expect.any(Object),
+      'CS101',
+      expect.any(Object),
+      expect.any(String),
+      ['Group A'],
+    )
   })
 
   it('invokes handleImageContent and handleToolsServer when image content and tools are present', async () => {
