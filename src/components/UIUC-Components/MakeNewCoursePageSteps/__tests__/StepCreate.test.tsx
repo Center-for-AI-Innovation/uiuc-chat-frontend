@@ -21,6 +21,7 @@ describe('StepCreate', () => {
     is_new_course: true,
     project_description: '',
     isCourseAvailable: undefined as boolean | undefined,
+    isCourseNameValid: undefined as boolean | undefined,
     isCheckingAvailability: false,
     onUpdateName: vi.fn(),
     onUpdateDescription: vi.fn(),
@@ -131,6 +132,7 @@ describe('StepCreate', () => {
         {...defaultProps}
         project_name="test"
         isCourseAvailable={true}
+        isCourseNameValid={true}
         isCheckingAvailability={false}
       />,
     )
@@ -143,10 +145,24 @@ describe('StepCreate', () => {
         {...defaultProps}
         project_name="test"
         isCourseAvailable={false}
+        isCourseNameValid={true}
         isCheckingAvailability={false}
       />,
     )
     expect(screen.getByText('Name is already taken')).toBeInTheDocument()
+  })
+
+  it('shows invalid status when name is invalid', () => {
+    render(
+      <StepCreate
+        {...defaultProps}
+        project_name="test"
+        isCourseAvailable={false}
+        isCourseNameValid={false}
+        isCheckingAvailability={false}
+      />,
+    )
+    expect(screen.getByText('Name is invalid')).toBeInTheDocument()
   })
 
   it('renders error status icon when name is taken', () => {
@@ -155,11 +171,29 @@ describe('StepCreate', () => {
         {...defaultProps}
         project_name="test"
         isCourseAvailable={false}
+        isCourseNameValid={true}
         isCheckingAvailability={false}
       />,
     )
     // The error status icon and sr-only text are rendered
     expect(screen.getByText('Name is already taken')).toBeInTheDocument()
+    // Status container has role="status"
+    const statusEl = container.querySelector('[role="status"]')
+    expect(statusEl).toBeInTheDocument()
+  })
+
+  it('renders error status icon when name is invalid', () => {
+    const { container } = render(
+      <StepCreate
+        {...defaultProps}
+        project_name="test"
+        isCourseAvailable={false}
+        isCourseNameValid={false}
+        isCheckingAvailability={false}
+      />,
+    )
+    // The error status icon and sr-only text are rendered
+    expect(screen.getByText('Name is invalid')).toBeInTheDocument()
     // Status container has role="status"
     const statusEl = container.querySelector('[role="status"]')
     expect(statusEl).toBeInTheDocument()

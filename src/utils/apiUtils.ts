@@ -162,7 +162,7 @@ export async function fetchPresignedUrl(
  */
 export async function fetchCourseMetadata(course_name: string): Promise<any> {
   try {
-    const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${course_name}`
+    const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${encodeURIComponent(course_name)}`
     const response = await fetch(endpoint)
 
     if (!response.ok) {
@@ -320,6 +320,13 @@ export default {
   fetchPresignedUrl,
   fetchCourseMetadata,
 }
+
+// Allow only letters, numbers, and hyphens in course names
+const regex = /^[a-zA-Z0-9-]+$/
+export const checkCourseNameValid = (courseName: string): boolean => {
+  return regex.test(courseName)
+}
+
 /**
  * Create a new project
  * @param project_name - The name of the project

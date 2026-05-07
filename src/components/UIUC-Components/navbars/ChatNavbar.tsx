@@ -22,6 +22,7 @@ import HomeContext from '~/pages/api/home/home.context'
 import { UserSettings } from '../../Chat/UserSettings'
 import { ThemeToggle } from '../ThemeToggle'
 import { AuthMenu } from './AuthMenu'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 const styles: Record<string, React.CSSProperties> = {
   logoContainerBox: {
@@ -182,36 +183,31 @@ const ChatNavbar = ({ bannerUrl = '', isgpt4 = true }: ChatNavbarProps) => {
     return router.asPath.split('/')[1]
   }
 
+  const { data: courseMetadata = null } = useFetchCourseMetadata({
+    courseName: getCurrentCourseName() || '',
+    enabled: auth.isAuthenticated,
+  })
+
   useEffect(() => {
-    const fetchCourses = async () => {
-      if (auth.isAuthenticated) {
-        const userEmail = auth.user?.profile.email
-        const currUserEmails = userEmail ? [userEmail] : []
-        posthog?.identify(auth.user?.profile.sub, {
-          email: currUserEmails[0] || 'no_email',
-        })
+    if (!auth.isAuthenticated || !courseMetadata) return
 
-        const response = await fetch(
-          `/api/UIUC-api/getCourseMetadata?course_name=${getCurrentCourseName()}`,
-        )
-        const courseMetadata = await response.json().then((data) => {
-          return data['course_metadata']
-        })
+    const userEmail = auth.user?.profile.email
+    const currUserEmails = userEmail ? [userEmail] : []
+    posthog?.identify(auth.user?.profile.sub, {
+      email: currUserEmails[0] || 'no_email',
+    })
 
-        if (
-          currUserEmails.includes(courseMetadata.course_owner) ||
-          currUserEmails.some((email) =>
-            courseMetadata.course_admins?.includes(email),
-          )
-        ) {
-          setIsAdminOrOwner(true)
-        } else {
-          setIsAdminOrOwner(false)
-        }
-      }
+    if (
+      currUserEmails.includes(courseMetadata.course_owner) ||
+      currUserEmails.some((email) =>
+        courseMetadata.course_admins?.includes(email),
+      )
+    ) {
+      setIsAdminOrOwner(true)
+    } else {
+      setIsAdminOrOwner(false)
     }
-    fetchCourses()
-  }, [auth.isAuthenticated])
+  }, [auth.isAuthenticated, courseMetadata])
 
   useEffect(() => {
     const handleResize = () => {
