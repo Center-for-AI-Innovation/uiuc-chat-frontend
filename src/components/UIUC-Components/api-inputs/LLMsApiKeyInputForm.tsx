@@ -4,14 +4,29 @@ import {
   Card,
   Flex,
   Group,
+  Modal,
   Select,
   Stack,
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { IconAlertCircle, IconCheck, IconX } from '@tabler/icons-react'
+import {
+  IconAlertCircle,
+  IconAlertTriangleFilled,
+  IconCheck,
+  IconX,
+} from '@tabler/icons-react'
+import {
+  type CountryOfConcern,
+  getCountryOfConcern,
+  getCountryOfConcernLongMessage,
+  getCountryOfConcernShortMessage,
+  isChatbotCocAcknowledged,
+  markChatbotCocAcknowledged,
+} from '~/utils/modelProviders/countriesOfConcern'
 import { useForm, type FieldApi } from '@tanstack/react-form'
 import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
@@ -168,7 +183,8 @@ const NewModelDropdown: React.FC<{
   onChange: (model: AnySupportedModel) => Promise<void>
   llmProviders: AllLLMProviders
   isSmallScreen: boolean
-}> = ({ value, onChange, llmProviders, isSmallScreen }) => {
+  chatbotId: string
+}> = ({ value, onChange, llmProviders, isSmallScreen, chatbotId }) => {
   // Filter out providers that are not enabled and their models which are disabled
   const { enabledProvidersAndModels, allModels } = Object.keys(
     llmProviders,
@@ -208,6 +224,21 @@ const NewModelDropdown: React.FC<{
   )
   const selectedModel =
     allModels.find((model) => model.id === value?.id) || undefined
+  const selectedModelCountry = getCountryOfConcern(value?.id)
+
+  const [pendingDefault, setPendingDefault] = useState<{
+    model: AnySupportedModel
+    country: CountryOfConcern
+  } | null>(null)
+
+  const closePendingModal = () => setPendingDefault(null)
+  const confirmPendingDefault = async () => {
+    if (!pendingDefault) return
+    const next = pendingDefault.model
+    markChatbotCocAcknowledged(chatbotId)
+    setPendingDefault(null)
+    await onChange(next)
+  }
 
   return (
     <>
@@ -228,10 +259,14 @@ const NewModelDropdown: React.FC<{
         searchable
         value={value?.id || ''}
         onChange={async (modelId) => {
-          const selectedModel = allModels.find((model) => model.id === modelId)
-          if (selectedModel) {
-            await onChange(selectedModel)
+          const nextModel = allModels.find((model) => model.id === modelId)
+          if (!nextModel) return
+          const country = getCountryOfConcern(nextModel.id)
+          if (country && !isChatbotCocAcknowledged(chatbotId)) {
+            setPendingDefault({ model: nextModel, country })
+            return
           }
+          await onChange(nextModel)
         }}
         data={Object.entries(enabledProvidersAndModels)
           // Sort by LLM_PROVIDER_ORDER
@@ -278,6 +313,32 @@ const NewModelDropdown: React.FC<{
               height={20}
               style={{ marginLeft: '4px', borderRadius: '4px' }}
             />
+          ) : null
+        }
+        rightSection={
+          selectedModelCountry ? (
+            <Tooltip
+              multiline
+              width={280}
+              withArrow
+              label={getCountryOfConcernShortMessage(selectedModelCountry)}
+            >
+              <span
+                aria-label={`Country of concern warning: ${selectedModelCountry}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  pointerEvents: 'auto',
+                  marginRight: '8px',
+                }}
+              >
+                <IconAlertTriangleFilled
+                  size="1rem"
+                  aria-hidden="true"
+                  style={{ color: '#eab308' }}
+                />
+              </span>
+            </Tooltip>
           ) : null
         }
         // rightSection={<IconChevronDown size="1rem" className="mr-2" />}
@@ -339,6 +400,43 @@ const NewModelDropdown: React.FC<{
         withinPortal
         zIndex={40}
       />
+
+      <Modal
+        opened={pendingDefault !== null}
+        onClose={closePendingModal}
+        title="Default Model — Country of Concern Warning"
+        centered
+        zIndex={1000}
+      >
+        {pendingDefault && (
+          <>
+            <Group spacing="sm" align="flex-start" noWrap>
+              <IconAlertTriangleFilled
+                size="1.5rem"
+                style={{ marginTop: 4, flexShrink: 0, color: '#eab308' }}
+                aria-hidden="true"
+              />
+              <Text size="sm">
+                Setting <strong>{pendingDefault.model.name}</strong> as the
+                default model is discouraged because it originates from a
+                country of concern.{' '}
+                {getCountryOfConcernLongMessage(
+                  pendingDefault.model.name,
+                  pendingDefault.country,
+                )}
+              </Text>
+            </Group>
+            <Group position="right" mt="lg" spacing="sm">
+              <Button variant="default" onClick={closePendingModal}>
+                Cancel
+              </Button>
+              <Button color="yellow" onClick={confirmPendingDefault}>
+                Set as default anyway
+              </Button>
+            </Group>
+          </>
+        )}
+      </Modal>
     </>
   )
 }
@@ -375,6 +473,7 @@ export const ModelItem = forwardRef<
     },
     ref,
   ) => {
+    const countryOfConcern = getCountryOfConcern(modelId)
     return (
       <>
         <div ref={ref} {...others}>
@@ -397,6 +496,29 @@ export const ModelItem = forwardRef<
                 <Text size="sm" style={{ marginLeft: '8px' }}>
                   {label}
                 </Text>
+                {countryOfConcern && (
+                  <Tooltip
+                    multiline
+                    width={280}
+                    withArrow
+                    label={getCountryOfConcernShortMessage(countryOfConcern)}
+                  >
+                    <span
+                      aria-label={`Country of concern warning: ${countryOfConcern}`}
+                      style={{
+                        marginLeft: '6px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <IconAlertTriangleFilled
+                        size="0.9rem"
+                        aria-hidden="true"
+                        style={{ color: '#eab308' }}
+                      />
+                    </span>
+                  </Tooltip>
+                )}
               </div>
             </div>
           </Group>
@@ -653,6 +775,7 @@ export default function APIKeyInputForm({
                   }}
                   llmProviders={llmProviders}
                   isSmallScreen={isSmallScreen}
+                  chatbotId={projectName}
                 />
               ) : null}
             </div>
@@ -1021,6 +1144,7 @@ export default function APIKeyInputForm({
                               }}
                               llmProviders={llmProviders}
                               isSmallScreen={isSmallScreen}
+                              chatbotId={projectName}
                             />
                           ) : null}
                         </div>

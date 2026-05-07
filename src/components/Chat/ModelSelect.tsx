@@ -11,7 +11,7 @@ import { forwardRef, useContext, useEffect, useState } from 'react'
 import { useMediaQuery } from '@mantine/hooks'
 import HomeContext from '~/pages/api/home/home.context'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { Group, Select, Title, Text, ActionIcon } from '@mantine/core'
+import { Group, Select, Title, Text, ActionIcon, Tooltip } from '@mantine/core'
 import Link from 'next/link'
 import React from 'react'
 import { type OpenAIModel } from '~/utils/modelProviders/types/openai'
@@ -31,6 +31,10 @@ import {
   recommendedModelIds,
   warningLargeModelIds,
 } from '~/utils/modelProviders/ConfigWebLLM'
+import {
+  getCountryOfConcern,
+  getCountryOfConcernShortMessage,
+} from '~/utils/modelProviders/countriesOfConcern'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
 
 interface ModelDropdownProps {
@@ -113,6 +117,7 @@ export const ModelItem = forwardRef<
     const [isModelCached, setIsModelCached] = useState(false)
     const showSparkles = recommendedModelIds.includes(label)
     const showWarningLargeModel = warningLargeModelIds.includes(label)
+    const countryOfConcern = getCountryOfConcern(modelId)
     const { state, dispatch: homeDispatch } = useContext(HomeContext)
     // const {
     //   state: {
@@ -173,6 +178,29 @@ export const ModelItem = forwardRef<
               <Text size="sm" style={{ marginLeft: '8px' }}>
                 {label}
               </Text>
+              {countryOfConcern && (
+                <Tooltip
+                  multiline
+                  width={280}
+                  withArrow
+                  label={getCountryOfConcernShortMessage(countryOfConcern)}
+                >
+                  <span
+                    aria-label={`Country of concern warning: ${countryOfConcern}`}
+                    style={{
+                      marginLeft: '6px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <IconAlertTriangleFilled
+                      size="0.9rem"
+                      aria-hidden="true"
+                      className="text-yellow-500"
+                    />
+                  </span>
+                </Tooltip>
+              )}
             </div>
             {downloadSize && (
               <div
@@ -343,6 +371,7 @@ const ModelDropdown: React.FC<
   )
 
   const selectedModel = allModels.find((model) => model.id === value)
+  const selectedModelCountry = getCountryOfConcern(value)
 
   return (
     <>
@@ -428,11 +457,36 @@ const ModelDropdown: React.FC<
             ) : null
           }
           rightSection={
-            <IconChevronDown
-              size="1rem"
-              aria-hidden="true"
-              className="mr-2 text-[--modal-button-text]"
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {selectedModelCountry && (
+                <Tooltip
+                  multiline
+                  width={280}
+                  withArrow
+                  label={getCountryOfConcernShortMessage(selectedModelCountry)}
+                >
+                  <span
+                    aria-label={`Country of concern warning: ${selectedModelCountry}`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      pointerEvents: 'auto',
+                    }}
+                  >
+                    <IconAlertTriangleFilled
+                      size="1rem"
+                      aria-hidden="true"
+                      className="text-yellow-500"
+                    />
+                  </span>
+                </Tooltip>
+              )}
+              <IconChevronDown
+                size="1rem"
+                aria-hidden="true"
+                className="mr-2 text-[--modal-button-text]"
+              />
+            </div>
           }
           classNames={{
             root: 'w-full',
@@ -512,7 +566,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
     const isSmallScreen = useMediaQuery('(max-width: 960px)')
     const defaultModel = selectBestModel(llmProviders).id
     const [loadingModelId, setLoadingModelId] = useState<string | null>(null)
-    const [isAccordionOpen, setIsAccordionOpen] = useState(false)
+    const [isAccordionOpen, setIsAccordionOpen] = useState(true)
 
     // console.log('defaultModelId in chat page: ', defaultModelId)
 
@@ -587,6 +641,41 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                         className={`${montserrat_paragraph.variable} flex-1 p-4 font-montserratParagraph`}
                       >
                         <div className="space-y-6">
+                          {/* Countries of Concern Section */}
+                          <div>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_heading.variable} mb-2 font-montserratHeading font-semibold`}
+                            >
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                }}
+                              >
+                                <IconAlertTriangleFilled
+                                  size="1rem"
+                                  aria-hidden="true"
+                                  className="text-yellow-500"
+                                />
+                                Countries of Concern
+                              </span>
+                            </Text>
+                            <Text
+                              size={'sm'}
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                            >
+                              Models marked with a yellow warning icon originate
+                              from countries the U.S. Department of Commerce has
+                              flagged as countries of concern (currently China,
+                              Russia, Iran, and North Korea). These models may
+                              carry data-handling, supply-chain, or compliance
+                              risks. They are disabled by default; admins can
+                              still enable them after reviewing the warning.
+                            </Text>
+                          </div>
+
                           {/* NCSA VLM Section */}
                           <div>
                             <Text

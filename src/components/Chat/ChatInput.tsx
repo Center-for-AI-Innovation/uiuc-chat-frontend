@@ -10,6 +10,7 @@ import { type Plugin } from '@/types/plugin'
 import { type Prompt } from '@/types/prompt'
 import { Text } from '@mantine/core'
 import {
+  IconAlertTriangleFilled,
   IconArrowDown,
   IconPlayerStop,
   IconRepeat,
@@ -67,6 +68,10 @@ import type ChatUI from '~/utils/modelProviders/WebLLM'
 import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { ContextWithMetadata } from '~/types/chat'
 import { modelSupportsTools } from '~/utils/modelProviders/capabilities'
+import {
+  getCountryOfConcern,
+  getCountryOfConcernShortMessage,
+} from '~/utils/modelProviders/countriesOfConcern'
 import posthog from 'posthog-js'
 import { deriveAgentModeEnabled } from '~/utils/app/agentMode'
 
@@ -1349,6 +1354,37 @@ export const ChatInput = ({
               style={{ cursor: 'pointer', pointerEvents: 'auto' }}
             >
               {selectBestModel(llmProviders)?.name}
+              {(() => {
+                const activeModelId =
+                  selectedConversation?.model?.id ??
+                  selectBestModel(llmProviders)?.id
+                const country = getCountryOfConcern(activeModelId)
+                if (!country) return null
+                return (
+                  <Tooltip
+                    multiline
+                    width={280}
+                    withArrow
+                    label={getCountryOfConcernShortMessage(country)}
+                  >
+                    <span
+                      aria-label={`Country of concern warning: ${country}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        marginLeft: '4px',
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <IconAlertTriangleFilled
+                        size={isSmallScreen ? '10px' : '13px'}
+                        aria-hidden="true"
+                        style={{ color: '#eab308' }}
+                      />
+                    </span>
+                  </Tooltip>
+                )
+              })()}
               {selectedConversation?.model &&
                 webLLMModels.some(
                   (m) => m.name === selectedConversation?.model?.name,
