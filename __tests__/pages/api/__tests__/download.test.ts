@@ -5,6 +5,12 @@ import { createMockReq, createMockRes } from '~/test-utils/nextApi'
 
 const hoisted = vi.hoisted(() => ({
   getSignedUrl: vi.fn(),
+  getS3Client: vi.fn(async () => ({
+    client: { name: 's3' },
+    bucket: 'default-bucket',
+    endpoint: null,
+    region: 'us-east-1',
+  })),
 }))
 
 vi.mock('~/pages/api/authorization', () => ({
@@ -15,15 +21,14 @@ vi.mock('@aws-sdk/s3-request-presigner', () => ({
   getSignedUrl: hoisted.getSignedUrl,
 }))
 
-vi.mock('~/utils/s3Client', () => ({
-  s3Client: { name: 's3' },
-  vyriadMinioClient: { name: 'minio' },
+vi.mock('~/utils/connectionManager', () => ({
+  connectionManager: { getS3Client: hoisted.getS3Client },
 }))
 
 import handler from '~/pages/api/download'
 
 describe('download API', () => {
-  it('returns 200 with presigned url for normal courses', async () => {
+  it('returns 200 with presigned url', async () => {
     hoisted.getSignedUrl.mockResolvedValueOnce('https://example.com/url')
 
     const res = createMockRes()
@@ -41,14 +46,14 @@ describe('download API', () => {
     )
   })
 
-  it('returns 200 with presigned url for vyriad/pubmed using minio client', async () => {
-    hoisted.getSignedUrl.mockResolvedValueOnce('https://example.com/minio')
+  it('routes through ConnectionManager for any course (no hardcoded vyriad branching)', async () => {
+    hoisted.getSignedUrl.mockResolvedValueOnce('https://example.com/anycourse')
 
     const res = createMockRes()
     await handler(
       createMockReq({
         method: 'POST',
-        body: { filePath: 'bucketA/folder/file.png', courseName: 'vyriad' },
+        body: { filePath: 'folder/file.png', courseName: 'vyriad' },
       }) as any,
       res as any,
     )

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { db } from '~/db/dbClient'
+import { connectionManager } from '~/utils/connectionManager'
 import { documents } from '~/db/schema'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
@@ -48,6 +48,7 @@ export const getCourseDocuments = async (
     return null
   }
   try {
+    const db = await connectionManager.getDocumentsDb(course_name)
     const data = await db
       .select({
         readable_filename: documents.readable_filename,

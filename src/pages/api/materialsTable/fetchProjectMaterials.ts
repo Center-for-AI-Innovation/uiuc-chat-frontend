@@ -1,4 +1,4 @@
-import { db } from '~/db/dbClient'
+import { connectionManager } from '~/utils/connectionManager'
 import posthog from 'posthog-js'
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
@@ -57,6 +57,8 @@ async function fetchDocuments(
   const to = parseInt(toStr)
 
   try {
+    const db = await connectionManager.getDocumentsDb(course_name as string)
+
     let foundDocs: any[] = []
     let finalError = null
 

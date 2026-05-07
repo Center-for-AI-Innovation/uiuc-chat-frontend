@@ -57,25 +57,4 @@ describe('s3Client', () => {
     expect(ctor).toHaveBeenCalledWith({ region: 'us-east-1' })
   })
 
-  it('creates a MinIO client when MINIO env vars are present', async () => {
-    const ctor = vi.fn()
-    vi.doMock('@aws-sdk/client-s3', () => ({ S3Client: ctor }))
-
-    vi.stubEnv('AWS_REGION', '')
-    vi.stubEnv('MINIO_KEY', 'mk')
-    vi.stubEnv('MINIO_SECRET', 'ms')
-    vi.stubEnv('MINIO_ENDPOINT', 'http://minio:9000')
-    vi.stubEnv('MINIO_REGION', '')
-
-    vi.resetModules()
-    const mod = await import('../s3Client')
-    expect(mod.vyriadMinioClient).toBeTruthy()
-    expect(ctor).toHaveBeenCalledWith(
-      expect.objectContaining({
-        region: 'us-east-1',
-        endpoint: 'http://minio:9000',
-        forcePathStyle: true,
-      }),
-    )
-  })
 })

@@ -4,10 +4,21 @@ const hoisted = vi.hoisted(() => {
   const mockWhere = vi.fn().mockResolvedValue(undefined)
   const mockSet = vi.fn().mockImplementation(() => ({ where: mockWhere }))
   const mockUpdate = vi.fn().mockImplementation(() => ({ set: mockSet }))
-  return { mockWhere, mockSet, mockUpdate }
+  const mockSetPayload = vi.fn().mockResolvedValue({ ok: true })
+  const mockResolveVectorEngine = vi
+    .fn()
+    .mockResolvedValue({ kind: 'pgvector' })
+  const mockGetHostDb = vi.fn(() => ({ update: mockUpdate }))
+  return {
+    mockWhere,
+    mockSet,
+    mockUpdate,
+    mockSetPayload,
+    mockResolveVectorEngine,
+    mockGetHostDb,
+  }
 })
 
-/** Re-apply db.update().set().where() chain; vitest clearMocks: true clears mock implementations. */
 function restoreUpdateChain() {
   const { mockWhere, mockSet, mockUpdate } = hoisted
   mockUpdate.mockImplementation(() => ({ set: mockSet }))
@@ -15,19 +26,23 @@ function restoreUpdateChain() {
   mockWhere.mockResolvedValue(undefined)
 }
 
-vi.mock('~/db/dbClient', () => ({
-  db: {
-    update: hoisted.mockUpdate,
+vi.mock('~/utils/connectionManager', () => ({
+  connectionManager: {
+    resolveVectorEngine: hoisted.mockResolveVectorEngine,
+    getHostDb: hoisted.mockGetHostDb,
   },
 }))
 
 describe('vectorUtils', () => {
   beforeEach(() => {
     restoreUpdateChain()
-    vi.resetModules()
+    hoisted.mockResolveVectorEngine.mockResolvedValue({ kind: 'pgvector' })
+    hoisted.mockGetHostDb.mockReturnValue({ update: hoisted.mockUpdate })
+    hoisted.mockSetPayload.mockReset()
+    hoisted.mockSetPayload.mockResolvedValue({ ok: true })
   })
 
-  it('updates embeddings via Drizzle and returns status completed', async () => {
+  it('pgvector path: updates embeddings via Drizzle and returns status completed', async () => {
     const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
 
     const doc = {
@@ -40,13 +55,13 @@ describe('vectorUtils', () => {
     const result = await updateDocGroupsInVectorStore('CS101', doc)
 
     expect(result).toEqual({ status: 'completed' })
-    expect(hoisted.mockUpdate).toHaveBeenCalled() // sanity: proves mock is used
+    expect(hoisted.mockUpdate).toHaveBeenCalled()
     expect(hoisted.mockSet).toHaveBeenCalledWith(
       expect.objectContaining({ doc_groups: ['g1', 'g2'] }),
     )
   })
 
-  it('sends empty url and s3_path when missing', async () => {
+  it('pgvector path: handles missing url and s3_path', async () => {
     const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
 
     const doc = {
@@ -61,7 +76,40 @@ describe('vectorUtils', () => {
     expect(hoisted.mockUpdate).toHaveBeenCalled()
   })
 
-  it('captures posthog event and rethrows on error', async () => {
+  it('qdrant path: dispatches to client.setPayload when engine is qdrant', async () => {
+    hoisted.mockResolveVectorEngine.mockResolvedValueOnce({
+      kind: 'qdrant',
+      client: { setPayload: hoisted.mockSetPayload },
+      collection: 'main',
+    })
+
+    const { updateDocGroupsInVectorStore } = await import('../vectorUtils')
+    const doc = {
+      url: 'https://example.com/doc',
+      s3_path: 's3://bucket/key',
+      doc_groups: ['g1'],
+      readable_filename: 'doc.pdf',
+    } as any
+
+    const result = await updateDocGroupsInVectorStore('CS101', doc)
+    expect(result).toEqual({ status: 'completed' })
+    expect(hoisted.mockSetPayload).toHaveBeenCalledWith(
+      'main',
+      expect.objectContaining({
+        payload: { doc_groups: ['g1'] },
+        filter: expect.objectContaining({
+          must: expect.arrayContaining([
+            expect.objectContaining({ key: 'course_name' }),
+            expect.objectContaining({ key: 'url' }),
+            expect.objectContaining({ key: 's3_path' }),
+          ]),
+        }),
+      }),
+    )
+    expect(hoisted.mockUpdate).not.toHaveBeenCalled()
+  })
+
+  it('captures posthog event and rethrows on pgvector error', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     hoisted.mockWhere.mockRejectedValueOnce(new Error('boom'))
 
@@ -92,7 +140,7 @@ describe('vectorUtils', () => {
     )
   })
 
-  it('reports doc_unique_identifier as doc.url when url is set and update fails', async () => {
+  it('reports doc_unique_identifier as doc.url when set and update fails', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     hoisted.mockWhere.mockRejectedValueOnce(new Error('db error'))
 

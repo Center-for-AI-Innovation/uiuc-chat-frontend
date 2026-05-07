@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   decrypt,
   decryptKeyIfNeeded,
+  decryptProjectConfig,
   encrypt,
   encryptKeyIfNeeded,
   isEncrypted,
@@ -94,5 +95,44 @@ describe('crypto utilities', () => {
 
     await expect(encryptKeyIfNeeded('raw')).rejects.toThrow(/boom/i)
     encryptSpy.mockRestore()
+  })
+})
+
+describe('decryptProjectConfig', () => {
+  const MASTER = 'test-master-key-do-not-use-in-prod'
+
+  it('returns null for null/undefined and missing-encrypted field', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', MASTER)
+    expect(await decryptProjectConfig(null)).toBeNull()
+    expect(await decryptProjectConfig(undefined)).toBeNull()
+    expect(await decryptProjectConfig({ encrypted: '' } as any)).toBeNull()
+  })
+
+  it('decrypts and JSON-parses an EncryptedField', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', MASTER)
+    const config = {
+      url: 'https://qdrant.example.com',
+      api_key: 'qdrant-secret',
+      port: 6333,
+      default_collection: 'my-coll',
+    }
+    const ct = (await encrypt(JSON.stringify(config), MASTER)) as string
+    const result = await decryptProjectConfig<typeof config>({ encrypted: ct })
+    expect(result).toEqual(config)
+  })
+
+  it('throws when ENCRYPTION_MASTER_KEY is unset', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', '')
+    await expect(
+      decryptProjectConfig({ encrypted: 'v1.x.y' } as any),
+    ).rejects.toThrow(/ENCRYPTION_MASTER_KEY/)
+  })
+
+  it('throws when the decrypted plaintext is not valid JSON', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', MASTER)
+    const ct = (await encrypt('not json', MASTER)) as string
+    await expect(decryptProjectConfig({ encrypted: ct })).rejects.toThrow(
+      /JSON-parse/,
+    )
   })
 })
