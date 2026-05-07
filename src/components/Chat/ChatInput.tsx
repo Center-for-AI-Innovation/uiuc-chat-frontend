@@ -921,6 +921,40 @@ export const ChatInput = ({
       className={`w-full border-transparent bg-transparent pt-6 md:pt-2`}
       style={{ pointerEvents: 'none' }}
     >
+      {/* Country-of-concern banner */}
+      {(() => {
+        const activeModelId =
+          selectedConversation?.model?.id ?? selectBestModel(llmProviders)?.id
+        const country = getCountryOfConcern(activeModelId)
+        if (!country) return null
+        const activeModelName =
+          selectedConversation?.model?.name ??
+          selectBestModel(llmProviders)?.name ??
+          'This model'
+        return (
+          <div className="flex justify-center">
+            <div
+              role="status"
+              aria-live="polite"
+              className="relative z-0 flex w-[calc(80%+32px)] translate-y-[16px] items-start gap-2 rounded-t-3xl bg-[--illinois-orange] px-3 pb-8 pt-2 text-white shadow-sm"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <IconAlertTriangleFilled
+                size={18}
+                aria-hidden="true"
+                style={{ flexShrink: 0, color: '#d97706', marginTop: 2 }}
+              />
+              <div className="text-xs leading-snug">
+                <strong>{activeModelName}</strong> originates from{' '}
+                <strong>{country}</strong>, a country of concern flagged by the
+                U.S. Department of Commerce. Avoid sharing sensitive or
+                proprietary information with this model.
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       <div
         className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl"
         style={{ pointerEvents: 'auto' }}
@@ -966,7 +1000,7 @@ export const ChatInput = ({
           {/* Chat input and preview container */}
           <div
             ref={chatInputContainerRef}
-            className="chat-input-container rbg-[--message-background] m-0 w-full resize-none p-0"
+            className="chat-input-container m-0 w-full resize-none p-0"
             tabIndex={0}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -1373,13 +1407,14 @@ export const ChatInput = ({
                         display: 'inline-flex',
                         alignItems: 'center',
                         marginLeft: '4px',
+                        opacity: 1,
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <IconAlertTriangleFilled
-                        size={isSmallScreen ? '10px' : '13px'}
+                        size={isSmallScreen ? '12px' : '14px'}
                         aria-hidden="true"
-                        style={{ color: '#eab308' }}
+                        style={{ color: '#f59e0b' }}
                       />
                     </span>
                   </Tooltip>
