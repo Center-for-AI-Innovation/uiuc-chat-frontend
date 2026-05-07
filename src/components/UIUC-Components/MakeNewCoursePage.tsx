@@ -83,14 +83,16 @@ const MakeNewCoursePage = ({
   // Debounce project name input to avoid excessive API calls
   const [debouncedProjectName] = useDebouncedValue(projectName, 1000)
 
+  const isCourseNameValid =
+    debouncedProjectName.length > 0 &&
+    checkCourseNameValid(debouncedProjectName)
+
   // Check project name availability using React Query
   const { data: courseExists = false, isFetching: isCheckingAvailability } =
     useFetchCourseExists({
       courseName: debouncedProjectName.toLowerCase(), // Normalize to lowercase for consistency
-      enabled: debouncedProjectName.length > 0 && is_new_course,
+      enabled: isCourseNameValid && is_new_course,
     })
-
-  const isCourseNameValid = checkCourseNameValid(projectName)
 
   // Calculate availability: course exists = not available
   const isCourseAvailable =
