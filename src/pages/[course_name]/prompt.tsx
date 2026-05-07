@@ -22,8 +22,8 @@ import SettingsLayout, {
 import PromptEditor from '~/components/UIUC-Components/PromptEditor'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import GlobalFooter from '../../components/UIUC-Components/GlobalFooter'
-import { type CourseMetadata } from '~/types/courseMetadata'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -47,46 +47,41 @@ const CourseMain: NextPage = () => {
   const isLoaded = !auth.isLoading
   const isSignedIn = auth.isAuthenticated
   const user = auth.user
-  const [courseExists, setCourseExists] = useState<boolean | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
   )
-  const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
 
   const cardWidthClasses = useResponsiveCardWidth(sidebarCollapsed)
 
-  useEffect(() => {
-    if (!router.isReady || auth.isLoading) return
-    const fetchCourseData = async () => {
-      setIsLoading(true)
-      const response = await fetch(
-        `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
-      )
-      const data = await response.json()
-      setCourseExists(data)
-      try {
-        const fetchedMetadata: CourseMetadata = (await fetchCourseMetadata(
-          courseName,
-        )) as CourseMetadata
-        if (fetchedMetadata === null) {
-          setErrorType(404)
-          return
-        }
-      } catch (error) {
-        console.error(error)
+  const {
+    isLoading: isCourseExistsLoading = false,
+    data: courseExists = false,
+  } = useFetchCourseExists({
+    courseName,
+    enabled: router.isReady && isLoaded,
+  })
 
-        const errorWithStatus = error as Error & { status?: number }
-        const status = errorWithStatus.status
-        if (status === 401 || status === 403 || status === 404) {
-          setErrorType(status as 401 | 403 | 404)
-        }
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchCourseData()
-  }, [router.isReady, auth.isLoading, courseName])
+  const fetchCourseMetadataResponse = useFetchCourseMetadata({
+    courseName,
+    enabled: router.isReady && isLoaded && courseExists,
+  })
+
+  const {
+    isLoading: isCourseMetadataLoading = false,
+    data: courseMetadata = null,
+    error: courseMetadataError,
+  } = fetchCourseMetadataResponse || {}
+
+  const isLoading = isCourseExistsLoading || isCourseMetadataLoading
+  const errorType =
+    !courseExists || courseMetadata === null
+      ? 404
+      : courseMetadataError
+        ? ((courseMetadataError as Error & { status?: number }).status as
+            | 401
+            | 403
+            | 404)
+        : null
 
   if (!isLoaded || isLoading) {
     return <LoadingPlaceholderForAdminPages />

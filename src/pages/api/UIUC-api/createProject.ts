@@ -3,6 +3,12 @@ import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { checkCourseExists } from './getCourseExists'
 
+// Allow only letters, numbers, and hyphens in course names
+const regex = /^[a-zA-Z0-9-]+$/
+const checkCourseNameValid = (courseName: string): boolean => {
+  return regex.test(courseName)
+}
+
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -17,10 +23,19 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     })
   }
 
+  if (!checkCourseNameValid(project_name)) {
+    return res.status(400).json({
+      error:
+        'Invalid project name. Only letters, numbers, and hyphens are allowed.',
+    })
+  }
+
+  const norm_project_name = project_name.toLowerCase() // Normalize project name to lowercase for consistency
+
   // Server-side validation: Check if project name already exists
   // This prevents race conditions where a user could bypass client-side validation
   try {
-    const projectExists = await checkCourseExists(project_name)
+    const projectExists = await checkCourseExists(norm_project_name)
 
     if (projectExists) {
       return res.status(409).json({
@@ -39,7 +54,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 
   const requestBody = {
-    project_name: project_name,
+    project_name: norm_project_name,
     project_description: project_description,
     project_owner_email: project_owner_email,
     is_private: is_private,

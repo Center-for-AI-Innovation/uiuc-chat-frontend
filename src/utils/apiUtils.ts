@@ -320,6 +320,13 @@ export default {
   fetchPresignedUrl,
   fetchCourseMetadata,
 }
+
+// Allow only letters, numbers, and hyphens in course names
+const regex = /^[a-zA-Z0-9-]+$/
+export const checkCourseNameValid = (courseName: string): boolean => {
+  return regex.test(courseName)
+}
+
 /**
  * Create a new project
  * @param project_name - The name of the project

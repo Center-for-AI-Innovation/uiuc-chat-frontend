@@ -14,6 +14,7 @@ import { Title } from '@mantine/core'
 import MakeToolsPage from '~/components/UIUC-Components/N8NPage'
 import posthog from 'posthog-js'
 import { useAuth } from 'react-oidc-context'
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
 
 const montserrat = Montserrat({
   weight: '700',
@@ -38,40 +39,39 @@ const ToolsPage: NextPage = () => {
   }
   const courseName = getCurrentPageName() as string
 
+  const {
+    isLoading: isCourseExistsLoading = true,
+    data: courseExists = false,
+  } = useFetchCourseExists({
+    courseName,
+    enabled: router.isReady && !auth.isLoading,
+  })
+
   useEffect(() => {
     if (!router.isReady || auth.isLoading) return
+
+    if (!courseExists) {
+      setErrorType(404)
+      return
+    }
 
     const fetchCourseData = async () => {
       setIsLoading(true)
       try {
-        const exsitResponse = await fetch(
-          `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
+        const dataResponse = await fetch(
+          `/api/UIUC-api/getAllCourseData?course_name=${encodeURIComponent(
+            courseName,
+          )}`,
         )
-        if (!exsitResponse.ok) {
-          const s = exsitResponse.status
+        if (!dataResponse.ok) {
+          const s = dataResponse.status
           if (s === 401 || s === 403 || s === 404)
             setErrorType(s as 401 | 403 | 404)
           return
         }
-
-        const data = await exsitResponse.json()
-        if (!data) {
-          setErrorType(404)
-          return
-        } else {
-          const dataResponse = await fetch(
-            `/api/UIUC-api/getAllCourseData?course_name=${courseName}`,
-          )
-          if (!dataResponse.ok) {
-            const s = dataResponse.status
-            if (s === 401 || s === 403 || s === 404)
-              setErrorType(s as 401 | 403 | 404)
-            return
-          }
-          const data = await dataResponse.json()
-          const courseData = data.distinct_files
-          setCourseData(courseData)
-        }
+        const data = await dataResponse.json()
+        const courseData = data.distinct_files
+        setCourseData(courseData)
       } catch (error) {
         console.error(error)
 
@@ -89,9 +89,14 @@ const ToolsPage: NextPage = () => {
       })
     }
     fetchCourseData()
-  }, [router.isReady, auth.isLoading, courseName])
+  }, [router.isReady, auth.isLoading, courseName, courseExists])
 
-  if (auth.isLoading || isLoading || courseName === undefined) {
+  if (
+    auth.isLoading ||
+    isLoading ||
+    isCourseExistsLoading ||
+    courseName === undefined
+  ) {
     return <LoadingPlaceholderForAdminPages />
   }
 
