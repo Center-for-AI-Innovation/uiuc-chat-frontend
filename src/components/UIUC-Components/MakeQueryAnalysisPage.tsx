@@ -125,9 +125,7 @@ const formatPercentageChange = (value: number | null | undefined) => {
 const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
   const { classes, theme } = useStyles()
   const auth = useAuth()
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
+
   const [currentEmail, setCurrentEmail] = useState('')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     getInitialCollapsedState(),
@@ -181,29 +179,14 @@ const MakeQueryAnalysisPage = ({ course_name }: { course_name: string }) => {
     null,
   )
 
+  const { data: courseMetadata = null } = useFetchCourseMetadata({
+    courseName: currentPageName,
+  })
+
   // TODO: remove this hook... we should already have this from the /materials props???
   useEffect(() => {
-    const fetchData = async () => {
-      setCurrentEmail(auth.user?.profile.email as string)
-
-      try {
-        const metadata: CourseMetadata = (await fetchCourseMetadata(
-          currentPageName,
-        )) as CourseMetadata
-
-        if (metadata && metadata.is_private) {
-          metadata.is_private = JSON.parse(
-            metadata.is_private as unknown as string,
-          )
-        }
-        setCourseMetadata(metadata)
-      } catch (error) {
-        console.error(error)
-      }
-    }
-
-    fetchData()
-  }, [currentPageName, !auth.isLoading, auth.user])
+    setCurrentEmail(auth.user?.profile.email as string)
+  }, [!auth.isLoading, auth.user])
 
   const [hasConversationData, setHasConversationData] = useState<boolean>(true)
 
@@ -1243,40 +1226,7 @@ import GlobalFooter from './GlobalFooter'
 
 import Link from 'next/link'
 import NomicDocumentMap from './NomicDocumentsMap'
-
-async function fetchCourseMetadata(course_name: string) {
-  try {
-    const response = await fetch(
-      `/api/UIUC-api/getCourseMetadata?course_name=${course_name}`,
-    )
-    if (response.ok) {
-      const data = await response.json()
-      if (data.success === false) {
-        throw new Error(
-          data.message || 'An error occurred while fetching course metadata',
-        )
-      }
-      // Parse is_private field from string to boolean
-      if (
-        data.course_metadata &&
-        typeof data.course_metadata.is_private === 'string'
-      ) {
-        data.course_metadata.is_private =
-          data.course_metadata.is_private.toLowerCase() === 'true'
-      }
-      return data.course_metadata
-    } else {
-      throw new Error(
-        `Error fetching course metadata: ${
-          response.statusText || response.status
-        }`,
-      )
-    }
-  } catch (error) {
-    console.error('Error fetching course metadata:', error)
-    throw error
-  }
-}
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 const showToastOnFileDeleted = (theme: MantineTheme, was_error = false) => {
   return (

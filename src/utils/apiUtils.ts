@@ -162,7 +162,7 @@ export async function fetchPresignedUrl(
  */
 export async function fetchCourseMetadata(course_name: string): Promise<any> {
   try {
-    const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${course_name}`
+    const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${encodeURIComponent(course_name)}`
     const response = await fetch(endpoint)
 
     if (!response.ok) {
