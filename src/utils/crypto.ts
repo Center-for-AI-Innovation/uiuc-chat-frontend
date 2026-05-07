@@ -105,3 +105,35 @@ export const encryptKeyIfNeeded = async (key: string) => {
   }
   return key
 }
+
+// Per-project external connection configs are stored encrypted in JSONB
+// columns shaped as `{ "encrypted": "v1.<ciphertext+tag>.<iv>" }` by the
+// Flask backend's `encrypt_config()` (AES-256-GCM, SHA-256-of-key-string
+// derivation). Decrypts with `ENCRYPTION_MASTER_KEY` (server-side env var
+// — never exposed to the browser).
+export type EncryptedField = { encrypted: string } | null | undefined
+
+export async function decryptProjectConfig<T = unknown>(
+  field: EncryptedField,
+): Promise<T | null> {
+  if (!field || typeof field !== 'object' || !field.encrypted) {
+    return null
+  }
+  const masterKey = process.env.ENCRYPTION_MASTER_KEY
+  if (!masterKey) {
+    throw new Error(
+      'ENCRYPTION_MASTER_KEY is not set; cannot decrypt project external connection config',
+    )
+  }
+  const plaintext = await decrypt(field.encrypted, masterKey)
+  if (plaintext == null) {
+    throw new Error('decrypt() returned null/undefined for project config')
+  }
+  try {
+    return JSON.parse(plaintext) as T
+  } catch (e) {
+    throw new Error(
+      'Failed to JSON-parse decrypted project config: ' + (e as Error).message,
+    )
+  }
+}

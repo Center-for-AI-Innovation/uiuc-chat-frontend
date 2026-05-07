@@ -1,4 +1,5 @@
-import { db, documentsFailed } from '~/db/dbClient'
+import { documentsFailed } from '~/db/dbClient'
+import { connectionManager } from '~/utils/connectionManager'
 import { eq, sql, and, gte, InferSelectModel } from 'drizzle-orm'
 import type { NextApiResponse, NextApiRequest } from 'next'
 import { AuthenticatedRequest } from '~/utils/authMiddleware'
@@ -40,6 +41,8 @@ async function fetchFailedDocuments(
   const from = parseInt(fromStr as string)
   const to = parseInt(toStr as string)
   try {
+    const db = await connectionManager.getDocumentsDb(course_name as string)
+
     let failedDocs
     let finalError
 

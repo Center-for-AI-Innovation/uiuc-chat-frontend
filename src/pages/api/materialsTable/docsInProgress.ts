@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm'
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { db, documentsInProgress } from '~/db/dbClient'
+import { documentsInProgress } from '~/db/dbClient'
+import { connectionManager } from '~/utils/connectionManager'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 // This is for "Documents in Progress" table, docs that are still being ingested.
@@ -23,6 +24,7 @@ async function docsInProgress(
   const course_name = req.query.course_name as string
 
   try {
+    const db = await connectionManager.getDocumentsDb(course_name)
     const data = await db
       .select({
         readable_filename: documentsInProgress.readable_filename,

@@ -2,7 +2,7 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post'
-import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
+import { connectionManager } from '~/utils/connectionManager'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
 const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
@@ -27,30 +27,19 @@ const handler = async (req: AuthenticatedRequest, res: NextApiResponse) => {
       uploadType === 'chat'
         ? `users/${user_id}/${uniqueFileName}`
         : `courses/${courseName}/${uniqueFileName}`
-    let post
-    if (courseName === 'vyriad') {
-      if (!vyriadMinioClient) {
-        throw new Error(
-          'MinIO client not configured - missing required environment variables',
-        )
-      }
-      post = await createPresignedPost(vyriadMinioClient, {
-        Bucket: process.env.S3_BUCKET_NAME!,
-        Key: s3_filepath,
-        Expires: 60 * 60, // 1 hour
-      })
-    } else {
-      if (!s3Client) {
-        throw new Error(
-          'S3 client not configured - missing required environment variables',
-        )
-      }
-      post = await createPresignedPost(s3Client, {
-        Bucket: process.env.S3_BUCKET_NAME!,
-        Key: s3_filepath,
-        Expires: 60 * 60, // 1 hour
-      })
+
+    const { client, bucket } = await connectionManager.getS3Client(courseName)
+    if (!bucket) {
+      throw new Error(
+        `S3 bucket not configured for project '${courseName}' (no s3_config.bucket_name and S3_BUCKET_NAME unset)`,
+      )
     }
+
+    const post = await createPresignedPost(client, {
+      Bucket: bucket,
+      Key: s3_filepath,
+      Expires: 60 * 60, // 1 hour
+    })
 
     res
       .status(200)
