@@ -41,6 +41,7 @@ import { PromptList } from './PromptList'
 import { VariableModal } from './VariableModal'
 
 import { Tooltip, useMantineTheme } from '@mantine/core'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   showToast,
   showErrorToast,
@@ -270,6 +271,14 @@ export const ChatInput = ({
   const [showPluginSelect, setShowPluginSelect] = useState(false)
   const [plugin, setPlugin] = useState<Plugin | null>(null)
   const [isDragging, setIsDragging] = useState<boolean>(false)
+  const [dismissedCocModelId, setDismissedCocModelId] = useState<string | null>(
+    null,
+  )
+  const [chatbarRect, setChatbarRect] = useState<{
+    height: number
+    left: number
+    width: number
+  }>({ height: 0, left: 0, width: 0 })
   const promptListRef = useRef<HTMLUListElement | null>(null)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
@@ -916,42 +925,91 @@ export const ChatInput = ({
     }
   }, [handleResize])
 
+  // Track chatbar geometry so the country-of-concern banner can sit just
+  // above it (with a small overlap) and align exactly with its left/width.
+  // The chatbar's rounded top corners then reveal the banner color around
+  // them.
+  useEffect(() => {
+    const el = chatInputParentContainerRef.current
+    if (!el) return
+    const update = () => {
+      const r = el.getBoundingClientRect()
+      setChatbarRect({ height: r.height, left: r.left, width: r.width })
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    window.addEventListener('resize', update)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [])
+
   return (
     <div
       className={`w-full border-transparent bg-transparent pt-6 md:pt-2`}
       style={{ pointerEvents: 'none' }}
     >
-      {/* Country-of-concern banner */}
+      {/* Country-of-concern banner — fixed-positioned BEHIND the chatbar
+          so the chatbar's rounded top corners reveal the amber color. */}
       {(() => {
         const activeModelId =
           selectedConversation?.model?.id ?? selectBestModel(llmProviders)?.id
         const country = getCountryOfConcern(activeModelId)
-        if (!country) return null
         const activeModelName =
           selectedConversation?.model?.name ??
           selectBestModel(llmProviders)?.name ??
           'This model'
+        const showBanner =
+          !!country && !!activeModelId && dismissedCocModelId !== activeModelId
+        // Overlap: 24px of the banner sits behind the chatbar's top edge
+        const overlapPx = 24
         return (
-          <div className="flex justify-center">
-            <div
-              role="status"
-              aria-live="polite"
-              className="relative z-0 flex w-[calc(80%+32px)] translate-y-[16px] items-start gap-2 rounded-t-3xl bg-[--illinois-orange] px-3 pb-8 pt-2 text-white shadow-sm"
-              style={{ pointerEvents: 'auto' }}
-            >
-              <IconAlertTriangleFilled
-                size={18}
-                aria-hidden="true"
-                style={{ flexShrink: 0, color: '#d97706', marginTop: 2 }}
-              />
-              <div className="text-xs leading-snug">
-                <strong>{activeModelName}</strong> originates from{' '}
-                <strong>{country}</strong>, a country of concern flagged by the
-                U.S. Department of Commerce. Avoid sharing sensitive or
-                proprietary information with this model.
-              </div>
-            </div>
-          </div>
+          <AnimatePresence initial={false}>
+            {showBanner && (
+              <motion.div
+                key={`coc-banner-${activeModelId}`}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 24 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="pointer-events-none fixed"
+                style={{
+                  bottom: `${Math.max(chatbarRect.height - overlapPx, 0)}px`,
+                  left: `${chatbarRect.left}px`,
+                  width: `${chatbarRect.width}px`,
+                  zIndex: 0,
+                }}
+              >
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="pointer-events-auto relative flex items-start gap-2 rounded-t-3xl bg-[--illinois-orange] px-4 pb-10 pr-10 pt-3 text-white shadow-sm"
+                >
+                  <IconAlertTriangleFilled
+                    size={18}
+                    aria-hidden="true"
+                    style={{ flexShrink: 0, color: '#fde047', marginTop: 2 }}
+                  />
+                  <div className="text-xs leading-snug">
+                    <strong>{activeModelName}</strong> originates from{' '}
+                    <strong>{country}</strong>, a country of concern flagged by
+                    the U.S. Department of Commerce. Avoid sharing sensitive or
+                    proprietary information with this model.
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="Dismiss country of concern warning"
+                    onClick={() => setDismissedCocModelId(activeModelId)}
+                    className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-white/80 transition hover:bg-white/15 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  >
+                    <IconX size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         )
       })()}
 
@@ -961,7 +1019,7 @@ export const ChatInput = ({
       >
         <div
           ref={chatInputParentContainerRef}
-          className="chat_input_container fixed bottom-0 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl bg-[--message-background] px-4 pb-8 pt-4 text-[--message] md:mx-20 md:w-[60%]"
+          className="chat_input_container fixed bottom-0 z-10 mx-4 flex w-[80%] flex-col self-center rounded-t-3xl bg-[--message-background] px-4 pb-8 pt-4 text-[--message] md:mx-20 md:w-[60%]"
           style={{ pointerEvents: 'auto', backdropFilter: 'blur(4px)' }}
         >
           {/* Stop generating and regenerate buttons */}

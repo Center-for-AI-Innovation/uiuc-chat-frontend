@@ -1,5 +1,6 @@
 import { ProviderNames, type OpenAICompatibleProvider } from '../LLMProvider'
 import { OpenAICompatibleModels } from '../types/openaiCompatible'
+import { isCountryOfConcern } from '../countriesOfConcern'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 
 interface ModelResponse {
@@ -109,9 +110,10 @@ export const getOpenAICompatibleModels = async (
         const existingModel = openAICompatibleProvider.models?.find(
           (m) => m.id.toLowerCase() === model.id.toLowerCase(),
         )
+        const flagged = isCountryOfConcern(model.id)
         return {
           ...model,
-          enabled: existingModel?.enabled ?? model.enabled,
+          enabled: existingModel?.enabled ?? (flagged ? false : model.enabled),
           default: existingModel?.default ?? model.default,
         }
       })

@@ -3,6 +3,7 @@ import {
   type NCSAHostedProvider,
 } from '~/utils/modelProviders/LLMProvider'
 import { OllamaModelIDs, OllamaModels, type OllamaModel } from './ollama'
+import { isCountryOfConcern } from './countriesOfConcern'
 
 export const getNCSAHostedModels = async (
   ncsaHostedProvider: NCSAHostedProvider,
@@ -69,7 +70,7 @@ export const getNCSAHostedModels = async (
         const existingState = existingModelStates.get(model.id)
         return {
           ...model,
-          enabled: existingState?.enabled ?? true,
+          enabled: existingState?.enabled ?? !isCountryOfConcern(model.id),
           default: existingState?.default ?? false,
         }
       })

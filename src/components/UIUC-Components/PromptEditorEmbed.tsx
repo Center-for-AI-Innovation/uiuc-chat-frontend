@@ -40,6 +40,10 @@ import { useDebouncedCallback } from 'use-debounce'
 import { v4 as uuidv4 } from 'uuid'
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
+import {
+  getCountryOfConcern,
+  getCountryOfConcernShortMessage,
+} from '~/utils/modelProviders/countriesOfConcern'
 import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
 import { Switch } from '@/components/shadcn/ui/switch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
@@ -543,21 +547,27 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         currentSwitchState.vectorSearchRewrite
       ) {
         changes.push(
-          `Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`,
+          `Smart Document Search ${
+            currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
         initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning
       ) {
         changes.push(
-          `Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`,
+          `Guided Learning ${
+            currentSwitchState.guidedLearning ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
         initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly
       ) {
         changes.push(
-          `Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`,
+          `Document-Based References Only ${
+            currentSwitchState.documentsOnly ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
@@ -565,7 +575,9 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         currentSwitchState.systemPromptOnly
       ) {
         changes.push(
-          `Bypass Illinois Chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
+          `Bypass Illinois Chat's internal prompting ${
+            currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
@@ -573,7 +585,9 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         currentSwitchState.agentModeFeatureEnabled
       ) {
         changes.push(
-          `Agent Mode ${currentSwitchState.agentModeFeatureEnabled ? 'enabled' : 'disabled'}`,
+          `Agent Mode ${
+            currentSwitchState.agentModeFeatureEnabled ? 'enabled' : 'disabled'
+          }`,
         )
       }
 
@@ -1144,6 +1158,37 @@ CRITICAL: The optimized prompt must:
                                 <Text size="sm" style={{ marginLeft: '12px' }}>
                                   {props.label}
                                 </Text>
+                                {(() => {
+                                  const country = getCountryOfConcern(
+                                    props.modelId ?? props.value,
+                                  )
+                                  if (!country) return null
+                                  return (
+                                    <Tooltip
+                                      multiline
+                                      width={280}
+                                      withArrow
+                                      label={getCountryOfConcernShortMessage(
+                                        country,
+                                      )}
+                                    >
+                                      <span
+                                        aria-label={`Country of concern warning: ${country}`}
+                                        style={{
+                                          marginLeft: '6px',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                        }}
+                                      >
+                                        <IconAlertTriangleFilled
+                                          size="0.9rem"
+                                          aria-hidden="true"
+                                          style={{ color: '#f59e0b' }}
+                                        />
+                                      </span>
+                                    </Tooltip>
+                                  )
+                                })()}
                               </div>
                               {props.downloadSize && (
                                 <div
@@ -1297,12 +1342,46 @@ CRITICAL: The optimized prompt must:
                           },
                         },
                       })}
-                      rightSection={
-                        <IconChevronDown
-                          size={isSmallScreen ? 12 : 14}
-                          style={{ marginRight: '8px' }}
-                        />
-                      }
+                      rightSection={(() => {
+                        const country = getCountryOfConcern(selectedModel)
+                        return (
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            {country && (
+                              <Tooltip
+                                multiline
+                                width={280}
+                                withArrow
+                                label={getCountryOfConcernShortMessage(country)}
+                              >
+                                <span
+                                  aria-label={`Country of concern warning: ${country}`}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    pointerEvents: 'auto',
+                                  }}
+                                >
+                                  <IconAlertTriangleFilled
+                                    size={isSmallScreen ? 12 : 14}
+                                    aria-hidden="true"
+                                    style={{ color: '#f59e0b' }}
+                                  />
+                                </span>
+                              </Tooltip>
+                            )}
+                            <IconChevronDown
+                              size={isSmallScreen ? 12 : 14}
+                              style={{ marginRight: '8px' }}
+                            />
+                          </div>
+                        )
+                      })()}
                       icon={
                         selectedModel ? (
                           <Image
