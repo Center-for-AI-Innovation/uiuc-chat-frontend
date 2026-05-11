@@ -1,5 +1,5 @@
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
@@ -1125,4 +1125,1648 @@ describe('ChatMessage', () => {
 
     await waitFor(() => expect(api.fetchPresignedUrl).toHaveBeenCalled())
   }, 20000)
+
+  // ---------- NEW COVERAGE TESTS ----------
+
+  it('renders a user message with simple string content (non-array)', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const userMsg = makeMessage({
+      id: 'u-simple',
+      role: 'user',
+      content: 'Just a plain text message',
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-simple',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={userMsg as any}
+        messageIndex={0}
+        courseName="CS101"
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(
+      await screen.findByText('Just a plain text message'),
+    ).toBeInTheDocument()
+  })
+
+  it('cancels editing without saving via the Cancel button', async () => {
+    const user = userEvent.setup()
+    const onEdit = vi.fn()
+
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const userMsg = makeMessage({
+      id: 'u-cancel',
+      role: 'user',
+      content: 'Original message',
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-cancel',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={userMsg as any}
+        messageIndex={0}
+        courseName="CS101"
+        onEdit={onEdit as any}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // Enter edit mode
+    await user.click(screen.getByRole('button', { name: /Edit message/i }))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+
+    // Click Cancel
+    await user.click(screen.getByRole('button', { name: /Cancel/i }))
+
+    // Should exit editing mode without calling onEdit
+    expect(onEdit).not.toHaveBeenCalled()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  })
+
+  it('does not submit edit when message content is empty', async () => {
+    const user = userEvent.setup()
+    const onEdit = vi.fn()
+
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const userMsg = makeMessage({
+      id: 'u-empty',
+      role: 'user',
+      content: 'Hello',
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-empty',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={userMsg as any}
+        messageIndex={0}
+        courseName="CS101"
+        onEdit={onEdit as any}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    await user.click(screen.getByRole('button', { name: /Edit message/i }))
+    const textarea = screen.getByRole('textbox')
+    await user.clear(textarea)
+
+    // The Save & Submit button should be disabled when empty
+    const saveBtn = screen.getByRole('button', { name: /Save & Submit/i })
+    expect(saveBtn).toBeDisabled()
+
+    // Pressing Enter with empty content should not submit
+    await user.keyboard('{Enter}')
+    expect(onEdit).not.toHaveBeenCalled()
+  })
+
+  it('does not submit edit on Shift+Enter (allows newline)', async () => {
+    const user = userEvent.setup()
+    const onEdit = vi.fn()
+
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const userMsg = makeMessage({
+      id: 'u-shift',
+      role: 'user',
+      content: 'Hello',
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-shift',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={userMsg as any}
+        messageIndex={0}
+        courseName="CS101"
+        onEdit={onEdit as any}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    await user.click(screen.getByRole('button', { name: /Edit message/i }))
+    await user.keyboard('{Shift>}{Enter}{/Shift}')
+
+    // Shift+Enter should NOT submit
+    expect(onEdit).not.toHaveBeenCalled()
+  })
+
+  it('renders "Generating final response" spinner when loading and tools are done', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-loading',
+      role: 'user',
+      content: 'Question',
+      tools: [
+        {
+          id: 'tool-done',
+          name: 'done_tool',
+          readableName: 'DoneTool',
+          description: 'd',
+          output: { text: 'result' },
+        } as any,
+      ],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-loading',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: true,
+          isRouting: false,
+          isRetrievalLoading: false,
+          isImg2TextLoading: false,
+          isQueryRewriting: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(
+      await screen.findByText('Generating final response…'),
+    ).toBeInTheDocument()
+  })
+
+  it('does NOT show "Generating final response" when agent mode is enabled', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-agent-loading',
+      role: 'user',
+      content: 'Question',
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-agent-loading',
+      messages: [userMsg],
+      agentModeEnabled: true,
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: true,
+          isRouting: false,
+          isRetrievalLoading: false,
+          isImg2TextLoading: false,
+          isQueryRewriting: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // Wait for render then assert absence
+    await waitFor(() =>
+      expect(screen.getByText('Question')).toBeInTheDocument(),
+    )
+    expect(
+      screen.queryByText('Generating final response…'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows wasQueryRewritten=false accordion text', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-noqr',
+      role: 'user',
+      content: 'Question',
+      wasQueryRewritten: false,
+      queryRewriteText: '',
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-noqr',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isQueryRewriting: false,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(
+      await screen.findByText('No query optimization necessary'),
+    ).toBeInTheDocument()
+  })
+
+  it('shows tool routing accordions with argument display when isRouting=false and tools present', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-toolroute',
+      role: 'user',
+      content: 'Question',
+      tools: [
+        {
+          id: 'tool-routed',
+          name: 'my_tool',
+          readableName: 'MyTool',
+          description: 'd',
+          aiGeneratedArgumentValues: {
+            query: 'test query',
+          },
+          output: { text: 'Tool output result text' },
+        } as any,
+      ],
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-toolroute',
+      role: 'assistant',
+      content: 'Tool result',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-toolroute',
+      messages: [userMsg, assistantMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRouting: false,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // Tool routing accordion with badge
+    await waitFor(() => {
+      expect(
+        screen.getAllByText('MyTool', { exact: false }).length,
+      ).toBeGreaterThanOrEqual(1)
+    })
+    // Tool output accordion
+    expect(
+      screen.getAllByText(/Tool output from/i).length,
+    ).toBeGreaterThanOrEqual(1)
+  })
+
+  it('shows tool error state in output accordion', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-toolerr',
+      role: 'user',
+      content: 'Question',
+      tools: [
+        {
+          id: 'tool-err',
+          name: 'err_tool',
+          readableName: 'ErrTool',
+          description: 'd',
+          error: 'Something went wrong with the tool',
+        } as any,
+      ],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-toolerr',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRouting: false,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(
+      await screen.findByText('Something went wrong with the tool'),
+    ).toBeInTheDocument()
+  })
+
+  it('shows tool output with data (JSON) when no text field', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-tooldata',
+      role: 'user',
+      content: 'Question',
+      tools: [
+        {
+          id: 'tool-data',
+          name: 'data_tool',
+          readableName: 'DataTool',
+          description: 'd',
+          output: { data: { key: 'value' } },
+        } as any,
+      ],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-tooldata',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRouting: false,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // JSON.stringify output should appear
+    await waitFor(() =>
+      expect(screen.getByText(/"key": "value"/)).toBeInTheDocument(),
+    )
+  })
+
+  it('hides edit button when user message contains image_url content', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const userMsg = makeMessage({
+      id: 'u-img',
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Look at this' },
+        {
+          type: 'image_url',
+          image_url: { url: 'https://example.com/image.png' },
+        },
+      ] as any,
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-img',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={userMsg as any}
+        messageIndex={0}
+        courseName="CS101"
+        onEdit={vi.fn() as any}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    await screen.findByText('Look at this')
+
+    // The edit button should have the 'hidden' class when image_url content exists
+    const editBtn = screen.getByRole('button', { name: /Edit message/i })
+    expect(editBtn.className).toContain('hidden')
+  })
+
+  it('does not show MessageActions while streaming the last assistant message', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const assistantMsg = makeMessage({
+      id: 'a-streaming',
+      role: 'assistant',
+      content: 'Partial response...',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-streaming',
+      messages: [
+        makeMessage({ id: 'u1', role: 'user', content: 'Q' }),
+        assistantMsg,
+      ],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={assistantMsg as any}
+        messageIndex={1}
+        courseName="CS101"
+        onFeedback={vi.fn() as any}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: true,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    await waitFor(() =>
+      expect(screen.queryByText('Partial response...')).toBeInTheDocument(),
+    )
+
+    // MessageActions mock renders "Open feedback" button - should not appear while streaming
+    expect(
+      screen.queryByRole('button', { name: /Open feedback/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not show MessageActions while loading the last assistant message', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const assistantMsg = makeMessage({
+      id: 'a-loading',
+      role: 'assistant',
+      content: 'Response text',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-load',
+      messages: [
+        makeMessage({ id: 'u1', role: 'user', content: 'Q' }),
+        assistantMsg,
+      ],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={assistantMsg as any}
+        messageIndex={1}
+        courseName="CS101"
+        onFeedback={vi.fn() as any}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: true,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    await waitFor(() =>
+      expect(screen.getByText('Response text')).toBeInTheDocument(),
+    )
+    expect(
+      screen.queryByRole('button', { name: /Open feedback/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows MessageActions for a non-last assistant message even when streaming', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const assistantMsg = makeMessage({
+      id: 'a-old',
+      role: 'assistant',
+      content: 'Old answer',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-old',
+      messages: [
+        makeMessage({ id: 'u1', role: 'user', content: 'Q1' }),
+        assistantMsg,
+        makeMessage({ id: 'u2', role: 'user', content: 'Q2' }),
+        makeMessage({
+          id: 'a2',
+          role: 'assistant',
+          content: 'New answer...',
+        }),
+      ],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={assistantMsg as any}
+        messageIndex={1}
+        courseName="CS101"
+        onFeedback={vi.fn() as any}
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: true,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // This is not the last message, so MessageActions should appear even if streaming
+    expect(
+      await screen.findByRole('button', { name: /Open feedback/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('does not show Sources button while streaming the last assistant message', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const ctxPdf = makeContextWithMetadata({
+      readable_filename: 'Doc.pdf',
+      s3_path: 'cs101/doc.pdf',
+      url: '',
+    })
+
+    const userMsg = makeMessage({
+      id: 'u1',
+      role: 'user',
+      content: 'Q',
+      contexts: [ctxPdf],
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-stream-src',
+      role: 'assistant',
+      content: 'Working...',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-stream-src',
+      messages: [userMsg, assistantMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={assistantMsg as any}
+          messageIndex={1}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: true,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    await waitFor(() =>
+      expect(screen.getByText('Working...')).toBeInTheDocument(),
+    )
+    expect(
+      screen.queryByRole('button', { name: /Sources/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('renders assistant message with own contexts (not from previous user message)', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const ctx = makeContextWithMetadata({
+      readable_filename: 'OwnCtx.pdf',
+      s3_path: 'cs101/own.pdf',
+      url: '',
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-own-ctx',
+      role: 'assistant',
+      content: 'Answer with own contexts',
+      contexts: [ctx],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-own-ctx',
+      messages: [
+        makeMessage({ id: 'u1', role: 'user', content: 'Q' }),
+        assistantMsg,
+      ],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={assistantMsg as any}
+          messageIndex={1}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // Sources button should appear because assistant itself has contexts
+    expect(
+      await screen.findByRole('button', { name: /Sources/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('renders user message with image description text in accordion', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-imgdesc',
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Check this' },
+        {
+          type: 'text',
+          text: 'Image description: A cat sitting on a mat',
+        },
+        {
+          type: 'image_url',
+          image_url: { url: 'https://example.com/cat.png' },
+        },
+      ] as any,
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-imgdesc',
+      role: 'assistant',
+      content: 'Description response',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-imgdesc',
+      messages: [userMsg, assistantMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // The image description accordion should render
+    await waitFor(() => {
+      expect(
+        screen.getAllByText(/Image Description/i).length,
+      ).toBeGreaterThanOrEqual(1)
+    })
+
+    // The text "Check this" should render but NOT the "Image description:" text as regular text
+    expect(screen.getByText('Check this')).toBeInTheDocument()
+  })
+
+  it('renders file cards for xls and ppt file types', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const userMsg = makeMessage({
+      id: 'u-office',
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Office files' },
+        {
+          type: 'file',
+          fileName: 'data.xlsx',
+          fileType:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          fileUrl: 'cs101/data.xlsx',
+        },
+        {
+          type: 'file',
+          fileName: 'slides.pptx',
+          fileType:
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          fileUrl: 'cs101/slides.pptx',
+        },
+      ] as any,
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-office',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={userMsg as any}
+        messageIndex={0}
+        courseName="CS101"
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // Both files should render (truncated or not)
+    expect(await screen.findByText(/data\.xlsx/)).toBeInTheDocument()
+    expect(screen.getByText(/slides\.pptx/)).toBeInTheDocument()
+  })
+
+  it('renders retrieval loading accordion for user message at second-to-last position', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-ret',
+      role: 'user',
+      content: 'Question about docs',
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-ret',
+      role: 'assistant',
+      content: '',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-ret',
+      messages: [userMsg, assistantMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRetrievalLoading: true,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(await screen.findByText(/Retrieving documents/i)).toBeInTheDocument()
+  })
+
+  it('renders routing accordion for user message at second-to-last position', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-route2',
+      role: 'user',
+      content: 'Route this',
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-route2',
+      role: 'assistant',
+      content: '',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-route2',
+      messages: [userMsg, assistantMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRouting: true,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(
+      await screen.findByText(/Routing the request to relevant tools/i),
+    ).toBeInTheDocument()
+  })
+
+  it('renders query rewriting accordion for last user message', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-qr',
+      role: 'user',
+      content: 'Search this',
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-qr',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isQueryRewriting: true,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(
+      await screen.findByText(/Optimizing search query/i),
+    ).toBeInTheDocument()
+  })
+
+  it('renders tool output with imageUrls in output accordion', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-toolimg',
+      role: 'user',
+      content: 'Generate image',
+      tools: [
+        {
+          id: 'tool-imgout',
+          name: 'img_tool',
+          readableName: 'ImgTool',
+          description: 'd',
+          output: {
+            imageUrls: ['https://example.com/output.png'],
+            text: 'Here is the generated image',
+          },
+        } as any,
+      ],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-toolimg',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRouting: false,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByText(/Tool output from/i).length,
+      ).toBeGreaterThanOrEqual(1),
+    )
+  })
+
+  it('renders tool still loading (no output, no error)', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-toolpending',
+      role: 'user',
+      content: 'Waiting for tool',
+      tools: [
+        {
+          id: 'tool-pending',
+          name: 'pending_tool',
+          readableName: 'PendingTool',
+          description: 'd',
+          // No output and no error => isLoading should be true
+        } as any,
+      ],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-toolpending',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRouting: false,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(await screen.findByText(/Tool output from/i)).toBeInTheDocument()
+  })
+
+  it('renders tool argument values with image_urls containing items', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-toolargimg',
+      role: 'user',
+      content: 'With tool images',
+      tools: [
+        {
+          id: 'tool-argimg',
+          name: 'img_arg_tool',
+          readableName: 'ImgArgTool',
+          description: 'd',
+          aiGeneratedArgumentValues: {
+            image_urls: JSON.stringify([
+              'https://example.com/arg1.png',
+              'https://example.com/arg2.png',
+            ]),
+          },
+          output: { text: 'done' },
+        } as any,
+      ],
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-toolargimg',
+      role: 'assistant',
+      content: 'Tool images result',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-toolargimg',
+      messages: [userMsg, assistantMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRouting: false,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // The tool routing accordion with image_urls should render
+    await waitFor(() => {
+      expect(
+        screen.getAllByText('ImgArgTool', { exact: false }).length,
+      ).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  it('renders tool argument values with empty image_urls array showing "No arguments provided"', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-toolnoarg',
+      role: 'user',
+      content: 'Empty tool args',
+      tools: [
+        {
+          id: 'tool-noarg',
+          name: 'empty_arg_tool',
+          readableName: 'EmptyArgTool',
+          description: 'd',
+          aiGeneratedArgumentValues: {
+            image_urls: JSON.stringify([]),
+          },
+          output: { text: 'done' },
+        } as any,
+      ],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-toolnoarg',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRouting: false,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(await screen.findByText('No arguments provided')).toBeInTheDocument()
+  })
+
+  it('renders web context thumbnails as favicons', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const ctxWeb = makeContextWithMetadata({
+      readable_filename: 'Web page',
+      s3_path: undefined,
+      url: 'https://example.com/page',
+    })
+
+    const userMsg = makeMessage({
+      id: 'u-web',
+      role: 'user',
+      content: 'Q',
+      contexts: [ctxWeb],
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-web',
+      role: 'assistant',
+      content: 'Answer about web',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-web',
+      messages: [userMsg, assistantMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={assistantMsg as any}
+          messageIndex={1}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // Sources button should appear
+    expect(
+      await screen.findByRole('button', { name: /Sources/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('renders assistant message with array content (Content[])', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const assistantMsg = makeMessage({
+      id: 'a-array',
+      role: 'assistant',
+      content: [
+        { type: 'text', text: 'First paragraph' },
+        { type: 'text', text: 'Second paragraph' },
+      ] as any,
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-array',
+      messages: [
+        makeMessage({ id: 'u1', role: 'user', content: 'Q' }),
+        assistantMsg,
+      ],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={assistantMsg as any}
+        messageIndex={1}
+        courseName="CS101"
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // The content should be joined and rendered
+    expect(await screen.findByText(/First paragraph/)).toBeInTheDocument()
+  })
+
+  it('renders assistant message with array content containing think tags', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const assistantMsg = makeMessage({
+      id: 'a-array-think',
+      role: 'assistant',
+      content: [
+        {
+          type: 'text',
+          text: '<think>internal reasoning</think>The answer is 42',
+        },
+      ] as any,
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-array-think',
+      messages: [
+        makeMessage({ id: 'u1', role: 'user', content: 'Q' }),
+        assistantMsg,
+      ],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={assistantMsg as any}
+        messageIndex={1}
+        courseName="CS101"
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(await screen.findByText(/AI's Thought Process/i)).toBeInTheDocument()
+    expect(screen.getByText(/The answer is 42/)).toBeInTheDocument()
+  })
+
+  it('handles img2Text loading accordion for second-to-last user message', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-img2t',
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What is this?' },
+        { type: 'text', text: 'Image description: A cat' },
+        {
+          type: 'image_url',
+          image_url: { url: 'https://example.com/cat.png' },
+        },
+      ] as any,
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-img2t',
+      role: 'assistant',
+      content: '',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-img2t',
+      messages: [userMsg, assistantMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isImg2TextLoading: true,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // Should show image description accordion(s) - both loading and static
+    const descriptions = await screen.findAllByText(/Image Description/i)
+    expect(descriptions.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('renders assistant message with no content gracefully', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const assistantMsg = makeMessage({
+      id: 'a-empty',
+      role: 'assistant',
+      content: '',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-empty-a',
+      messages: [
+        makeMessage({ id: 'u1', role: 'user', content: 'Q' }),
+        assistantMsg,
+      ],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={assistantMsg as any}
+        messageIndex={1}
+        courseName="CS101"
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // Should render the robot icon at minimum
+    await waitFor(() =>
+      expect(document.querySelector('.tabler-icon-robot')).toBeInTheDocument(),
+    )
+  })
+
+  it('renders file card for doc (not docx) file extension', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const userMsg = makeMessage({
+      id: 'u-doc',
+      role: 'user',
+      content: [
+        { type: 'text', text: 'A doc file' },
+        {
+          type: 'file',
+          fileName: 'legacy.doc',
+          fileType: 'application/msword',
+          fileUrl: 'cs101/legacy.doc',
+        },
+      ] as any,
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-doc',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={userMsg as any}
+        messageIndex={0}
+        courseName="CS101"
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(await screen.findByText('legacy.doc')).toBeInTheDocument()
+  })
+
+  it('handles a file card without a fileName gracefully (fallback to "Unknown file")', async () => {
+    const { ChatMessage } = await import('../ChatMessage')
+
+    const userMsg = makeMessage({
+      id: 'u-noname',
+      role: 'user',
+      content: [
+        { type: 'text', text: 'File here' },
+        {
+          type: 'file',
+          // No fileName
+          fileType: 'application/octet-stream',
+          fileUrl: 'cs101/mystery',
+        },
+      ] as any,
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-noname',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <ChatMessage
+        message={userMsg as any}
+        messageIndex={0}
+        courseName="CS101"
+      />,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: false,
+        },
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(await screen.findByText('Unknown file')).toBeInTheDocument()
+  })
+
+  it('renders "Generating final response" for second-to-last user message when loading', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-gen2',
+      role: 'user',
+      content: 'Question 2',
+    })
+
+    const assistantMsg = makeMessage({
+      id: 'a-gen2',
+      role: 'assistant',
+      content: '',
+      contexts: [],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-gen2',
+      messages: [userMsg, assistantMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          loading: true,
+          isRouting: false,
+          isRetrievalLoading: false,
+          isImg2TextLoading: false,
+          isQueryRewriting: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    expect(
+      await screen.findByText('Generating final response…'),
+    ).toBeInTheDocument()
+  })
+
+  it('renders tool routing accordion with non-image argument values as JSON pre block', async () => {
+    const { ChatMessage, SourcesSidebarProvider } = await import(
+      '../ChatMessage'
+    )
+
+    const userMsg = makeMessage({
+      id: 'u-tooljson',
+      role: 'user',
+      content: 'Run tool',
+      tools: [
+        {
+          id: 'tool-json',
+          name: 'json_tool',
+          readableName: 'JsonTool',
+          description: 'd',
+          aiGeneratedArgumentValues: {
+            query: 'test',
+            limit: '10',
+          },
+          output: { text: 'result' },
+        } as any,
+      ],
+    })
+
+    const conversation = makeConversation({
+      id: 'conv-tooljson',
+      messages: [userMsg],
+    })
+
+    renderWithProviders(
+      <SourcesSidebarProvider>
+        <ChatMessage
+          message={userMsg as any}
+          messageIndex={0}
+          courseName="CS101"
+        />
+      </SourcesSidebarProvider>,
+      {
+        homeState: {
+          selectedConversation: conversation as any,
+          messageIsStreaming: false,
+          isRouting: false,
+          loading: false,
+        } as any,
+        homeContext: { dispatch: vi.fn() },
+      },
+    )
+
+    // Should render JSON stringified argument values in a pre block
+    await waitFor(() =>
+      expect(screen.getByText(/"query": "test"/)).toBeInTheDocument(),
+    )
+  })
 })

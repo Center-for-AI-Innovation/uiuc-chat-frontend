@@ -333,7 +333,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                 <Text className="">/</Text>
                 <Title
                   order={3}
-                  className={`${montserrat_heading.variable} min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
+                  className={`${
+                    montserrat_heading.variable
+                  } min-w-0 font-montserratHeading text-base text-[--illinois-orange] sm:text-xl ${
                     course_name.length > 40
                       ? 'max-w-[120px] truncate sm:max-w-[300px] lg:max-w-[400px]'
                       : ''
@@ -394,6 +396,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                     <Flex align="center" gap="md">
                       <IconBook
                         size={24}
+                        aria-hidden="true"
                         style={{
                           color: 'var(--dashboard-button)',
                         }}
@@ -418,7 +421,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                         justifyContent: 'center',
                       }}
                     >
-                      <IconChevronDown size={24} />
+                      <IconChevronDown size={24} aria-hidden="true" />
                     </div>
                   </Flex>
 
@@ -459,6 +462,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                               OpenAI API documentation
                               <IconExternalLink
                                 size={18}
+                                aria-hidden="true"
                                 className="inline-block pl-1"
                                 style={{ position: 'relative', top: '-2px' }}
                               />
@@ -475,6 +479,7 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                               UIUC.chat API documentation
                               <IconExternalLink
                                 size={18}
+                                aria-hidden="true"
                                 className="inline-block pl-1"
                                 style={{ position: 'relative', top: '-2px' }}
                               />
@@ -576,7 +581,11 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
                       radius={'md'}
                       className="min-w-[5rem] -translate-x-1 transform rounded-s-md bg-[--dashboard-button] text-[--dashboard-button-foreground] hover:bg-[--dashboard-button-hover] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
                     >
-                      {copiedApiKey ? <IconCheck /> : <IconCopy />}
+                      {copiedApiKey ? (
+                        <IconCheck aria-hidden="true" />
+                      ) : (
+                        <IconCopy aria-hidden="true" />
+                      )}
                     </Button>
                   }
                   rightSectionWidth={'auto'}

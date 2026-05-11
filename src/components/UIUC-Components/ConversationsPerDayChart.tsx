@@ -141,6 +141,7 @@ const ConversationsPerDayChart: React.FC<ChartProps> = ({
           onChange={(event) => setUseLogScale(event.currentTarget.checked)}
           size="sm"
           color="var(--dashboard-button)"
+          label={<span className="sr-only">Toggle scale</span>}
           aria-label="Toggle between linear and logarithmic scale"
           title="Switch between linear and logarithmic scale visualization"
           styles={{

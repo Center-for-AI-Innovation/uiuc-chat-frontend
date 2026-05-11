@@ -1,6 +1,5 @@
 import React from 'react'
-import { IconCheck, IconX } from '@tabler/icons-react'
-import { Switch, Stack } from '@mantine/core'
+import { Switch } from '@/components/shadcn/ui/switch'
 import { type LLMProvider } from '~/utils/modelProviders/LLMProvider'
 
 export function ModelToggles({
@@ -15,7 +14,7 @@ export function ModelToggles({
     : {}
 
   return (
-    <Stack mt="md">
+    <div className="mt-4 flex flex-col gap-2">
       {Object.entries(providerModels).map(
         ([modelId, modelData]: [string, any]) => (
           <form.Field
@@ -24,44 +23,22 @@ export function ModelToggles({
           >
             {(field: any) => (
               <Switch
+                variant="labeled"
+                showLabels
+                showThumbIcon
+                size="sm"
                 label={modelData.name}
                 checked={field.state.value}
-                onLabel="ON"
-                offLabel="OFF"
-                onChange={(event) => {
-                  field.handleChange(event.currentTarget.checked)
+                onCheckedChange={(checked) => {
+                  field.handleChange(checked)
                   // Trigger form submission
                   setTimeout(() => form.handleSubmit(), 0)
-                }}
-                thumbIcon={
-                  field.state.value ? (
-                    <IconCheck
-                      size="0.8rem"
-                      color="var(--dashboard-button)"
-                      stroke={3}
-                    />
-                  ) : (
-                    <IconX size="0.8rem" color="grey" stroke={3} />
-                  )
-                }
-                styles={{
-                  label: {
-                    color: 'var(--dashboard-foreground)',
-                  },
-                  track: {
-                    backgroundColor: field.state.value
-                      ? 'var(--dashboard-button) !important'
-                      : 'var(--dashboard-background-faded)',
-                    borderColor: field.state.value
-                      ? 'var(--dashboard-button) !important'
-                      : 'var(--dashboard-background-faded)',
-                  },
                 }}
               />
             )}
           </form.Field>
         ),
       )}
-    </Stack>
+    </div>
   )
 }

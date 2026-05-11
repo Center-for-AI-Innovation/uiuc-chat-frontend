@@ -457,6 +457,8 @@ const Home = ({
       fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
+      role="none"
+      aria-hidden="true"
     >
       <defs>
         <linearGradient id="gradient" x1="100%" y1="100%" x2="0%" y2="0%">
@@ -604,7 +606,6 @@ const Home = ({
           <div
             className={`flex h-screen w-screen flex-col pt-20 text-sm text-white dark:text-white`}
           >
-            <h1 className="sr-only">{course_name} — Illinois Chat</h1>
             <Navbar isPlain={false} />
 
             <main
@@ -612,6 +613,7 @@ const Home = ({
               tabIndex={-1}
               className="flex h-full w-full overflow-y-auto sm:pt-0"
             >
+              <h1 className="sr-only">{course_name} — Illinois Chat</h1>
               <Chatbar
                 current_email={current_email}
                 courseName={course_name}
