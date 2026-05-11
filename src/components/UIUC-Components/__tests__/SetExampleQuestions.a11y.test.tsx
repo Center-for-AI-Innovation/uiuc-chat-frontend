@@ -28,9 +28,8 @@ describe('SetExampleQuestions - accessibility', () => {
     await user.clear(input)
     await user.type(input, 'Updated question')
 
-    const saveButton = screen.getAllByRole('button', { name: /Save/i })[0]
-    if (!saveButton) throw new Error('Expected a Save button')
-    fireEvent.click(saveButton)
+    // Component auto-saves on blur (no Save button)
+    fireEvent.blur(input)
 
     await waitFor(() =>
       expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith('CS101', {

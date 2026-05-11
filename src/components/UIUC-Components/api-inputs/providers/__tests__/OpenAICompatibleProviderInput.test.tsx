@@ -90,7 +90,11 @@ describe('OpenAICompatibleProviderInput', () => {
       />,
     )
 
-    expect(screen.getByText(/OpenAI Compatible/i)).toBeInTheDocument()
+    expect(
+      screen.getByRole('switch', {
+        name: /Enable OpenAI Compatible provider/i,
+      }),
+    ).toBeInTheDocument()
     expect(screen.getByTestId('model-toggles')).toBeInTheDocument()
 
     expect(screen.getByText('Base URL must include /v1')).toBeInTheDocument()

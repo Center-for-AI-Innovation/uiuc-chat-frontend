@@ -42,7 +42,7 @@ import { v4 as uuidv4 } from 'uuid'
 import CustomCopyButton from '~/components/Buttons/CustomCopyButton'
 import { getModelLogo } from '~/components/Chat/ModelSelect'
 import { LinkGeneratorModal } from '~/components/Modals/LinkGeneratorModal'
-import CustomSwitch from '~/components/Switches/CustomSwitch'
+import { Switch } from '@/components/shadcn/ui/switch'
 import { findDefaultModel } from '~/components/UIUC-Components/api-inputs/LLMsApiKeyInputForm'
 import { type ChatBody } from '~/types/chat'
 import { type CourseMetadata } from '~/types/courseMetadata'
@@ -131,7 +131,13 @@ export const showPromptToast = (
     autoClose: duration,
     title: title,
     message: message,
-    icon: icon || (isError ? <IconAlertTriangle /> : <IconCheck />),
+    icon:
+      icon ||
+      (isError ? (
+        <IconAlertTriangle aria-hidden="true" />
+      ) : (
+        <IconCheck aria-hidden="true" />
+      )),
     styles: {
       root: {
         backgroundColor: 'var(--notification)', // Dark background to match the page
@@ -199,7 +205,11 @@ export const showToastNotification = (
     autoClose: duration,
     title: title,
     message: message,
-    icon: isError ? <IconAlertTriangle /> : <IconCheck />,
+    icon: isError ? (
+      <IconAlertTriangle aria-hidden="true" />
+    ) : (
+      <IconCheck aria-hidden="true" />
+    ),
     styles: {
       root: {
         backgroundColor: 'var(--notification)',
@@ -545,21 +555,27 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         currentSwitchState.vectorSearchRewrite
       ) {
         changes.push(
-          `Smart Document Search ${currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'}`,
+          `Smart Document Search ${
+            currentSwitchState.vectorSearchRewrite ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
         initialSwitchState.guidedLearning !== currentSwitchState.guidedLearning
       ) {
         changes.push(
-          `Guided Learning ${currentSwitchState.guidedLearning ? 'enabled' : 'disabled'}`,
+          `Guided Learning ${
+            currentSwitchState.guidedLearning ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
         initialSwitchState.documentsOnly !== currentSwitchState.documentsOnly
       ) {
         changes.push(
-          `Document-Based References Only ${currentSwitchState.documentsOnly ? 'enabled' : 'disabled'}`,
+          `Document-Based References Only ${
+            currentSwitchState.documentsOnly ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
@@ -567,7 +583,9 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         currentSwitchState.systemPromptOnly
       ) {
         changes.push(
-          `Bypass Illinois Chat's internal prompting ${currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'}`,
+          `Bypass Illinois Chat's internal prompting ${
+            currentSwitchState.systemPromptOnly ? 'enabled' : 'disabled'
+          }`,
         )
       }
       if (
@@ -575,7 +593,9 @@ const PromptEditor: React.FC<PromptEditorProps> = ({
         currentSwitchState.agentModeFeatureEnabled
       ) {
         changes.push(
-          `Agent Mode ${currentSwitchState.agentModeFeatureEnabled ? 'enabled' : 'disabled'}`,
+          `Agent Mode ${
+            currentSwitchState.agentModeFeatureEnabled ? 'enabled' : 'disabled'
+          }`,
         )
       }
 
@@ -894,7 +914,8 @@ CRITICAL: The optimized prompt must:
         'Failed to optimize prompt. Please try again.',
         true,
       )
-      setIsOptimizing(false) // Keep this here for error cases
+    } finally {
+      setIsOptimizing(false)
     }
   }
 
@@ -938,7 +959,7 @@ CRITICAL: The optimized prompt must:
           <div className={`${isEmbedded ? '' : 'p-4'}`}>
             {/* Prompt Engineering Guide */}
             <Paper
-              className="w-full rounded-xl bg-[--dashboard-background-faded] px-4 sm:px-6 md:px-8"
+              className="w-full rounded-xl bg-[--dashboard-background-faded] px-6"
               p="md"
               sx={{
                 transition: 'all 0.2s ease',
@@ -952,7 +973,6 @@ CRITICAL: The optimized prompt must:
                 justify="space-between"
                 sx={{
                   cursor: 'pointer',
-                  padding: '4px 8px',
                   borderRadius: '8px',
                 }}
                 className="focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[--dashboard-button]"
@@ -967,17 +987,17 @@ CRITICAL: The optimized prompt must:
                 <Flex align="center" gap="md">
                   <IconBook
                     size={24}
+                    aria-hidden="true"
                     style={{
                       color: 'var(--dashboard-button)',
                     }}
                   />
-                  <Text
-                    size="md"
-                    weight={600}
-                    className={`${montserrat_paragraph.variable} select-text font-montserratParagraph text-[--dashboard-foreground]`}
+                  <Title
+                    className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
+                    order={4}
                   >
                     Prompt Engineering Guide
-                  </Text>
+                  </Title>
                 </Flex>
                 <div
                   className="transition-transform duration-200"
@@ -989,7 +1009,7 @@ CRITICAL: The optimized prompt must:
                     justifyContent: 'center',
                   }}
                 >
-                  <IconChevronDown size={24} />
+                  <IconChevronDown size={24} aria-hidden="true" />
                 </div>
               </Flex>
 
@@ -1028,6 +1048,7 @@ CRITICAL: The optimized prompt must:
                           The Official OpenAI Prompt Engineering Guide
                           <IconExternalLink
                             size={18}
+                            aria-hidden="true"
                             className="inline-block pl-1"
                             style={{
                               position: 'relative',
@@ -1047,6 +1068,7 @@ CRITICAL: The optimized prompt must:
                           The Official Anthropic Prompt Library
                           <IconExternalLink
                             size={18}
+                            aria-hidden="true"
                             className="inline-block pl-1"
                             style={{
                               position: 'relative',
@@ -1101,7 +1123,7 @@ CRITICAL: The optimized prompt must:
                 alignItems: 'center',
                 background: 'var(--dashboard-background-faded)',
               }}
-              className="mt-4 rounded-xl px-4 py-6 sm:px-6 sm:py-6 md:px-8"
+              className="mt-4 rounded-xl px-4 py-6 sm:p-6"
             >
               <div
                 style={{
@@ -1111,7 +1133,7 @@ CRITICAL: The optimized prompt must:
                 }}
               >
                 <Flex justify="space-between" align="center" mb="md">
-                  <Flex align="center" className="gap-4">
+                  <Flex align="center" className="-mt-2 gap-4">
                     <Title
                       className={`label ${montserrat_heading.variable} pl-1 pr-0 font-montserratHeading text-[--dashboard-foreground] md:pl-0 md:pr-2`}
                       order={4}
@@ -1183,6 +1205,7 @@ CRITICAL: The optimized prompt must:
                                     >
                                       <IconSparkles
                                         size="1rem"
+                                        aria-hidden="true"
                                         style={{ marginLeft: '8px' }}
                                       />
                                       <Text
@@ -1205,6 +1228,7 @@ CRITICAL: The optimized prompt must:
                                     >
                                       <IconAlertTriangleFilled
                                         size="1rem"
+                                        aria-hidden="true"
                                         style={{ marginLeft: '8px' }}
                                       />
                                       <Text
@@ -1236,7 +1260,7 @@ CRITICAL: The optimized prompt must:
                         input: {
                           color: 'var(--foreground)',
                           backgroundColor: 'var(--background)',
-                          border: 'none',
+                          borderColor: 'var(--button)',
                           '&:focus': {
                             outline: '2px solid var(--dashboard-button)',
                             outlineOffset: '-2px',
@@ -1320,6 +1344,7 @@ CRITICAL: The optimized prompt must:
                       rightSection={
                         <IconChevronDown
                           size={isSmallScreen ? 12 : 14}
+                          aria-hidden="true"
                           style={{ marginRight: '8px' }}
                         />
                       }
@@ -1349,6 +1374,9 @@ CRITICAL: The optimized prompt must:
                           />
                         ) : null
                       }
+                      dropdownPosition="bottom"
+                      withinPortal
+                      zIndex={40}
                     />
                     <Tooltip
                       label="The selected model will be used when Optimizing System Prompt"
@@ -1374,6 +1402,7 @@ CRITICAL: The optimized prompt must:
                       <div>
                         <IconInfoCircle
                           size={18}
+                          aria-hidden="true"
                           className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
                           style={{ cursor: 'pointer' }}
                         />
@@ -1385,31 +1414,33 @@ CRITICAL: The optimized prompt must:
                     <>
                       {isRightSideVisible ? (
                         <Tooltip label="Close Prompt Builder" key="close">
-                          <div
-                            className="cursor-pointer p-0 pl-2"
+                          <button
+                            className="cursor-pointer border-none bg-transparent p-0 pl-2"
                             data-right-sidebar-icon
+                            aria-label="Close Prompt Builder"
+                            onClick={() => setIsRightSideVisible(false)}
                           >
                             <IconLayoutSidebarRight
-                              tabIndex={0}
-                              aria-label="Close Prompt Builder"
                               stroke={2}
+                              aria-hidden="true"
                               className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
-                              onClick={() => setIsRightSideVisible(false)}
                             />
-                          </div>
+                          </button>
                         </Tooltip>
                       ) : (
                         <Tooltip label="Open Prompt Builder" key="open">
-                          <div
-                            className="mr-2 cursor-pointer p-0"
+                          <button
+                            className="mr-2 cursor-pointer border-none bg-transparent p-0"
                             data-right-sidebar-icon
+                            aria-label="Open Prompt Builder"
+                            onClick={() => setIsRightSideVisible(true)}
                           >
                             <IconLayoutSidebarRightExpand
                               stroke={2}
+                              aria-hidden="true"
                               className="text-[--foreground-faded] transition-colors duration-200 hover:text-[--foreground]"
-                              onClick={() => setIsRightSideVisible(true)}
                             />
-                          </div>
+                          </button>
                         </Tooltip>
                       )}
                     </>
@@ -1486,6 +1517,7 @@ CRITICAL: The optimized prompt must:
                           ) : (
                             <IconSparkles
                               stroke={1}
+                              aria-hidden="true"
                               color="var(--dashboard-button-foreground)"
                             />
                           )
@@ -1675,49 +1707,69 @@ CRITICAL: The optimized prompt must:
                 </Title>
 
                 <Flex direction="column" gap="md">
-                  <CustomSwitch
+                  <Switch
+                    size="lg"
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Smart Document Search"
                     tooltip="Optimizes queries to better search through course materials."
                     checked={vectorSearchRewrite}
-                    onChange={(value: boolean) => {
+                    onCheckedChange={(value: boolean) => {
                       handleSettingChange({
                         vector_search_rewrite_disabled: !value,
                       })
                     }}
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    size="lg"
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Guided Learning"
                     tooltip="AI provides hints instead of direct answers to encourage learning."
                     checked={guidedLearning}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ guidedLearning: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    size="lg"
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Document-Based References Only"
                     tooltip="Restricts AI to only use information from provided documents."
                     checked={documentsOnly}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ documentsOnly: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    size="lg"
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Bypass Illinois Chat's internal prompting"
                     tooltip="Full control over bot behavior without internal prompting."
                     checked={systemPromptOnly}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ systemPromptOnly: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    size="lg"
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Enable Agent Mode"
                     tooltip="Runs a multi-step server-side agent loop that can iteratively search documents and execute tools before generating the final answer."
                     checked={agentModeFeatureEnabled}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleSettingChange({ agent_mode_enabled: value })
                     }
                   />
@@ -1784,6 +1836,7 @@ CRITICAL: The optimized prompt must:
                       <Flex align="flex-start" gap="md">
                         <IconAlertTriangle
                           size={24}
+                          aria-hidden="true"
                           color={theme.colors.red[5]}
                           style={{ marginTop: '2px' }}
                         />
@@ -1914,7 +1967,9 @@ CRITICAL: The optimized prompt must:
                       variant="filled"
                       color="red"
                       radius="md"
-                      leftIcon={<IconAlertTriangle size={16} />}
+                      leftIcon={
+                        <IconAlertTriangle size={16} aria-hidden="true" />
+                      }
                       onClick={openResetModal}
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       sx={(theme) => ({
@@ -1935,7 +1990,7 @@ CRITICAL: The optimized prompt must:
                     <Button
                       variant="filled"
                       radius="md"
-                      leftIcon={<IconLink size={16} />}
+                      leftIcon={<IconLink size={16} aria-hidden="true" />}
                       onClick={openLinkGenerator}
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       sx={() => ({
@@ -2018,11 +2073,14 @@ CRITICAL: The optimized prompt must:
                 </Indicator>
               </Flex>
 
-              <CustomSwitch
+              <Switch
+                variant="labeled"
+                showLabels
+                showThumbIcon
                 label="Smart Document Search"
                 tooltip="When enabled, Illinois Chat optimizes your queries to better search through course materials and find relevant content. Note: This only affects how documents are searched - your chat messages remain exactly as you write them."
                 checked={vectorSearchRewrite}
-                onChange={(value: boolean) => {
+                onCheckedChange={(value: boolean) => {
                   handleSettingChange({
                     vector_search_rewrite_disabled: !value,
                   })
@@ -2063,38 +2121,50 @@ CRITICAL: The optimized prompt must:
 
               <Flex direction="column" gap="md">
                 <div className="flex flex-col gap-1">
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Guided Learning"
                     tooltip="When enabled course-wide, this setting applies to all students and cannot be disabled by them. The AI will encourage independent problem-solving by providing hints and questions instead of direct answers, while still finding and citing relevant course materials. This promotes critical thinking while ensuring students have access to proper resources."
                     checked={guidedLearning}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ guidedLearning: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Document-Based References Only"
                     tooltip="Restricts the AI to use only information from the provided documents. Useful for maintaining accuracy in fields like legal research where external knowledge could be problematic."
                     checked={documentsOnly}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ documentsOnly: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Bypass Illinois Chat's internal prompting"
                     tooltip="Internally, we prompt the model to (1) add citations and (2) always be as helpful as possible. You can bypass this for full un-modified control over your bot."
                     checked={systemPromptOnly}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ systemPromptOnly: value })
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Enable Agent Mode"
                     tooltip="Enables the Agent Mode feature for this project. Agent Mode runs a multi-step server-side loop that can iteratively search documents and execute tools before generating the final answer."
                     checked={agentModeFeatureEnabled}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleSettingChange({ agent_mode_enabled: value })
                     }
                   />
@@ -2166,6 +2236,7 @@ CRITICAL: The optimized prompt must:
                       <Flex align="flex-start" gap="md">
                         <IconAlertTriangle
                           size={24}
+                          aria-hidden="true"
                           color={theme.colors.red[5]}
                           style={{ marginTop: '2px' }}
                         />
@@ -2300,7 +2371,9 @@ CRITICAL: The optimized prompt must:
                       variant="filled"
                       color="red"
                       radius="md"
-                      leftIcon={<IconAlertTriangle size={16} />}
+                      leftIcon={
+                        <IconAlertTriangle size={16} aria-hidden="true" />
+                      }
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       sx={(theme) => ({
                         backgroundColor: `${theme.colors.red[8]} !important`,
@@ -2322,7 +2395,7 @@ CRITICAL: The optimized prompt must:
                     <Button
                       variant="filled"
                       radius="md"
-                      leftIcon={<IconLink size={16} />}
+                      leftIcon={<IconLink size={16} aria-hidden="true" />}
                       onClick={openLinkGenerator}
                       className={`${montserrat_paragraph.variable} font-montserratParagraph`}
                       sx={() => ({

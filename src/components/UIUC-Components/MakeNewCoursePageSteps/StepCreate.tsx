@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react'
 
-import { Loader, Textarea, TextInput } from '@mantine/core'
+import { CheckCircle, LoaderCircle, XCircle } from 'lucide-react'
+
+import {
+  FormInput,
+  type FormInputStatus,
+} from '@/components/shadcn/ui/form-input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/shadcn/ui/tooltip'
 
 import HeaderStepNavigation from './HeaderStepNavigation'
 
@@ -36,102 +47,98 @@ const StepCreate = ({
     onUpdateDescription(projectDescription)
   }, [projectDescription])
 
+  const getNameStatus = (): FormInputStatus => {
+    if (!projectName) return 'default'
+    if (isCheckingAvailability) return 'loading'
+    if (isCourseAvailable) return 'success'
+    return 'error'
+  }
+
   return (
-    <>
-      <div className="step">
-        <HeaderStepNavigation
-          project_name="" //don't send project name for create page
-          title="Create a new chatbot"
-          description="What’s it all about?"
-        />
+    <div className="step">
+      <HeaderStepNavigation
+        project_name=""
+        title="Create a new chatbot"
+        description="Give your chatbot a name and tell us what it's about."
+      />
 
-        <div className="step_content mt-6">
-          <TextInput
-            type="text"
-            value={projectName}
-            label="Name"
-            placeholder="example-project"
-            description="The name will be used as part of the unique url across the entire campus chatbots."
-            className="mt-4"
-            classNames={componentClasses.input}
-            autoComplete="off"
-            data-lpignore="true"
-            data-form-type="other"
-            disabled={!is_new_course}
-            radius={'md'}
-            size={'md'}
-            autoFocus
-            withAsterisk
-            onInput={(e) =>
-              setProjectName(
-                (e.target as HTMLInputElement).value.replaceAll(' ', '-'),
-              )
+      <div className="step_content space-y-5">
+        <TooltipProvider>
+          <Tooltip
+            open={
+              !isCheckingAvailability &&
+              isCourseAvailable === false &&
+              projectName.length > 0
             }
-          />
+          >
+            <TooltipTrigger asChild>
+              <FormInput
+                as="input"
+                value={projectName}
+                label="Name"
+                required
+                placeholder="my-awesome-chatbot"
+                description="This becomes part of your chatbot's unique URL."
+                autoComplete="off"
+                disabled={!is_new_course}
+                autoFocus
+                status={getNameStatus()}
+                rightSlot={
+                  isCheckingAvailability ? (
+                    <span role="status">
+                      <LoaderCircle
+                        className="size-4 animate-spin text-[--foreground-faded]"
+                        aria-hidden="true"
+                      />
+                      <span className="sr-only">
+                        Checking name availability...
+                      </span>
+                    </span>
+                  ) : isCourseAvailable && projectName ? (
+                    <span role="status">
+                      <CheckCircle
+                        className="size-4 text-green-500"
+                        aria-hidden="true"
+                      />
+                      <span className="sr-only">Name is available</span>
+                    </span>
+                  ) : isCourseAvailable === false && projectName ? (
+                    <span role="status">
+                      <XCircle
+                        className="size-4 text-red-500"
+                        aria-hidden="true"
+                      />
+                      <span className="sr-only">Name is already taken</span>
+                    </span>
+                  ) : undefined
+                }
+                onInput={(e) =>
+                  setProjectName(
+                    (e.target as HTMLInputElement).value.replaceAll(' ', '-'),
+                  )
+                }
+              />
+            </TooltipTrigger>
+            <TooltipContent
+              side="right"
+              className="border-red-500 bg-red-500 text-white"
+            >
+              This name is already taken. Please choose a different name.
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
-          <div className="mt-1 min-h-[1.35rem] text-sm">
-            {projectName && (
-              <div className="flex items-start gap-2">
-                {/* NOTE: assuming this is the best / proper way to get the current server url */}
-                <div>
-                  {window.location.origin}/{projectName}
-                </div>
-
-                {isCheckingAvailability && (
-                  <div className="flex items-center gap-1 text-[--foreground-faded]">
-                    <Loader size="xs" />
-                    <span>(checking...)</span>
-                  </div>
-                )}
-                {!isCheckingAvailability &&
-                  isCourseAvailable &&
-                  projectName && (
-                    <div className="text-green-500">(url available)</div>
-                  )}
-                {!isCheckingAvailability &&
-                  (!isCourseAvailable || !projectName) && (
-                    <div className="text-[--error]">(url not available)</div>
-                  )}
-              </div>
-            )}
-          </div>
-
-          <div className="text-sm text-[--foreground-faded]"></div>
-
-          <Textarea
-            value={projectDescription}
-            label="Description"
-            placeholder="Describe your project, goals, expected impact etc...."
-            description=""
-            className="mt-6"
-            classNames={componentClasses.input}
-            radius={'md'}
-            size={'md'}
-            minRows={4}
-            onChange={(e) => setProjectDescription(e.target.value)}
-          />
-        </div>
+        <FormInput
+          as="textarea"
+          value={projectDescription}
+          label="Description"
+          placeholder="Describe your chatbot's purpose, target audience, and goals..."
+          minRows={4}
+          onChange={(e) => setProjectDescription(e.target.value)}
+        />
       </div>
-    </>
+    </div>
   )
-}
-
-const componentClasses = {
-  input: {
-    label: 'font-semibold text-base text-[--foreground]',
-    wrapper: '-ml-3',
-    input: `
-      mt-2
-      px-3
-
-      placeholder:text-[--foreground-faded]
-      text-[--foreground] bg-[--background]
-
-      border-[--foreground-faded] focus:border-[--foreground]
-      overflow-ellipsis
-    `,
-    description: 'text-sm text-[--foreground-faded]',
-  },
 }
 
 export default StepCreate

@@ -389,9 +389,7 @@ export default function NavigationSidebar({
   const navItems: NavItem[] = [
     {
       name: <NavText>Dashboard</NavText>,
-      icon: (
-        <IconHome size={20} strokeWidth={2} role="img" aria-label="Dashboard" />
-      ),
+      icon: <IconHome size={20} strokeWidth={2} aria-hidden="true" />,
       link: course_name ? `/${course_name}/dashboard` : '/dashboard',
     },
     {
@@ -401,8 +399,7 @@ export default function NavigationSidebar({
           size={18}
           strokeWidth={2}
           style={{ marginRight: '3px', marginLeft: '3px' }}
-          role="img"
-          aria-label="LLMs"
+          aria-hidden="true"
         />
       ),
       link: course_name ? `/${course_name}/llms` : '/llms',
@@ -414,8 +411,7 @@ export default function NavigationSidebar({
           size={18}
           strokeWidth={2}
           style={{ marginRight: '3px', marginLeft: '3px' }}
-          role="img"
-          aria-label="Analysis"
+          aria-hidden="true"
         />
       ),
       link: course_name ? `/${course_name}/analysis` : '/analysis',
@@ -427,8 +423,7 @@ export default function NavigationSidebar({
           size={18}
           strokeWidth={2}
           style={{ marginRight: '3px', marginLeft: '3px' }}
-          role="img"
-          aria-label="Prompting"
+          aria-hidden="true"
         />
       ),
       link: course_name ? `/${course_name}/prompt` : '/prompt',
@@ -440,8 +435,7 @@ export default function NavigationSidebar({
           size={18}
           strokeWidth={2}
           style={{ marginRight: '3px', marginLeft: '3px' }}
-          role="img"
-          aria-label="Tools"
+          aria-hidden="true"
         />
       ),
       link: course_name ? `/${course_name}/tools` : '/tools',
@@ -453,8 +447,7 @@ export default function NavigationSidebar({
           size={18}
           strokeWidth={2}
           style={{ marginRight: '3px', marginLeft: '3px' }}
-          role="img"
-          aria-label="API"
+          aria-hidden="true"
         />
       ),
       link: course_name ? `/${course_name}/api` : '/api',
@@ -486,7 +479,7 @@ export default function NavigationSidebar({
           className={`${classes.toggleButton} md:hidden`}
           onClick={onToggle}
         >
-          <IconMenu2 size={20} />
+          <IconMenu2 size={20} aria-hidden="true" />
         </button>
       )}
 
@@ -532,6 +525,7 @@ export default function NavigationSidebar({
             </div>
             {/* Collapse Button - Hidden on mobile, visible on desktop */}
             <button
+              aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
               className={`${classes.collapseButton} hidden md:flex`}
               onClick={onCollapseToggle}
             >
@@ -539,15 +533,13 @@ export default function NavigationSidebar({
                 <IconLayoutSidebarLeftExpand
                   size={20}
                   strokeWidth={2}
-                  role="img"
-                  aria-label="Expand Sidebar"
+                  aria-hidden="true"
                 />
               ) : (
                 <IconLayoutSidebarLeftCollapse
                   size={20}
                   strokeWidth={2}
-                  role="img"
-                  aria-label="Collapse Sidebar"
+                  aria-hidden="true"
                 />
               )}
             </button>
@@ -569,12 +561,7 @@ export default function NavigationSidebar({
               }
             }}
           >
-            <IconChevronLeft
-              size={16}
-              strokeWidth={3}
-              role="img"
-              aria-label="Back to Chat"
-            />
+            <IconChevronLeft size={16} strokeWidth={3} aria-hidden="true" />
             <span
               className={`md:${isCollapsed ? 'hidden' : 'inline'} ${
                 montserrat_paragraph.variable
