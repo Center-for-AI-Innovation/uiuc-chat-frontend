@@ -11,7 +11,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createProject } from '~/utils/apiUtils'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import Navbar from './navbars/Navbar'
+import { ChatbotsGlobalNav } from './chatbots-hub/ChatbotsGlobalNav'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 
 import StepCreate from './MakeNewCoursePageSteps/StepCreate'
@@ -369,7 +369,7 @@ const MakeNewCoursePage = ({
 
   return (
     <>
-      <Navbar isPlain={false} />
+      <ChatbotsGlobalNav />
       <Head>
         <title>{project_name || 'New Project'} — Illinois Chat</title>
         <meta name="description" content="Create a new project on UIUC.chat." />

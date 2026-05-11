@@ -5,9 +5,9 @@ import jwt from 'jsonwebtoken'
 // Keycloak configuration
 const KEYCLOAK_REALM =
   process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'illinois_chat_realm'
-const KEYCLOAK_CLIENT_ID =
-  process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'illinois_chat'
-const KEYCLOAK_CLIENT_SECRET = process.env.KEYCLOAK_CLIENT_SECRET
+const KEYCLOAK_ADMIN_CLIENT_ID =
+  process.env.KEYCLOAK_ADMIN_CLIENT_ID || 'illinois_chat'
+const KEYCLOAK_ADMIN_CLIENT_SECRET = process.env.KEYCLOAK_ADMIN_CLIENT_SECRET
 
 // Keycloak Admin Client instance
 let kcAdminClient: KcAdminClient | null = null
@@ -28,11 +28,11 @@ export async function initializeKeycloakAdmin(
   })
 
   // Authenticate with client credentials
-  if (KEYCLOAK_CLIENT_SECRET) {
+  if (KEYCLOAK_ADMIN_CLIENT_SECRET) {
     await kcAdminClient.auth({
       grantType: 'client_credentials',
-      clientId: KEYCLOAK_CLIENT_ID,
-      clientSecret: KEYCLOAK_CLIENT_SECRET,
+      clientId: KEYCLOAK_ADMIN_CLIENT_ID,
+      clientSecret: KEYCLOAK_ADMIN_CLIENT_SECRET,
     })
   }
 
