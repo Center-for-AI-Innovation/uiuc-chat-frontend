@@ -4,10 +4,9 @@ import { createMockReq, createMockRes } from '~/test-utils/nextApi'
 const hoisted = vi.hoisted(() => {
   return {
     getCourseMetadata: vi.fn(),
-    ensureRedisConnected: vi.fn(),
+    writeCourseMetadata: vi.fn(async () => undefined),
     encrypt: vi.fn(async () => 'enc'),
     isEncrypted: vi.fn(() => false),
-    hSet: vi.fn(),
   }
 })
 
@@ -19,8 +18,8 @@ vi.mock('~/pages/api/UIUC-api/getCourseMetadata', () => ({
   getCourseMetadata: hoisted.getCourseMetadata,
 }))
 
-vi.mock('~/utils/redisClient', () => ({
-  ensureRedisConnected: hoisted.ensureRedisConnected,
+vi.mock('~/utils/courseMetadataStore', () => ({
+  writeCourseMetadata: hoisted.writeCourseMetadata,
 }))
 
 vi.mock('~/utils/superAdmins', () => ({
@@ -50,7 +49,6 @@ describe('UIUC-api/upsertCourseMetadata', () => {
       is_private: undefined,
       openai_api_key: 'sk-plain',
     })
-    hoisted.ensureRedisConnected.mockResolvedValueOnce({ hSet: hoisted.hSet })
 
     const res = createMockRes()
     await handler(
@@ -65,6 +63,9 @@ describe('UIUC-api/upsertCourseMetadata', () => {
     )
     expect(res.status).toHaveBeenCalledWith(200)
     expect(hoisted.encrypt).toHaveBeenCalled()
-    expect(hoisted.hSet).toHaveBeenCalled()
+    expect(hoisted.writeCourseMetadata).toHaveBeenCalledWith(
+      'CS101',
+      expect.objectContaining({ course_owner: 'owner@example.com' }),
+    )
   })
 })

@@ -1,10 +1,36 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMockReq, createMockRes } from '~/test-utils/nextApi'
 
 const hoisted = vi.hoisted(() => {
+  const makeDbChain = () => {
+    const chain: any = {}
+    const methods = [
+      'select',
+      'from',
+      'where',
+      'groupBy',
+      'limit',
+      'orderBy',
+      'innerJoin',
+      'leftJoin',
+    ]
+    for (const m of methods) chain[m] = (..._args: unknown[]) => chain
+    chain.then = (onFulfilled: any, onRejected?: any) =>
+      Promise.resolve([] as unknown[]).then(onFulfilled, onRejected)
+    return chain
+  }
+
   return {
     ensureRedisConnected: vi.fn(),
     hGetAll: vi.fn(),
+    getBatchProjectTimestamps: vi.fn(
+      async () =>
+        new Map<
+          string,
+          { created_at: string | null; last_updated_at: string | null }
+        >(),
+    ),
+    db: makeDbChain(),
   }
 })
 
@@ -16,12 +42,35 @@ vi.mock('~/utils/redisClient', () => ({
   ensureRedisConnected: hoisted.ensureRedisConnected,
 }))
 
+vi.mock('~/utils/projectTimestamps', () => ({
+  getBatchProjectTimestamps: hoisted.getBatchProjectTimestamps,
+}))
+
+vi.mock('~/db/dbClient', () => ({
+  db: hoisted.db,
+}))
+
+vi.mock('~/db/schema', () => ({
+  conversations: {
+    project_name: 'project_name',
+    updated_at: 'updated_at',
+    user_email: 'user_email',
+  },
+}))
+
 import handler, {
   getAllCourseMetadata,
   getCoursesByOwnerOrAdmin,
 } from '~/pages/api/UIUC-api/getAllCourseMetadata'
 
 describe('UIUC-api/getAllCourseMetadata', () => {
+  beforeEach(() => {
+    hoisted.ensureRedisConnected.mockReset()
+    hoisted.hGetAll.mockReset()
+    hoisted.getBatchProjectTimestamps.mockReset()
+    hoisted.getBatchProjectTimestamps.mockResolvedValue(new Map())
+  })
+
   it('getCoursesByOwnerOrAdmin filters by owner/admin and ignores invalid JSON', async () => {
     hoisted.ensureRedisConnected.mockResolvedValueOnce({
       hGetAll: hoisted.hGetAll.mockResolvedValueOnce({

@@ -6,7 +6,7 @@ import { createMockReq, createMockRes } from '~/test-utils/nextApi'
 const hoisted = vi.hoisted(() => ({
   set: vi.fn(),
   hGet: vi.fn(),
-  hSet: vi.fn(),
+  writeCourseMetadata: vi.fn(async () => undefined),
 }))
 
 vi.mock('~/utils/authMiddleware', () => ({
@@ -21,8 +21,11 @@ vi.mock('~/utils/redisClient', () => ({
   ensureRedisConnected: vi.fn(async () => ({
     set: hoisted.set,
     hGet: hoisted.hGet,
-    hSet: hoisted.hSet,
   })),
+}))
+
+vi.mock('~/utils/courseMetadataStore', () => ({
+  writeCourseMetadata: hoisted.writeCourseMetadata,
 }))
 
 import setCourseExistsHandler from '~/pages/api/UIUC-api/setCourseExists'
@@ -33,7 +36,8 @@ describe('UIUC-api course metadata setters', () => {
   beforeEach(() => {
     hoisted.set.mockReset()
     hoisted.hGet.mockReset()
-    hoisted.hSet.mockReset()
+    hoisted.writeCourseMetadata.mockReset()
+    hoisted.writeCourseMetadata.mockResolvedValue(undefined)
   })
 
   it('setCourseExists returns 200 on success and 500 on failure', async () => {
@@ -59,7 +63,6 @@ describe('UIUC-api course metadata setters', () => {
 
   it('setCoursePublicOrPrivate returns 200 on success and 500 on failures', async () => {
     hoisted.hGet.mockResolvedValueOnce(JSON.stringify({ is_private: false }))
-    hoisted.hSet.mockResolvedValueOnce(undefined)
 
     const res1 = createMockRes()
     await setCoursePublicOrPrivateHandler(
@@ -71,9 +74,10 @@ describe('UIUC-api course metadata setters', () => {
     )
     expect(res1.status).toHaveBeenCalledWith(200)
     expect(res1.json).toHaveBeenCalledWith({ success: true })
-    expect(hoisted.hSet).toHaveBeenCalledWith('course_metadatas', {
-      CS101: JSON.stringify({ is_private: true }),
-    })
+    expect(hoisted.writeCourseMetadata).toHaveBeenCalledWith(
+      'CS101',
+      expect.objectContaining({ is_private: true }),
+    )
 
     hoisted.hGet.mockResolvedValueOnce(null)
     const res2 = createMockRes()
@@ -107,7 +111,6 @@ describe('UIUC-api course metadata setters', () => {
     expect(res1.status).toHaveBeenCalledWith(405)
     expect(res1.status).toHaveBeenCalledWith(500)
 
-    hoisted.hSet.mockResolvedValueOnce(undefined)
     const res2 = createMockRes()
     await setCourseMetadataHandler(
       createMockReq({
@@ -128,14 +131,14 @@ describe('UIUC-api course metadata setters', () => {
     )
     expect(res2.status).toHaveBeenCalledWith(200)
     expect(res2.json).toHaveBeenCalledWith({ success: true })
-    expect(hoisted.hSet).toHaveBeenCalledWith('course_metadatas', {
-      CS101: expect.any(String),
-    })
+    expect(hoisted.writeCourseMetadata).toHaveBeenCalledWith(
+      'CS101',
+      expect.objectContaining({ course_owner: 'owner@example.com' }),
+    )
   })
 
-  it('setCourseMetadata returns 500 when redis fails', async () => {
-    const { ensureRedisConnected } = await import('~/utils/redisClient')
-    vi.mocked(ensureRedisConnected).mockRejectedValueOnce(new Error('boom'))
+  it('setCourseMetadata returns 500 when the metadata store fails', async () => {
+    hoisted.writeCourseMetadata.mockRejectedValueOnce(new Error('boom'))
 
     const res = createMockRes()
     await setCourseMetadataHandler(
