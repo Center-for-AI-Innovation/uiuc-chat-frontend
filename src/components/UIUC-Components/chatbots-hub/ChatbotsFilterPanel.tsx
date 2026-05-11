@@ -1,12 +1,4 @@
-import { Filter } from 'lucide-react'
 import { Button } from '~/components/shadcn/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '~/components/shadcn/ui/select'
 import type { ChatbotProjectType, SearchChatbotsParams } from './chatbots.types'
 
 const CATEGORY_OPTIONS: { value: ChatbotProjectType; label: string }[] = [
@@ -17,129 +9,125 @@ const CATEGORY_OPTIONS: { value: ChatbotProjectType; label: string }[] = [
 ]
 
 const PRIVACY_OPTIONS: {
-  value: 'public' | 'private' | 'logged_in'
+  value: 'public' | 'private'
   label: string
 }[] = [
   { value: 'public', label: 'Public' },
   { value: 'private', label: 'Private' },
-  { value: 'logged_in', label: 'Logged-in Users' },
 ]
 
 type ChatbotsFilterPanelProps = {
   params: SearchChatbotsParams
   onParamsChange: (params: SearchChatbotsParams) => void
+  open: boolean
+}
+
+type PillProps = {
+  label: string
+  active: boolean
+  onClick: () => void
+  ariaLabel?: string
+}
+
+function FilterPill({ label, active, onClick, ariaLabel }: PillProps) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      aria-pressed={active}
+      aria-label={ariaLabel}
+      className={`h-9 rounded-lg px-4 text-sm font-semibold transition-colors ${
+        active
+          ? 'border-[--illinois-blue] bg-[--illinois-blue] text-white hover:bg-[--illinois-blue] hover:text-white dark:border-white dark:bg-white dark:text-[--illinois-blue] dark:hover:bg-white'
+          : 'hover:bg-[--illinois-blue]/5 border-[#e5e7eb] bg-white text-[--illinois-blue] dark:border-[#32517a] dark:bg-[#13294b] dark:text-white dark:hover:bg-white/5'
+      }`}
+    >
+      {label}
+    </Button>
+  )
 }
 
 export function ChatbotsFilterPanel({
   params,
   onParamsChange,
+  open,
 }: ChatbotsFilterPanelProps) {
-  const hasFilters = params.category || params.privacy || params.my_bots
+  if (!open) return null
 
-  const handleCategoryChange = (value: string) => {
-    onParamsChange({
-      ...params,
-      category: value === '__all__' ? undefined : (value as ChatbotProjectType),
-    })
+  const handleCategoryChange = (value: ChatbotProjectType | undefined) => {
+    onParamsChange({ ...params, category: value })
   }
 
-  const handlePrivacyChange = (value: string) => {
-    onParamsChange({
-      ...params,
-      privacy:
-        value === '__all__'
-          ? undefined
-          : (value as 'public' | 'private' | 'logged_in'),
-    })
+  const handlePrivacyChange = (value: 'public' | 'private' | undefined) => {
+    onParamsChange({ ...params, privacy: value })
   }
 
   const handleMyBotsToggle = () => {
-    onParamsChange({
-      ...params,
-      my_bots: params.my_bots ? undefined : true,
-    })
-  }
-
-  const handleClearAll = () => {
-    onParamsChange({
-      ...params,
-      category: undefined,
-      privacy: undefined,
-      my_bots: undefined,
-    })
+    onParamsChange({ ...params, my_bots: params.my_bots ? undefined : true })
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Filter
-        aria-hidden="true"
-        className="h-4 w-4 text-[--illinois-storm-medium] dark:text-[#94a3b8]"
-      />
+    <section
+      id="chatbot-filters-panel"
+      aria-label="Chatbot filters"
+      className="rounded-2xl bg-[#f5f7fa] p-6 dark:bg-[#0c1f3f]"
+    >
+      <div className="space-y-5">
+        <div>
+          <h3 className="mb-3 text-sm font-bold text-[--illinois-blue] dark:text-white">
+            Category
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            <FilterPill
+              label="All"
+              active={!params.category}
+              onClick={() => handleCategoryChange(undefined)}
+            />
+            {CATEGORY_OPTIONS.map((opt) => (
+              <FilterPill
+                key={opt.value}
+                label={opt.label}
+                active={params.category === opt.value}
+                onClick={() => handleCategoryChange(opt.value)}
+              />
+            ))}
+          </div>
+        </div>
 
-      <Select
-        value={params.category ?? '__all__'}
-        onValueChange={handleCategoryChange}
-      >
-        <SelectTrigger
-          className="h-9 w-[140px] rounded-lg border-[#e5e7eb] bg-white text-xs dark:border-[#32517a] dark:bg-[#13294b] dark:text-white"
-          aria-label="Filter by category"
-        >
-          <SelectValue placeholder="Category" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">All Categories</SelectItem>
-          {CATEGORY_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <div>
+          <h3 className="mb-3 text-sm font-bold text-[--illinois-blue] dark:text-white">
+            Privacy
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            <FilterPill
+              label="All"
+              active={!params.privacy}
+              onClick={() => handlePrivacyChange(undefined)}
+            />
+            {PRIVACY_OPTIONS.map((opt) => (
+              <FilterPill
+                key={opt.value}
+                label={opt.label}
+                active={params.privacy === opt.value}
+                onClick={() => handlePrivacyChange(opt.value)}
+              />
+            ))}
+          </div>
+        </div>
 
-      <Select
-        value={params.privacy ?? '__all__'}
-        onValueChange={handlePrivacyChange}
-      >
-        <SelectTrigger
-          className="h-9 w-[150px] rounded-lg border-[#e5e7eb] bg-white text-xs dark:border-[#32517a] dark:bg-[#13294b] dark:text-white"
-          aria-label="Filter by privacy"
-        >
-          <SelectValue placeholder="Privacy" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="__all__">All Privacy</SelectItem>
-          {PRIVACY_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Button
-        variant={params.my_bots ? 'default' : 'outline'}
-        size="sm"
-        className={`h-9 rounded-lg text-xs ${
-          params.my_bots
-            ? 'bg-[--illinois-blue] text-white hover:bg-[--foreground-dark] dark:bg-white dark:text-[--illinois-blue] dark:hover:bg-[#e5e7eb]'
-            : 'hover:bg-[--illinois-blue]/5 border-[#e5e7eb] text-[--illinois-storm-dark] dark:border-[#32517a] dark:text-[#c8d2e3] dark:hover:bg-white/5'
-        }`}
-        onClick={handleMyBotsToggle}
-        aria-pressed={params.my_bots ?? false}
-      >
-        My Bots
-      </Button>
-
-      {hasFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-9 text-xs text-[--illinois-storm-medium] hover:text-[--illinois-blue] dark:text-[#94a3b8] dark:hover:text-white"
-          onClick={handleClearAll}
-        >
-          Clear filters
-        </Button>
-      )}
-    </div>
+        <div>
+          <h3 className="mb-3 text-sm font-bold text-[--illinois-blue] dark:text-white">
+            My Bots
+          </h3>
+          <FilterPill
+            label="Show My Bots"
+            active={Boolean(params.my_bots)}
+            onClick={handleMyBotsToggle}
+          />
+        </div>
+      </div>
+    </section>
   )
 }

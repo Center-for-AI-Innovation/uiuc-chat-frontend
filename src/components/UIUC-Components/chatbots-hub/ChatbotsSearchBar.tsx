@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Input } from '~/components/shadcn/ui/input'
 import { Badge } from '~/components/shadcn/ui/badge'
@@ -37,11 +37,15 @@ function getActiveFilters(params: SearchChatbotsParams): ActiveFilter[] {
 type ChatbotsSearchBarProps = {
   params: SearchChatbotsParams
   onParamsChange: (params: SearchChatbotsParams) => void
+  isFiltersOpen: boolean
+  onToggleFilters: () => void
 }
 
 export function ChatbotsSearchBar({
   params,
   onParamsChange,
+  isFiltersOpen,
+  onToggleFilters,
 }: ChatbotsSearchBarProps) {
   const [localQuery, setLocalQuery] = useState(params.q ?? '')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -95,30 +99,47 @@ export function ChatbotsSearchBar({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative">
-        <Search
-          aria-hidden="true"
-          className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[--illinois-storm-medium] dark:text-[#94a3b8]"
-        />
-        <Input
-          type="search"
-          placeholder="Search chatbots..."
-          value={localQuery}
-          onChange={handleInputChange}
-          aria-label="Search chatbots"
-          className="h-11 rounded-xl border-[#e5e7eb] bg-white pl-10 pr-10 text-sm text-[--illinois-blue] placeholder:text-[--illinois-storm-medium] focus-visible:ring-[--illinois-blue] dark:border-[#32517a] dark:bg-[#13294b] dark:text-white dark:placeholder:text-[#94a3b8] dark:focus-visible:ring-white/30"
-        />
-        {localQuery && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
-            onClick={handleClear}
-            aria-label="Clear search"
-          >
-            <X className="h-4 w-4 text-[--illinois-storm-medium] dark:text-[#94a3b8]" />
-          </Button>
-        )}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search
+            aria-hidden="true"
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[--illinois-storm-medium] dark:text-[#94a3b8]"
+          />
+          <Input
+            type="search"
+            placeholder="Search for chatbots..."
+            value={localQuery}
+            onChange={handleInputChange}
+            aria-label="Search chatbots"
+            className="h-12 rounded-xl border-[#e5e7eb] bg-white pl-10 pr-10 text-sm text-[--illinois-blue] placeholder:text-[--illinois-storm-medium] focus-visible:ring-[--illinois-blue] dark:border-[#32517a] dark:bg-[#13294b] dark:text-white dark:placeholder:text-[#94a3b8] dark:focus-visible:ring-white/30"
+          />
+          {localQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
+              onClick={handleClear}
+              aria-label="Clear search"
+            >
+              <X className="h-4 w-4 text-[--illinois-storm-medium] dark:text-[#94a3b8]" />
+            </Button>
+          )}
+        </div>
+        <Button
+          variant="outline"
+          onClick={onToggleFilters}
+          aria-pressed={isFiltersOpen}
+          aria-expanded={isFiltersOpen}
+          aria-controls="chatbot-filters-panel"
+          className={`hover:bg-[--illinois-blue]/5 h-12 gap-2 rounded-xl border-[#e5e7eb] bg-white px-5 text-sm font-semibold text-[--illinois-blue] dark:border-[#32517a] dark:bg-[#13294b] dark:text-white dark:hover:bg-white/5 ${
+            isFiltersOpen
+              ? 'border-[--illinois-orange] ring-1 ring-[--illinois-orange]'
+              : ''
+          }`}
+        >
+          <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+          Filters
+        </Button>
       </div>
 
       {activeFilters.length > 0 && (

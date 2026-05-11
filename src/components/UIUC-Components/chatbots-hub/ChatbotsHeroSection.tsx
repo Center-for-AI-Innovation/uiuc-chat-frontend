@@ -26,19 +26,19 @@ export function ChatbotsHeroSection() {
           everything you need to succeed at Illinois.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
-          <Link href="/chat">
-            <Button className="h-10 bg-[--illinois-blue] px-8 text-sm text-white hover:bg-[--foreground-dark] dark:bg-white dark:text-[--illinois-blue] dark:hover:bg-[#e5e7eb]">
-              Start Chatting
-            </Button>
-          </Link>
-          <Link href="/disclaimer">
-            <Button
-              variant="secondary"
-              className="h-10 bg-[hsl(var(--muted))] px-8 text-sm text-[--illinois-blue] dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
-            >
-              More Info
-            </Button>
-          </Link>
+          <Button
+            asChild
+            className="h-10 bg-[--illinois-blue] px-8 text-sm text-white hover:bg-[--foreground-dark] dark:bg-white dark:text-[--illinois-blue] dark:hover:bg-[#e5e7eb]"
+          >
+            <Link href="/chat">Start Chatting</Link>
+          </Button>
+          <Button
+            asChild
+            variant="secondary"
+            className="dark:hover:bg-white/15 h-10 bg-[hsl(var(--muted))] px-8 text-sm text-[--illinois-blue] dark:bg-white/10 dark:text-white"
+          >
+            <Link href="/disclaimer">More Info</Link>
+          </Button>
         </div>
       </div>
     </section>

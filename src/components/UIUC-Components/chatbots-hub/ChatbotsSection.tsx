@@ -9,7 +9,12 @@ export function ChatbotsSection({ title, cards }: ChatbotSectionData) {
       </h2>
       <div className="scrollbar-thin-auto -mx-6 flex gap-5 overflow-x-auto px-6 py-6">
         {cards.map((card) => (
-          <ChatbotHubCard key={`${title}-${card.course_name}`} {...card} />
+          <div
+            key={`${title}-${card.course_name}`}
+            className="w-[320px] shrink-0"
+          >
+            <ChatbotHubCard {...card} />
+          </div>
         ))}
       </div>
     </section>

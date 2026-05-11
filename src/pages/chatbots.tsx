@@ -68,11 +68,16 @@ const ChatbotsHubPage = () => {
   const currentUserEmail = auth.user?.profile.email as string | undefined
 
   const [searchParams, setSearchParams] = useState<SearchChatbotsParams>({})
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
 
   const isSearchActive = hasActiveSearch(searchParams)
 
   const handleParamsChange = useCallback((next: SearchChatbotsParams) => {
     setSearchParams(next)
+  }, [])
+
+  const handleToggleFilters = useCallback(() => {
+    setIsFiltersOpen((prev) => !prev)
   }, [])
 
   // Server-side search (only fires when a search/filter is active)
@@ -197,19 +202,22 @@ const ChatbotsHubPage = () => {
     <main className="min-h-screen bg-white dark:bg-[#081735]">
       <ChatbotsGlobalNav />
       <div className="mx-auto max-w-[1680px] pt-[72px]">
-        <ChatbotsHeroSection />
-
-        {/* Search & Filter Bar */}
+        {/* Search & Filter Bar — pinned above hero */}
         <div className="space-y-4 px-4 py-6 sm:px-8">
           <ChatbotsSearchBar
             params={searchParams}
             onParamsChange={handleParamsChange}
+            isFiltersOpen={isFiltersOpen}
+            onToggleFilters={handleToggleFilters}
           />
           <ChatbotsFilterPanel
             params={searchParams}
             onParamsChange={handleParamsChange}
+            open={isFiltersOpen}
           />
         </div>
+
+        <ChatbotsHeroSection />
 
         <div className="pb-12 dark:bg-[#081735]">
           {isSearchActive ? (
@@ -234,12 +242,15 @@ const ChatbotsHubPage = () => {
               <p className="text-lg text-[--illinois-storm-dark] dark:text-[#c8d2e3]">
                 You don&apos;t have any chatbots yet.
               </p>
-              <Link href="/new">
-                <Button className="h-10 gap-2 bg-[--illinois-blue] px-8 text-sm text-white hover:bg-[--foreground-dark] dark:bg-white dark:text-[--illinois-blue] dark:hover:bg-[#e5e7eb]">
+              <Button
+                asChild
+                className="h-10 gap-2 bg-[--illinois-blue] px-8 text-sm text-white hover:bg-[--foreground-dark] dark:bg-white dark:text-[--illinois-blue] dark:hover:bg-[#e5e7eb]"
+              >
+                <Link href="/new">
                   <Sparkles className="h-4 w-4" />
                   Create Your First Chatbot
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           )}
         </div>

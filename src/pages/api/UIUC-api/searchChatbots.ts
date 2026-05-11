@@ -28,7 +28,7 @@ function isUserBot(metadata: CourseMetadata, userEmail: string): boolean {
   )
 }
 
-/** Build a safe card payload — never include raw secrets. */
+/** Build a safe card payload — only attach raw metadata for bots the caller owns or admins. */
 function toCardData(
   courseName: string,
   metadata: CourseMetadata,
@@ -40,6 +40,7 @@ function toCardData(
   )
 
   const accessLevel = getAccessLevel(metadata)
+  const callerIsUserBot = isUserBot(metadata, userEmail)
 
   return {
     course_name: courseName,
@@ -47,14 +48,11 @@ function toCardData(
     description: metadata.project_description ?? '',
     owner: isOwner ? 'You' : metadata.course_owner,
     collaboratorCount: admins.length,
-    userRole: isOwner
-      ? 'owner'
-      : isUserBot(metadata, userEmail)
-        ? 'member'
-        : undefined,
+    userRole: isOwner ? 'owner' : callerIsUserBot ? 'member' : undefined,
     accessLevel: accessLevel === 'logged_in' ? 'unlisted' : accessLevel,
     isPrivate: metadata.is_private,
     bannerImageS3: metadata.banner_image_s3,
+    metadata: callerIsUserBot ? metadata : undefined,
   }
 }
 
