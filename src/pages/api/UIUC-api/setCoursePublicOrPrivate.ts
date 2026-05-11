@@ -2,6 +2,7 @@ import { type NextApiResponse } from 'next'
 import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import { writeCourseMetadata } from '~/utils/courseMetadataStore'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -27,9 +28,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       is_private,
     }
 
-    await redisClient.hSet('course_metadatas', {
-      [course_name]: JSON.stringify(updated_course_metadata),
-    })
+    await writeCourseMetadata(course_name, updated_course_metadata)
     return res.status(200).json({ success: true })
   } catch (error) {
     console.log(error)

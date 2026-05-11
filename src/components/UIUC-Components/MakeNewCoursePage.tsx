@@ -11,7 +11,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createProject } from '~/utils/apiUtils'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
-import Navbar from './navbars/Navbar'
+import { ChatbotsGlobalNav } from './chatbots-hub/ChatbotsGlobalNav'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 
 import StepCreate from './MakeNewCoursePageSteps/StepCreate'
@@ -300,7 +300,6 @@ const MakeNewCoursePage = ({
     }
   }
 
-  // If Illinois Chat config is NOT enabled, disable UI-based project creation
   // if (!useIllinoisChatConfig) {
   // {
   //   return (
@@ -369,7 +368,7 @@ const MakeNewCoursePage = ({
 
   return (
     <>
-      <Navbar isPlain={false} />
+      <ChatbotsGlobalNav />
       <Head>
         <title>{project_name || 'New Project'} — Illinois Chat</title>
         <meta name="description" content="Create a new project on UIUC.chat." />
@@ -439,7 +438,11 @@ const MakeNewCoursePage = ({
                     stepNames[index]
                   }${currentStep === index ? ' (current)' : ''}`}
                   aria-current={currentStep === index ? 'step' : undefined}
-                  className={`rounded-full bg-[--illinois-blue] transition-all duration-200 ${currentStep === index ? 'h-2.5 w-2.5 opacity-100' : 'h-2 w-2 opacity-25'}`}
+                  className={`rounded-full bg-[--illinois-blue] transition-all duration-200 ${
+                    currentStep === index
+                      ? 'h-2.5 w-2.5 opacity-100'
+                      : 'h-2 w-2 opacity-25'
+                  }`}
                 />
               ))}
             </div>
