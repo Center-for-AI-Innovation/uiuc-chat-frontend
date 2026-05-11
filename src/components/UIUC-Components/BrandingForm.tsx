@@ -8,6 +8,7 @@ import { IconFileUpload } from '@tabler/icons-react'
 import { FormInput } from '@/components/shadcn/ui/form-input'
 
 import SetExampleQuestions from './SetExampleQuestions'
+import ChatbotTagsEditor from './ChatbotTagsEditor'
 
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -175,6 +176,13 @@ const BrandingForm = ({
             )}
           </div>
         </div>
+
+        {metadata && (
+          <ChatbotTagsEditor
+            course_name={project_name}
+            course_metadata={metadata as CourseMetadataOptionalForUpsert}
+          />
+        )}
 
         <div className="upload_logo form-control">
           <div className="mt-6 font-semibold">Add a logo</div>
