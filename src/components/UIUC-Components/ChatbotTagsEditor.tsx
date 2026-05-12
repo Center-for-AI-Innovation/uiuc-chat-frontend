@@ -1,16 +1,23 @@
 import { useCallback, useMemo, useState, type KeyboardEvent } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Sparkles, X } from 'lucide-react'
+import { ChevronDown, X } from 'lucide-react'
+import { Text } from '@mantine/core'
+import { Montserrat } from 'next/font/google'
+import { montserrat_heading } from 'fonts'
 
 import { Button } from '@/components/shadcn/ui/button'
 import { Spinner } from '@/components/shadcn/ui/spinner'
+
+const montserrat_light = Montserrat({
+  weight: '400',
+  subsets: ['latin'],
+})
 
 import {
   CHATBOT_PROJECT_TYPES,
   CHATBOT_TAG_CATEGORY_LABEL,
   COMMON_ORGANIZATIONS,
   MAX_CHATBOT_TAGS,
-  categorizeTagValue,
   chatbotTagKey,
   sanitizeChatbotTags,
   type ChatbotTag,
@@ -26,7 +33,7 @@ interface ChatbotTagsEditorProps {
   course_metadata: CourseMetadataOptionalForUpsert | CourseMetadata
 }
 
-const TAG_DATALIST_ID = 'chatbot-tag-suggestions'
+type PickerKind = 'project_type' | 'organization' | null
 
 function TagBadge({
   tag,
@@ -37,34 +44,57 @@ function TagBadge({
   onRemove: () => void
   disabled: boolean
 }) {
-  const isSpecial = tag.category === 'projectType'
-  const wrapperClass = isSpecial
-    ? 'inline-flex items-center gap-1.5 rounded-full border border-[--illinois-prairie]/40 bg-[--illinois-prairie]/10 px-3 py-1 text-xs text-[--illinois-prairie]'
-    : 'inline-flex items-center gap-1.5 rounded-full border border-[--dashboard-border] bg-[--background] px-3 py-1 text-xs text-[--foreground]'
-
-  const removeClass = isSpecial
-    ? 'ml-1 rounded-full p-0.5 text-[--illinois-prairie] transition-colors hover:bg-[--illinois-prairie]/15'
-    : 'ml-1 rounded-full p-0.5 text-[--foreground-faded] transition-colors hover:bg-[--error]/10 hover:text-[--error]'
-
   return (
-    <span role="listitem" className={wrapperClass}>
-      {isSpecial && <Sparkles className="size-3" aria-hidden="true" />}
-      <span className="font-medium">
-        {isSpecial ? `${CHATBOT_TAG_CATEGORY_LABEL.projectType}: ` : ''}
-        {tag.value}
-      </span>
+    <span
+      role="listitem"
+      className="inline-flex items-center gap-1.5 rounded-full border border-[--dashboard-border] bg-[--background] px-3 py-1 text-xs text-[--foreground]"
+    >
+      <span className="font-medium">{tag.value}</span>
       <button
         type="button"
         aria-label={`Remove tag ${CHATBOT_TAG_CATEGORY_LABEL[tag.category]}: ${
           tag.value
         }`}
-        className={removeClass}
+        className="hover:bg-[--error]/10 ml-1 rounded-full p-0.5 text-[--foreground-faded] transition-colors hover:text-[--error]"
         onClick={onRemove}
         disabled={disabled}
       >
         <X className="size-3" />
       </button>
     </span>
+  )
+}
+
+function PickerChip({
+  label,
+  isOpen,
+  disabled,
+  onToggle,
+}: {
+  label: string
+  isOpen: boolean
+  disabled: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      aria-expanded={isOpen}
+      aria-haspopup="true"
+      disabled={disabled}
+      onClick={onToggle}
+      className={`inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-medium text-[--foreground] transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+        isOpen
+          ? 'bg-[--dashboard-border]/40 border-[--foreground]'
+          : 'hover:bg-[--dashboard-border]/40 border-[--dashboard-border] bg-[--background]'
+      }`}
+    >
+      {label}
+      <ChevronDown
+        className={`size-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        aria-hidden="true"
+      />
+    </button>
   )
 }
 
@@ -80,10 +110,27 @@ export default function ChatbotTagsEditor({
   )
 
   const [inputValue, setInputValue] = useState('')
+  const [openPicker, setOpenPicker] = useState<PickerKind>(null)
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const isFull = tags.length >= MAX_CHATBOT_TAGS
+
+  const hasOrganizationTag = useMemo(
+    () => tags.some((t) => t.category === 'organization'),
+    [tags],
+  )
+  const hasProjectTypeTag = useMemo(
+    () => tags.some((t) => t.category === 'projectType'),
+    [tags],
+  )
+
+  // Lowercased existing tag values for case-insensitive duplicate checks.
+  const existingValueKeys = useMemo(
+    () =>
+      new Set(tags.map((t) => `${t.category}:${t.value.trim().toLowerCase()}`)),
+    [tags],
+  )
 
   const persistTags = useCallback(
     async (nextTags: ChatbotTag[]) => {
@@ -112,34 +159,62 @@ export default function ChatbotTagsEditor({
     [course_name, course_metadata, queryClient],
   )
 
-  const addTag = useCallback(async () => {
+  const flashError = useCallback((message: string) => {
+    setStatus('error')
+    setErrorMessage(message)
+  }, [])
+
+  const addGeneralTag = useCallback(async () => {
     if (isFull) return
-
-    const candidate = categorizeTagValue(inputValue)
-    if (!candidate) {
-      setStatus('error')
-      setErrorMessage('Enter a tag name.')
+    const trimmed = inputValue.trim()
+    if (!trimmed) {
+      flashError('Enter a tag name.')
+      return
+    }
+    const key = `general:${trimmed.toLowerCase()}`
+    if (existingValueKeys.has(key)) {
+      flashError('That tag is already added.')
       return
     }
 
-    const existingInCategory = tags.find(
-      (existing) => existing.category === candidate.category,
-    )
-    if (existingInCategory) {
-      setStatus('error')
-      setErrorMessage(
-        existingInCategory.value === candidate.value
-          ? 'That tag is already added.'
-          : `You can only have one ${
-              CHATBOT_TAG_CATEGORY_LABEL[candidate.category]
-            } tag. Remove "${existingInCategory.value}" to change it.`,
-      )
-      return
-    }
-
-    const ok = await persistTags([...tags, candidate])
+    const ok = await persistTags([
+      ...tags,
+      { category: 'general', value: trimmed },
+    ])
     if (ok) setInputValue('')
-  }, [inputValue, isFull, persistTags, tags])
+  }, [existingValueKeys, flashError, inputValue, isFull, persistTags, tags])
+
+  const addConstrainedTag = useCallback(
+    async (
+      category: 'projectType' | 'organization',
+      value: string,
+    ): Promise<boolean> => {
+      if (isFull) {
+        flashError(
+          `Maximum of ${MAX_CHATBOT_TAGS} tags reached. Remove one to add another.`,
+        )
+        return false
+      }
+      const alreadyExists =
+        category === 'projectType' ? hasProjectTypeTag : hasOrganizationTag
+      if (alreadyExists) {
+        flashError(
+          `You can only have one ${CHATBOT_TAG_CATEGORY_LABEL[category]} tag.`,
+        )
+        return false
+      }
+      const ok = await persistTags([...tags, { category, value }])
+      return ok
+    },
+    [
+      flashError,
+      hasOrganizationTag,
+      hasProjectTypeTag,
+      isFull,
+      persistTags,
+      tags,
+    ],
+  )
 
   const removeTag = useCallback(
     async (target: ChatbotTag) => {
@@ -155,21 +230,51 @@ export default function ChatbotTagsEditor({
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       event.preventDefault()
-      void addTag()
+      void addGeneralTag()
     }
   }
 
+  const togglePicker = useCallback((kind: PickerKind) => {
+    setOpenPicker((current) => (current === kind ? null : kind))
+    setStatus('idle')
+    setErrorMessage(null)
+  }, [])
+
+  const closePicker = useCallback(() => setOpenPicker(null), [])
+
+  const handleProjectTypeClick = useCallback(
+    async (value: (typeof CHATBOT_PROJECT_TYPES)[number]) => {
+      const ok = await addConstrainedTag('projectType', value)
+      if (ok) closePicker()
+    },
+    [addConstrainedTag, closePicker],
+  )
+
+  const handleOrganizationClick = useCallback(
+    async (value: (typeof COMMON_ORGANIZATIONS)[number]) => {
+      const ok = await addConstrainedTag('organization', value)
+      if (ok) closePicker()
+    },
+    [addConstrainedTag, closePicker],
+  )
+
+  const isSaving = status === 'saving'
+
   return (
     <div className="chatbot_tags form-control">
-      <div className="mb-3 mt-6 font-semibold">Tags</div>
-      <div className="mb-3 text-sm text-[--foreground-faded]">
+      <label
+        className={`label ${montserrat_heading.variable} font-montserratHeading`}
+      >
+        <span className="label-text-unused text-lg">Tags</span>
+      </label>
+      <Text size={'sm'} className={`label !mt-0 ${montserrat_light.className}`}>
         Add up to {MAX_CHATBOT_TAGS} tags to help people discover your bot in
-        the chatbot hub. Project-type tags (Course, Department, etc.) are
-        highlighted; organization tags take precedence when sorting results.
-      </div>
+        the chatbot hub. Type any tag below, or pick a constrained Project Type
+        or Organization from the lists.
+      </Text>
 
       <div
-        className="mb-3 flex flex-wrap gap-2"
+        className="mt-2 flex flex-wrap gap-2"
         aria-label="Selected tags"
         role="list"
       >
@@ -183,21 +288,21 @@ export default function ChatbotTagsEditor({
               key={chatbotTagKey(tag)}
               tag={tag}
               onRemove={() => removeTag(tag)}
-              disabled={status === 'saving'}
+              disabled={isSaving}
             />
           ))
         )}
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+      {/* Free-text input → general tag */}
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
         <div
           className="flex w-full flex-1 items-center rounded-md border border-[--dashboard-border] bg-[--background] transition-colors focus-within:border-[--foreground] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[--illinois-orange] data-[disabled=true]:opacity-50"
           data-disabled={isFull || undefined}
         >
           <input
             type="text"
-            list={TAG_DATALIST_ID}
-            placeholder="Type a tag, e.g. Course or Grainger Engineering"
+            placeholder="Type a tag and press Enter"
             aria-label="Tag"
             value={inputValue}
             disabled={isFull}
@@ -210,33 +315,54 @@ export default function ChatbotTagsEditor({
             onKeyDown={handleKeyDown}
           />
         </div>
-        <datalist id={TAG_DATALIST_ID}>
-          {CHATBOT_PROJECT_TYPES.map((option) => (
-            <option
-              key={`pt-${option}`}
-              value={option}
-              label={CHATBOT_TAG_CATEGORY_LABEL.projectType}
-            />
-          ))}
-          {COMMON_ORGANIZATIONS.map((option) => (
-            <option
-              key={`org-${option}`}
-              value={option}
-              label={CHATBOT_TAG_CATEGORY_LABEL.organization}
-            />
-          ))}
-        </datalist>
 
         <Button
           type="button"
           variant="dashboard"
           size="sm"
-          onClick={addTag}
-          disabled={isFull || status === 'saving'}
+          onClick={addGeneralTag}
+          disabled={isFull || isSaving}
           aria-label="Add tag"
         >
-          {status === 'saving' ? <Spinner className="size-4" /> : 'Add tag'}
+          {isSaving ? <Spinner className="size-4" /> : 'Add tag'}
         </Button>
+      </div>
+
+      {/* Constrained pickers */}
+      <div
+        className="mt-3 flex flex-wrap items-start gap-2"
+        role="group"
+        aria-label="Constrained tag pickers"
+      >
+        <div className="flex flex-col gap-2">
+          <PickerChip
+            label="project_type:"
+            isOpen={openPicker === 'project_type'}
+            disabled={isFull || hasProjectTypeTag || isSaving}
+            onToggle={() => togglePicker('project_type')}
+          />
+          {openPicker === 'project_type' && (
+            <ProjectTypePicker
+              disabled={isSaving}
+              onPick={handleProjectTypeClick}
+            />
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <PickerChip
+            label="organization:"
+            isOpen={openPicker === 'organization'}
+            disabled={isFull || hasOrganizationTag || isSaving}
+            onToggle={() => togglePicker('organization')}
+          />
+          {openPicker === 'organization' && (
+            <OrganizationPicker
+              disabled={isSaving}
+              onPick={handleOrganizationClick}
+            />
+          )}
+        </div>
       </div>
 
       {isFull && (
@@ -254,6 +380,82 @@ export default function ChatbotTagsEditor({
           {errorMessage}
         </div>
       )}
+    </div>
+  )
+}
+
+function PickerOption({
+  label,
+  ariaLabel,
+  disabled,
+  onClick,
+}: {
+  label: string
+  ariaLabel: string
+  disabled: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={onClick}
+      className="hover:bg-[--dashboard-border]/40 inline-flex items-center rounded-full border border-[--dashboard-border] bg-[--background] px-3 py-1 text-xs font-medium text-[--foreground] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {label}
+    </button>
+  )
+}
+
+function ProjectTypePicker({
+  disabled,
+  onPick,
+}: {
+  disabled: boolean
+  onPick: (value: (typeof CHATBOT_PROJECT_TYPES)[number]) => void
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Project type options"
+      className="bg-[--background-faded]/40 flex flex-wrap gap-2 rounded-md border border-[--dashboard-border] p-2"
+    >
+      {CHATBOT_PROJECT_TYPES.map((value) => (
+        <PickerOption
+          key={value}
+          label={value}
+          ariaLabel={`Add project type ${value}`}
+          disabled={disabled}
+          onClick={() => onPick(value)}
+        />
+      ))}
+    </div>
+  )
+}
+
+function OrganizationPicker({
+  disabled,
+  onPick,
+}: {
+  disabled: boolean
+  onPick: (value: (typeof COMMON_ORGANIZATIONS)[number]) => void
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Organization options"
+      className="bg-[--background-faded]/40 flex flex-wrap gap-2 rounded-md border border-[--dashboard-border] p-2"
+    >
+      {COMMON_ORGANIZATIONS.map((value) => (
+        <PickerOption
+          key={value}
+          label={value}
+          ariaLabel={`Add organization ${value}`}
+          disabled={disabled}
+          onClick={() => onPick(value)}
+        />
+      ))}
     </div>
   )
 }

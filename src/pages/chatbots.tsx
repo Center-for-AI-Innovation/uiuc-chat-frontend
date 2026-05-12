@@ -225,10 +225,10 @@ const ChatbotsHubPage = () => {
 
   return (
     <main className="min-h-screen bg-white dark:bg-[#081735]">
-      <ChatbotsGlobalNav />
-      <div className="mx-auto max-w-[1680px] pt-[72px]">
-        {/* Search & Filter Bar — pinned above hero */}
-        <div className="space-y-4 px-4 py-6 sm:px-8">
+      <ChatbotsGlobalNav hideBorder />
+      <div className="mx-auto w-full pt-[72px]">
+        {/* Search & Filter Bar — sticky just below the global nav */}
+        <div className="sticky top-[72px] z-30 space-y-4 border-b border-[hsl(var(--border))] bg-white px-4 py-6 dark:border-[#32517a] dark:bg-[#081735] sm:px-8">
           <ChatbotsSearchBar
             params={searchParams}
             onParamsChange={handleParamsChange}

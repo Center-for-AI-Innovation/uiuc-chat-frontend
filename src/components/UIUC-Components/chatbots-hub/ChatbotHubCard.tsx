@@ -54,13 +54,13 @@ export function ChatbotHubCard(card: ChatbotCardData) {
   return (
     <>
       <Card
-        className={`group relative h-[380px] w-full overflow-hidden rounded-[14px] bg-white transition-transform duration-200 ease-out hover:scale-[1.03] dark:bg-[#13294b] [&:has(a:focus-visible)]:ring-2 [&:has(a:focus-visible)]:ring-[--illinois-orange] [&:has(a:focus-visible)]:ring-offset-2 ${
+        className={`group relative flex min-h-[380px] w-full flex-col overflow-hidden rounded-[14px] bg-white transition-transform duration-200 ease-out hover:scale-[1.03] dark:bg-[#13294b] [&:has(a:focus-visible)]:ring-2 [&:has(a:focus-visible)]:ring-[--illinois-orange] [&:has(a:focus-visible)]:ring-offset-2 ${
           isOwnerCard
             ? 'border border-[--illinois-orange-branding] dark:border-[#32517a]'
             : 'border border-[#e5e7eb] shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:border-[#32517a] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
         }`}
       >
-        <div className="relative flex h-40 items-start justify-between p-3">
+        <div className="relative flex h-40 shrink-0 items-start justify-between p-3">
           {bannerUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -90,7 +90,7 @@ export function ChatbotHubCard(card: ChatbotCardData) {
           />
         </div>
 
-        <CardContent className="px-5 pb-4 pt-5">
+        <CardContent className="flex flex-1 flex-col px-5 pb-4 pt-5">
           <div className="space-y-4">
             <h3 className="truncate text-xl font-semibold leading-7 text-[--illinois-blue] dark:text-white">
               <Link
@@ -104,68 +104,69 @@ export function ChatbotHubCard(card: ChatbotCardData) {
             <p className="line-clamp-2 min-h-[40px] text-sm leading-5 text-[--illinois-storm-dark] dark:text-[#c8d2e3]">
               {description}
             </p>
-            <div className="flex flex-wrap items-center gap-2">
-              {organization && (
-                <ChatbotOrganizationBadge
-                  label={organization}
-                  category="organization"
-                />
-              )}
-              {projectType && (
-                <ChatbotOrganizationBadge
-                  label={projectType}
-                  category="projectType"
-                />
+            <div className="flex flex-col gap-2">
+              {(organization || projectType) && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {organization && (
+                    <ChatbotOrganizationBadge label={organization} />
+                  )}
+                  {projectType && (
+                    <ChatbotOrganizationBadge label={projectType} />
+                  )}
+                </div>
               )}
               {resolvedAccessLevel && (
-                <ChatbotAccessLevelBadge level={resolvedAccessLevel} />
+                <div className="flex items-center">
+                  <ChatbotAccessLevelBadge level={resolvedAccessLevel} />
+                </div>
               )}
             </div>
           </div>
 
-          <Separator className="my-4 dark:bg-[#32517a]" />
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs">
-              <Bot className="h-4 w-4 text-[--illinois-storm-medium] dark:text-[#94a3b8]" />
-              <span className="text-[--illinois-storm-medium] dark:text-[#94a3b8]">
-                by
-              </span>
-              <span className="truncate text-[--illinois-storm-dark] dark:text-[#c8d2e3]">
-                {owner}
-              </span>
-              {collaboratorCount > 0 && (
+          <div className="mt-auto">
+            <Separator className="my-3 dark:bg-[#32517a]" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs">
+                <Bot className="h-4 w-4 text-[--illinois-storm-medium] dark:text-[#94a3b8]" />
                 <span className="text-[--illinois-storm-medium] dark:text-[#94a3b8]">
-                  +{collaboratorCount} more
+                  by
                 </span>
-              )}
-            </div>
-            {metadata && (
-              <div className="relative z-10 flex items-center gap-1">
-                {isOwnerCard && (
+                <span className="truncate text-[--illinois-storm-dark] dark:text-[#c8d2e3]">
+                  {owner}
+                </span>
+                {collaboratorCount > 0 && (
+                  <span className="text-[--illinois-storm-medium] dark:text-[#94a3b8]">
+                    +{collaboratorCount} more
+                  </span>
+                )}
+              </div>
+              {metadata && (
+                <div className="relative z-10 flex items-center gap-1">
+                  {isOwnerCard && (
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      aria-label={`Settings for ${title}`}
+                    >
+                      <Link href={`/${course_name}/dashboard`}>
+                        <Settings className="h-4 w-4 text-[--illinois-blue] dark:text-white" />
+                      </Link>
+                    </Button>
+                  )}
                   <Button
-                    asChild
                     variant="ghost"
                     size="icon"
                     className="h-9 w-9"
-                    aria-label={`Settings for ${title}`}
+                    aria-label={`Share ${title}`}
+                    onClick={() => setIsShareModalOpen(true)}
                   >
-                    <Link href={`/${course_name}/dashboard`}>
-                      <Settings className="h-4 w-4 text-[--illinois-blue] dark:text-white" />
-                    </Link>
+                    <Share2 className="h-4 w-4 text-[--illinois-blue] dark:text-white" />
                   </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9"
-                  aria-label={`Share ${title}`}
-                  onClick={() => setIsShareModalOpen(true)}
-                >
-                  <Share2 className="h-4 w-4 text-[--illinois-blue] dark:text-white" />
-                </Button>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

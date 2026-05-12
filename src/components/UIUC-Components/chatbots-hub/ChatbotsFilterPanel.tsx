@@ -1,4 +1,3 @@
-import { Sparkles } from 'lucide-react'
 import { Button } from '~/components/shadcn/ui/button'
 import type { ChatbotProjectType, SearchChatbotsParams } from './chatbots.types'
 
@@ -28,23 +27,12 @@ type PillProps = {
   active: boolean
   onClick: () => void
   ariaLabel?: string
-  /** When true, the pill is rendered with the "special tag" treatment (Sparkles + prairie accent). */
-  special?: boolean
 }
 
-function FilterPill({ label, active, onClick, ariaLabel, special }: PillProps) {
-  let stateClass: string
-  if (active) {
-    stateClass = special
-      ? 'border-[--illinois-prairie] bg-[--illinois-prairie] text-white hover:bg-[--illinois-prairie] hover:text-white'
-      : 'border-[--illinois-blue] bg-[--illinois-blue] text-white hover:bg-[--illinois-blue] hover:text-white dark:border-white dark:bg-white dark:text-[--illinois-blue] dark:hover:bg-white'
-  } else if (special) {
-    stateClass =
-      'border-[--illinois-prairie]/40 bg-[--illinois-prairie]/10 text-[--illinois-prairie] hover:bg-[--illinois-prairie]/15 dark:border-[--illinois-prairie]/60 dark:bg-[--illinois-prairie]/15 dark:text-[--illinois-prairie]'
-  } else {
-    stateClass =
-      'hover:bg-[--illinois-blue]/5 border-[#e5e7eb] bg-white text-[--illinois-blue] dark:border-[#32517a] dark:bg-[#13294b] dark:text-white dark:hover:bg-white/5'
-  }
+function FilterPill({ label, active, onClick, ariaLabel }: PillProps) {
+  const stateClass = active
+    ? 'border-[--illinois-blue] bg-[--illinois-blue] text-white hover:bg-[--illinois-blue] hover:text-white dark:border-white dark:bg-white dark:text-[--illinois-blue] dark:hover:bg-white'
+    : 'hover:bg-[--illinois-blue]/5 border-[#e5e7eb] bg-white text-[--illinois-blue] dark:border-[#32517a] dark:bg-[#13294b] dark:text-white dark:hover:bg-white/5'
 
   return (
     <Button
@@ -54,9 +42,8 @@ function FilterPill({ label, active, onClick, ariaLabel, special }: PillProps) {
       onClick={onClick}
       aria-pressed={active}
       aria-label={ariaLabel}
-      className={`h-9 gap-1.5 rounded-lg px-4 text-sm font-semibold transition-colors ${stateClass}`}
+      className={`h-9 rounded-lg px-4 text-sm font-semibold transition-colors ${stateClass}`}
     >
-      {special && <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />}
       {label}
     </Button>
   )
@@ -107,7 +94,6 @@ export function ChatbotsFilterPanel({
                 label={opt.label}
                 active={params.category === opt.value}
                 onClick={() => handleCategoryChange(opt.value)}
-                special
               />
             ))}
           </div>

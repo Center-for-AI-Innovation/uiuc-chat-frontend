@@ -9,12 +9,26 @@ const navItems = [
   { label: 'Create Your Own Bot', icon: IconSparkles, link: '/new' },
 ]
 
-export function ChatbotsGlobalNav() {
+interface ChatbotsGlobalNavProps {
+  /** Hide the default bottom border. Useful when the page wants a sticky
+   *  sub-bar (e.g. a search/filter bar) to own the divider instead. */
+  hideBorder?: boolean
+}
+
+export function ChatbotsGlobalNav({
+  hideBorder = false,
+}: ChatbotsGlobalNavProps = {}) {
   const router = useRouter()
   const activePath = router.asPath.split('?')[0]
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 border-b border-[hsl(var(--border))] bg-white/95 backdrop-blur-sm dark:border-[#32517a] dark:bg-[#13294b]">
+    <header
+      className={`fixed left-0 right-0 top-0 z-50 bg-white/95 backdrop-blur-sm dark:bg-[#13294b] ${
+        hideBorder
+          ? ''
+          : 'border-b border-[hsl(var(--border))] dark:border-[#32517a]'
+      }`}
+    >
       <div className="mx-auto flex h-[72px] w-full max-w-[1680px] items-center justify-between px-4 sm:px-8">
         <Link
           href="/"
@@ -34,7 +48,9 @@ export function ChatbotsGlobalNav() {
                 key={item.link}
                 href={item.link}
                 data-active={isActive}
-                className={`${montserrat_heading.variable} flex items-center gap-2 rounded-md px-3 py-2 font-montserratHeading text-xs font-medium text-[--illinois-blue] transition-colors dark:text-white sm:px-4 sm:text-sm ${
+                className={`${
+                  montserrat_heading.variable
+                } flex items-center gap-2 rounded-md px-3 py-2 font-montserratHeading text-xs font-medium text-[--illinois-blue] transition-colors dark:text-white sm:px-4 sm:text-sm ${
                   isActive
                     ? 'bg-[--illinois-orange]/10 dark:bg-white/10'
                     : 'hover:bg-[--illinois-orange]/10 dark:hover:bg-white/10'

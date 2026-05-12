@@ -7,7 +7,16 @@ export const CHATBOT_PROJECT_TYPES = [
 
 export type ChatbotProjectType = (typeof CHATBOT_PROJECT_TYPES)[number]
 
-export type ChatbotTagCategory = 'projectType' | 'organization'
+/**
+ * Tag categories:
+ * - `projectType`: constrained to {@link CHATBOT_PROJECT_TYPES}. One per chatbot.
+ * - `organization`: constrained at the UI to {@link COMMON_ORGANIZATIONS}, but
+ *   accepted server-side as any non-empty string so the curated list can grow
+ *   without breaking historic data. One per chatbot.
+ * - `general`: free-text tags. Multiple allowed up to {@link MAX_CHATBOT_TAGS}
+ *   total across all categories.
+ */
+export type ChatbotTagCategory = 'projectType' | 'organization' | 'general'
 
 export interface ChatbotTag {
   category: ChatbotTagCategory
@@ -19,7 +28,12 @@ export const MAX_CHATBOT_TAGS = 5
 export const CHATBOT_TAG_CATEGORY_LABEL: Record<ChatbotTagCategory, string> = {
   projectType: 'Project Type',
   organization: 'Organization',
+  general: 'Tag',
 }
+
+/** Categories that are limited to one tag per chatbot. */
+export const SINGLETON_TAG_CATEGORIES: ReadonlySet<ChatbotTagCategory> =
+  new Set(['projectType', 'organization'])
 
 export const COMMON_ORGANIZATIONS = [
   'Grainger Engineering',
@@ -34,7 +48,8 @@ export function isChatbotTag(value: unknown): value is ChatbotTag {
   const candidate = value as Partial<ChatbotTag>
   if (
     candidate.category !== 'projectType' &&
-    candidate.category !== 'organization'
+    candidate.category !== 'organization' &&
+    candidate.category !== 'general'
   ) {
     return false
   }
@@ -51,14 +66,21 @@ export function isChatbotTag(value: unknown): value is ChatbotTag {
 
 export function sanitizeChatbotTags(raw: unknown): ChatbotTag[] {
   if (!Array.isArray(raw)) return []
-  const seenCategories = new Set<ChatbotTagCategory>()
+  const seenSingletons = new Set<ChatbotTagCategory>()
+  const seenKeys = new Set<string>()
   const result: ChatbotTag[] = []
   for (const item of raw) {
     if (!isChatbotTag(item)) continue
-    // At most one tag per category — first valid occurrence wins.
-    if (seenCategories.has(item.category)) continue
-    seenCategories.add(item.category)
-    result.push({ category: item.category, value: item.value.trim() })
+    // One tag per category for project_type and organization; general allows many.
+    if (SINGLETON_TAG_CATEGORIES.has(item.category)) {
+      if (seenSingletons.has(item.category)) continue
+      seenSingletons.add(item.category)
+    }
+    const trimmed = item.value.trim()
+    const key = `${item.category}:${trimmed.toLowerCase()}`
+    if (seenKeys.has(key)) continue
+    seenKeys.add(key)
+    result.push({ category: item.category, value: trimmed })
     if (result.length >= MAX_CHATBOT_TAGS) break
   }
   return result
@@ -69,11 +91,9 @@ export function chatbotTagKey(tag: ChatbotTag): string {
 }
 
 /**
- * Resolve a free-text tag input into a canonical ChatbotTag.
- * A value matching a project-type enum (case-insensitive) is canonicalized to
- * the enum's declared casing and categorized as `projectType`; anything else
- * is categorized as `organization` with whitespace trimmed.
- * Returns null when the trimmed value is empty.
+ * Legacy helper retained for any callers that auto-classify a raw string.
+ * Not used by the editor anymore — the editor now records the category
+ * explicitly. Returns null for empty input.
  */
 export function categorizeTagValue(raw: string): ChatbotTag | null {
   const trimmed = raw.trim()

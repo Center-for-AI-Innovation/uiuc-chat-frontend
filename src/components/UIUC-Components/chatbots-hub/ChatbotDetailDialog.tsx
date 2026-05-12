@@ -31,6 +31,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTitle,
 } from '~/components/shadcn/ui/dialog'
 import { Separator } from '~/components/shadcn/ui/separator'
@@ -111,6 +112,9 @@ export function ChatbotDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[85vh] max-w-lg flex-col overflow-hidden border-[#e5e7eb] bg-white p-0 text-[--illinois-blue] dark:border-[#32517a] dark:bg-[#15172b] dark:text-white [&>*]:max-w-full">
         <DialogTitle className="sr-only">{title} Details</DialogTitle>
+        <DialogDescription className="sr-only">
+          {description || `Details for the ${title} chatbot.`}
+        </DialogDescription>
 
         {/* Scrollable body */}
         <div className="scrollbar-thin-auto min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
@@ -302,6 +306,13 @@ function DocumentSummarySection({
     )
   }
 
+  const hasFiles = summary.total_file_count > 0
+  const fileCountLabel = `${summary.total_file_count} ${
+    summary.total_file_count === 1 || summary.total_file_count === 0
+      ? 'file'
+      : 'files'
+  }`
+
   return (
     <div className="rounded-xl border border-[#e5e7eb] bg-[#fafafa] dark:border-[#32517a] dark:bg-[#0f1629]">
       <h3 className="px-4 pt-4 text-base font-semibold">
@@ -309,8 +320,14 @@ function DocumentSummarySection({
       </h3>
       <Separator className="mx-4 my-3 dark:bg-[#32517a]" />
 
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="flex w-full items-center justify-between px-4 pb-3 pt-1">
+      <Collapsible
+        open={hasFiles && isOpen}
+        onOpenChange={hasFiles ? setIsOpen : undefined}
+      >
+        <CollapsibleTrigger
+          disabled={!hasFiles}
+          className="flex w-full items-center justify-between px-4 pb-3 pt-1 disabled:cursor-default"
+        >
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#e5e7eb] dark:bg-[#1e293b]">
               <FileText className="h-5 w-5 text-[--illinois-storm-medium] dark:text-[#94a3b8]" />
@@ -324,18 +341,18 @@ function DocumentSummarySection({
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-sm font-semibold">
-                {summary.total_file_count} files
-              </p>
+              <p className="text-sm font-semibold">{fileCountLabel}</p>
               <p className="text-xs text-[--illinois-storm-medium] dark:text-[#94a3b8]">
                 {formatBytes(summary.total_size_bytes)}
               </p>
             </div>
-            <ChevronDown
-              className={`h-4 w-4 text-[--illinois-storm-medium] transition-transform duration-200 dark:text-[#94a3b8] ${
-                isOpen ? 'rotate-180' : ''
-              }`}
-            />
+            {hasFiles && (
+              <ChevronDown
+                className={`h-4 w-4 text-[--illinois-storm-medium] transition-transform duration-200 dark:text-[#94a3b8] ${
+                  isOpen ? 'rotate-180' : ''
+                }`}
+              />
+            )}
           </div>
         </CollapsibleTrigger>
 

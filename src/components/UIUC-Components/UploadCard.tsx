@@ -17,6 +17,7 @@ import {
 import { callSetCourseMetadata, uploadToS3 } from '~/utils/apiUtils'
 import { useResponsiveCardWidth } from '~/utils/responsiveGrid'
 import SetExampleQuestions from './SetExampleQuestions'
+import ChatbotTagsEditor from './ChatbotTagsEditor'
 // import { Checkbox } from '@radix-ui/react-checkbox'
 import { IconShare } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -458,6 +459,13 @@ export const UploadCard = memo(function UploadCard({
                   }}
                 />
               </div>
+
+              {metadata && (
+                <ChatbotTagsEditor
+                  course_name={projectName}
+                  course_metadata={metadata as CourseMetadataOptionalForUpsert}
+                />
+              )}
             </div>
           </div>
         </div>

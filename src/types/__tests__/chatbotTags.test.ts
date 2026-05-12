@@ -85,14 +85,40 @@ describe('sanitizeChatbotTags', () => {
     expect(result).toHaveLength(2)
   })
 
-  it(`respects MAX_CHATBOT_TAGS (${MAX_CHATBOT_TAGS}) as a defensive upper bound`, () => {
-    // With only 2 categories today, effective max is 2 via per-category uniqueness.
+  it(`caps the total number of tags at MAX_CHATBOT_TAGS (${MAX_CHATBOT_TAGS})`, () => {
+    const inputs = Array.from({ length: MAX_CHATBOT_TAGS + 3 }, (_, i) => ({
+      category: 'general' as const,
+      value: `tag-${i}`,
+    }))
+    const result = sanitizeChatbotTags(inputs)
+    expect(result).toHaveLength(MAX_CHATBOT_TAGS)
+  })
+
+  it('allows multiple general tags but keeps singleton categories unique', () => {
     const result = sanitizeChatbotTags([
+      { category: 'general', value: 'beta' },
+      { category: 'general', value: 'launch' },
+      { category: 'projectType', value: 'Course' },
+      { category: 'projectType', value: 'Department' },
+      { category: 'organization', value: 'CS' },
+      { category: 'organization', value: 'Grainger Engineering' },
+    ])
+    expect(result).toEqual([
+      { category: 'general', value: 'beta' },
+      { category: 'general', value: 'launch' },
       { category: 'projectType', value: 'Course' },
       { category: 'organization', value: 'CS' },
     ])
-    expect(result.length).toBeLessThanOrEqual(MAX_CHATBOT_TAGS)
-    expect(result).toHaveLength(2)
+  })
+
+  it('dedupes general tags case-insensitively', () => {
+    const result = sanitizeChatbotTags([
+      { category: 'general', value: 'Beta' },
+      { category: 'general', value: 'beta' },
+      { category: 'general', value: '  BETA  ' },
+    ])
+    expect(result).toHaveLength(1)
+    expect(result[0]).toEqual({ category: 'general', value: 'Beta' })
   })
 
   it('trims whitespace from organization values', () => {

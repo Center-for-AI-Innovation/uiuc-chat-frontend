@@ -48,6 +48,9 @@ function renderEditor(metadata: CourseMetadata = makeMetadata()) {
   )
 }
 
+const PROJECT_TYPE_CHIP = /^project_type:$/i
+const ORGANIZATION_CHIP = /^organization:$/i
+
 describe('ChatbotTagsEditor', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -59,50 +62,138 @@ describe('ChatbotTagsEditor', () => {
     expect(screen.getByText('No tags yet.')).toBeInTheDocument()
   })
 
-  it('renders an organization tag as a plain badge (no Project Type prefix)', () => {
+  it('renders the free-text input and both picker chips by default', () => {
+    renderEditor()
+    expect(screen.getByLabelText('Tag')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: PROJECT_TYPE_CHIP }),
+    ).toHaveAttribute('aria-expanded', 'false')
+    expect(
+      screen.getByRole('button', { name: ORGANIZATION_CHIP }),
+    ).toHaveAttribute('aria-expanded', 'false')
+    // Pickers are collapsed initially.
+    expect(
+      screen.queryByRole('group', { name: /Project type options/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('group', { name: /Organization options/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('renders tag badges identically regardless of category', () => {
     renderEditor(
       makeMetadata({
-        tags: [{ category: 'organization', value: 'Grainger Engineering' }],
+        tags: [
+          { category: 'organization', value: 'Grainger Engineering' },
+          { category: 'projectType', value: 'Course' },
+          { category: 'general', value: 'beta' },
+        ],
       }),
     )
     expect(screen.getByText('Grainger Engineering')).toBeInTheDocument()
+    expect(screen.getByText('Course')).toBeInTheDocument()
+    expect(screen.getByText('beta')).toBeInTheDocument()
     expect(screen.queryByText(/Project Type:/)).not.toBeInTheDocument()
   })
 
-  it('renders a project-type tag with the "Project Type:" prefix (special styling)', () => {
-    renderEditor(
-      makeMetadata({
-        tags: [{ category: 'projectType', value: 'Course' }],
-      }),
-    )
-    expect(screen.getByText(/Project Type:\s*Course/)).toBeInTheDocument()
-  })
-
-  it('typing a free-text value and clicking Add creates an organization tag', async () => {
+  it('typing free text and clicking Add creates a general tag', async () => {
     const user = userEvent.setup()
     const { callSetCourseMetadata } = await import('~/utils/apiUtils')
     renderEditor()
 
-    await user.type(screen.getByLabelText('Tag'), 'Computer Science')
-    await user.click(screen.getByRole('button', { name: /Add tag/i }))
+    await user.type(screen.getByLabelText('Tag'), 'beta-cohort')
+    await user.click(screen.getByRole('button', { name: /^Add tag$/i }))
 
     await waitFor(() => {
       expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith(
         'TestProject',
         expect.objectContaining({
-          tags: [{ category: 'organization', value: 'Computer Science' }],
+          tags: [{ category: 'general', value: 'beta-cohort' }],
         }),
       )
     })
   })
 
-  it('typing a project-type value (case-insensitive) creates a projectType tag with canonical casing', async () => {
+  it('pressing Enter in the input adds a general tag', async () => {
     const user = userEvent.setup()
     const { callSetCourseMetadata } = await import('~/utils/apiUtils')
     renderEditor()
 
-    await user.type(screen.getByLabelText('Tag'), 'course')
-    await user.keyboard('{Enter}')
+    await user.type(screen.getByLabelText('Tag'), 'launch{enter}')
+
+    await waitFor(() => {
+      expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith(
+        'TestProject',
+        expect.objectContaining({
+          tags: [{ category: 'general', value: 'launch' }],
+        }),
+      )
+    })
+  })
+
+  it('rejects duplicate general tags case-insensitively', async () => {
+    const user = userEvent.setup()
+    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+
+    renderEditor(
+      makeMetadata({
+        tags: [{ category: 'general', value: 'Beta' }],
+      }),
+    )
+
+    await user.type(screen.getByLabelText('Tag'), 'beta')
+    await user.click(screen.getByRole('button', { name: /^Add tag$/i }))
+
+    expect(
+      await screen.findByText(/That tag is already added/i),
+    ).toBeInTheDocument()
+    expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+  })
+
+  it('validates that the input is not empty before adding', async () => {
+    const user = userEvent.setup()
+    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+    renderEditor()
+
+    await user.click(screen.getByRole('button', { name: /^Add tag$/i }))
+
+    expect(await screen.findByText(/Enter a tag name/i)).toBeInTheDocument()
+    expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+  })
+
+  it('clicking the project_type chip opens the hardcoded project-type picker', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+
+    await user.click(screen.getByRole('button', { name: PROJECT_TYPE_CHIP }))
+
+    const listbox = await screen.findByRole('group', {
+      name: /Project type options/i,
+    })
+    expect(listbox).toBeInTheDocument()
+    for (const value of [
+      'Course',
+      'Department',
+      'Student Org.',
+      'Entertainment',
+    ]) {
+      expect(
+        screen.getByRole('button', {
+          name: new RegExp(`Add project type ${value}`, 'i'),
+        }),
+      ).toBeInTheDocument()
+    }
+  })
+
+  it('picking a project_type value adds it as a projectType tag and closes the picker', async () => {
+    const user = userEvent.setup()
+    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+    renderEditor()
+
+    await user.click(screen.getByRole('button', { name: PROJECT_TYPE_CHIP }))
+    await user.click(
+      screen.getByRole('button', { name: /Add project type Course/i }),
+    )
 
     await waitFor(() => {
       expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith(
@@ -112,93 +203,94 @@ describe('ChatbotTagsEditor', () => {
         }),
       )
     })
-  })
-
-  it('validates that the input is not empty before adding', async () => {
-    const user = userEvent.setup()
-    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
-    renderEditor()
-
-    await user.click(screen.getByRole('button', { name: /Add tag/i }))
-
-    expect(await screen.findByText(/Enter a tag name/i)).toBeInTheDocument()
-    expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
-  })
-
-  it('rejects duplicates with an inline error', async () => {
-    const user = userEvent.setup()
-    renderEditor(
-      makeMetadata({
-        tags: [{ category: 'organization', value: 'Grainger Engineering' }],
-      }),
-    )
-
-    await user.type(screen.getByLabelText('Tag'), 'Grainger Engineering')
-    await user.click(screen.getByRole('button', { name: /Add tag/i }))
-
     expect(
-      await screen.findByText(/That tag is already added/i),
-    ).toBeInTheDocument()
+      screen.queryByRole('group', { name: /Project type options/i }),
+    ).not.toBeInTheDocument()
   })
 
-  it('rejects adding a second project-type tag when one already exists', async () => {
-    const user = userEvent.setup()
-    const { callSetCourseMetadata } = await import('~/utils/apiUtils')
-
+  it('disables the project_type chip when one project-type tag already exists', () => {
     renderEditor(
       makeMetadata({
         tags: [{ category: 'projectType', value: 'Course' }],
       }),
     )
-
-    await user.type(screen.getByLabelText('Tag'), 'Department')
-    await user.click(screen.getByRole('button', { name: /Add tag/i }))
-
     expect(
-      await screen.findByText(
-        /You can only have one Project Type tag\. Remove "Course" to change it\./i,
-      ),
-    ).toBeInTheDocument()
-    expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+      screen.getByRole('button', { name: PROJECT_TYPE_CHIP }),
+    ).toBeDisabled()
   })
 
-  it('rejects adding a second organization tag when one already exists', async () => {
+  it('clicking the organization chip opens the hardcoded organization picker', async () => {
+    const user = userEvent.setup()
+    renderEditor()
+
+    await user.click(screen.getByRole('button', { name: ORGANIZATION_CHIP }))
+
+    const listbox = await screen.findByRole('group', {
+      name: /Organization options/i,
+    })
+    expect(listbox).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: /Add organization Grainger Engineering/i,
+      }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: /Add organization Computer Science/i,
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('picking an organization value adds it as an organization tag and closes the picker', async () => {
     const user = userEvent.setup()
     const { callSetCourseMetadata } = await import('~/utils/apiUtils')
+    renderEditor()
 
+    await user.click(screen.getByRole('button', { name: ORGANIZATION_CHIP }))
+    await user.click(
+      screen.getByRole('button', {
+        name: /Add organization Grainger Engineering/i,
+      }),
+    )
+
+    await waitFor(() => {
+      expect(vi.mocked(callSetCourseMetadata)).toHaveBeenCalledWith(
+        'TestProject',
+        expect.objectContaining({
+          tags: [{ category: 'organization', value: 'Grainger Engineering' }],
+        }),
+      )
+    })
+    expect(
+      screen.queryByRole('group', { name: /Organization options/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('disables the organization chip when one organization tag already exists', () => {
     renderEditor(
       makeMetadata({
         tags: [{ category: 'organization', value: 'Grainger Engineering' }],
       }),
     )
-
-    await user.type(screen.getByLabelText('Tag'), 'Computer Science')
-    await user.click(screen.getByRole('button', { name: /Add tag/i }))
-
     expect(
-      await screen.findByText(
-        /You can only have one Organization tag\. Remove "Grainger Engineering" to change it\./i,
-      ),
-    ).toBeInTheDocument()
-    expect(vi.mocked(callSetCourseMetadata)).not.toHaveBeenCalled()
+      screen.getByRole('button', { name: ORGANIZATION_CHIP }),
+    ).toBeDisabled()
   })
 
-  it('disables inputs when the tag limit is reached (one per category)', () => {
-    renderEditor(
-      makeMetadata({
-        tags: [
-          { category: 'projectType', value: 'Course' },
-          { category: 'organization', value: 'Grainger Engineering' },
-        ],
-      }),
-    )
-
-    // With both categories filled, max tags (all available categories) is reached.
-    // Current cap is MAX_CHATBOT_TAGS = 5; this guards the "disabled" path generically.
-    if (MAX_CHATBOT_TAGS <= 2) {
-      expect(screen.getByRole('button', { name: /Add tag/i })).toBeDisabled()
-      expect(screen.getByLabelText('Tag')).toBeDisabled()
-    }
+  it('disables the free-text Add button when total tag cap is reached', () => {
+    const generalTags = Array.from({ length: MAX_CHATBOT_TAGS }, (_, i) => ({
+      category: 'general' as const,
+      value: `tag-${i}`,
+    }))
+    renderEditor(makeMetadata({ tags: generalTags }))
+    expect(screen.getByLabelText('Tag')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /^Add tag$/i })).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: PROJECT_TYPE_CHIP }),
+    ).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: ORGANIZATION_CHIP }),
+    ).toBeDisabled()
   })
 
   it('removing a tag calls the API without the removed tag', async () => {
@@ -237,13 +329,11 @@ describe('ChatbotTagsEditor', () => {
 
     renderEditor(
       makeMetadata({
-        tags: [{ category: 'organization', value: 'A' }],
+        tags: [{ category: 'general', value: 'A' }],
       }),
     )
 
-    await user.click(
-      screen.getByRole('button', { name: /Remove tag Organization: A/i }),
-    )
+    await user.click(screen.getByRole('button', { name: /Remove tag Tag: A/i }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       /Failed to save tags/i,
