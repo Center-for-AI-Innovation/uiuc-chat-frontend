@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { Search, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Input } from '~/components/shadcn/ui/input'
 import { Badge } from '~/components/shadcn/ui/badge'
@@ -148,22 +148,34 @@ export function ChatbotsSearchBar({
           role="list"
           aria-label="Active filters"
         >
-          {activeFilters.map((filter) => (
-            <Badge
-              key={filter.key}
-              variant="secondary"
-              className="bg-[--illinois-blue]/10 gap-1 text-[--illinois-blue] dark:bg-white/10 dark:text-white"
-            >
-              {filter.label}
-              <button
-                onClick={() => handleRemoveFilter(filter.key)}
-                className="hover:bg-[--illinois-blue]/20 ml-0.5 rounded-full p-0.5 dark:hover:bg-white/20"
-                aria-label={`Remove ${filter.label} filter`}
+          {activeFilters.map((filter) => {
+            const isSpecial = filter.key === 'category'
+            const badgeClass = isSpecial
+              ? 'gap-1 border border-[--illinois-prairie]/40 bg-[--illinois-prairie]/10 text-[--illinois-prairie] dark:border-[--illinois-prairie]/60 dark:bg-[--illinois-prairie]/15'
+              : 'bg-[--illinois-blue]/10 gap-1 text-[--illinois-blue] dark:bg-white/10 dark:text-white'
+            const removeBtnClass = isSpecial
+              ? 'ml-0.5 rounded-full p-0.5 hover:bg-[--illinois-prairie]/20'
+              : 'hover:bg-[--illinois-blue]/20 ml-0.5 rounded-full p-0.5 dark:hover:bg-white/20'
+            return (
+              <Badge
+                key={filter.key}
+                variant="secondary"
+                className={badgeClass}
               >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+                {isSpecial && (
+                  <Sparkles className="h-3 w-3" aria-hidden="true" />
+                )}
+                {filter.label}
+                <button
+                  onClick={() => handleRemoveFilter(filter.key)}
+                  className={removeBtnClass}
+                  aria-label={`Remove ${filter.label} filter`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )
+          })}
         </div>
       )}
     </div>

@@ -26,6 +26,8 @@ import {
 } from '~/hooks/queries/useFetchAllCourseMetadata'
 import { useFetchAccessibleChatbots } from '~/hooks/queries/useFetchAccessibleChatbots'
 import { useSearchChatbots } from '~/hooks/queries/useSearchChatbots'
+import { sanitizeChatbotTags } from '~/types/chatbotTags'
+import { compareChatbotTagPrecedence } from '~/utils/chatbotTagSort'
 
 function transformToCardData(
   course: CourseWithMetadata,
@@ -38,10 +40,16 @@ function transformToCardData(
       !(isOwner && a === currentUserEmail),
   )
 
+  const tags = sanitizeChatbotTags(course.metadata.tags)
+  const organization = tags.find((t) => t.category === 'organization')?.value
+  const projectType = tags.find((t) => t.category === 'projectType')?.value
+
   return {
     course_name: course.course_name,
     title: course.course_name,
     description: course.metadata.project_description || '',
+    organization,
+    projectType,
     owner: isOwner ? 'You' : course.metadata.course_owner,
     collaboratorCount: otherAdmins.length,
     userRole: isOwner ? ('owner' as const) : ('member' as const),
@@ -53,6 +61,16 @@ function transformToCardData(
     bannerImageS3: course.metadata.banner_image_s3,
     metadata: course.metadata,
   }
+}
+
+/** Card → synthetic ChatbotTag[] for precedence sorting (org first, then projectType). */
+function cardSortTags(card: { organization?: string; projectType?: string }) {
+  const tags: { category: 'organization' | 'projectType'; value: string }[] = []
+  if (card.organization)
+    tags.push({ category: 'organization', value: card.organization })
+  if (card.projectType)
+    tags.push({ category: 'projectType', value: card.projectType })
+  return tags
 }
 
 function hasActiveSearch(params: SearchChatbotsParams): boolean {
@@ -176,7 +194,14 @@ const ChatbotsHubPage = () => {
       }
     }
 
-    return result
+    // Within each section, surface organization-tagged bots first, then
+    // projectType-tagged, then untagged — matching the precedence rules from #598.
+    return result.map((section) => ({
+      ...section,
+      cards: [...section.cards].sort((a, b) =>
+        compareChatbotTagPrecedence(cardSortTags(a), cardSortTags(b)),
+      ),
+    }))
   }, [courses, accessibleChatbots, currentUserEmail, isSearchActive])
 
   if (auth.isLoading) {

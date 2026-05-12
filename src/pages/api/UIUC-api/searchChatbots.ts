@@ -4,6 +4,8 @@ import type { CourseMetadata } from '~/types/courseMetadata'
 import type { ChatbotCardData } from '~/components/UIUC-Components/chatbots-hub/chatbots.types'
 import { db, courseMetadata } from '~/db/dbClient'
 import { sql } from 'drizzle-orm'
+import { sanitizeChatbotTags } from '~/types/chatbotTags'
+import { compareChatbotTagPrecedence } from '~/utils/chatbotTagSort'
 
 const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL ?? ''
 const MAX_QUERY_LENGTH = 200
@@ -42,10 +44,16 @@ function toCardData(
   const accessLevel = getAccessLevel(metadata)
   const callerIsUserBot = isUserBot(metadata, userEmail)
 
+  const tags = sanitizeChatbotTags(metadata.tags)
+  const organization = tags.find((t) => t.category === 'organization')?.value
+  const projectType = tags.find((t) => t.category === 'projectType')?.value
+
   return {
     course_name: courseName,
     title: courseName,
     description: metadata.project_description ?? '',
+    organization,
+    projectType,
     owner: isOwner ? 'You' : metadata.course_owner,
     collaboratorCount: admins.length,
     userRole: isOwner ? 'owner' : callerIsUserBot ? 'member' : undefined,
@@ -54,6 +62,13 @@ function toCardData(
     bannerImageS3: metadata.banner_image_s3,
     metadata: callerIsUserBot ? metadata : undefined,
   }
+}
+
+/** Rank a card by user-role tier: owner=0, admin=1, other=2. */
+function userTier(metadata: CourseMetadata, userEmail: string): number {
+  if (metadata.course_owner === userEmail) return 0
+  if ((metadata.course_admins ?? []).includes(userEmail)) return 1
+  return 2
 }
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -176,13 +191,27 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       .orderBy(rankOrder)
       .limit(MAX_RESULTS)
 
-    const results: ChatbotCardData[] = rows.map((row) =>
-      toCardData(
-        row.course_name,
-        row.raw_metadata as CourseMetadata,
-        userEmail,
-      ),
-    )
+    // Build cards, then re-sort: keep user-tier (owner > admin > other) as the
+    // primary key, but within each tier order by chatbot tag precedence
+    // (organization-tagged ahead of projectType-tagged, untagged last;
+    // alphabetical course name as a final tiebreaker).
+    const cards = rows.map((row) => {
+      const metadata = row.raw_metadata as CourseMetadata
+      return {
+        tier: userTier(metadata, userEmail),
+        card: toCardData(row.course_name, metadata, userEmail),
+        tags: sanitizeChatbotTags(metadata.tags),
+      }
+    })
+
+    cards.sort((a, b) => {
+      if (a.tier !== b.tier) return a.tier - b.tier
+      const byTag = compareChatbotTagPrecedence(a.tags, b.tags)
+      if (byTag !== 0) return byTag
+      return a.card.course_name.localeCompare(b.card.course_name)
+    })
+
+    const results: ChatbotCardData[] = cards.map((c) => c.card)
 
     return res.status(200).json({ results, total: results.length })
   } catch (error) {

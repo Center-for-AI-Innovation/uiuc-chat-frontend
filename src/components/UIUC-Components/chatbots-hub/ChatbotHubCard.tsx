@@ -31,7 +31,6 @@ export function ChatbotHubCard(card: ChatbotCardData) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
 
-  const organizationLabel = organization ?? projectType
   const resolvedAccessLevel = accessLevel ?? (isPrivate ? 'private' : undefined)
   const resolvedUserRole = userRole ?? (owner === 'You' ? 'owner' : 'member')
   const isOwnerCard = resolvedUserRole === 'owner'
@@ -105,9 +104,18 @@ export function ChatbotHubCard(card: ChatbotCardData) {
             <p className="line-clamp-2 min-h-[40px] text-sm leading-5 text-[--illinois-storm-dark] dark:text-[#c8d2e3]">
               {description}
             </p>
-            <div className="flex items-center gap-3">
-              {organizationLabel && (
-                <ChatbotOrganizationBadge label={organizationLabel} />
+            <div className="flex flex-wrap items-center gap-2">
+              {organization && (
+                <ChatbotOrganizationBadge
+                  label={organization}
+                  category="organization"
+                />
+              )}
+              {projectType && (
+                <ChatbotOrganizationBadge
+                  label={projectType}
+                  category="projectType"
+                />
               )}
               {resolvedAccessLevel && (
                 <ChatbotAccessLevelBadge level={resolvedAccessLevel} />
