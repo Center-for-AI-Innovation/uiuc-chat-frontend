@@ -540,35 +540,9 @@ describe('Chatbar – additional coverage', () => {
   })
 
   // -------------------------------------------------------------------
-  // handleApiKeyChange
+  // handleApiKeyChange — removed: the OpenAI API Key input was deleted
+  // from ChatbarSettings in 3510ef1f (replaced by the theme toggle).
   // -------------------------------------------------------------------
-  it('stores API key in localStorage when changed', async () => {
-    const dispatch = vi.fn()
-
-    renderChatbar({
-      dispatch,
-      homeState: {
-        showChatbar: true,
-        apiKey: '',
-        serverSideApiKeyIsSet: false,
-        conversations: [],
-        folders: [],
-      },
-    })
-
-    const user = userEvent.setup()
-    await user.click(
-      await screen.findByRole('button', { name: /OpenAI API Key/i }),
-    )
-    const input = screen.getByPlaceholderText(/API Key/i)
-    await user.type(input, ' my-key {Enter}')
-
-    expect(localStorage.getItem('apiKey')).toBe('my-key')
-    expect(dispatch).toHaveBeenCalledWith({
-      field: 'apiKey',
-      value: 'my-key',
-    })
-  })
 
   // -------------------------------------------------------------------
   // handleExportData – no-op when courseName or email missing

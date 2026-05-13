@@ -17,6 +17,12 @@ vi.mock('../navbars/Navbar', () => ({
   default: () => <div data-testid="navbar" />,
 }))
 
+// MakeNewCoursePage renders ChatbotsGlobalNav instead of the old Navbar.
+// Mock it with the same testid so the existing assertion still works.
+vi.mock('../chatbots-hub/ChatbotsGlobalNav', () => ({
+  ChatbotsGlobalNav: () => <div data-testid="navbar" />,
+}))
+
 vi.mock('../UploadNotification', () => ({
   __esModule: true,
   default: ({

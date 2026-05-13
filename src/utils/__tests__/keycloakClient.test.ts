@@ -4,9 +4,9 @@ import { describe, expect, it, vi } from 'vitest'
 
 describe('keycloakClient', () => {
   it('initializeKeycloakAdmin caches the client and authenticates when secret is set', async () => {
-    vi.stubEnv('KEYCLOAK_CLIENT_SECRET', 'secret')
+    vi.stubEnv('KEYCLOAK_ADMIN_CLIENT_SECRET', 'secret')
     vi.stubEnv('NEXT_PUBLIC_KEYCLOAK_REALM', 'realm')
-    vi.stubEnv('NEXT_PUBLIC_KEYCLOAK_CLIENT_ID', 'client')
+    vi.stubEnv('KEYCLOAK_ADMIN_CLIENT_ID', 'client')
 
     const auth = vi.fn().mockResolvedValue(undefined)
     const ctor = vi.fn().mockImplementation(() => ({
