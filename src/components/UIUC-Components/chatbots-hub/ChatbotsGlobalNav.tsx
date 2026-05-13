@@ -5,7 +5,7 @@ import { useRouter } from 'next/router'
 import { AuthMenu } from '~/components/UIUC-Components/navbars/AuthMenu'
 
 const navItems = [
-  { label: 'My Chatbots', icon: IconHome, link: '/chatbots' },
+  { label: 'Chatbots Hub', icon: IconHome, link: '/chatbots' },
   { label: 'Create Your Own Bot', icon: IconSparkles, link: '/new' },
 ]
 
