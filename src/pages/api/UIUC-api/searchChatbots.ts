@@ -6,70 +6,14 @@ import { db, courseMetadata } from '~/db/dbClient'
 import { sql } from 'drizzle-orm'
 import { sanitizeChatbotTags } from '~/types/chatbotTags'
 import { compareChatbotTagPrecedence } from '~/utils/chatbotTagSort'
+import { toChatbotCardData, chatbotUserTier } from '~/utils/chatbotCard'
 
-const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL ?? ''
 const MAX_QUERY_LENGTH = 200
 const MAX_RESULTS = 500
 
 const VALID_PRIVACY_VALUES = new Set(['public', 'private', 'logged_in'])
 
 type PrivacyFilter = 'public' | 'private' | 'logged_in'
-
-function getAccessLevel(
-  metadata: CourseMetadata,
-): 'public' | 'private' | 'logged_in' {
-  if (!metadata.is_private) return 'public'
-  if (metadata.allow_logged_in_users) return 'logged_in'
-  return 'private'
-}
-
-function isUserBot(metadata: CourseMetadata, userEmail: string): boolean {
-  return (
-    metadata.course_owner === userEmail ||
-    (metadata.course_admins ?? []).includes(userEmail)
-  )
-}
-
-/** Build a safe card payload — only attach raw metadata for bots the caller owns or admins. */
-function toCardData(
-  courseName: string,
-  metadata: CourseMetadata,
-  userEmail: string,
-): ChatbotCardData {
-  const isOwner = metadata.course_owner === userEmail
-  const admins = (metadata.course_admins ?? []).filter(
-    (a) => a !== metadata.course_owner && a !== DEFAULT_ADMIN_EMAIL,
-  )
-
-  const accessLevel = getAccessLevel(metadata)
-  const callerIsUserBot = isUserBot(metadata, userEmail)
-
-  const tags = sanitizeChatbotTags(metadata.tags)
-  const organization = tags.find((t) => t.category === 'organization')?.value
-  const projectType = tags.find((t) => t.category === 'projectType')?.value
-
-  return {
-    course_name: courseName,
-    title: courseName,
-    description: metadata.project_description ?? '',
-    organization,
-    projectType,
-    owner: isOwner ? 'You' : metadata.course_owner,
-    collaboratorCount: admins.length,
-    userRole: isOwner ? 'owner' : callerIsUserBot ? 'member' : undefined,
-    accessLevel: accessLevel === 'logged_in' ? 'unlisted' : accessLevel,
-    isPrivate: metadata.is_private,
-    bannerImageS3: metadata.banner_image_s3,
-    metadata: callerIsUserBot ? metadata : undefined,
-  }
-}
-
-/** Rank a card by user-role tier: owner=0, admin=1, other=2. */
-function userTier(metadata: CourseMetadata, userEmail: string): number {
-  if (metadata.course_owner === userEmail) return 0
-  if ((metadata.course_admins ?? []).includes(userEmail)) return 1
-  return 2
-}
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -132,6 +76,10 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
           ${courseMetadata.course_name} ILIKE ${'%' + q + '%'}
           OR ${courseMetadata.project_description} ILIKE ${'%' + q + '%'}
           OR ${courseMetadata.course_owner} ILIKE ${'%' + q + '%'}
+          OR EXISTS (
+            SELECT 1 FROM jsonb_array_elements(${courseMetadata.tags}) t
+            WHERE (t->>'value') ILIKE ${'%' + q + '%'}
+          )
         )`
       : sql``
 
@@ -198,8 +146,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     const cards = rows.map((row) => {
       const metadata = row.raw_metadata as CourseMetadata
       return {
-        tier: userTier(metadata, userEmail),
-        card: toCardData(row.course_name, metadata, userEmail),
+        tier: chatbotUserTier(metadata, userEmail),
+        card: toChatbotCardData(row.course_name, metadata, userEmail),
         tags: sanitizeChatbotTags(metadata.tags),
       }
     })

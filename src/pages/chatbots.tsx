@@ -13,6 +13,7 @@ import { ChatbotsFilterPanel } from '~/components/UIUC-Components/chatbots-hub/C
 import { ChatbotsSearchResults } from '~/components/UIUC-Components/chatbots-hub/ChatbotsSearchResults'
 import { ChatbotsSection } from '~/components/UIUC-Components/chatbots-hub/ChatbotsSection'
 import {
+  type ChatbotCardData,
   type ChatbotSectionData,
   type SearchChatbotsParams,
   PROJECT_TYPE_TO_SECTION,
@@ -24,7 +25,7 @@ import {
   useFetchAllCourseMetadata,
   type CourseWithMetadata,
 } from '~/hooks/queries/useFetchAllCourseMetadata'
-import { useFetchAccessibleChatbots } from '~/hooks/queries/useFetchAccessibleChatbots'
+import { useFetchFeaturedChatbots } from '~/hooks/queries/useFetchFeaturedChatbots'
 import { useSearchChatbots } from '~/hooks/queries/useSearchChatbots'
 import { sanitizeChatbotTags } from '~/types/chatbotTags'
 import { compareChatbotTagPrecedence } from '~/utils/chatbotTagSort'
@@ -43,6 +44,9 @@ function transformToCardData(
   const tags = sanitizeChatbotTags(course.metadata.tags)
   const organization = tags.find((t) => t.category === 'organization')?.value
   const projectType = tags.find((t) => t.category === 'projectType')?.value
+  const generalTags = tags
+    .filter((t) => t.category === 'general')
+    .map((t) => t.value)
 
   return {
     course_name: course.course_name,
@@ -50,6 +54,7 @@ function transformToCardData(
     description: course.metadata.project_description || '',
     organization,
     projectType,
+    generalTags,
     owner: isOwner ? 'You' : course.metadata.course_owner,
     collaboratorCount: otherAdmins.length,
     userRole: isOwner ? ('owner' as const) : ('member' as const),
@@ -113,8 +118,8 @@ const ChatbotsHubPage = () => {
       enabled: auth.isAuthenticated && !isSearchActive,
     })
 
-  const { data: accessibleChatbots, isLoading: isAccessibleLoading } =
-    useFetchAccessibleChatbots({
+  const { data: featuredChatbots, isLoading: isFeaturedLoading } =
+    useFetchFeaturedChatbots({
       enabled: auth.isAuthenticated && !isSearchActive,
     })
 
@@ -139,59 +144,54 @@ const ChatbotsHubPage = () => {
   const sections = useMemo(() => {
     if (isSearchActive) return []
 
-    const result: ChatbotSectionData[] = []
+    // Merge both data sources into a single map keyed by course_name.
+    // - `courses` carries the user's own + admined bots (incl. private ones).
+    // - `featuredChatbots` is the curated/sampled set of bots to highlight on
+    //   the default page.
+    // A bot can appear in both; prefer the `courses` version because it has
+    // the full metadata + correct owner/role tagging.
+    const byCourseName = new Map<string, ChatbotCardData>()
 
-    if (courses) {
-      const myCourses = courses.filter(
-        (c) => c.metadata.course_owner === currentUserEmail,
-      )
-      const sharedCourses = courses.filter(
-        (c) => c.metadata.course_owner !== currentUserEmail,
-      )
-
-      if (myCourses.length > 0) {
-        result.push({
-          title: 'My Chatbots',
-          cards: myCourses.map((c) => transformToCardData(c, currentUserEmail)),
-        })
-      }
-
-      if (sharedCourses.length > 0) {
-        result.push({
-          title: 'Shared With Me',
-          cards: sharedCourses.map((c) =>
-            transformToCardData(c, currentUserEmail),
-          ),
-        })
+    if (featuredChatbots) {
+      for (const bot of featuredChatbots) {
+        byCourseName.set(bot.course_name, bot)
       }
     }
 
-    // Accessible chatbots grouped by project type into Figma sections
-    if (accessibleChatbots && accessibleChatbots.length > 0) {
-      const grouped = new Map<string, ChatbotSectionData>()
+    if (courses) {
+      for (const course of courses) {
+        byCourseName.set(
+          course.course_name,
+          transformToCardData(course, currentUserEmail),
+        )
+      }
+    }
 
-      for (const bot of accessibleChatbots) {
-        const projectType = bot.projectType as
-          | keyof typeof PROJECT_TYPE_TO_SECTION
-          | undefined
-        const sectionTitle =
-          (projectType && PROJECT_TYPE_TO_SECTION[projectType]) ??
-          DEFAULT_ACCESSIBLE_SECTION
+    if (byCourseName.size === 0) return []
 
-        let section = grouped.get(sectionTitle)
-        if (!section) {
-          section = { title: sectionTitle, cards: [] }
-          grouped.set(sectionTitle, section)
-        }
+    // Group everything by projectType into the Figma sections.
+    const grouped = new Map<string, ChatbotSectionData>()
+    for (const bot of byCourseName.values()) {
+      const projectType = bot.projectType as
+        | keyof typeof PROJECT_TYPE_TO_SECTION
+        | undefined
+      const sectionTitle =
+        (projectType && PROJECT_TYPE_TO_SECTION[projectType]) ??
+        DEFAULT_ACCESSIBLE_SECTION
 
-        section.cards.push(bot)
+      let section = grouped.get(sectionTitle)
+      if (!section) {
+        section = { title: sectionTitle, cards: [] }
+        grouped.set(sectionTitle, section)
       }
 
-      // Enforce Figma section ordering
-      for (const title of ACCESSIBLE_SECTION_ORDER) {
-        const section = grouped.get(title)
-        if (section) result.push(section)
-      }
+      section.cards.push(bot)
+    }
+
+    const result: ChatbotSectionData[] = []
+    for (const title of ACCESSIBLE_SECTION_ORDER) {
+      const section = grouped.get(title)
+      if (section) result.push(section)
     }
 
     // Within each section, surface organization-tagged bots first, then
@@ -202,7 +202,7 @@ const ChatbotsHubPage = () => {
         compareChatbotTagPrecedence(cardSortTags(a), cardSortTags(b)),
       ),
     }))
-  }, [courses, accessibleChatbots, currentUserEmail, isSearchActive])
+  }, [courses, featuredChatbots, currentUserEmail, isSearchActive])
 
   if (auth.isLoading) {
     return (
@@ -221,7 +221,7 @@ const ChatbotsHubPage = () => {
   }
 
   const isSectionsLoading =
-    !isSearchActive && (isCoursesLoading || isAccessibleLoading)
+    !isSearchActive && (isCoursesLoading || isFeaturedLoading)
 
   return (
     <main className="min-h-screen bg-white dark:bg-[#081735]">

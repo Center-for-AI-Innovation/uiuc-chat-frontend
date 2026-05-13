@@ -50,6 +50,13 @@
       "when": 1777852800000,
       "tag": "0006_course_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1779081600000,
+      "tag": "0007_chatbot_tags",
+      "breakpoints": true
     }
   ]
 }

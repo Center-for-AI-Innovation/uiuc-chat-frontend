@@ -19,6 +19,7 @@ export function ChatbotHubCard(card: ChatbotCardData) {
     description,
     organization,
     projectType,
+    generalTags,
     owner,
     collaboratorCount,
     userRole,
@@ -27,6 +28,13 @@ export function ChatbotHubCard(card: ChatbotCardData) {
     bannerImageS3,
     metadata,
   } = card
+
+  // Card shows at most 2 tag badges, reserved for organization + projectType.
+  // All other tags (i.e. user-defined general tags) collapse into a "+N more
+  // tags" indicator so the singletons never get crowded off the card.
+  const overflowTagCount = generalTags?.length ?? 0
+  const hasAnyTagBadge =
+    Boolean(organization) || Boolean(projectType) || overflowTagCount > 0
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
@@ -105,13 +113,20 @@ export function ChatbotHubCard(card: ChatbotCardData) {
               {description}
             </p>
             <div className="flex flex-col gap-2">
-              {(organization || projectType) && (
+              {hasAnyTagBadge && (
                 <div className="flex flex-wrap items-center gap-2">
                   {organization && (
                     <ChatbotOrganizationBadge label={organization} />
                   )}
                   {projectType && (
                     <ChatbotOrganizationBadge label={projectType} />
+                  )}
+                  {overflowTagCount > 0 && (
+                    <ChatbotOrganizationBadge
+                      label={`+${overflowTagCount} more ${
+                        overflowTagCount === 1 ? 'tag' : 'tags'
+                      }`}
+                    />
                   )}
                 </div>
               )}

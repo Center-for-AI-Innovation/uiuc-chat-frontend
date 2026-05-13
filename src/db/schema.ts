@@ -245,6 +245,33 @@ export const courseMetadata = pgTable('course_metadata', {
     .notNull(),
 })
 
+// Registry of all known chatbot tag values, deduplicated across the system.
+// Maintained by upsertCourseMetadata; consumed by /api/UIUC-api/searchTags
+// for autocomplete in the chatbot tag editor.
+export const chatbotTags = pgTable(
+  'chatbot_tags',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    category: text('category').notNull(),
+    value: text('value').notNull(),
+    value_lower: text('value_lower').notNull(),
+    usage_count: integer('usage_count').notNull().default(0),
+    created_at: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updated_at: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      categoryValueLowerUnique: uniqueIndex(
+        'chatbot_tags_category_value_lower_unique',
+      ).on(table.category, table.value_lower),
+    }
+  },
+)
+
 // DocGroups table
 export const docGroups = pgTable(
   'doc_groups',

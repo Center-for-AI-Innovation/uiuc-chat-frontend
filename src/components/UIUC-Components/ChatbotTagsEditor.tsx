@@ -18,10 +18,14 @@ import {
   CHATBOT_TAG_CATEGORY_LABEL,
   COMMON_ORGANIZATIONS,
   MAX_CHATBOT_TAGS,
+  MAX_GENERAL_TAG_LENGTH,
   chatbotTagKey,
+  isValidGeneralTagValue,
   sanitizeChatbotTags,
+  sanitizeGeneralTagInput,
   type ChatbotTag,
 } from '~/types/chatbotTags'
+import { useSearchTags } from '~/hooks/queries/useSearchTags'
 import type {
   CourseMetadata,
   CourseMetadataOptionalForUpsert,
@@ -113,6 +117,7 @@ export default function ChatbotTagsEditor({
   const [openPicker, setOpenPicker] = useState<PickerKind>(null)
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isInputFocused, setIsInputFocused] = useState(false)
 
   const isFull = tags.length >= MAX_CHATBOT_TAGS
 
@@ -164,25 +169,39 @@ export default function ChatbotTagsEditor({
     setErrorMessage(message)
   }, [])
 
-  const addGeneralTag = useCallback(async () => {
-    if (isFull) return
-    const trimmed = inputValue.trim()
-    if (!trimmed) {
-      flashError('Enter a tag name.')
-      return
-    }
-    const key = `general:${trimmed.toLowerCase()}`
-    if (existingValueKeys.has(key)) {
-      flashError('That tag is already added.')
-      return
-    }
+  const addGeneralTagWithValue = useCallback(
+    async (rawValue: string) => {
+      if (isFull) return
+      const trimmed = rawValue.trim()
+      if (!trimmed) {
+        flashError('Enter a tag name.')
+        return
+      }
+      if (!isValidGeneralTagValue(trimmed)) {
+        flashError(
+          `Tags can only contain letters, numbers, spaces, hyphens and underscores (max ${MAX_GENERAL_TAG_LENGTH} characters).`,
+        )
+        return
+      }
+      const key = `general:${trimmed.toLowerCase()}`
+      if (existingValueKeys.has(key)) {
+        flashError('That tag is already added.')
+        return
+      }
 
-    const ok = await persistTags([
-      ...tags,
-      { category: 'general', value: trimmed },
-    ])
-    if (ok) setInputValue('')
-  }, [existingValueKeys, flashError, inputValue, isFull, persistTags, tags])
+      const ok = await persistTags([
+        ...tags,
+        { category: 'general', value: trimmed },
+      ])
+      if (ok) setInputValue('')
+    },
+    [existingValueKeys, flashError, isFull, persistTags, tags],
+  )
+
+  const addGeneralTag = useCallback(
+    () => addGeneralTagWithValue(inputValue),
+    [addGeneralTagWithValue, inputValue],
+  )
 
   const addConstrainedTag = useCallback(
     async (
@@ -233,6 +252,22 @@ export default function ChatbotTagsEditor({
       void addGeneralTag()
     }
   }
+
+  // Autocomplete suggestions for the free-text general-tag input.
+  const trimmedInput = inputValue.trim()
+  const { data: rawSuggestions = [] } = useSearchTags(trimmedInput, {
+    category: 'general',
+    enabled: isInputFocused && !isFull && trimmedInput.length > 0,
+  })
+  const suggestions = useMemo(
+    () =>
+      rawSuggestions.filter(
+        (s) =>
+          !existingValueKeys.has(`general:${s.value.trim().toLowerCase()}`),
+      ),
+    [rawSuggestions, existingValueKeys],
+  )
+  const showSuggestions = isInputFocused && !isFull && suggestions.length > 0
 
   const togglePicker = useCallback((kind: PickerKind) => {
     setOpenPicker((current) => (current === kind ? null : kind))
@@ -296,24 +331,64 @@ export default function ChatbotTagsEditor({
 
       {/* Free-text input → general tag */}
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
-        <div
-          className="flex w-full flex-1 items-center rounded-md border border-[--dashboard-border] bg-[--background] transition-colors focus-within:border-[--foreground] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[--illinois-orange] data-[disabled=true]:opacity-50"
-          data-disabled={isFull || undefined}
-        >
-          <input
-            type="text"
-            placeholder="Type a tag and press Enter"
-            aria-label="Tag"
-            value={inputValue}
-            disabled={isFull}
-            className="w-full bg-transparent px-3 py-2 text-sm text-[--foreground] outline-none placeholder:text-[--foreground-faded] disabled:cursor-not-allowed"
-            onChange={(e) => {
-              setInputValue(e.target.value)
-              setStatus('idle')
-              setErrorMessage(null)
-            }}
-            onKeyDown={handleKeyDown}
-          />
+        <div className="relative w-full flex-1">
+          <div
+            className="flex w-full items-center rounded-md border border-[--dashboard-border] bg-[--background] transition-colors focus-within:border-[--foreground] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[--illinois-orange] data-[disabled=true]:opacity-50"
+            data-disabled={isFull || undefined}
+          >
+            <input
+              type="text"
+              placeholder={`Letters, numbers, space — up to ${MAX_GENERAL_TAG_LENGTH} chars`}
+              aria-label="Tag"
+              value={inputValue}
+              disabled={isFull}
+              maxLength={MAX_GENERAL_TAG_LENGTH}
+              role="combobox"
+              aria-expanded={showSuggestions}
+              aria-autocomplete="list"
+              aria-controls="chatbot-tag-suggestions"
+              className="w-full bg-transparent px-3 py-2 text-sm text-[--foreground] outline-none placeholder:text-[--foreground-faded] disabled:cursor-not-allowed"
+              onChange={(e) => {
+                setInputValue(sanitizeGeneralTagInput(e.target.value))
+                setStatus('idle')
+                setErrorMessage(null)
+              }}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setIsInputFocused(true)}
+              // Delay so onMouseDown on a suggestion fires before blur.
+              onBlur={() =>
+                window.setTimeout(() => setIsInputFocused(false), 120)
+              }
+            />
+          </div>
+
+          {showSuggestions && (
+            <ul
+              id="chatbot-tag-suggestions"
+              role="listbox"
+              aria-label="Tag suggestions"
+              className="absolute left-0 right-0 top-full z-10 mt-1 max-h-56 overflow-auto rounded-md border border-[--dashboard-border] bg-[--background] py-1 shadow-md"
+            >
+              {suggestions.map((s) => (
+                <li key={s.value} role="option" aria-selected={false}>
+                  <button
+                    type="button"
+                    // onMouseDown fires before input blur so the click lands.
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      void addGeneralTagWithValue(s.value)
+                    }}
+                    className="hover:bg-[--dashboard-border]/40 flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left text-sm text-[--foreground]"
+                  >
+                    <span className="truncate">{s.value}</span>
+                    <span className="shrink-0 text-xs text-[--foreground-faded]">
+                      {s.usage_count}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <Button

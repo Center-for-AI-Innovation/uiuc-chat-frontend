@@ -3,9 +3,12 @@ import { describe, expect, it } from 'vitest'
 import {
   CHATBOT_PROJECT_TYPES,
   MAX_CHATBOT_TAGS,
+  MAX_GENERAL_TAG_LENGTH,
   categorizeTagValue,
   isChatbotTag,
+  isValidGeneralTagValue,
   sanitizeChatbotTags,
+  sanitizeGeneralTagInput,
 } from '~/types/chatbotTags'
 
 describe('isChatbotTag', () => {
@@ -126,6 +129,80 @@ describe('sanitizeChatbotTags', () => {
       { category: 'organization', value: '  Grainger  ' },
     ])
     expect(result).toEqual([{ category: 'organization', value: 'Grainger' }])
+  })
+
+  it('drops general tags with special characters but keeps orgs with punctuation', () => {
+    const result = sanitizeChatbotTags([
+      { category: 'general', value: 'C++' },
+      { category: 'general', value: 'AI/ML' },
+      { category: 'general', value: 'beta' },
+      { category: 'organization', value: 'College of Liberal Arts & Sciences' },
+    ])
+    expect(result).toEqual([
+      { category: 'general', value: 'beta' },
+      {
+        category: 'organization',
+        value: 'College of Liberal Arts & Sciences',
+      },
+    ])
+  })
+
+  it('drops general tags longer than MAX_GENERAL_TAG_LENGTH', () => {
+    const tooLong = 'a'.repeat(MAX_GENERAL_TAG_LENGTH + 1)
+    const exact = 'a'.repeat(MAX_GENERAL_TAG_LENGTH)
+    const result = sanitizeChatbotTags([
+      { category: 'general', value: tooLong },
+      { category: 'general', value: exact },
+    ])
+    expect(result).toEqual([{ category: 'general', value: exact }])
+  })
+})
+
+describe('isValidGeneralTagValue', () => {
+  it('accepts letters, digits, spaces, hyphens, underscores', () => {
+    expect(isValidGeneralTagValue('beta')).toBe(true)
+    expect(isValidGeneralTagValue('cs 101')).toBe(true)
+    expect(isValidGeneralTagValue('ai-ml')).toBe(true)
+    expect(isValidGeneralTagValue('ai_ml')).toBe(true)
+    expect(isValidGeneralTagValue('Group 12')).toBe(true)
+  })
+
+  it('rejects punctuation and other special characters', () => {
+    expect(isValidGeneralTagValue('C++')).toBe(false)
+    expect(isValidGeneralTagValue('AI/ML')).toBe(false)
+    expect(isValidGeneralTagValue('foo!')).toBe(false)
+    expect(isValidGeneralTagValue('foo@bar')).toBe(false)
+    expect(isValidGeneralTagValue('foo.bar')).toBe(false)
+  })
+
+  it('rejects empty / whitespace-only values', () => {
+    expect(isValidGeneralTagValue('')).toBe(false)
+    expect(isValidGeneralTagValue('   ')).toBe(false)
+  })
+
+  it(`rejects values longer than ${MAX_GENERAL_TAG_LENGTH} chars after trimming`, () => {
+    expect(isValidGeneralTagValue('a'.repeat(MAX_GENERAL_TAG_LENGTH))).toBe(
+      true,
+    )
+    expect(isValidGeneralTagValue('a'.repeat(MAX_GENERAL_TAG_LENGTH + 1))).toBe(
+      false,
+    )
+  })
+})
+
+describe('sanitizeGeneralTagInput', () => {
+  it('strips disallowed characters as the user types', () => {
+    expect(sanitizeGeneralTagInput('hello!@#world')).toBe('helloworld')
+    expect(sanitizeGeneralTagInput('a/b\\c')).toBe('abc')
+  })
+
+  it('truncates to MAX_GENERAL_TAG_LENGTH characters', () => {
+    const long = 'a'.repeat(MAX_GENERAL_TAG_LENGTH + 10)
+    expect(sanitizeGeneralTagInput(long).length).toBe(MAX_GENERAL_TAG_LENGTH)
+  })
+
+  it('preserves allowed characters and case', () => {
+    expect(sanitizeGeneralTagInput('Beta_test-1')).toBe('Beta_test-1')
   })
 })
 

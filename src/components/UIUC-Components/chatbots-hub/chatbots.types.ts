@@ -41,6 +41,7 @@ export type ChatbotCardData = {
   description: string
   organization?: string
   projectType?: string
+  generalTags?: string[]
   owner: string
   collaboratorCount: number
   userRole?: ChatbotUserRole
