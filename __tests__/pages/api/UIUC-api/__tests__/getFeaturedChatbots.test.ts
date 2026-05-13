@@ -7,6 +7,7 @@ type Row = { course_name: string; raw_metadata: any }
 
 const hoisted = vi.hoisted(() => {
   let nextRows: Row[] = []
+  let nextError: Error | null = null
   let capturedWhere: SQL | undefined
   let capturedOrderBy: SQL | undefined
   let capturedLimit: number | undefined
@@ -28,7 +29,10 @@ const hoisted = vi.hoisted(() => {
       return chain
     }
     chain.then = (onFulfilled: any, onRejected?: any) =>
-      Promise.resolve(nextRows).then(onFulfilled, onRejected)
+      (nextError ? Promise.reject(nextError) : Promise.resolve(nextRows)).then(
+        onFulfilled,
+        onRejected,
+      )
     return chain
   }
 
@@ -37,11 +41,15 @@ const hoisted = vi.hoisted(() => {
     setNextRows: (rows: Row[]) => {
       nextRows = rows
     },
+    setNextError: (err: Error | null) => {
+      nextError = err
+    },
     getCapturedWhere: () => capturedWhere,
     getCapturedOrderBy: () => capturedOrderBy,
     getCapturedLimit: () => capturedLimit,
     resetCaptures: () => {
       nextRows = []
+      nextError = null
       capturedWhere = undefined
       capturedOrderBy = undefined
       capturedLimit = undefined
@@ -187,5 +195,26 @@ describe('UIUC-api/getFeaturedChatbots', () => {
     // Not the caller's bot, so raw metadata is not exposed.
     expect(card.metadata).toBeUndefined()
     expect(card.userRole).toBeUndefined()
+  })
+
+  it('returns 500 and a generic error message when the db throws', async () => {
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
+    hoisted.setNextError(new Error('db is down'))
+
+    const res = createMockRes()
+    await handler(
+      createMockReq({
+        method: 'GET',
+        user: { email: 'me@example.com' },
+      }) as any,
+      res as any,
+    )
+    expect(res.status).toHaveBeenCalledWith(500)
+    const payload = (res.json as any).mock.calls[0][0]
+    expect(payload.error).toBe('Failed to fetch featured chatbots')
+    expect(consoleError).toHaveBeenCalled()
+    consoleError.mockRestore()
   })
 })

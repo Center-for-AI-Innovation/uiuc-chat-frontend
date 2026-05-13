@@ -208,4 +208,110 @@ describe('writeCourseMetadata', () => {
       CourseMetadataWriteError,
     )
   })
+
+  it('reports a CRITICAL rollback failure when Redis fails AND the restore also fails', async () => {
+    // Seed Redis with a malformed prior value so the UPDATE rollback's
+    // JSON.parse blows up inside rollbackPostgres.
+    redisState.store.set('bot-critical', '{not json')
+    redisState.hSet.mockImplementationOnce(async () => {
+      throw new Error('redis down')
+    })
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
+    const { writeCourseMetadata, CourseMetadataWriteError } = await import(
+      '../courseMetadataStore'
+    )
+    await expect(
+      writeCourseMetadata('bot-critical', makeMetadata()),
+    ).rejects.toThrow(CourseMetadataWriteError)
+    expect(consoleError).toHaveBeenCalled()
+    consoleError.mockRestore()
+  })
+})
+
+describe('deleteCourseMetadata', () => {
+  it('rejects when courseName is empty', async () => {
+    const { deleteCourseMetadata, CourseMetadataWriteError } = await import(
+      '../courseMetadataStore'
+    )
+    await expect(deleteCourseMetadata('')).rejects.toThrow(
+      CourseMetadataWriteError,
+    )
+  })
+
+  it('returns early after deleting Postgres when Redis had no prior value', async () => {
+    // Pre-seed only Postgres, Redis is empty.
+    dbState.rows.set('bot-x', {
+      course_name: 'bot-x',
+      course_owner: 'o@test.edu',
+    })
+    const { deleteCourseMetadata } = await import('../courseMetadataStore')
+    await deleteCourseMetadata('bot-x')
+    expect(dbState.deleteFn).toHaveBeenCalledTimes(1)
+    expect(redisState.hDel).not.toHaveBeenCalled()
+  })
+
+  it('deletes from Postgres then Redis on the happy path', async () => {
+    dbState.rows.set('bot-y', { course_name: 'bot-y' })
+    redisState.store.set('bot-y', JSON.stringify(makeMetadata()))
+    const { deleteCourseMetadata } = await import('../courseMetadataStore')
+    await deleteCourseMetadata('bot-y')
+    expect(dbState.deleteFn).toHaveBeenCalledTimes(1)
+    expect(redisState.hDel).toHaveBeenCalledTimes(1)
+  })
+
+  it('restores the Postgres row when the Redis delete fails', async () => {
+    dbState.rows.set('bot-z', { course_name: 'bot-z' })
+    redisState.store.set('bot-z', JSON.stringify(makeMetadata()))
+    redisState.hDel.mockImplementationOnce(async () => {
+      throw new Error('redis down')
+    })
+    const { deleteCourseMetadata, CourseMetadataWriteError } = await import(
+      '../courseMetadataStore'
+    )
+    await expect(deleteCourseMetadata('bot-z')).rejects.toThrow(
+      CourseMetadataWriteError,
+    )
+    // delete called once, then insert (restore) called once
+    expect(dbState.deleteFn).toHaveBeenCalledTimes(1)
+    expect(dbState.insertFn).toHaveBeenCalledTimes(1)
+  })
+
+  it('logs CRITICAL when Redis delete fails AND the Postgres restore also fails', async () => {
+    dbState.rows.set('bot-w', { course_name: 'bot-w' })
+    redisState.store.set('bot-w', JSON.stringify(makeMetadata()))
+    redisState.hDel.mockImplementationOnce(async () => {
+      throw new Error('redis down')
+    })
+    dbState.insertFn.mockImplementationOnce(() => {
+      throw new Error('restore also failed')
+    })
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
+    const { deleteCourseMetadata, CourseMetadataWriteError } = await import(
+      '../courseMetadataStore'
+    )
+    await expect(deleteCourseMetadata('bot-w')).rejects.toThrow(
+      CourseMetadataWriteError,
+    )
+    expect(consoleError).toHaveBeenCalled()
+    consoleError.mockRestore()
+  })
+
+  it('wraps a Postgres delete failure in CourseMetadataWriteError', async () => {
+    dbState.rows.set('bot-v', { course_name: 'bot-v' })
+    redisState.store.set('bot-v', JSON.stringify(makeMetadata()))
+    dbState.deleteFn.mockImplementationOnce(() => {
+      throw new Error('pg down')
+    })
+    const { deleteCourseMetadata, CourseMetadataWriteError } = await import(
+      '../courseMetadataStore'
+    )
+    await expect(deleteCourseMetadata('bot-v')).rejects.toThrow(
+      CourseMetadataWriteError,
+    )
+    expect(redisState.hDel).not.toHaveBeenCalled()
+  })
 })
