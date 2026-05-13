@@ -425,7 +425,7 @@ export default function ChatbotTagsEditor({
                   left: dropdownRect.left,
                   width: dropdownRect.width,
                 }}
-                className="z-[1000] max-h-56 overflow-auto rounded-md border border-[--dashboard-border] bg-[--background] py-1 shadow-md"
+                className="z-[1000] m-0 max-h-56 list-none overflow-auto rounded-md border border-[--dashboard-border] bg-[--background] p-1 shadow-md"
               >
                 {suggestions.map((s) => (
                   <li key={s.value} role="option" aria-selected={false}>
@@ -438,7 +438,7 @@ export default function ChatbotTagsEditor({
                         if (s.alreadyAdded) return
                         void addGeneralTagWithValue(s.value)
                       }}
-                      className="enabled:hover:bg-[--dashboard-border]/40 flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left text-sm text-[--foreground] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="enabled:hover:bg-[--dashboard-border]/40 flex w-full items-center justify-between gap-3 rounded-sm px-2 py-1 text-left text-sm leading-tight text-[--foreground] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <span className="truncate">{s.value}</span>
                       <span className="shrink-0 text-xs text-[--foreground-faded]">
