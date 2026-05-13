@@ -26,6 +26,7 @@ import {
   type ChatbotTag,
 } from '~/types/chatbotTags'
 import { useSearchTags } from '~/hooks/queries/useSearchTags'
+import { useDebounce } from '~/hooks/useDebounce'
 import type {
   CourseMetadata,
   CourseMetadataOptionalForUpsert,
@@ -254,10 +255,13 @@ export default function ChatbotTagsEditor({
   }
 
   // Autocomplete suggestions for the free-text general-tag input.
+  // The query input is debounced so we don't fire a network request on
+  // every keystroke; ~200ms feels responsive without being chatty.
   const trimmedInput = inputValue.trim()
-  const { data: rawSuggestions = [] } = useSearchTags(trimmedInput, {
+  const debouncedQuery = useDebounce(trimmedInput, 200)
+  const { data: rawSuggestions = [] } = useSearchTags(debouncedQuery, {
     category: 'general',
-    enabled: isInputFocused && !isFull && trimmedInput.length > 0,
+    enabled: isInputFocused && !isFull && debouncedQuery.length > 0,
   })
   const suggestions = useMemo(
     () =>
@@ -333,7 +337,7 @@ export default function ChatbotTagsEditor({
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
         <div className="relative w-full flex-1">
           <div
-            className="flex w-full items-center rounded-md border border-[--dashboard-border] bg-[--background] transition-colors focus-within:border-[--foreground] focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[--illinois-orange] data-[disabled=true]:opacity-50"
+            className="flex w-full items-center rounded-md border border-[--dashboard-border] bg-[--background] transition-colors focus-within:border-[--illinois-orange] data-[disabled=true]:opacity-50"
             data-disabled={isFull || undefined}
           >
             <input
