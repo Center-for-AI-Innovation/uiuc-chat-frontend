@@ -4,12 +4,16 @@ import {
   type ChatbotTagCategory,
 } from '~/types/chatbotTags'
 
+// `general` is included for TypeScript exhaustiveness — `getPrimaryTag`
+// never returns a general tag, so this rank is effectively unreachable
+// at runtime, but Record<ChatbotTagCategory, number> requires it.
 const CATEGORY_RANK: Record<ChatbotTagCategory, number> = {
   organization: 0,
   projectType: 1,
+  general: 2,
 }
 
-const UNTAGGED_RANK = CATEGORY_RANK.projectType + 1
+const UNTAGGED_RANK = CATEGORY_RANK.general + 1
 
 const PROJECT_TYPE_RANK: Record<string, number> = CHATBOT_PROJECT_TYPES.reduce(
   (acc, value, index) => ({ ...acc, [value]: index }),
