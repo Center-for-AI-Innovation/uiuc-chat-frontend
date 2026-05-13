@@ -50,9 +50,20 @@ const BrandingForm = ({
   >(cachedMetadata?.banner_image_s3 ? 'success' : 'idle')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Subscribe to future query cache changes
+  // Subscribe to future query cache changes — but only react to events for
+  // this course's metadata key. Without this guard, *any* query observer
+  // mounting elsewhere in the tree (e.g. the tag autocomplete) would fire
+  // the callback and clobber any in-progress edits on this form.
   useEffect(() => {
-    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      const key = event?.query?.queryKey
+      if (
+        !Array.isArray(key) ||
+        key[0] !== 'courseMetadata' ||
+        key[1] !== project_name
+      ) {
+        return
+      }
       const latestData = queryClient.getQueryData([
         'courseMetadata',
         project_name,
