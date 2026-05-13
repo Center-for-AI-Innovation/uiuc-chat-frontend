@@ -1,4 +1,12 @@
-import { useCallback, useMemo, useState, type KeyboardEvent } from 'react'
+import {
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react'
+import { createPortal } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, X } from 'lucide-react'
 import { Text } from '@mantine/core'
@@ -277,6 +285,38 @@ export default function ChatbotTagsEditor({
   )
   const showSuggestions = isInputFocused && !isFull && suggestions.length > 0
 
+  // Portal the dropdown to <body> so ancestor overflow:hidden (cards,
+  // modals, etc.) can't clip it. Position is recomputed from the input
+  // rect whenever the dropdown opens or the viewport changes.
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const [dropdownRect, setDropdownRect] = useState<{
+    top: number
+    left: number
+    width: number
+  } | null>(null)
+
+  useLayoutEffect(() => {
+    if (!showSuggestions || !inputRef.current) {
+      setDropdownRect(null)
+      return
+    }
+
+    const updateRect = () => {
+      const node = inputRef.current
+      if (!node) return
+      const r = node.getBoundingClientRect()
+      setDropdownRect({ top: r.bottom + 4, left: r.left, width: r.width })
+    }
+
+    updateRect()
+    window.addEventListener('resize', updateRect)
+    window.addEventListener('scroll', updateRect, true)
+    return () => {
+      window.removeEventListener('resize', updateRect)
+      window.removeEventListener('scroll', updateRect, true)
+    }
+  }, [showSuggestions])
+
   const togglePicker = useCallback((kind: PickerKind) => {
     setOpenPicker((current) => (current === kind ? null : kind))
     setStatus('idle')
@@ -345,6 +385,7 @@ export default function ChatbotTagsEditor({
             data-disabled={isFull || undefined}
           >
             <input
+              ref={inputRef}
               type="text"
               placeholder={`Letters, numbers, space — up to ${MAX_GENERAL_TAG_LENGTH} chars`}
               aria-label="Tag"
@@ -370,35 +411,45 @@ export default function ChatbotTagsEditor({
             />
           </div>
 
-          {showSuggestions && (
-            <ul
-              id="chatbot-tag-suggestions"
-              role="listbox"
-              aria-label="Tag suggestions"
-              className="absolute left-0 right-0 top-full z-10 mt-1 max-h-56 overflow-auto rounded-md border border-[--dashboard-border] bg-[--background] py-1 shadow-md"
-            >
-              {suggestions.map((s) => (
-                <li key={s.value} role="option" aria-selected={false}>
-                  <button
-                    type="button"
-                    disabled={s.alreadyAdded}
-                    // onMouseDown fires before input blur so the click lands.
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      if (s.alreadyAdded) return
-                      void addGeneralTagWithValue(s.value)
-                    }}
-                    className="enabled:hover:bg-[--dashboard-border]/40 flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left text-sm text-[--foreground] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <span className="truncate">{s.value}</span>
-                    <span className="shrink-0 text-xs text-[--foreground-faded]">
-                      {s.alreadyAdded ? 'added' : s.usage_count}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          {showSuggestions &&
+            dropdownRect &&
+            typeof document !== 'undefined' &&
+            createPortal(
+              <ul
+                id="chatbot-tag-suggestions"
+                role="listbox"
+                aria-label="Tag suggestions"
+                style={{
+                  position: 'fixed',
+                  top: dropdownRect.top,
+                  left: dropdownRect.left,
+                  width: dropdownRect.width,
+                }}
+                className="z-[1000] max-h-56 overflow-auto rounded-md border border-[--dashboard-border] bg-[--background] py-1 shadow-md"
+              >
+                {suggestions.map((s) => (
+                  <li key={s.value} role="option" aria-selected={false}>
+                    <button
+                      type="button"
+                      disabled={s.alreadyAdded}
+                      // onMouseDown fires before input blur so the click lands.
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        if (s.alreadyAdded) return
+                        void addGeneralTagWithValue(s.value)
+                      }}
+                      className="enabled:hover:bg-[--dashboard-border]/40 flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left text-sm text-[--foreground] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <span className="truncate">{s.value}</span>
+                      <span className="shrink-0 text-xs text-[--foreground-faded]">
+                        {s.alreadyAdded ? 'added' : s.usage_count}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>,
+              document.body,
+            )}
         </div>
 
         <Button
