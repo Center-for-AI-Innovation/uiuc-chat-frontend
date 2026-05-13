@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -117,10 +118,20 @@ export default function ChatbotTagsEditor({
 }: ChatbotTagsEditorProps) {
   const queryClient = useQueryClient()
 
-  const tags = useMemo(
+  // Local copy of the attached tag list. We seed it from the incoming
+  // course_metadata prop and re-sync whenever that prop changes (so an
+  // external edit, e.g. via the parent's cache subscription, still shows
+  // up here), but persistTags also updates this locally and immediately
+  // so the badges row reflects a save even if the parent's prop refresh
+  // is delayed for any reason.
+  const propTags = useMemo(
     () => sanitizeChatbotTags(course_metadata.tags),
     [course_metadata.tags],
   )
+  const [tags, setTags] = useState<ChatbotTag[]>(propTags)
+  useEffect(() => {
+    setTags(propTags)
+  }, [propTags])
 
   const [inputValue, setInputValue] = useState('')
   const [openPicker, setOpenPicker] = useState<PickerKind>(null)
@@ -162,10 +173,15 @@ export default function ChatbotTagsEditor({
         return false
       }
 
+      // Local state first so the badges row updates immediately, even
+      // before the parent's cache subscription notices the change.
+      setTags(nextTags)
       queryClient.setQueryData(
         ['courseMetadata', course_name],
         (prev: CourseMetadata | undefined) =>
-          prev ? { ...prev, tags: nextTags } : prev,
+          prev
+            ? { ...prev, tags: nextTags }
+            : { ...course_metadata, tags: nextTags },
       )
       setStatus('idle')
       return true
