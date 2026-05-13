@@ -263,12 +263,16 @@ export default function ChatbotTagsEditor({
     category: 'general',
     enabled: isInputFocused && !isFull && debouncedQuery.length > 0,
   })
+  // Annotate (don't drop) already-attached tags so the user sees the
+  // registry actually has them — just disabled so they can't re-add.
   const suggestions = useMemo(
     () =>
-      rawSuggestions.filter(
-        (s) =>
-          !existingValueKeys.has(`general:${s.value.trim().toLowerCase()}`),
-      ),
+      rawSuggestions.map((s) => ({
+        ...s,
+        alreadyAdded: existingValueKeys.has(
+          `general:${s.value.trim().toLowerCase()}`,
+        ),
+      })),
     [rawSuggestions, existingValueKeys],
   )
   const showSuggestions = isInputFocused && !isFull && suggestions.length > 0
@@ -377,16 +381,18 @@ export default function ChatbotTagsEditor({
                 <li key={s.value} role="option" aria-selected={false}>
                   <button
                     type="button"
+                    disabled={s.alreadyAdded}
                     // onMouseDown fires before input blur so the click lands.
                     onMouseDown={(e) => {
                       e.preventDefault()
+                      if (s.alreadyAdded) return
                       void addGeneralTagWithValue(s.value)
                     }}
-                    className="hover:bg-[--dashboard-border]/40 flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left text-sm text-[--foreground]"
+                    className="enabled:hover:bg-[--dashboard-border]/40 flex w-full items-center justify-between gap-3 px-3 py-1.5 text-left text-sm text-[--foreground] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <span className="truncate">{s.value}</span>
                     <span className="shrink-0 text-xs text-[--foreground-faded]">
-                      {s.usage_count}
+                      {s.alreadyAdded ? 'added' : s.usage_count}
                     </span>
                   </button>
                 </li>
