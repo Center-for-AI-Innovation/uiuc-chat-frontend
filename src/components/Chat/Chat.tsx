@@ -2,8 +2,11 @@
 import { Button, Text } from '@mantine/core'
 import {
   IconAlertCircle,
+  IconAlertTriangle,
   IconArrowRight,
+  IconInfoCircle,
   IconSettings,
+  IconWorld,
 } from '@tabler/icons-react'
 import { useTranslation } from 'next-i18next'
 import {
@@ -56,7 +59,7 @@ import type * as webllm from '@mlc-ai/web-llm'
 import { MLCEngine } from '@mlc-ai/web-llm'
 import { useQueryClient } from '@tanstack/react-query'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Montserrat } from 'next/font/google'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
@@ -70,6 +73,12 @@ import { useQueryRewrite } from '@/hooks/queries/useQueryRewrite'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
 import { useUpdateConversation } from '@/hooks/queries/useUpdateConversation'
 import { CropwizardLicenseDisclaimer } from '~/pages/cropwizard-licenses'
+import {
+  COUNTRY_OF_CONCERN_INFO_URL,
+  getCountryOfConcern,
+  isCocBannerDismissed,
+  markCocBannerDismissed,
+} from '~/utils/modelProviders/countriesOfConcern'
 
 import { get_user_permission } from '~/components/UIUC-Components/runAuthCheck'
 
@@ -220,6 +229,8 @@ export const Chat = memo(
     const [autoScrollEnabled, setAutoScrollEnabled] = useState<boolean>(true)
     const [showScrollDownButton, setShowScrollDownButton] =
       useState<boolean>(false)
+    // Re-render trigger when the user clicks "I Understand" on the COC banner
+    const [, setCocDismissTick] = useState(0)
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -1863,6 +1874,101 @@ export const Chat = memo(
                 ))}
             </div>
           </div>
+          {(() => {
+            const activeModelId = selectedConversation?.model?.id
+            const country = getCountryOfConcern(activeModelId)
+            const showBanner =
+              !!country &&
+              !!activeModelId &&
+              !!courseName &&
+              !isCocBannerDismissed(courseName, activeModelId)
+            return (
+              <AnimatePresence initial={false}>
+                {showBanner && (
+                  <motion.div
+                    key={`coc-banner-${activeModelId}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    className="mt-3"
+                  >
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="relative rounded-2xl bg-[#FBEDE5] px-5 py-4 text-[#2A1B3D] shadow-sm"
+                    >
+                      <div className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-[#F5D9CC] px-2 py-0.5 text-xs font-medium text-[#7A2E1F]">
+                        <IconAlertTriangle
+                          size={12}
+                          stroke={2}
+                          aria-hidden="true"
+                        />
+                        Notice
+                      </div>
+                      <span
+                        aria-hidden="true"
+                        className="absolute right-3 top-3 inline-flex text-[#2A1B3D]/60"
+                      >
+                        <IconInfoCircle size={16} stroke={2} />
+                      </span>
+                      <div className="mb-1 flex items-center gap-2 text-base font-semibold">
+                        <IconWorld
+                          size={20}
+                          stroke={2}
+                          aria-hidden="true"
+                          className="text-[#2A1B3D]"
+                        />
+                        LLM from Country of Concern
+                      </div>
+                      <p className="text-sm leading-snug">
+                        While this model is locally hosted here at the U of I,
+                        and Illinois Chat never sends information to foreign
+                        servers, users should be aware that the LLM was
+                        initially developed in a country deemed worthy of extra
+                        caution in the AI space. Users may click{' '}
+                        <a
+                          href={COUNTRY_OF_CONCERN_INFO_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline underline-offset-2 hover:opacity-80"
+                        >
+                          here
+                        </a>{' '}
+                        for further information
+                      </p>
+                      <div className="mt-3 flex flex-wrap justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (courseName && activeModelId) {
+                              markCocBannerDismissed(courseName, activeModelId)
+                              setCocDismissTick((t) => t + 1)
+                            }
+                          }}
+                          className="rounded-md border border-[#2A1B3D]/20 bg-white px-3 py-1.5 text-sm font-medium text-[#2A1B3D] transition hover:bg-[#2A1B3D]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
+                        >
+                          I Understand
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            homeDispatch({
+                              field: 'showModelSettings',
+                              value: true,
+                            })
+                          }}
+                          className="rounded-md bg-[#1B1336] px-3 py-1.5 text-sm font-medium text-white transition hover:bg-[#2A1B3D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
+                        >
+                          Switch Model in Use
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )
+          })()}
           <div
             // This is critical to keep the scrolling proper. We need padding below the messages for the chat bar to sit.
             // className="h-[162px] bg-gradient-to-b from-[#1a1a2e] via-[#2A2A40] to-[#15162c]"
