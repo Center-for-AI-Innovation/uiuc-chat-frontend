@@ -108,9 +108,9 @@ export function isCountryOfConcern(
  * Short label used inline next to a model name (tooltip/icon hover).
  */
 export function getCountryOfConcernShortMessage(
-  country: CountryOfConcern,
+  _country: CountryOfConcern,
 ): string {
-  return `This model originates from ${country}, a country of concern flagged by the U.S. Department of Commerce. Use with caution.`
+  return `This model originates from a country of concern flagged by the U.S. Department of Commerce. Use with caution.`
 }
 
 const ACK_STORAGE_KEY = 'coc-acknowledged-chatbots'
