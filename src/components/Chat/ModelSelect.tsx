@@ -469,7 +469,11 @@ const ModelDropdown: React.FC<
                       pointerEvents: 'auto',
                     }}
                   >
-                    <IconAlertTriangle size="1rem" aria-hidden="true" />
+                    <IconAlertTriangle
+                      size="1rem"
+                      aria-hidden="true"
+                      className="text-[--modal-button-text]"
+                    />
                   </span>
                 </Tooltip>
               )}
