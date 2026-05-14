@@ -6,7 +6,7 @@ import {
   IconArrowRight,
   IconInfoCircle,
   IconSettings,
-  IconWorld,
+  IconWorldExclamation,
 } from '@tabler/icons-react'
 import { useTranslation } from 'next-i18next'
 import {
@@ -1913,7 +1913,7 @@ export const Chat = memo(
                         <IconInfoCircle size={16} stroke={2} />
                       </span>
                       <div className="mb-1 flex items-center gap-2 text-base font-semibold">
-                        <IconWorld
+                        <IconWorldExclamation
                           size={20}
                           stroke={2}
                           aria-hidden="true"
