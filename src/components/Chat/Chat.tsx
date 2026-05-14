@@ -1896,9 +1896,9 @@ export const Chat = memo(
                     <div
                       role="status"
                       aria-live="polite"
-                      className="relative rounded-2xl bg-[#FBEDE5] px-5 py-4 text-[#2A1B3D] shadow-sm"
+                      className="relative rounded-2xl bg-[#FFEDE5] px-5 py-4 text-[#543C37] shadow-sm"
                     >
-                      <div className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-[#F5D9CC] px-2 py-0.5 text-xs font-medium text-[#7A2E1F]">
+                      <div className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-[#F2D6CE] px-2 py-0.5 text-xs font-medium text-red-800">
                         <IconAlertTriangle
                           size={12}
                           stroke={2}
@@ -1908,7 +1908,7 @@ export const Chat = memo(
                       </div>
                       <span
                         aria-hidden="true"
-                        className="absolute right-3 top-3 inline-flex text-[#2A1B3D]/60"
+                        className="absolute right-3 top-3 inline-flex text-red-800"
                       >
                         <IconInfoCircle size={16} stroke={2} />
                       </span>
@@ -1917,7 +1917,7 @@ export const Chat = memo(
                           size={20}
                           stroke={2}
                           aria-hidden="true"
-                          className="text-[#2A1B3D]"
+                          className="text-red-800"
                         />
                         LLM from Country of Concern
                       </div>
@@ -1946,7 +1946,7 @@ export const Chat = memo(
                               setCocDismissTick((t) => t + 1)
                             }
                           }}
-                          className="rounded-md border border-[#2A1B3D]/20 bg-white px-3 py-1.5 text-sm font-medium text-[#2A1B3D] transition hover:bg-[#2A1B3D]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
+                          className="rounded-md border border-[#543C37]/20 bg-white px-3 py-1.5 text-sm font-medium text-[#543C37] transition hover:bg-[#543C37]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
                         >
                           I Understand
                         </button>
@@ -1958,7 +1958,7 @@ export const Chat = memo(
                               value: true,
                             })
                           }}
-                          className="rounded-md bg-[#1B1336] px-3 py-1.5 text-sm font-medium text-white transition hover:bg-[#2A1B3D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
+                          className="rounded-md bg-[#543C37] px-3 py-1.5 text-sm font-medium text-white transition hover:bg-[#3F2C28] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
                         >
                           Switch Model in Use
                         </button>
