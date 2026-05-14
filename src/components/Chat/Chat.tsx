@@ -1896,7 +1896,7 @@ export const Chat = memo(
                     <div
                       role="status"
                       aria-live="polite"
-                      className="relative rounded-2xl bg-[#FFEDE5] px-5 py-4 text-[#543C37] shadow-sm"
+                      className="relative rounded-lg bg-[#FFEDE5] px-5 py-4 text-[#543C37] shadow-sm"
                     >
                       <div className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-[#F2D6CE] px-2 py-0.5 text-xs font-medium text-red-800">
                         <IconAlertTriangle
