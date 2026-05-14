@@ -1184,7 +1184,6 @@ CRITICAL: The optimized prompt must:
                                           size="0.9rem"
                                           stroke={2}
                                           aria-hidden="true"
-                                          style={{ color: '#f59e0b' }}
                                         />
                                       </span>
                                     </Tooltip>
@@ -1372,7 +1371,6 @@ CRITICAL: The optimized prompt must:
                                     size={isSmallScreen ? 12 : 14}
                                     stroke={2}
                                     aria-hidden="true"
-                                    style={{ color: '#f59e0b' }}
                                   />
                                 </span>
                               </Tooltip>
