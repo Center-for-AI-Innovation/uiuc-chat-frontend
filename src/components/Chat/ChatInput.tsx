@@ -10,8 +10,9 @@ import { type Plugin } from '@/types/plugin'
 import { type Prompt } from '@/types/prompt'
 import { Text } from '@mantine/core'
 import {
-  IconAlertTriangleFilled,
+  IconAlertTriangle,
   IconArrowDown,
+  IconInfoCircle,
   IconPlayerStop,
   IconRepeat,
   IconSend,
@@ -70,8 +71,11 @@ import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { ContextWithMetadata } from '~/types/chat'
 import { modelSupportsTools } from '~/utils/modelProviders/capabilities'
 import {
+  COUNTRY_OF_CONCERN_INFO_URL,
   getCountryOfConcern,
   getCountryOfConcernShortMessage,
+  isCocBannerDismissed,
+  markCocBannerDismissed,
 } from '~/utils/modelProviders/countriesOfConcern'
 import posthog from 'posthog-js'
 import { deriveAgentModeEnabled } from '~/utils/app/agentMode'
@@ -271,14 +275,8 @@ export const ChatInput = ({
   const [showPluginSelect, setShowPluginSelect] = useState(false)
   const [plugin, setPlugin] = useState<Plugin | null>(null)
   const [isDragging, setIsDragging] = useState<boolean>(false)
-  const [dismissedCocModelId, setDismissedCocModelId] = useState<string | null>(
-    null,
-  )
-  const [chatbarRect, setChatbarRect] = useState<{
-    height: number
-    left: number
-    width: number
-  }>({ height: 0, left: 0, width: 0 })
+  // Re-render trigger when the user clicks "I Understand" (storage value changes)
+  const [, setCocDismissTick] = useState(0)
   const promptListRef = useRef<HTMLUListElement | null>(null)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
@@ -925,87 +923,98 @@ export const ChatInput = ({
     }
   }, [handleResize])
 
-  // Track chatbar geometry so the country-of-concern banner can sit just
-  // above it (with a small overlap) and align exactly with its left/width.
-  // The chatbar's rounded top corners then reveal the banner color around
-  // them.
-  useEffect(() => {
-    const el = chatInputParentContainerRef.current
-    if (!el) return
-    const update = () => {
-      const r = el.getBoundingClientRect()
-      setChatbarRect({ height: r.height, left: r.left, width: r.width })
-    }
-    update()
-    const ro = new ResizeObserver(update)
-    ro.observe(el)
-    window.addEventListener('resize', update)
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', update)
-    }
-  }, [])
-
   return (
     <div
       className={`w-full border-transparent bg-transparent pt-6 md:pt-2`}
       style={{ pointerEvents: 'none' }}
     >
-      {/* Country-of-concern banner — fixed-positioned BEHIND the chatbar
-          so the chatbar's rounded top corners reveal the amber color. */}
+      {/* Country-of-concern banner — card sitting above the chat input. */}
       {(() => {
         const activeModelId =
           selectedConversation?.model?.id ?? selectBestModel(llmProviders)?.id
         const country = getCountryOfConcern(activeModelId)
-        const activeModelName =
-          selectedConversation?.model?.name ??
-          selectBestModel(llmProviders)?.name ??
-          'This model'
         const showBanner =
-          !!country && !!activeModelId && dismissedCocModelId !== activeModelId
-        // Overlap: 24px of the banner sits behind the chatbar's top edge
-        const overlapPx = 24
+          !!country &&
+          !!activeModelId &&
+          !!courseName &&
+          !isCocBannerDismissed(courseName, activeModelId)
         return (
           <AnimatePresence initial={false}>
             {showBanner && (
               <motion.div
                 key={`coc-banner-${activeModelId}`}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 24 }}
+                exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.25, ease: 'easeInOut' }}
-                className="pointer-events-none fixed"
-                style={{
-                  bottom: `${Math.max(chatbarRect.height - overlapPx, 0)}px`,
-                  left: `${chatbarRect.left}px`,
-                  width: `${chatbarRect.width}px`,
-                  zIndex: 0,
-                }}
+                className="mx-2 mb-3 md:mx-4 lg:mx-auto lg:max-w-3xl"
+                style={{ pointerEvents: 'auto' }}
               >
                 <div
                   role="status"
                   aria-live="polite"
-                  className="pointer-events-auto relative flex items-start gap-2 rounded-t-3xl bg-[--illinois-orange] px-4 pb-10 pr-10 pt-3 text-white shadow-sm"
+                  className="relative rounded-2xl bg-[#FBEDE5] px-5 py-4 text-[#2A1B3D] shadow-sm"
                 >
-                  <IconAlertTriangleFilled
-                    size={18}
-                    aria-hidden="true"
-                    style={{ flexShrink: 0, color: '#fde047', marginTop: 2 }}
-                  />
-                  <div className="text-xs leading-snug">
-                    <strong>{activeModelName}</strong> originates from{' '}
-                    <strong>{country}</strong>, a country of concern flagged by
-                    the U.S. Department of Commerce. Avoid sharing sensitive or
-                    proprietary information with this model.
+                  <div className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-[#F5D9CC] px-2 py-0.5 text-xs font-medium text-[#7A2E1F]">
+                    <IconAlertTriangle
+                      size={12}
+                      stroke={2}
+                      aria-hidden="true"
+                    />
+                    Notice
                   </div>
-                  <button
-                    type="button"
-                    aria-label="Dismiss country of concern warning"
-                    onClick={() => setDismissedCocModelId(activeModelId)}
-                    className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-white/80 transition hover:bg-white/15 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  <span
+                    aria-hidden="true"
+                    className="absolute right-3 top-3 inline-flex text-[#2A1B3D]/60"
                   >
-                    <IconX size={16} aria-hidden="true" />
-                  </button>
+                    <IconInfoCircle size={16} stroke={2} />
+                  </span>
+                  <div className="mb-1 flex items-center gap-2 text-base font-semibold">
+                    <span aria-hidden="true">🌐</span>
+                    LLM from Country of Concern
+                  </div>
+                  <p className="text-sm leading-snug">
+                    While this model is locally hosted here at the U of I, and
+                    Illinois Chat never sends information to foreign servers,
+                    users should be aware that the LLM was initially developed
+                    in a country deemed worthy of extra caution in the AI space.
+                    Users may click{' '}
+                    <a
+                      href={COUNTRY_OF_CONCERN_INFO_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2 hover:opacity-80"
+                    >
+                      here
+                    </a>{' '}
+                    for further information
+                  </p>
+                  <div className="mt-3 flex flex-wrap justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (courseName && activeModelId) {
+                          markCocBannerDismissed(courseName, activeModelId)
+                          setCocDismissTick((t) => t + 1)
+                        }
+                      }}
+                      className="rounded-md border border-[#2A1B3D]/20 bg-white px-3 py-1.5 text-sm font-medium text-[#2A1B3D] transition hover:bg-[#2A1B3D]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
+                    >
+                      I Understand
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        homeDispatch({
+                          field: 'showModelSettings',
+                          value: true,
+                        })
+                      }}
+                      className="rounded-md bg-[#1B1336] px-3 py-1.5 text-sm font-medium text-white transition hover:bg-[#2A1B3D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
+                    >
+                      Switch Model in Use
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -1469,8 +1478,9 @@ export const ChatInput = ({
                       }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <IconAlertTriangleFilled
+                      <IconAlertTriangle
                         size={isSmallScreen ? '12px' : '14px'}
+                        stroke={2}
                         aria-hidden="true"
                         style={{ color: '#f59e0b' }}
                       />

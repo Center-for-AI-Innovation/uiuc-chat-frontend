@@ -180,3 +180,65 @@ export function getCountryOfConcernLongMessage(
     `with your institution's policy.`
   )
 }
+
+export const COUNTRY_OF_CONCERN_INFO_URL =
+  'https://www.bis.doc.gov/index.php/policy-guidance/country-guidance/sanctioned-destinations'
+
+const BANNER_ACK_STORAGE_KEY = 'coc-banner-dismissed-pairs'
+
+function readBannerDismissedSet(): Set<string> {
+  if (typeof window === 'undefined') return new Set()
+  try {
+    const raw = window.localStorage.getItem(BANNER_ACK_STORAGE_KEY)
+    if (!raw) return new Set()
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return new Set()
+    return new Set(parsed.filter((x): x is string => typeof x === 'string'))
+  } catch {
+    return new Set()
+  }
+}
+
+function writeBannerDismissedSet(set: Set<string>): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(
+      BANNER_ACK_STORAGE_KEY,
+      JSON.stringify(Array.from(set)),
+    )
+  } catch {
+    // ignore quota / serialization errors — banner will simply re-fire next time
+  }
+}
+
+function bannerKey(chatbotId: string, modelId: string): string {
+  return `${chatbotId}::${modelId}`
+}
+
+/**
+ * Whether the user has permanently dismissed the country-of-concern banner
+ * for this (chatbot, model) pair. Banner remains dismissed across reloads
+ * for that pair only; selecting a different flagged model re-shows it.
+ */
+export function isCocBannerDismissed(
+  chatbotId: string | undefined | null,
+  modelId: string | undefined | null,
+): boolean {
+  if (!chatbotId || !modelId) return false
+  return readBannerDismissedSet().has(bannerKey(chatbotId, modelId))
+}
+
+/**
+ * Persist banner dismissal for a (chatbot, model) pair.
+ */
+export function markCocBannerDismissed(
+  chatbotId: string,
+  modelId: string,
+): void {
+  if (!chatbotId || !modelId) return
+  const set = readBannerDismissedSet()
+  const key = bannerKey(chatbotId, modelId)
+  if (set.has(key)) return
+  set.add(key)
+  writeBannerDismissedSet(set)
+}

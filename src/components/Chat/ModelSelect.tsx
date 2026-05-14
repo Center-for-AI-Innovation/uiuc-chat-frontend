@@ -4,7 +4,7 @@ import {
   IconDownload,
   IconExternalLink,
   IconSparkles,
-  IconAlertTriangleFilled,
+  IconAlertTriangle,
   IconInfoCircle,
 } from '@tabler/icons-react'
 import { forwardRef, useContext, useEffect, useState } from 'react'
@@ -193,7 +193,7 @@ export const ModelItem = forwardRef<
                       alignItems: 'center',
                     }}
                   >
-                    <IconAlertTriangleFilled
+                    <IconAlertTriangle
                       size="0.9rem"
                       aria-hidden="true"
                       className="text-yellow-500"
@@ -290,7 +290,7 @@ export const ModelItem = forwardRef<
                 )}
                 {showWarningLargeModel && (
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <IconAlertTriangleFilled
+                    <IconAlertTriangle
                       size="1rem"
                       aria-hidden="true"
                       style={{ marginLeft: '8px' }}
@@ -473,7 +473,7 @@ const ModelDropdown: React.FC<
                       pointerEvents: 'auto',
                     }}
                   >
-                    <IconAlertTriangleFilled
+                    <IconAlertTriangle
                       size="1rem"
                       aria-hidden="true"
                       className="text-yellow-500"
@@ -654,7 +654,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                                   gap: '6px',
                                 }}
                               >
-                                <IconAlertTriangleFilled
+                                <IconAlertTriangle
                                   size="1rem"
                                   aria-hidden="true"
                                   className="text-yellow-500"
