@@ -170,14 +170,14 @@ export function markChatbotCocAcknowledged(chatbotId: string): void {
  */
 export function getCountryOfConcernLongMessage(
   modelName: string,
-  country: CountryOfConcern,
+  _country: CountryOfConcern,
 ): string {
   return (
-    `${modelName} originates from ${country}, which the U.S. Department of Commerce ` +
-    `has identified as a country of concern. Models from these jurisdictions may carry ` +
+    `${modelName} originates from a country of concern flagged by the ` +
+    `U.S. Department of Commerce. Models from these jurisdictions may carry ` +
     `data-handling, supply-chain, or compliance risks for your organization. ` +
-    `You can still enable this model, but please confirm that doing so is consistent ` +
-    `with your institution's policy.`
+    `You can still enable this model, but please confirm that doing so is ` +
+    `consistent with your institution's policy.`
   )
 }
 

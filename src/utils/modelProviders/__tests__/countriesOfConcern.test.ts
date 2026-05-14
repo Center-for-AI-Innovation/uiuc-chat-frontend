@@ -43,13 +43,14 @@ describe('message helpers', () => {
     expect(message).not.toContain('China')
   })
 
-  it('long message names the model and country', () => {
+  it('long message names the model but not the country', () => {
     const message = getCountryOfConcernLongMessage(
       'DeepSeek V3',
       CountryOfConcern.China,
     )
     expect(message).toContain('DeepSeek V3')
-    expect(message).toContain('China')
+    expect(message).not.toContain('China')
+    expect(message).toContain('country of concern')
     expect(message).toContain('U.S. Department of Commerce')
   })
 
