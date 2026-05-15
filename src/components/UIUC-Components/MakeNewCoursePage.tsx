@@ -8,9 +8,13 @@ import { LoaderCircle } from 'lucide-react'
 import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createProject } from '~/utils/apiUtils'
-import { fetchCourseMetadata } from '~/utils/apiUtils'
+import {
+  callSetCourseMetadata,
+  createProject,
+  fetchCourseMetadata,
+} from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
+import { type ChatbotProjectType, type ChatbotTag } from '~/types/chatbotTags'
 import { ChatbotsGlobalNav } from './chatbots-hub/ChatbotsGlobalNav'
 import UploadNotification, { type FileUpload } from './UploadNotification'
 
@@ -69,6 +73,12 @@ const MakeNewCoursePage = ({
   const [projectName, setProjectName] = useState(project_name || '')
   const [projectDescription, setProjectDescription] = useState(
     project_description || '',
+  )
+  const [projectType, setProjectType] = useState<
+    ChatbotProjectType | undefined
+  >(undefined)
+  const [organization, setOrganization] = useState<string | undefined>(
+    undefined,
   )
   const [isLoading, setIsLoading] = useState(false)
   const [hasCreatedProject, setHasCreatedProject] = useState(false)
@@ -143,11 +153,15 @@ const MakeNewCoursePage = ({
       key="create"
       project_name={projectName}
       project_description={projectDescription}
+      project_type={projectType}
+      organization={organization}
       is_new_course={!hasCreatedProject}
       isCourseAvailable={isCourseAvailable}
       isCheckingAvailability={isWaitingForAvailabilityCheck}
       onUpdateName={setProjectName}
       onUpdateDescription={setProjectDescription}
+      onUpdateProjectType={setProjectType}
+      onUpdateOrganization={setOrganization}
     />,
     <StepSuccess
       key="success"
@@ -214,6 +228,8 @@ const MakeNewCoursePage = ({
     project_description: string | undefined,
     current_user_email: string,
     is_private = false,
+    initial_project_type?: ChatbotProjectType,
+    initial_organization?: string,
   ): Promise<boolean> => {
     setIsLoading(true)
     try {
@@ -227,11 +243,28 @@ const MakeNewCoursePage = ({
         return false
       }
 
+      const initialTags: ChatbotTag[] = []
+      if (initial_project_type) {
+        initialTags.push({
+          category: 'projectType',
+          value: initial_project_type,
+        })
+      }
+      if (initial_organization) {
+        initialTags.push({
+          category: 'organization',
+          value: initial_organization,
+        })
+      }
+
       if (is_new_course) {
         try {
           const metadata = (await fetchCourseMetadata(
             project_name,
           )) as CourseMetadata
+          if (initialTags.length > 0) {
+            metadata.tags = initialTags
+          }
           queryClient.setQueryData(['courseMetadata', project_name], metadata)
         } catch (metadataError) {
           console.error(
@@ -256,6 +289,7 @@ const MakeNewCoursePage = ({
             systemPromptOnly: undefined,
             vector_search_rewrite_disabled: undefined,
             allow_logged_in_users: undefined,
+            tags: initialTags,
           }
           queryClient.setQueryData(
             ['courseMetadata', project_name],
@@ -263,6 +297,14 @@ const MakeNewCoursePage = ({
           )
         }
       }
+
+      // Persist the wizard-set projectType/organization tags. Fire-and-forget:
+      // a registry/tag failure should not block the wizard. The cache was
+      // already updated above so the user sees them immediately.
+      if (initialTags.length > 0) {
+        void callSetCourseMetadata(project_name, { tags: initialTags } as never)
+      }
+
       return true
     } catch (error) {
       console.error('Error creating project:', error)
@@ -473,6 +515,8 @@ const MakeNewCoursePage = ({
                       projectDescription,
                       current_user_email,
                       useIllinoisChatConfig,
+                      projectType,
+                      organization,
                     )
 
                     if (!isCreated) {

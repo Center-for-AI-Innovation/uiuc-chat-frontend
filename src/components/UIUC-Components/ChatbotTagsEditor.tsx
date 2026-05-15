@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Text } from '@mantine/core'
 import { Montserrat } from 'next/font/google'
 import { montserrat_heading } from 'fonts'
@@ -23,9 +23,7 @@ const montserrat_light = Montserrat({
 })
 
 import {
-  CHATBOT_PROJECT_TYPES,
   CHATBOT_TAG_CATEGORY_LABEL,
-  COMMON_ORGANIZATIONS,
   MAX_CHATBOT_TAGS,
   MAX_GENERAL_TAG_LENGTH,
   chatbotTagKey,
@@ -46,8 +44,6 @@ interface ChatbotTagsEditorProps {
   course_name: string
   course_metadata: CourseMetadataOptionalForUpsert | CourseMetadata
 }
-
-type PickerKind = 'project_type' | 'organization' | null
 
 function TagBadge({
   tag,
@@ -79,39 +75,6 @@ function TagBadge({
   )
 }
 
-function PickerChip({
-  label,
-  isOpen,
-  disabled,
-  onToggle,
-}: {
-  label: string
-  isOpen: boolean
-  disabled: boolean
-  onToggle: () => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-expanded={isOpen}
-      aria-haspopup="true"
-      disabled={disabled}
-      onClick={onToggle}
-      className={`inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs font-medium text-[--foreground] transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-        isOpen
-          ? 'bg-[--dashboard-border]/40 border-[--foreground]'
-          : 'hover:bg-[--dashboard-border]/40 border-[--dashboard-border] bg-[--background]'
-      }`}
-    >
-      {label}
-      <ChevronDown
-        className={`size-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-        aria-hidden="true"
-      />
-    </button>
-  )
-}
-
 export default function ChatbotTagsEditor({
   course_name,
   course_metadata,
@@ -134,21 +97,11 @@ export default function ChatbotTagsEditor({
   }, [propTags])
 
   const [inputValue, setInputValue] = useState('')
-  const [openPicker, setOpenPicker] = useState<PickerKind>(null)
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isInputFocused, setIsInputFocused] = useState(false)
 
   const isFull = tags.length >= MAX_CHATBOT_TAGS
-
-  const hasOrganizationTag = useMemo(
-    () => tags.some((t) => t.category === 'organization'),
-    [tags],
-  )
-  const hasProjectTypeTag = useMemo(
-    () => tags.some((t) => t.category === 'projectType'),
-    [tags],
-  )
 
   // Lowercased existing tag values for case-insensitive duplicate checks.
   const existingValueKeys = useMemo(
@@ -228,38 +181,6 @@ export default function ChatbotTagsEditor({
     [addGeneralTagWithValue, inputValue],
   )
 
-  const addConstrainedTag = useCallback(
-    async (
-      category: 'projectType' | 'organization',
-      value: string,
-    ): Promise<boolean> => {
-      if (isFull) {
-        flashError(
-          `Maximum of ${MAX_CHATBOT_TAGS} tags reached. Remove one to add another.`,
-        )
-        return false
-      }
-      const alreadyExists =
-        category === 'projectType' ? hasProjectTypeTag : hasOrganizationTag
-      if (alreadyExists) {
-        flashError(
-          `You can only have one ${CHATBOT_TAG_CATEGORY_LABEL[category]} tag.`,
-        )
-        return false
-      }
-      const ok = await persistTags([...tags, { category, value }])
-      return ok
-    },
-    [
-      flashError,
-      hasOrganizationTag,
-      hasProjectTypeTag,
-      isFull,
-      persistTags,
-      tags,
-    ],
-  )
-
   const removeTag = useCallback(
     async (target: ChatbotTag) => {
       const targetKey = chatbotTagKey(target)
@@ -333,30 +254,6 @@ export default function ChatbotTagsEditor({
     }
   }, [showSuggestions])
 
-  const togglePicker = useCallback((kind: PickerKind) => {
-    setOpenPicker((current) => (current === kind ? null : kind))
-    setStatus('idle')
-    setErrorMessage(null)
-  }, [])
-
-  const closePicker = useCallback(() => setOpenPicker(null), [])
-
-  const handleProjectTypeClick = useCallback(
-    async (value: (typeof CHATBOT_PROJECT_TYPES)[number]) => {
-      const ok = await addConstrainedTag('projectType', value)
-      if (ok) closePicker()
-    },
-    [addConstrainedTag, closePicker],
-  )
-
-  const handleOrganizationClick = useCallback(
-    async (value: (typeof COMMON_ORGANIZATIONS)[number]) => {
-      const ok = await addConstrainedTag('organization', value)
-      if (ok) closePicker()
-    },
-    [addConstrainedTag, closePicker],
-  )
-
   const isSaving = status === 'saving'
 
   return (
@@ -368,8 +265,8 @@ export default function ChatbotTagsEditor({
       </label>
       <Text size={'sm'} className={`label !mt-0 ${montserrat_light.className}`}>
         Add up to {MAX_CHATBOT_TAGS} tags to help people discover your bot in
-        the chatbot hub. Type any tag below, or pick a constrained Project Type
-        or Organization from the lists.
+        the chatbot hub. Project Type and Organization are set when you create
+        the chatbot.
       </Text>
 
       <div
@@ -480,43 +377,6 @@ export default function ChatbotTagsEditor({
         </Button>
       </div>
 
-      {/* Constrained pickers */}
-      <div
-        className="mt-3 flex flex-wrap items-start gap-2"
-        role="group"
-        aria-label="Constrained tag pickers"
-      >
-        <div className="flex flex-col gap-2">
-          <PickerChip
-            label="project_type:"
-            isOpen={openPicker === 'project_type'}
-            disabled={isFull || hasProjectTypeTag || isSaving}
-            onToggle={() => togglePicker('project_type')}
-          />
-          {openPicker === 'project_type' && (
-            <ProjectTypePicker
-              disabled={isSaving}
-              onPick={handleProjectTypeClick}
-            />
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <PickerChip
-            label="organization:"
-            isOpen={openPicker === 'organization'}
-            disabled={isFull || hasOrganizationTag || isSaving}
-            onToggle={() => togglePicker('organization')}
-          />
-          {openPicker === 'organization' && (
-            <OrganizationPicker
-              disabled={isSaving}
-              onPick={handleOrganizationClick}
-            />
-          )}
-        </div>
-      </div>
-
       {isFull && (
         <div className="mt-2 text-xs text-[--foreground-faded]">
           Maximum of {MAX_CHATBOT_TAGS} tags reached. Remove one to add another.
@@ -532,82 +392,6 @@ export default function ChatbotTagsEditor({
           {errorMessage}
         </div>
       )}
-    </div>
-  )
-}
-
-function PickerOption({
-  label,
-  ariaLabel,
-  disabled,
-  onClick,
-}: {
-  label: string
-  ariaLabel: string
-  disabled: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      disabled={disabled}
-      onClick={onClick}
-      className="hover:bg-[--dashboard-border]/40 inline-flex items-center rounded-full border border-[--dashboard-border] bg-[--background] px-3 py-1 text-xs font-medium text-[--foreground] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {label}
-    </button>
-  )
-}
-
-function ProjectTypePicker({
-  disabled,
-  onPick,
-}: {
-  disabled: boolean
-  onPick: (value: (typeof CHATBOT_PROJECT_TYPES)[number]) => void
-}) {
-  return (
-    <div
-      role="group"
-      aria-label="Project type options"
-      className="bg-[--background-faded]/40 flex flex-wrap gap-2 rounded-md border border-[--dashboard-border] p-2"
-    >
-      {CHATBOT_PROJECT_TYPES.map((value) => (
-        <PickerOption
-          key={value}
-          label={value}
-          ariaLabel={`Add project type ${value}`}
-          disabled={disabled}
-          onClick={() => onPick(value)}
-        />
-      ))}
-    </div>
-  )
-}
-
-function OrganizationPicker({
-  disabled,
-  onPick,
-}: {
-  disabled: boolean
-  onPick: (value: (typeof COMMON_ORGANIZATIONS)[number]) => void
-}) {
-  return (
-    <div
-      role="group"
-      aria-label="Organization options"
-      className="bg-[--background-faded]/40 flex flex-wrap gap-2 rounded-md border border-[--dashboard-border] p-2"
-    >
-      {COMMON_ORGANIZATIONS.map((value) => (
-        <PickerOption
-          key={value}
-          label={value}
-          ariaLabel={`Add organization ${value}`}
-          disabled={disabled}
-          onClick={() => onPick(value)}
-        />
-      ))}
     </div>
   )
 }

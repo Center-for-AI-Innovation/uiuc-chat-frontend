@@ -7,32 +7,55 @@ import {
   type FormInputStatus,
 } from '@/components/shadcn/ui/form-input'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/shadcn/ui/select'
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/shadcn/ui/tooltip'
+import {
+  CHATBOT_PROJECT_TYPES,
+  COMMON_ORGANIZATIONS,
+  type ChatbotProjectType,
+} from '~/types/chatbotTags'
 
 import HeaderStepNavigation from './HeaderStepNavigation'
+
+// Sentinel for the "no selection" item, since Radix Select doesn't accept "".
+const UNSET_VALUE = '__none__'
 
 const StepCreate = ({
   project_name,
   is_new_course = true,
   project_description,
+  project_type,
+  organization,
   isCourseAvailable,
   isCheckingAvailability,
 
   onUpdateName,
   onUpdateDescription,
+  onUpdateProjectType,
+  onUpdateOrganization,
 }: {
   project_name: string
   is_new_course?: boolean
   project_description?: string
+  project_type?: ChatbotProjectType
+  organization?: string
   isCourseAvailable?: boolean
   isCheckingAvailability?: boolean
 
   onUpdateName: (name: string) => void
   onUpdateDescription: (description: string) => void
+  onUpdateProjectType?: (value: ChatbotProjectType | undefined) => void
+  onUpdateOrganization?: (value: string | undefined) => void
 }) => {
   const [projectName, setProjectName] = useState(project_name || '')
   const [projectDescription, setProjectDescription] = useState(
@@ -127,6 +150,86 @@ const StepCreate = ({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="step-create-project-type"
+              className="text-sm font-medium text-[--foreground]"
+            >
+              Project Type{' '}
+              <span className="font-normal text-[--foreground-faded]">
+                (optional)
+              </span>
+            </label>
+            <Select
+              value={project_type ?? UNSET_VALUE}
+              onValueChange={(value) =>
+                onUpdateProjectType?.(
+                  value === UNSET_VALUE
+                    ? undefined
+                    : (value as ChatbotProjectType),
+                )
+              }
+            >
+              <SelectTrigger
+                id="step-create-project-type"
+                aria-label="Project Type"
+              >
+                <SelectValue placeholder="Pick a category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNSET_VALUE}>None</SelectItem>
+                {CHATBOT_PROJECT_TYPES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {value}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-[--foreground-faded]">
+              Helps people find your bot in the hub.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="step-create-organization"
+              className="text-sm font-medium text-[--foreground]"
+            >
+              Organization{' '}
+              <span className="font-normal text-[--foreground-faded]">
+                (optional)
+              </span>
+            </label>
+            <Select
+              value={organization ?? UNSET_VALUE}
+              onValueChange={(value) =>
+                onUpdateOrganization?.(
+                  value === UNSET_VALUE ? undefined : value,
+                )
+              }
+            >
+              <SelectTrigger
+                id="step-create-organization"
+                aria-label="Organization"
+              >
+                <SelectValue placeholder="Pick an organization" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={UNSET_VALUE}>None</SelectItem>
+                {COMMON_ORGANIZATIONS.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {value}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-[--foreground-faded]">
+              The college, department, or group running this bot.
+            </p>
+          </div>
+        </div>
 
         <FormInput
           as="textarea"
