@@ -193,11 +193,11 @@ export default function GitHubIngestForm({
   useEffect(() => {
     const checkIngestStatus = async () => {
       const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${project_name}`,
+        `/api/materialsTable/docsInProgress?course_name=${encodeURIComponent(project_name)}`,
       )
       const data = await response.json()
       const docsResponse = await fetch(
-        `/api/materialsTable/successDocs?course_name=${project_name}`,
+        `/api/materialsTable/successDocs?course_name=${encodeURIComponent(project_name)}`,
       )
       const docsData = await docsResponse.json()
 

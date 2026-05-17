@@ -22,7 +22,9 @@ export async function fetchConversationHistory(
   }
   try {
     const response = await fetch(
-      `/api/conversation?searchTerm=${searchTerm}&courseName=${courseName}&pageParam=${pageParam}`,
+      `/api/conversation?searchTerm=${encodeURIComponent(
+        searchTerm,
+      )}&courseName=${encodeURIComponent(courseName)}&pageParam=${pageParam}`,
       {
         method: 'GET',
         headers: createHeaders(userEmail),
@@ -103,7 +105,9 @@ export async function fetchLastConversation(
   try {
     // Grab the first page; server already orders by updated_at DESC in your SQL,
     const res = await fetch(
-      `/api/conversation?searchTerm=&courseName=${encodeURIComponent(courseName)}&pageParam=0`,
+      `/api/conversation?searchTerm=&courseName=${encodeURIComponent(
+        courseName,
+      )}&pageParam=0`,
       {
         method: 'GET',
         headers: createHeaders(userEmail),

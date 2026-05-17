@@ -15,7 +15,9 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
 
   try {
     const response = await fetch(
-      `${getBackendUrl()}/getProjectStats?project_name=${project_name}`,
+      `${getBackendUrl()}/getProjectStats?project_name=${encodeURIComponent(
+        project_name,
+      )}`,
     )
 
     if (!response.ok) {
@@ -40,7 +42,9 @@ export default withCourseOwnerOrAdminAccess()(handler)
 export async function getProjectStats(project_name: string) {
   try {
     const response = await fetch(
-      `/api/UIUC-api/getProjectStats?project_name=${project_name}`,
+      `/api/UIUC-api/getProjectStats?project_name=${encodeURIComponent(
+        project_name,
+      )}`,
     )
 
     if (!response.ok) {

@@ -11,7 +11,9 @@ export async function fetchFolders(
   let fetchedFolders = []
   try {
     const foldersResonse = await fetch(
-      `/api/folder?courseName=${course_name}&searchTerm=${searchTerm}`,
+      `/api/folder?courseName=${encodeURIComponent(
+        course_name,
+      )}&searchTerm=${encodeURIComponent(searchTerm || '')}`,
       {
         method: 'GET',
         headers: createHeaders(userEmail),
