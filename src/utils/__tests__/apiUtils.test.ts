@@ -12,6 +12,7 @@ import {
   getBackendUrl,
   getBaseUrl,
   uploadToS3,
+  checkCourseNameValid,
 } from '../apiUtils'
 
 describe('apiUtils (browser/jsdom)', () => {
@@ -171,6 +172,35 @@ describe('apiUtils (browser/jsdom)', () => {
     await expect(
       createProject('p', undefined, 'owner@example.com', false),
     ).resolves.toBe(true)
+  })
+
+  describe('checkCourseNameValid', () => {
+    it('should return true for valid course names', () => {
+      expect(checkCourseNameValid('CS101')).toBe(true)
+      expect(checkCourseNameValid('Intro-to-CS-101')).toBe(true)
+    })
+
+    it('should return false for course names containing spaces', () => {
+      expect(checkCourseNameValid('Intro to CS')).toBe(false)
+      expect(checkCourseNameValid('CS101 ')).toBe(false)
+    })
+
+    it('should return false for course names containing underscores', () => {
+      expect(checkCourseNameValid('Intro_to_CS')).toBe(false)
+    })
+
+    it('should return false for course names starting with a hyphen', () => {
+      expect(checkCourseNameValid('-Intro-to-CS-101')).toBe(false)
+    })
+
+    it('should return false for course names containing special characters', () => {
+      expect(checkCourseNameValid('Intro-To-CS&Programming')).toBe(false)
+      expect(checkCourseNameValid('CS@101')).toBe(false)
+    })
+
+    it('should return false for an empty string', () => {
+      expect(checkCourseNameValid('')).toBe(false)
+    })
   })
 
   it('createProject throws an error containing status and error fields', async () => {

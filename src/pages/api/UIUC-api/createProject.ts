@@ -3,8 +3,8 @@ import { withAuth, type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { checkCourseExists } from './getCourseExists'
 
-// Allow only letters, numbers, and hyphens in course names
-const regex = /^[a-zA-Z0-9-]+$/
+// Allow only letters, numbers, and hyphens in course names, cannot start with a hyphen
+const regex = /^[a-zA-Z0-9][a-zA-Z0-9-]*$/
 const checkCourseNameValid = (courseName: string): boolean => {
   return regex.test(courseName)
 }

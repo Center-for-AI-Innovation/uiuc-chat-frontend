@@ -321,8 +321,8 @@ export default {
   fetchCourseMetadata,
 }
 
-// Allow only letters, numbers, and hyphens in course names
-const regex = /^[a-zA-Z0-9-]+$/
+// Allow only letters, numbers, and hyphens in course names, cannot start with a hyphen, and must be at least 1 character long
+const regex = /^[a-zA-Z0-9][a-zA-Z0-9-]*$/
 export const checkCourseNameValid = (courseName: string): boolean => {
   return regex.test(courseName)
 }
