@@ -125,21 +125,13 @@ export async function handleFunctionCall(
           } catch (fixError) {
             // If healing fails, throw error with context
             throw new Error(
-              `Failed to parse tool arguments: ${
-                parseError instanceof Error
-                  ? parseError.message
-                  : String(parseError)
-              }. Original arguments: ${args.substring(0, 200)}`,
+              `Failed to parse tool arguments: ${parseError instanceof Error ? parseError.message : String(parseError)}. Original arguments: ${args.substring(0, 200)}`,
             )
           }
         }
         // If not healable, throw error
         throw new Error(
-          `Failed to parse tool arguments: ${
-            parseError instanceof Error
-              ? parseError.message
-              : String(parseError)
-          }. Arguments: ${args.substring(0, 200)}`,
+          `Failed to parse tool arguments: ${parseError instanceof Error ? parseError.message : String(parseError)}. Arguments: ${args.substring(0, 200)}`,
         )
       }
     }
@@ -335,12 +327,8 @@ const callN8nFunction = async (
   // get n8n api key per project
   if (!n8n_api_key) {
     const url = base_url
-      ? `${base_url}/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${encodeURIComponent(
-          projectName,
-        )}`
-      : `/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${encodeURIComponent(
-          projectName,
-        )}`
+      ? `${base_url}/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${encodeURIComponent(projectName)}`
+      : `/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${encodeURIComponent(projectName)}`
 
     const response = await fetch(url, {
       method: 'GET',
@@ -634,11 +622,7 @@ export async function fetchTools(
   if (!api_key || api_key === 'undefined') {
     try {
       const response = await fetch(
-        `${
-          base_url ? base_url : ''
-        }/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${encodeURIComponent(
-          course_name,
-        )}`,
+        `${base_url ? base_url : ''}/api/UIUC-api/tools/getN8nKeyFromProject?course_name=${encodeURIComponent(course_name)}`,
         {
           method: 'GET',
         },
@@ -672,9 +656,7 @@ export async function fetchTools(
   if (isClientSide) {
     // Client-side: use our API route
     response = await fetch(
-      `/api/UIUC-api/getN8nWorkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}&course_name=${encodeURIComponent(
-        course_name,
-      )}`,
+      `/api/UIUC-api/getN8nWorkflows?api_key=${api_key}&limit=${limit}&pagination=${parsedPagination}&course_name=${encodeURIComponent(course_name)}`,
     )
   } else {
     // Server-side: use direct backend call
