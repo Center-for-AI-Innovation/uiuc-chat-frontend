@@ -7,6 +7,9 @@ import { db } from './dbClient'
 import { embeddings } from './schema'
 import type { ContextWithMetadata } from '~/types/chat'
 
+/** Dimensions used for similarity search (first N dims of stored embedding; matches HNSW index). */
+export const EMBEDDING_SEARCH_DIM = 1536
+
 export interface VectorSearchParams {
   /** Query embedding from embedding API (e.g. backend or OpenAI). */
   queryEmbedding: number[]
@@ -35,10 +38,11 @@ export async function vectorSearchWithDrizzle(
     top_n = 100,
   } = params
 
-  // Pass vector as single string to avoid Postgres "ROW expressions can have at most 1664 entries" (embedding has 4096 dims)
-  const vectorLiteral = '[' + queryEmbedding.join(',') + ']'
-  const scoreExpr = sql<number>`(1 - (${embeddings.embedding} <=> ${vectorLiteral}::vector))`
-  const orderByDistance = sql`${embeddings.embedding} <=> ${vectorLiteral}::vector`
+  // First N dims of stored VECTOR(4096); matches idx_embeddings_hnsw_cosine (subvector + cosine).
+  const vectorLiteral =
+    '[' + queryEmbedding.slice(0, EMBEDDING_SEARCH_DIM).join(',') + ']'
+  const scoreExpr = sql<number>`(1 - (subvector(${embeddings.embedding}, 1, 1536) <=> ${vectorLiteral}::vector(1536)))`
+  const orderByDistance = sql`subvector(${embeddings.embedding}, 1, 1536) <=> ${vectorLiteral}::vector(1536)`
 
   if (conversation_id) {
     // Chat: (regular course chunks OR conversation-specific chunks)
