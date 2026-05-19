@@ -38,15 +38,56 @@ export async function vectorSearchWithDrizzle(
     top_n = 100,
   } = params
 
-  // First N dims of stored VECTOR(4096); matches idx_embeddings_hnsw_cosine (subvector + cosine).
   const vectorLiteral =
     '[' + queryEmbedding.slice(0, EMBEDDING_SEARCH_DIM).join(',') + ']'
-  const scoreExpr = sql<number>`(1 - (subvector(${embeddings.embedding}, 1, 1536) <=> ${vectorLiteral}::vector(1536)))`
-  const orderByDistance = sql`subvector(${embeddings.embedding}, 1, 1536) <=> ${vectorLiteral}::vector(1536)`
+  const scoreExpr = sql<number>`(1 - (subvector(${embeddings.embedding}::vector(4096), 1, 1536)::vector(1536) <=> ${vectorLiteral}::vector(1536)))`
+  const orderByDistance = sql`subvector(${embeddings.embedding}::vector(4096), 1, 1536)::vector(1536) <=> ${vectorLiteral}::vector(1536)`
 
-  if (conversation_id) {
-    // Chat: (regular course chunks OR conversation-specific chunks)
-    const regularCondition = and(
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SET LOCAL hnsw.iterative_scan = relaxed_order`)
+    await tx.execute(sql`SET LOCAL hnsw.ef_search = 64`)
+
+    if (conversation_id) {
+      // Chat: (regular course chunks OR conversation-specific chunks)
+      const regularCondition = and(
+        or(
+          sql`${embeddings.conversation_id} IS NULL`,
+          eq(embeddings.conversation_id, ''),
+        ),
+        buildShouldCondition(
+          embeddings,
+          course_name,
+          doc_groups,
+          public_doc_groups,
+        ),
+        buildMustNotCondition(embeddings, disabled_doc_groups),
+      )
+      const conversationCondition = eq(
+        embeddings.conversation_id,
+        conversation_id,
+      )
+      const whereClause = or(regularCondition!, conversationCondition)!
+      const rows = await tx
+        .select({
+          id: embeddings.id,
+          page_content: embeddings.page_content,
+          readable_filename: embeddings.readable_filename,
+          course_name: embeddings.course_name,
+          s3_path: embeddings.s3_path,
+          pagenumber: embeddings.pagenumber,
+          url: embeddings.url,
+          base_url: embeddings.base_url,
+          score: scoreExpr,
+        })
+        .from(embeddings)
+        .where(whereClause)
+        .orderBy(orderByDistance)
+        .limit(top_n)
+      return rows.map((row) => rowToContext(row))
+    }
+
+    // No conversation: only course chunks (conversation_id empty)
+    const whereClause = and(
       or(
         sql`${embeddings.conversation_id} IS NULL`,
         eq(embeddings.conversation_id, ''),
@@ -59,12 +100,8 @@ export async function vectorSearchWithDrizzle(
       ),
       buildMustNotCondition(embeddings, disabled_doc_groups),
     )
-    const conversationCondition = eq(
-      embeddings.conversation_id,
-      conversation_id,
-    )
-    const whereClause = or(regularCondition!, conversationCondition)!
-    const rows = await db
+
+    const rows = await tx
       .select({
         id: embeddings.id,
         page_content: embeddings.page_content,
@@ -80,42 +117,9 @@ export async function vectorSearchWithDrizzle(
       .where(whereClause)
       .orderBy(orderByDistance)
       .limit(top_n)
+
     return rows.map((row) => rowToContext(row))
-  }
-
-  // No conversation: only course chunks (conversation_id empty)
-  const whereClause = and(
-    or(
-      sql`${embeddings.conversation_id} IS NULL`,
-      eq(embeddings.conversation_id, ''),
-    ),
-    buildShouldCondition(
-      embeddings,
-      course_name,
-      doc_groups,
-      public_doc_groups,
-    ),
-    buildMustNotCondition(embeddings, disabled_doc_groups),
-  )
-
-  const rows = await db
-    .select({
-      id: embeddings.id,
-      page_content: embeddings.page_content,
-      readable_filename: embeddings.readable_filename,
-      course_name: embeddings.course_name,
-      s3_path: embeddings.s3_path,
-      pagenumber: embeddings.pagenumber,
-      url: embeddings.url,
-      base_url: embeddings.base_url,
-      score: scoreExpr,
-    })
-    .from(embeddings)
-    .where(whereClause)
-    .orderBy(orderByDistance)
-    .limit(top_n)
-
-  return rows.map((row) => rowToContext(row))
+  })
 }
 
 /** JSONB overlap (row has any of these doc group names). Use @> containment since && is not supported for jsonb in PostgreSQL. */

@@ -11,7 +11,7 @@ const connectionString = `postgres://${process.env.POSTGRES_USERNAME}:${process.
 const HNSW_INDEX_NAME = 'idx_embeddings_hnsw_cosine'
 const EMBEDDING_SEARCH_DIM = 1536
 
-/** First N dims of VECTOR(4096) column; matches vector search in src/db/vectorSearch.ts */
+/** Expression must match docSearchVector in src/db/vectorSearch.ts */
 const CREATE_HNSW_INDEX_SQL = `
 CREATE INDEX CONCURRENTLY IF NOT EXISTS ${HNSW_INDEX_NAME}
 ON public.embeddings
