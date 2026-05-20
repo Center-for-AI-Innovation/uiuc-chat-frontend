@@ -7,8 +7,8 @@ import { db } from './dbClient'
 import { embeddings } from './schema'
 import type { ContextWithMetadata } from '~/types/chat'
 
-/** Dimensions used for similarity search (first N dims of stored embedding; matches HNSW index). */
-export const EMBEDDING_SEARCH_DIM = 1536
+/** Stored/query vector dimensions (binary_quantize over full embedding). */
+export const EMBEDDING_DIM = 4096
 
 export interface VectorSearchParams {
   /** Query embedding from embedding API (e.g. backend or OpenAI). */
@@ -39,9 +39,9 @@ export async function vectorSearchWithDrizzle(
   } = params
 
   const vectorLiteral =
-    '[' + queryEmbedding.slice(0, EMBEDDING_SEARCH_DIM).join(',') + ']'
-  const scoreExpr = sql<number>`(1 - (subvector(${embeddings.embedding}::vector(4096), 1, 1536)::vector(1536) <=> ${vectorLiteral}::vector(1536)))`
-  const orderByDistance = sql`subvector(${embeddings.embedding}::vector(4096), 1, 1536)::vector(1536) <=> ${vectorLiteral}::vector(1536)`
+    '[' + queryEmbedding.slice(0, EMBEDDING_DIM).join(',') + ']'
+  const scoreExpr = sql<number>`(1 - (binary_quantize(${embeddings.embedding}::vector(4096))::bit(4096) <~> binary_quantize(${vectorLiteral}::vector(4096))::bit(4096)) / 4096.0)`
+  const orderByDistance = sql`binary_quantize(${embeddings.embedding}::vector(4096))::bit(4096) <~> binary_quantize(${vectorLiteral}::vector(4096))::bit(4096)`
 
   return db.transaction(async (tx) => {
     await tx.execute(sql`SET LOCAL hnsw.iterative_scan = relaxed_order`)
