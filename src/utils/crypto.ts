@@ -107,11 +107,21 @@ export const encryptKeyIfNeeded = async (key: string) => {
 }
 
 // Per-project external connection configs are stored encrypted in JSONB
-// columns shaped as `{ "encrypted": "v1.<ciphertext+tag>.<iv>" }` by the
-// Flask backend's `encrypt_config()` (AES-256-GCM, SHA-256-of-key-string
-// derivation). Decrypts with `ENCRYPTION_MASTER_KEY` (server-side env var
-// — never exposed to the browser).
+// columns shaped as `{ "encrypted": "v1.<ciphertext+tag>.<iv>" }`.
+// Frontend is the sole writer of this table; the backend reads + decrypts
+// using the same `ENCRYPTION_MASTER_KEY` (server-side env var — never
+// exposed to the browser).
 export type EncryptedField = { encrypted: string } | null | undefined
+
+function getMasterKey(): string {
+  const masterKey = process.env.ENCRYPTION_MASTER_KEY
+  if (!masterKey) {
+    throw new Error(
+      'ENCRYPTION_MASTER_KEY is not set; cannot read/write project external connection config',
+    )
+  }
+  return masterKey
+}
 
 export async function decryptProjectConfig<T = unknown>(
   field: EncryptedField,
@@ -119,13 +129,7 @@ export async function decryptProjectConfig<T = unknown>(
   if (!field || typeof field !== 'object' || !field.encrypted) {
     return null
   }
-  const masterKey = process.env.ENCRYPTION_MASTER_KEY
-  if (!masterKey) {
-    throw new Error(
-      'ENCRYPTION_MASTER_KEY is not set; cannot decrypt project external connection config',
-    )
-  }
-  const plaintext = await decrypt(field.encrypted, masterKey)
+  const plaintext = await decrypt(field.encrypted, getMasterKey())
   if (plaintext == null) {
     throw new Error('decrypt() returned null/undefined for project config')
   }
@@ -136,4 +140,50 @@ export async function decryptProjectConfig<T = unknown>(
       'Failed to JSON-parse decrypted project config: ' + (e as Error).message,
     )
   }
+}
+
+export async function encryptProjectConfig<T = unknown>(
+  plain: T,
+): Promise<{ encrypted: string }> {
+  const envelope = await encrypt(JSON.stringify(plain), getMasterKey())
+  if (!envelope) {
+    throw new Error('encrypt() returned no value for project config')
+  }
+  return { encrypted: envelope }
+}
+
+// Substring patterns that mark a config field as secret-bearing. Matched
+// case-insensitively against config keys. Mirrors the backend's
+// _SECRET_FIELD_PATTERNS in ai_ta_backend/utils/crypto.py.
+const SECRET_FIELD_PATTERNS = [
+  'key',
+  'secret',
+  'password',
+  'passwd',
+  'token',
+  'connection_uri',
+] as const
+
+function isSecretField(name: string): boolean {
+  const lower = name.toLowerCase()
+  return SECRET_FIELD_PATTERNS.some((p) => lower.includes(p))
+}
+
+// Returns a copy of `config` with secret-bearing values masked for API
+// responses. Non-secret identifiers (bucket_name, endpoint_url, region,
+// url, port, default_collection, ...) pass through unchanged. Masked
+// values show only the last 4 characters.
+export function maskConfig<T extends Record<string, unknown> | null | undefined>(
+  config: T,
+): T {
+  if (!config) return config
+  const masked: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(config)) {
+    if (typeof value === 'string' && isSecretField(key)) {
+      masked[key] = value.length > 4 ? '****' + value.slice(-4) : '****'
+    } else {
+      masked[key] = value
+    }
+  }
+  return masked as T
 }

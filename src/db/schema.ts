@@ -1,11 +1,12 @@
 // Generated schema.ts based on PostgreSQL database
-import { relations } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import {
   bigint,
   bigserial,
   boolean,
   date,
   doublePrecision,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -450,6 +451,38 @@ export const projectExternalConnections = pgTable(
   },
 )
 
+// Append-only audit trail for super-admin CRUD on project_external_connections.
+// Never store values from the configs themselves — only field NAMES go in
+// `changed_fields`. See docs/external-connections.md.
+//
+// `project_name` is nullable so the test endpoint can write audit rows that
+// are not tied to a specific project (probes happen before a config is saved).
+export const projectConnectionAuditLog = pgTable(
+  'project_connection_audit_log',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    occurred_at: timestamp('occurred_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    actor_email: text('actor_email').notNull(),
+    action: text('action').notNull(), // 'upsert' | 'delete' | 'set_active' | 'test'
+    project_name: text('project_name'),
+    kind: text('kind'), // 's3' | 'database' | 'qdrant' | null
+    outcome: text('outcome').notNull(), // 'success' | 'failure'
+    failure_reason: text('failure_reason'),
+    changed_fields: text('changed_fields').array(),
+    source_ip: text('source_ip'),
+    user_agent: text('user_agent'),
+    request_id: text('request_id'),
+  },
+  (t) => ({
+    projectIdx: index('project_connection_audit_log_project_idx').on(
+      t.project_name,
+      sql`${t.occurred_at} DESC`,
+    ),
+  }),
+)
+
 // PubMed Daily Update (from schema.sql)
 export const pubmedDailyUpdate = pgTable('pubmed_daily_update', {
   id: serial('id').primaryKey(),
@@ -663,6 +696,11 @@ export type ProjectExternalConnections =
   typeof projectExternalConnections.$inferSelect
 export type NewProjectExternalConnections =
   typeof projectExternalConnections.$inferInsert
+
+export type ProjectConnectionAuditLog =
+  typeof projectConnectionAuditLog.$inferSelect
+export type NewProjectConnectionAuditLog =
+  typeof projectConnectionAuditLog.$inferInsert
 
 // export types for keycloak users
 export type KeycloakUsers = typeof keycloakUsers.$inferSelect

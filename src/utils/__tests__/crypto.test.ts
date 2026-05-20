@@ -5,7 +5,9 @@ import {
   decryptProjectConfig,
   encrypt,
   encryptKeyIfNeeded,
+  encryptProjectConfig,
   isEncrypted,
+  maskConfig,
 } from '../crypto'
 
 describe('crypto utilities', () => {
@@ -134,5 +136,64 @@ describe('decryptProjectConfig', () => {
     await expect(decryptProjectConfig({ encrypted: ct })).rejects.toThrow(
       /JSON-parse/,
     )
+  })
+})
+
+describe('encryptProjectConfig', () => {
+  const MASTER = 'test-master-key-do-not-use-in-prod'
+
+  it('round-trips through decryptProjectConfig', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', MASTER)
+    const config = {
+      aws_access_key_id: 'AKIAEXAMPLE',
+      aws_secret_access_key: 'super-secret',
+      bucket_name: 'my-bucket',
+      region: 'us-east-2',
+    }
+    const blob = await encryptProjectConfig(config)
+    expect(blob.encrypted).toMatch(/^v1\..+\..+$/)
+    const back = await decryptProjectConfig<typeof config>(blob)
+    expect(back).toEqual(config)
+  })
+
+  it('throws when ENCRYPTION_MASTER_KEY is unset', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', '')
+    await expect(encryptProjectConfig({ a: 1 })).rejects.toThrow(
+      /ENCRYPTION_MASTER_KEY/,
+    )
+  })
+})
+
+describe('maskConfig', () => {
+  it('masks secret-bearing fields and leaves identifiers untouched', () => {
+    const masked = maskConfig({
+      aws_access_key_id: 'AKIAEXAMPLE1234',
+      aws_secret_access_key: 'super-long-secret-ending-in-CAFE',
+      bucket_name: 'cropwizard-prod',
+      endpoint_url: 'https://s3.example.com',
+      region: 'us-east-2',
+    })
+    expect(masked.aws_access_key_id).toBe('****1234')
+    expect(masked.aws_secret_access_key).toBe('****CAFE')
+    expect(masked.bucket_name).toBe('cropwizard-prod')
+    expect(masked.endpoint_url).toBe('https://s3.example.com')
+    expect(masked.region).toBe('us-east-2')
+  })
+
+  it('returns null/undefined unchanged', () => {
+    expect(maskConfig(null)).toBeNull()
+    expect(maskConfig(undefined)).toBeUndefined()
+  })
+
+  it('masks short secrets to ****', () => {
+    const masked = maskConfig({ api_key: 'ab' })
+    expect(masked.api_key).toBe('****')
+  })
+
+  it('treats connection_uri as a secret', () => {
+    const masked = maskConfig({
+      connection_uri: 'postgres://user:pw@host:5432/db',
+    })
+    expect(masked.connection_uri).toMatch(/^\*\*\*\*/)
   })
 })
