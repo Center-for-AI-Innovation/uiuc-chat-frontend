@@ -54,13 +54,13 @@ describe('toChatbotCardData', () => {
     expect(card.metadata).toBe(meta)
   })
 
-  it('flags the caller as member (admin) and exposes raw metadata', () => {
+  it('flags the caller as admin (in course_admins) and exposes raw metadata', () => {
     const meta = makeMetadata({
       course_owner: 'other@example.com',
       course_admins: ['me@example.com'],
     })
     const card = toChatbotCardData('cs101', meta, 'me@example.com')
-    expect(card.userRole).toBe('member')
+    expect(card.userRole).toBe('admin')
     expect(card.owner).toBe('other@example.com')
     expect(card.metadata).toBe(meta)
   })

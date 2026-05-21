@@ -10,6 +10,7 @@ import { ChatbotDetailDialog } from './ChatbotDetailDialog'
 import { ChatbotUserRoleBadge } from './ChatbotUserRoleBadge'
 import { type ChatbotCardData } from './chatbots.types'
 import { ChatbotOrganizationBadge } from './ChatbotOrganizationBadge'
+import { getProjectTypeIcon } from './icons/projectTypeIcon'
 import ShareSettingsModal from '../ShareSettingsModal'
 
 export function ChatbotHubCard(card: ChatbotCardData) {
@@ -41,7 +42,11 @@ export function ChatbotHubCard(card: ChatbotCardData) {
 
   const resolvedAccessLevel = accessLevel ?? (isPrivate ? 'private' : undefined)
   const resolvedUserRole = userRole ?? (owner === 'You' ? 'owner' : 'member')
-  const isOwnerCard = resolvedUserRole === 'owner'
+  // Owner + admin share edit/share capabilities, so the rim + Settings gear
+  // light up for both. Only the badge text distinguishes them.
+  const hasAdminAccess =
+    resolvedUserRole === 'owner' || resolvedUserRole === 'admin'
+  const ProjectTypeIcon = getProjectTypeIcon(projectType)
 
   const { data: bannerUrl } = useQuery({
     queryKey: ['bannerUrl', course_name, bannerImageS3],
@@ -63,7 +68,7 @@ export function ChatbotHubCard(card: ChatbotCardData) {
     <>
       <Card
         className={`group relative flex min-h-[380px] w-full flex-col overflow-hidden rounded-[14px] bg-white transition-transform duration-200 ease-out hover:scale-[1.03] dark:bg-[#13294b] [&:has(a:focus-visible)]:ring-2 [&:has(a:focus-visible)]:ring-[--illinois-orange] [&:has(a:focus-visible)]:ring-offset-2 ${
-          isOwnerCard
+          hasAdminAccess
             ? 'border border-[--illinois-orange-branding] dark:border-[#32517a]'
             : 'border border-[#e5e7eb] shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:border-[#32517a] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]'
         }`}
@@ -80,6 +85,10 @@ export function ChatbotHubCard(card: ChatbotCardData) {
             <div className="absolute inset-0 bg-gradient-to-br from-[#e8edf4] via-[#f0ebe4] to-[#dde5ed] dark:from-[#1a3a6b] dark:via-[#152e55] dark:to-[#0f2340]" />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/55 dark:from-transparent dark:via-[#13294b]/45 dark:to-[#13294b]/95" />
+
+          <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
+            <ProjectTypeIcon className="h-16 w-16 text-[--illinois-blue] dark:text-white" />
+          </div>
 
           {/* Info icon — visible on hover or keyboard focus */}
           <Button
@@ -140,24 +149,28 @@ export function ChatbotHubCard(card: ChatbotCardData) {
 
           <div className="mt-auto">
             <Separator className="my-3 dark:bg-[#32517a]" />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs">
-                <Bot className="h-4 w-4 text-[--illinois-storm-medium] dark:text-[#94a3b8]" />
-                <span className="text-[--illinois-storm-medium] dark:text-[#94a3b8]">
+            <div className="flex items-center justify-between gap-2">
+              {/* `min-w-0` is required for the owner-email <span>'s `truncate`
+                  to actually shrink inside this flex row — without it, the
+                  long email pushes the right-side action buttons off the
+                  card and `overflow-hidden` clips them. */}
+              <div className="flex min-w-0 flex-1 items-center gap-2 text-xs">
+                <Bot className="h-4 w-4 shrink-0 text-[--illinois-storm-medium] dark:text-[#94a3b8]" />
+                <span className="shrink-0 text-[--illinois-storm-medium] dark:text-[#94a3b8]">
                   by
                 </span>
-                <span className="truncate text-[--illinois-storm-dark] dark:text-[#c8d2e3]">
+                <span className="min-w-0 truncate text-[--illinois-storm-dark] dark:text-[#c8d2e3]">
                   {owner}
                 </span>
                 {collaboratorCount > 0 && (
-                  <span className="text-[--illinois-storm-medium] dark:text-[#94a3b8]">
+                  <span className="shrink-0 whitespace-nowrap text-[--illinois-storm-medium] dark:text-[#94a3b8]">
                     +{collaboratorCount} more
                   </span>
                 )}
               </div>
               {metadata && (
-                <div className="relative z-10 flex items-center gap-1">
-                  {isOwnerCard && (
+                <div className="relative z-10 flex shrink-0 items-center gap-1">
+                  {hasAdminAccess && (
                     <Button
                       asChild
                       variant="ghost"

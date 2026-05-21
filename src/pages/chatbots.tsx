@@ -19,6 +19,7 @@ import {
   PROJECT_TYPE_TO_SECTION,
   DEFAULT_ACCESSIBLE_SECTION,
   ACCESSIBLE_SECTION_ORDER,
+  YOUR_BOTS_SECTION,
 } from '~/components/UIUC-Components/chatbots-hub/chatbots.types'
 import { PermissionGate } from '~/components/UIUC-Components/PermissionGate'
 import {
@@ -35,6 +36,10 @@ function transformToCardData(
   currentUserEmail: string | undefined,
 ) {
   const isOwner = course.metadata.course_owner === currentUserEmail
+  const isAdmin =
+    !isOwner &&
+    !!currentUserEmail &&
+    (course.metadata.course_admins || []).includes(currentUserEmail)
   const otherAdmins = (course.metadata.course_admins || []).filter(
     (a) =>
       a !== course.metadata.course_owner &&
@@ -57,7 +62,11 @@ function transformToCardData(
     generalTags,
     owner: isOwner ? 'You' : course.metadata.course_owner,
     collaboratorCount: otherAdmins.length,
-    userRole: isOwner ? ('owner' as const) : ('member' as const),
+    userRole: isOwner
+      ? ('owner' as const)
+      : isAdmin
+        ? ('admin' as const)
+        : ('member' as const),
     accessLevel: course.metadata.is_private
       ? course.metadata.allow_logged_in_users
         ? ('unlisted' as const)
@@ -169,15 +178,32 @@ const ChatbotsHubPage = () => {
 
     if (byCourseName.size === 0) return []
 
-    // Group everything by projectType into the Figma sections.
+    // Bucket each bot. Owner/member relationships short-circuit into
+    // "Your Bots" regardless of privacy; everything else only lands in a
+    // project-type section if it's actually public, so the discovery
+    // sections (notably "Public Bots") never include private/unlisted bots.
     const grouped = new Map<string, ChatbotSectionData>()
     for (const bot of byCourseName.values()) {
-      const projectType = bot.projectType as
-        | keyof typeof PROJECT_TYPE_TO_SECTION
-        | undefined
-      const sectionTitle =
-        (projectType && PROJECT_TYPE_TO_SECTION[projectType]) ??
-        DEFAULT_ACCESSIBLE_SECTION
+      const isYours =
+        bot.userRole === 'owner' ||
+        bot.userRole === 'admin' ||
+        bot.userRole === 'member'
+
+      let sectionTitle: string
+      if (isYours) {
+        sectionTitle = YOUR_BOTS_SECTION
+      } else if (bot.accessLevel === 'public') {
+        const projectType = bot.projectType as
+          | keyof typeof PROJECT_TYPE_TO_SECTION
+          | undefined
+        sectionTitle =
+          (projectType && PROJECT_TYPE_TO_SECTION[projectType]) ??
+          DEFAULT_ACCESSIBLE_SECTION
+      } else {
+        // Defensive: the search/featured APIs shouldn't return private bots
+        // for users without a relationship, but drop them here if they do.
+        continue
+      }
 
       let section = grouped.get(sectionTitle)
       if (!section) {
@@ -196,11 +222,22 @@ const ChatbotsHubPage = () => {
 
     // Within each section, surface organization-tagged bots first, then
     // projectType-tagged, then untagged — matching the precedence rules from #598.
+    // "Your Bots" additionally puts owner before admin before member.
+    const yourBotsRoleRank: Record<string, number> = {
+      owner: 0,
+      admin: 1,
+      member: 2,
+    }
     return result.map((section) => ({
       ...section,
-      cards: [...section.cards].sort((a, b) =>
-        compareChatbotTagPrecedence(cardSortTags(a), cardSortTags(b)),
-      ),
+      cards: [...section.cards].sort((a, b) => {
+        if (section.title === YOUR_BOTS_SECTION && a.userRole !== b.userRole) {
+          const aRank = yourBotsRoleRank[a.userRole ?? 'member'] ?? 2
+          const bRank = yourBotsRoleRank[b.userRole ?? 'member'] ?? 2
+          if (aRank !== bRank) return aRank - bRank
+        }
+        return compareChatbotTagPrecedence(cardSortTags(a), cardSortTags(b))
+      }),
     }))
   }, [courses, featuredChatbots, currentUserEmail, isSearchActive])
 

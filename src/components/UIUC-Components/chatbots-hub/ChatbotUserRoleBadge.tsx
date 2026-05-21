@@ -13,6 +13,10 @@ const userRoleBadgeVariants = cva('rounded-[8px]', {
     role: {
       owner:
         'border-[#ff5f05] bg-white text-[#c2410c] hover:bg-white dark:border-[#32517a] dark:bg-[#081735] dark:text-white dark:hover:bg-[#081735]',
+      // Admin uses the orange family (matches the orange rim) but a softer,
+      // filled treatment so it reads distinct from the owner outline.
+      admin:
+        'border-[#fdba74] bg-[#fff7ed] text-[#c2410c] hover:bg-[#fff7ed] dark:border-[#32517a] dark:bg-[#081735] dark:text-[#fdba74] dark:hover:bg-[#081735]',
       member:
         'border-[#d4d4d8] bg-white text-[--illinois-blue] hover:bg-white dark:border-[#32517a] dark:bg-[#081735] dark:text-[#e2e8f0] dark:hover:bg-[#081735]',
     },
@@ -21,6 +25,7 @@ const userRoleBadgeVariants = cva('rounded-[8px]', {
 
 const userRoleLabel: Record<ChatbotUserRole, string> = {
   owner: 'Owner',
+  admin: 'Admin',
   member: 'Member',
 }
 

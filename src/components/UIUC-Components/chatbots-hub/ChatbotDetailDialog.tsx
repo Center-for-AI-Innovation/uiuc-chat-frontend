@@ -78,8 +78,6 @@ export function ChatbotDetailDialog({
 
   const organizationLabel = organization ?? projectType
   const resolvedAccessLevel = accessLevel ?? (isPrivate ? 'private' : undefined)
-  const resolvedUserRole =
-    card.userRole ?? (owner === 'You' ? 'owner' : 'member')
 
   const { data: fetchedMetadata } = useFetchCourseMetadata({
     courseName: course_name,
@@ -87,11 +85,28 @@ export function ChatbotDetailDialog({
   })
   const resolvedMetadata = metadata ?? fetchedMetadata
 
-  const isOwnerOrAdmin =
+  const isOwnerFromMetadata =
     !!currentUserEmail &&
     !!resolvedMetadata &&
-    (resolvedMetadata.course_owner === currentUserEmail ||
-      (resolvedMetadata.course_admins ?? []).includes(currentUserEmail))
+    resolvedMetadata.course_owner === currentUserEmail
+  const isAdminFromMetadata =
+    !isOwnerFromMetadata &&
+    !!currentUserEmail &&
+    !!resolvedMetadata &&
+    (resolvedMetadata.course_admins ?? []).includes(currentUserEmail)
+  const isOwnerOrAdmin = isOwnerFromMetadata || isAdminFromMetadata
+
+  // Prefer the explicit role passed in. Fall back to metadata-derived role
+  // so admins still see the orange badge if a caller forgets to pass it.
+  const resolvedUserRole =
+    card.userRole ??
+    (isOwnerFromMetadata
+      ? 'owner'
+      : isAdminFromMetadata
+        ? 'admin'
+        : owner === 'You'
+          ? 'owner'
+          : 'member')
 
   const aboutText = resolvedMetadata?.project_description || description
 

@@ -1,10 +1,20 @@
 import { type CourseMetadata } from '~/types/courseMetadata'
 
 export type ChatbotAccessLevel = 'private' | 'unlisted' | 'public'
-export type ChatbotUserRole = 'owner' | 'member'
+/**
+ * Visual tier of the current user's relationship with a chatbot.
+ * - `owner`  — `course_owner` matches the caller. Full control.
+ * - `admin`  — caller is in `course_admins`. Same edit/share permissions as
+ *              the owner, surfaced with an orange rim + Settings gear, but a
+ *              distinct badge so the actual owner is still identifiable.
+ * - `member` — caller is on `approved_emails_list` only. View access; no
+ *              edit shortcuts on the card.
+ */
+export type ChatbotUserRole = 'owner' | 'admin' | 'member'
 export type ChatbotProjectType =
   | 'Course'
   | 'Department'
+  | 'Research'
   | 'Student Org.'
   | 'Entertainment'
 
@@ -73,19 +83,33 @@ export type AccessibleChatbotData = {
   knowledgeSources?: KnowledgeSource[]
 }
 
-/** Maps a project type to the section title it belongs to in the chatbots hub */
+/** Section that surfaces the user's own + member bots (any privacy). */
+export const YOUR_BOTS_SECTION = 'Your Bots'
+
+/**
+ * Maps a project type to the section title it belongs to in the chatbots hub.
+ * Only applies to PUBLIC bots the user has no direct relationship to —
+ * owner/member bots short-circuit into {@link YOUR_BOTS_SECTION}.
+ */
 export const PROJECT_TYPE_TO_SECTION: Record<ChatbotProjectType, string> = {
   Course: 'Course Assistants',
   Department: 'Department Resources',
+  Research: 'Public Bots',
   'Student Org.': 'Public Bots',
   Entertainment: 'Public Bots',
 }
 
-/** Fallback section for accessible chatbots with unknown project types */
+/** Fallback section for public chatbots with unknown project types */
 export const DEFAULT_ACCESSIBLE_SECTION = 'Public Bots'
 
-/** Ordered list of accessible-chatbot section titles (matches Figma) */
+/**
+ * Ordered list of section titles. "Your Bots" surfaces first so users see
+ * their own + shared work before discovery sections. The discovery sections
+ * are scoped to PUBLIC bots only — private/unlisted bots the user owns or is
+ * a member of live in "Your Bots".
+ */
 export const ACCESSIBLE_SECTION_ORDER = [
+  YOUR_BOTS_SECTION,
   'Course Assistants',
   'Department Resources',
   'Public Bots',

@@ -53,9 +53,15 @@ export function ChatbotsSearchResults({
       <p className="mb-4 text-sm text-[--illinois-storm-medium] dark:text-[#94a3b8]">
         {total} {total === 1 ? 'result' : 'results'}
       </p>
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {/* Match the default page: each card is locked to 320px (see
+          ChatbotsSection.tsx) so search results don't render fatter than
+          the cards on the landing page. Flex-wrap left-aligns rows
+          naturally when the last row is partial. */}
+      <div className="flex flex-wrap gap-5">
         {results.map((card) => (
-          <ChatbotHubCard key={card.course_name} {...card} />
+          <div key={card.course_name} className="w-[320px] shrink-0">
+            <ChatbotHubCard {...card} />
+          </div>
         ))}
       </div>
     </div>

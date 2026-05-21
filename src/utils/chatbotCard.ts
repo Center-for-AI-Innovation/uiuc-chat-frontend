@@ -29,6 +29,7 @@ export function toChatbotCardData(
   userEmail: string,
 ): ChatbotCardData {
   const isOwner = metadata.course_owner === userEmail
+  const isAdmin = !isOwner && (metadata.course_admins ?? []).includes(userEmail)
   const admins = (metadata.course_admins ?? []).filter(
     (a) => a !== metadata.course_owner && a !== DEFAULT_ADMIN_EMAIL,
   )
@@ -52,7 +53,13 @@ export function toChatbotCardData(
     generalTags,
     owner: isOwner ? 'You' : metadata.course_owner,
     collaboratorCount: admins.length,
-    userRole: isOwner ? 'owner' : callerIsUserBot ? 'member' : undefined,
+    userRole: isOwner
+      ? 'owner'
+      : isAdmin
+        ? 'admin'
+        : callerIsUserBot
+          ? 'member'
+          : undefined,
     accessLevel: accessLevel === 'logged_in' ? 'unlisted' : accessLevel,
     isPrivate: metadata.is_private,
     bannerImageS3: metadata.banner_image_s3,
