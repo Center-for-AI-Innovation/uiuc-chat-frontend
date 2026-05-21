@@ -8,16 +8,18 @@ export default async function fetchContextsFromBackend(
   token_limit = 4000,
   doc_groups: string[] = [],
   conversation_id?: string,
+  top_n?: number,
 ): Promise<ContextWithMetadata[]> {
   const backendUrl = getBackendUrl()
 
-  const requestBody = {
+  const requestBody: Record<string, unknown> = {
     course_name: course_name,
     search_query: search_query,
     token_limit: token_limit,
     doc_groups: doc_groups,
     conversation_id: conversation_id,
   }
+  if (top_n !== undefined) requestBody.top_n = top_n
 
   const response = await fetch(`${backendUrl}/getTopContexts`, {
     method: 'POST',

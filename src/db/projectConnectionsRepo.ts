@@ -26,10 +26,14 @@ export async function getProjectIdByName(
   return rows[0]?.id ?? null
 }
 
-const KIND_TO_COLUMN: Record<ConnectionKind, 's3_config' | 'database_config' | 'qdrant_config'> = {
+const KIND_TO_COLUMN: Record<
+  ConnectionKind,
+  's3_config' | 'database_config' | 'qdrant_config' | 'embedding_config'
+> = {
   s3: 's3_config',
   database: 'database_config',
   qdrant: 'qdrant_config',
+  embedding: 'embedding_config',
 }
 
 export async function getConnectionByProject(
@@ -64,6 +68,7 @@ export async function upsertConnectionField(args: {
     s3_config: kind === 's3' ? encryptedBlob : null,
     database_config: kind === 'database' ? encryptedBlob : null,
     qdrant_config: kind === 'qdrant' ? encryptedBlob : null,
+    embedding_config: kind === 'embedding' ? encryptedBlob : null,
     is_active: true,
   }
 

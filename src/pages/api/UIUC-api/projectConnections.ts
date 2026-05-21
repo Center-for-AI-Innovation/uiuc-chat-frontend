@@ -77,10 +77,11 @@ async function handleGet(req: AuthenticatedRequest, res: NextApiResponse) {
     return res.status(200).json({ found: false, project_name })
   }
 
-  const [s3, database, qdrant] = await Promise.all([
+  const [s3, database, qdrant, embedding] = await Promise.all([
     decryptProjectConfig<Record<string, unknown>>(row.s3_config as EncryptedField),
     decryptProjectConfig<Record<string, unknown>>(row.database_config as EncryptedField),
     decryptProjectConfig<Record<string, unknown>>(row.qdrant_config as EncryptedField),
+    decryptProjectConfig<Record<string, unknown>>(row.embedding_config as EncryptedField),
   ])
 
   return res.status(200).json({
@@ -92,6 +93,7 @@ async function handleGet(req: AuthenticatedRequest, res: NextApiResponse) {
     s3_config: maskConfig(s3),
     database_config: maskConfig(database),
     qdrant_config: maskConfig(qdrant),
+    embedding_config: maskConfig(embedding),
   })
 }
 

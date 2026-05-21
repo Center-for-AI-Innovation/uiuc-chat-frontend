@@ -3,7 +3,7 @@
  */
 
 import { and, eq, or, sql } from 'drizzle-orm'
-import { db } from './dbClient'
+import { connectionManager } from '~/utils/connectionManager'
 import { embeddings } from './schema'
 import type { ContextWithMetadata } from '~/types/chat'
 
@@ -21,10 +21,15 @@ export interface VectorSearchParams {
 /**
  * Run vector search on the embeddings table using Drizzle.
  * Filter logic mirrors backend _create_search_filter and conversation handling.
+ *
+ * `projectName` is required so the per-project documents Postgres is used
+ * when `database_config` is set on the project; otherwise the host db.
  */
 export async function vectorSearchWithDrizzle(
+  projectName: string,
   params: VectorSearchParams,
 ): Promise<ContextWithMetadata[]> {
+  const db = await connectionManager.getDocumentsDb(projectName)
   const {
     queryEmbedding,
     course_name,
@@ -70,6 +75,8 @@ export async function vectorSearchWithDrizzle(
         pagenumber: embeddings.pagenumber,
         url: embeddings.url,
         base_url: embeddings.base_url,
+        doc_groups: embeddings.doc_groups,
+        conversation_id: embeddings.conversation_id,
         score: scoreExpr,
       })
       .from(embeddings)
@@ -104,6 +111,8 @@ export async function vectorSearchWithDrizzle(
       pagenumber: embeddings.pagenumber,
       url: embeddings.url,
       base_url: embeddings.base_url,
+      doc_groups: embeddings.doc_groups,
+      conversation_id: embeddings.conversation_id,
       score: scoreExpr,
     })
     .from(embeddings)
@@ -172,7 +181,22 @@ function rowToContext(row: {
   pagenumber: string | null
   url: string | null
   base_url: string | null
+  doc_groups?: string[] | null
+  conversation_id?: string | null
 }): ContextWithMetadata {
+  // `doc_groups` is JSONB. Drizzle/postgres-js usually hands back a parsed
+  // array; defensively handle a string envelope too.
+  let docGroups: string[] | undefined
+  const raw = row.doc_groups
+  if (Array.isArray(raw)) docGroups = raw
+  else if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw)
+      docGroups = Array.isArray(parsed) ? parsed : undefined
+    } catch {
+      docGroups = undefined
+    }
+  }
   return {
     id: row.id,
     text: row.page_content ?? '',
@@ -183,5 +207,7 @@ function rowToContext(row: {
     pagenumber: row.pagenumber ?? '',
     url: row.url ?? '',
     base_url: row.base_url ?? '',
+    doc_groups: docGroups,
+    conversation_id: row.conversation_id ?? undefined,
   }
 }

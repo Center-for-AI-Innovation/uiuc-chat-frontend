@@ -1,6 +1,7 @@
 // vectorUtils.ts — dispatches doc_groups payload writes to either an
-// external Qdrant (per-project override or shared) or to host pgvector
-// (Drizzle UPDATE on the embeddings table). The engine is decided per
+// external Qdrant (per-project override) or to pgvector (Drizzle UPDATE
+// on the embeddings table — host pgvector by default, per-project
+// external pg when `database_config` is set). The engine is decided per
 // project by ConnectionManager.resolveVectorEngine.
 import { and, eq, or, sql } from 'drizzle-orm'
 import { type CourseDocument } from '~/types/courseMaterials'
@@ -70,9 +71,10 @@ async function setPgvectorDocGroups(
   courseName: string,
   doc: CourseDocument,
 ): Promise<void> {
-  // Drizzle UPDATE on the host embeddings table.
+  // Drizzle UPDATE on the project's documents Postgres (per-project pg
+  // if `database_config` is set; otherwise host).
   // Match backend logic: WHERE course_name AND s3_path AND (url = $url or url IS NULL/empty).
-  const db = connectionManager.getHostDb()
+  const db = await connectionManager.getDocumentsDb(courseName)
   const s3_path = doc.s3_path ?? ''
   const url = doc.url ?? ''
   const doc_groups = doc.doc_groups ?? []

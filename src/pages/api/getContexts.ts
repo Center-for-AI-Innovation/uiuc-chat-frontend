@@ -3,6 +3,7 @@ import { type AuthenticatedRequest } from '~/utils/authMiddleware'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import fetchContextsFromBackend from '~/utils/fetchContexts'
 import { fetchContextsViaDrizzleVectorSearch } from '~/server/fetchContextsForVectorSearch'
+import { connectionManager } from '~/utils/connectionManager'
 
 
 export default withCourseAccessFromRequest('any')(handler)
@@ -30,22 +31,39 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       })
     }
 
-    const data = (process.env.VECTOR_ENGINE === 'qdrant' ?
-        await fetchContextsFromBackend(
-        course_name,
-        search_query,
-        doc_groups,
-        conversation_id,
-        top_n,
+    // Dispatch by engine resolved per-project. Qdrant-backed projects need
+    // to hit the Python backend (which owns the Qdrant client + multi-
+    // collection fan-out). Pgvector projects can run the search locally
+    // via Drizzle on whatever documents DB the project is bound to. If
+    // resolution fails (e.g. host DB unreachable) we fall back to the
+    // local Drizzle path with a warning rather than 500-ing the request.
+    let engineKind: 'qdrant' | 'pgvector' = 'pgvector'
+    try {
+      engineKind = (await connectionManager.resolveVectorEngine(course_name)).kind
+    } catch (err) {
+      console.warn(
+        `[getContexts] resolveVectorEngine failed for ${course_name}; defaulting to pgvector:`,
+        err,
       )
-     : await fetchContextsViaDrizzleVectorSearch(
-        course_name,
-        search_query,
-        doc_groups,
-        conversation_id,
-        top_n,
-      )
-    )
+    }
+
+    const data =
+      engineKind === 'qdrant'
+        ? await fetchContextsFromBackend(
+            course_name,
+            search_query,
+            token_limit,
+            doc_groups,
+            conversation_id,
+            top_n,
+          )
+        : await fetchContextsViaDrizzleVectorSearch(
+            course_name,
+            search_query,
+            doc_groups,
+            conversation_id,
+            top_n,
+          )
 
     return res.status(200).json(data)
   } catch (error) {

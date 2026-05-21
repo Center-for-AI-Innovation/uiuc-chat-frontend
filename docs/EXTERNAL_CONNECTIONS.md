@@ -53,7 +53,8 @@ Returns the row with secrets masked (`****<last-4-chars>`). Returns
     "region": "us-east-2"
   },
   "database_config": null,
-  "qdrant_config": null
+  "qdrant_config": null,
+  "embedding_config": null
 }
 ```
 
@@ -66,7 +67,7 @@ Upsert one connection kind. The handler looks up `project_id` from the
 ```json
 {
   "project_name": "demo",
-  "kind": "s3" | "database" | "qdrant",
+  "kind": "s3" | "database" | "qdrant" | "embedding",
   "config": { ... see §4 ... }
 }
 ```
@@ -78,8 +79,8 @@ return `400` with a Zod-shaped issue list.
 ### `DELETE /api/UIUC-api/projectConnections?project_name=<name>&kind=<kind>`
 
 If `kind` is omitted, the row is deleted entirely. If `kind` is one of
-`s3 | database | qdrant`, only that column is set to NULL. Other columns
-are left intact.
+`s3 | database | qdrant | embedding`, only that column is set to NULL.
+Other columns are left intact.
 
 ### `PATCH /api/UIUC-api/projectConnections/active`
 
@@ -146,8 +147,36 @@ endpoints are intentionally **separate** from the existing
 | `updated_at`      | timestamptz | bumped on every write                                                 |
 | `s3_config`       | jsonb       | encrypted envelope or NULL                                            |
 | `database_config` | jsonb       | encrypted envelope or NULL                                            |
-| `qdrant_config`   | jsonb       | encrypted envelope or NULL                                            |
+| `qdrant_config`   | jsonb       | encrypted envelope or NULL — when present, embeddings live in Qdrant  |
+| `embedding_config`| jsonb       | encrypted envelope or NULL — per-project embedding-model override     |
 | `is_active`       | boolean     | when false, the backend ignores overrides and falls back to defaults  |
+
+### Vector / docs routing precedence
+
+Routing decisions, in order:
+
+1. `qdrant_config` present (active) → vector lives in external Qdrant.
+2. Else → vector lives in pgvector. `database_config` present (active) means
+   the **same external Postgres** stores both documents AND embeddings.
+3. No overrides → host Postgres (with pgvector) for both.
+
+There is no `VECTOR_ENGINE` environment switch — the row alone decides.
+
+### Migration journal — important caveat
+
+Several migrations in this repo are **hand-written and intentionally not
+tracked in `meta/_journal.json`**: `0001_custom_functions`,
+`0006_pgvector_extension`, `0007_embeddings_table`,
+`0009_add_project_connection_audit_log`, and `0010_add_embedding_config`.
+The journal stops at `0008` because the team applies these out-of-band
+(via `psql` against the target database) rather than through `drizzle-kit
+migrate`. This is the established convention; do not run `drizzle-kit
+generate` against this schema unless you intend to regenerate snapshots
+for the entire chain and reconcile any diffs.
+
+When provisioning a new database (host OR per-project external pg),
+apply ALL `*.sql` files under `src/db/migrations/` in numeric order
+manually, not via `drizzle-kit migrate`.
 
 ### Encrypted envelope
 
