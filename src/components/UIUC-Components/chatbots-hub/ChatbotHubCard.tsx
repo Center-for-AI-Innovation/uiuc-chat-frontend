@@ -1,10 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
+import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { Bot, Info, Settings, Share2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '~/components/shadcn/ui/button'
 import { Card, CardContent } from '~/components/shadcn/ui/card'
 import { Separator } from '~/components/shadcn/ui/separator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '~/components/shadcn/ui/tooltip'
 import { ChatbotAccessLevelBadge } from './ChatbotAccessLevelBadge'
 import { ChatbotDetailDialog } from './ChatbotDetailDialog'
 import { ChatbotUserRoleBadge } from './ChatbotUserRoleBadge'
@@ -130,12 +137,41 @@ export function ChatbotHubCard(card: ChatbotCardData) {
                   {projectType && (
                     <ChatbotOrganizationBadge label={projectType} />
                   )}
-                  {overflowTagCount > 0 && (
-                    <ChatbotOrganizationBadge
-                      label={`+${overflowTagCount} more ${
-                        overflowTagCount === 1 ? 'tag' : 'tags'
-                      }`}
-                    />
+                  {overflowTagCount > 0 && generalTags && (
+                    <TooltipProvider delayDuration={150}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          {/* `relative z-10` lifts the trigger above the
+                              title <Link>'s `after:inset-0` pseudo-overlay
+                              that covers the whole card; without it the
+                              overlay swallows hover and the tooltip never
+                              opens. `tabIndex={0}` makes it keyboard-
+                              reachable since the badge itself isn't
+                              focusable. */}
+                          <span
+                            tabIndex={0}
+                            aria-label={`Other tags: ${generalTags.join(', ')}`}
+                            className="relative z-10 inline-flex cursor-default rounded-[8px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--illinois-orange] focus-visible:ring-offset-2"
+                          >
+                            <ChatbotOrganizationBadge
+                              label={`+${overflowTagCount} more ${
+                                overflowTagCount === 1 ? 'tag' : 'tags'
+                              }`}
+                            />
+                          </span>
+                        </TooltipTrigger>
+                        {/* Portal escapes the card's `overflow-hidden` so
+                            the tooltip isn't clipped at the card edge. */}
+                        <TooltipPrimitive.Portal>
+                          <TooltipContent
+                            side="top"
+                            className="max-w-[260px] whitespace-normal break-words"
+                          >
+                            {generalTags.join(', ')}
+                          </TooltipContent>
+                        </TooltipPrimitive.Portal>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                 </div>
               )}
