@@ -1,6 +1,7 @@
 export const CHATBOT_PROJECT_TYPES = [
   'Course',
   'Department',
+  'Research',
   'Student Org.',
   'Entertainment',
 ] as const
