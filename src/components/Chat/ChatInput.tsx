@@ -12,6 +12,7 @@ import { Text } from '@mantine/core'
 import {
   IconAlertTriangle,
   IconArrowDown,
+  IconInfoCircle,
   IconPlayerStop,
   IconRepeat,
   IconSend,
@@ -41,6 +42,7 @@ import { PromptList } from './PromptList'
 import { VariableModal } from './VariableModal'
 
 import { Tooltip, useMantineTheme } from '@mantine/core'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   showToast,
   showErrorToast,
@@ -69,8 +71,11 @@ import { webLLMModels } from '~/utils/modelProviders/WebLLM'
 import { ContextWithMetadata } from '~/types/chat'
 import { modelSupportsTools } from '~/utils/modelProviders/capabilities'
 import {
+  COUNTRY_OF_CONCERN_INFO_URL,
   getCountryOfConcern,
   getCountryOfConcernShortMessage,
+  isCocBannerDismissed,
+  markCocBannerDismissed,
 } from '~/utils/modelProviders/countriesOfConcern'
 import posthog from 'posthog-js'
 import { deriveAgentModeEnabled } from '~/utils/app/agentMode'
@@ -270,6 +275,8 @@ export const ChatInput = ({
   const [showPluginSelect, setShowPluginSelect] = useState(false)
   const [plugin, setPlugin] = useState<Plugin | null>(null)
   const [isDragging, setIsDragging] = useState<boolean>(false)
+  // Re-render trigger when the user clicks "I Understand" (storage value changes)
+  const [, setCocDismissTick] = useState(0)
   const promptListRef = useRef<HTMLUListElement | null>(null)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
@@ -921,6 +928,100 @@ export const ChatInput = ({
       className={`w-full border-transparent bg-transparent pt-6 md:pt-2`}
       style={{ pointerEvents: 'none' }}
     >
+      {/* Country-of-concern banner — card sitting above the chat input. */}
+      {(() => {
+        const activeModelId =
+          selectedConversation?.model?.id ?? selectBestModel(llmProviders)?.id
+        const country = getCountryOfConcern(activeModelId)
+        const showBanner =
+          !!country &&
+          !!activeModelId &&
+          !!courseName &&
+          !isCocBannerDismissed(courseName, activeModelId)
+        return (
+          <AnimatePresence initial={false}>
+            {showBanner && (
+              <motion.div
+                key={`coc-banner-${activeModelId}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="mx-2 mb-3 md:mx-4 lg:mx-auto lg:max-w-3xl"
+                style={{ pointerEvents: 'auto' }}
+              >
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="relative rounded-2xl bg-[#FBEDE5] px-5 py-4 text-[#2A1B3D] shadow-sm"
+                >
+                  <div className="mb-2 inline-flex items-center gap-1.5 rounded-md bg-[#F5D9CC] px-2 py-0.5 text-xs font-medium text-[#7A2E1F]">
+                    <IconAlertTriangle
+                      size={12}
+                      stroke={2}
+                      aria-hidden="true"
+                    />
+                    Notice
+                  </div>
+                  <span
+                    aria-hidden="true"
+                    className="absolute right-3 top-3 inline-flex text-[#2A1B3D]/60"
+                  >
+                    <IconInfoCircle size={16} stroke={2} />
+                  </span>
+                  <div className="mb-1 flex items-center gap-2 text-base font-semibold">
+                    <span aria-hidden="true">🌐</span>
+                    LLM from Country of Concern
+                  </div>
+                  <p className="text-sm leading-snug">
+                    While this model is locally hosted here at the U of I, and
+                    Illinois Chat never sends information to foreign servers,
+                    users should be aware that the LLM was initially developed
+                    in a country deemed worthy of extra caution in the AI space.
+                    Users may click{' '}
+                    <a
+                      href={COUNTRY_OF_CONCERN_INFO_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2 hover:opacity-80"
+                    >
+                      here
+                    </a>{' '}
+                    for further information
+                  </p>
+                  <div className="mt-3 flex flex-wrap justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (courseName && activeModelId) {
+                          markCocBannerDismissed(courseName, activeModelId)
+                          setCocDismissTick((t) => t + 1)
+                        }
+                      }}
+                      className="rounded-md border border-[#2A1B3D]/20 bg-white px-3 py-1.5 text-sm font-medium text-[#2A1B3D] transition hover:bg-[#2A1B3D]/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
+                    >
+                      I Understand
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        homeDispatch({
+                          field: 'showModelSettings',
+                          value: true,
+                        })
+                      }}
+                      className="rounded-md bg-[#1B1336] px-3 py-1.5 text-sm font-medium text-white transition hover:bg-[#2A1B3D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--dashboard-button]"
+                    >
+                      Switch Model in Use
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )
+      })()}
+
       <div
         className="stretch mx-2 mt-4 flex flex-col gap-3 last:mb-2 md:mx-4 md:mt-[52px] md:last:mb-6 lg:mx-auto lg:max-w-3xl"
         style={{ pointerEvents: 'auto' }}
@@ -1381,6 +1482,7 @@ export const ChatInput = ({
                         size={isSmallScreen ? '12px' : '14px'}
                         stroke={2}
                         aria-hidden="true"
+                        style={{ color: '#f59e0b' }}
                       />
                     </span>
                   </Tooltip>

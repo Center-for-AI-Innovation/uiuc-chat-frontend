@@ -193,7 +193,11 @@ export const ModelItem = forwardRef<
                       alignItems: 'center',
                     }}
                   >
-                    <IconAlertTriangle size="0.9rem" aria-hidden="true" />
+                    <IconAlertTriangle
+                      size="0.9rem"
+                      aria-hidden="true"
+                      className="text-yellow-500"
+                    />
                   </span>
                 </Tooltip>
               )}
@@ -472,7 +476,7 @@ const ModelDropdown: React.FC<
                     <IconAlertTriangle
                       size="1rem"
                       aria-hidden="true"
-                      className="text-[--modal-button-text]"
+                      className="text-yellow-500"
                     />
                   </span>
                 </Tooltip>
@@ -653,6 +657,7 @@ export const ModelSelect = React.forwardRef<HTMLDivElement, any>(
                                 <IconAlertTriangle
                                   size="1rem"
                                   aria-hidden="true"
+                                  className="text-yellow-500"
                                 />
                                 Countries of Concern
                               </span>
