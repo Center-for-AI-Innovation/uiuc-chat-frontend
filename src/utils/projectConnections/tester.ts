@@ -2,8 +2,12 @@
 //
 // SSRF posture:
 //   - URLs are parsed and the scheme validated up front.
-//   - For S3/Qdrant we require https unless the host is explicitly localhost
+//   - For S3 we require https unless the host is explicitly localhost
 //     (developer escape hatch).
+//   - For Qdrant, the URL's scheme is authoritative (matches qdrant-client
+//     semantics in both Python and JS). Plain HTTP is allowed because in-VPC
+//     Qdrant deployments commonly run on HTTP behind an SG allowlist; we log
+//     a visible warning when that path is taken.
 //   - Every hostname is DNS-resolved; resolution to RFC1918 / loopback /
 //     link-local / cloud-metadata addresses is rejected before any outbound
 //     I/O.
@@ -29,10 +33,11 @@ import {
 import { NodeHttpHandler } from '@smithy/node-http-handler'
 import { QdrantClient } from '@qdrant/js-client-rest'
 import postgres from 'postgres'
-import type {
-  S3OverrideConfig,
-  DatabaseOverrideConfig,
-  QdrantOverrideConfig,
+import {
+  buildQdrantUrl,
+  type S3OverrideConfig,
+  type DatabaseOverrideConfig,
+  type QdrantOverrideConfig,
 } from '~/utils/connectionManager'
 import {
   EMBEDDING_PROVIDERS,
@@ -232,10 +237,34 @@ function withTimeout<T>(
 
 function classifyUnknown(e: unknown): TestResult {
   if (e instanceof TestError) {
+    // Surface the underlying message server-side so operators can debug
+    // without secret leakage (TestError messages are authored here).
+    console.warn(
+      `[projectConnections/tester] classified error: code=${e.code} message=${e.message}`,
+    )
     return { ok: false, code: e.code, message: e.message }
   }
-  const msg = e instanceof Error ? e.message : String(e)
-  const lower = msg.toLowerCase()
+  const rawMsg = e instanceof Error ? e.message : String(e)
+  const errName = e instanceof Error ? e.name : 'non-Error'
+  const cause = e instanceof Error ? (e as Error & { cause?: unknown }).cause : undefined
+  const causeMsg =
+    cause instanceof Error
+      ? cause.message
+      : typeof cause === 'string'
+        ? cause
+        : ''
+  const errno = (e as { code?: string } | undefined)?.code
+  // Log the raw upstream error so operators can see what actually failed.
+  // The user-facing response keeps a sanitized code/message — secrets in
+  // upstream errors (e.g. presigned URLs, connection strings) never leave
+  // the server.
+  console.warn(
+    `[projectConnections/tester] upstream error name=${errName} errno=${errno ?? '(none)'} msg=${rawMsg}${causeMsg ? ` cause=${causeMsg}` : ''}`,
+  )
+  // Include the Error name in the classification haystack — Qdrant's client
+  // throws `QdrantClientTimeoutError` with the bland message "This operation
+  // was aborted", which on its own matches none of the patterns below.
+  const lower = `${errName} ${rawMsg} ${causeMsg} ${errno ?? ''}`.toLowerCase()
   if (lower.includes('cert') || lower.includes('tls') || lower.includes('ssl')) {
     return { ok: false, code: 'tls', message: 'TLS/certificate error' }
   }
@@ -252,7 +281,12 @@ function classifyUnknown(e: unknown): TestResult {
   if (lower.includes('not found') || lower.includes('nosuchbucket')) {
     return { ok: false, code: 'not_found', message: 'Resource not found' }
   }
-  if (lower.includes('timeout') || lower.includes('timed out')) {
+  if (
+    lower.includes('timeout') ||
+    lower.includes('timed out') ||
+    lower.includes('aborted') ||
+    lower.includes('etimedout')
+  ) {
     return { ok: false, code: 'timeout', message: 'Probe timed out' }
   }
   if (
@@ -260,6 +294,10 @@ function classifyUnknown(e: unknown): TestResult {
     lower.includes('econnrefused') ||
     lower.includes('econnreset') ||
     lower.includes('eai_again') ||
+    lower.includes('epipe') ||
+    lower.includes('eproto') ||
+    lower.includes('fetch failed') ||
+    lower.includes('socket hang up') ||
     lower.includes('network')
   ) {
     return { ok: false, code: 'network', message: 'Network error' }
@@ -334,23 +372,34 @@ export async function testQdrant(
   cfg: QdrantOverrideConfig,
 ): Promise<TestResult> {
   try {
-    const u = new URL(cfg.url)
-    if (u.protocol !== 'https:' && cfg.https !== false) {
-      throw new TestError('tls', 'Qdrant URL must use https://')
-    }
+    // The URL's scheme is the source of truth — see `buildQdrantUrl` for
+    // the rationale. We previously rejected `http://` unless an `https:
+    // false` escape hatch was set; that field is gone and so is the
+    // pre-check. SSRF protection (assertPublicHost) and the 5s timeout
+    // still apply.
+    const effectiveUrl = buildQdrantUrl(cfg)
+    const u = new URL(effectiveUrl)
     await assertPublicHost(u.hostname)
+    if (u.protocol === 'http:') {
+      // Visible warning so operators don't store a plaintext config without
+      // realizing the api-key will cross any intermediate network in the
+      // clear. Not blocking — production has historically used plain HTTP
+      // for in-VPC Qdrant deployments.
+      console.warn(
+        `[projectConnections/tester] qdrant probe target is plain HTTP — api-key crosses the network in cleartext. host=${u.hostname}`,
+      )
+    }
 
-    // QdrantClient ≥ 1.9 accepts `timeout` (seconds); internally it builds an
-    // AbortSignal that aborts the underlying fetch. We pass our own value
-    // here AND a withTimeout wrapper as defence-in-depth so the promise
-    // resolves regardless of how the client handles the abort.
-    const timeoutSeconds = Math.ceil(PROBE_TIMEOUT_MS / 1000)
+    // QdrantClient (JS, ≥ 1.9) takes `timeout` in MILLISECONDS — verified in
+    // node_modules/@qdrant/js-client-rest/.../api-client.js:30, where the
+    // value is passed directly to `setTimeout`. This contradicts the Python
+    // client (which uses seconds) and the README, but the source is the
+    // source. Pass PROBE_TIMEOUT_MS as-is; `withTimeout` is kept as defence
+    // in depth in case future versions silently change units again.
     const client = new QdrantClient({
-      url: cfg.url,
+      url: effectiveUrl,
       apiKey: cfg.api_key,
-      port: cfg.port ?? undefined,
-      https: cfg.https,
-      timeout: timeoutSeconds,
+      timeout: PROBE_TIMEOUT_MS,
     })
     await withTimeout(client.getCollections(), PROBE_TIMEOUT_MS)
     return { ok: true }

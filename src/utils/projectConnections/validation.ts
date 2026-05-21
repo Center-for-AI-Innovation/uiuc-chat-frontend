@@ -37,10 +37,16 @@ export const qdrantCollectionEntrySchema = z.object({
 export type QdrantCollectionEntry = z.infer<typeof qdrantCollectionEntrySchema>
 
 export const qdrantConfigSchema = z.object({
+  // URL is the source of truth — its scheme picks http vs https. Both
+  // qdrant-client libraries (Python `qdrant_remote.py:97-99` and JS
+  // `qdrant-client.js:29`) let the URL's scheme overwrite any `https`
+  // arg passed alongside, so we don't accept one here. Existing records
+  // that still carry an `https` key in their encrypted JSON parse cleanly
+  // because `z.object()` strips unknown keys by default; the Python
+  // backend already tolerated absence via `.get("https", False)`.
   url: z.string().url(),
   api_key: z.string().min(1),
   port: z.coerce.number().int().positive(),
-  https: z.boolean().optional(),
   default_collection: z.string().min(1),
   // Optional read-side fan-out. Each entry is a dict, not a bare string —
   // the backend consumes `name`, `top_n`, `use_filter`, `processor`.

@@ -38,16 +38,38 @@ describe('projectConnections/tester — SSRF guard', () => {
     expect(result.code).toBe('network')
   })
 
-  it('rejects http:// for qdrant when https flag is not explicitly false', async () => {
+  it('accepts qdrant url=http (URL scheme is authoritative, no `https` flag)', async () => {
+    // cropwizard-1.5's stored record is `url: http://ec2-…, port: 6333`.
+    // The URL's scheme drives the connection — there's no `https` flag to
+    // disagree with — and the test probe must succeed against plain HTTP.
+    // Uses a public IP literal so `assertPublicHost` skips DNS resolution.
+    let constructedWith: { url?: string } | undefined
+    const QdrantClientCtor = vi.fn((opts: { url?: string }) => {
+      constructedWith = opts
+      return {
+        getCollections: vi.fn(async () => ({ collections: [] })),
+      }
+    })
+    // Reset modules so the dynamic import re-evaluates `tester.ts` against
+    // our freshly-doMocked Qdrant client (earlier tests in this file install
+    // their own mocks of the same module).
+    vi.resetModules()
+    vi.doMock('@qdrant/js-client-rest', () => ({
+      QdrantClient: QdrantClientCtor,
+    }))
+
     const { testQdrant } = await import('../tester')
     const result = await testQdrant({
-      url: 'http://qdrant.example.com',
+      url: 'http://93.184.216.34',
       api_key: 'k',
       port: 6333,
       default_collection: 'c',
     })
-    expect(result.ok).toBe(false)
-    expect(result.code).toBe('tls')
+
+    expect(QdrantClientCtor).toHaveBeenCalledTimes(1)
+    // URL scheme stays http; port grafted on because URL has none.
+    expect(constructedWith?.url).toBe('http://93.184.216.34:6333')
+    expect(result).toEqual({ ok: true })
   })
 
   it('rejects localhost', async () => {

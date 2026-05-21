@@ -42,10 +42,17 @@ export interface DatabaseOverrideConfig {
 }
 
 export interface QdrantOverrideConfig {
+  // URL is the source of truth for both host and scheme. Both qdrant-client
+  // libraries (Python qdrant_remote.py:97-99 and JS qdrant-client.js:29)
+  // let the URL's scheme overwrite any `https` flag passed alongside it, so
+  // we don't model `https` here. The Python backend's connection_manager.py
+  // still does `.get("https", False)` which is now a no-op against records
+  // written by the new shape.
   url: string
   api_key: string
+  // Applied only when the URL has no explicit port — matches qdrant-client
+  // semantics (`self._port = parsed_url.port or port` in both libs).
   port?: number
-  https?: boolean
   // Primary collection. All ingest writes (and the doc_groups setPayload
   // mutation that shares that lane) target this collection. The optional
   // `collections` array on the backend's qdrant_config schema is read-side
@@ -606,14 +613,19 @@ function redisKey(projectName: string): string {
   return `pec:config:${projectName}`
 }
 
-function buildQdrantUrl(q: QdrantOverrideConfig): string {
-  // Honor explicit url; if the caller supplied port / https separately,
-  // graft them on. Backend stores all three so we mirror its behaviour.
-  if (!q.port && q.https === undefined) return q.url
+// Exported because the test probe in ~/utils/projectConnections/tester needs
+// the same effective URL as the runtime QdrantClient.
+//
+// The URL's scheme is authoritative — this matches both qdrant-client libs
+// (Python qdrant_remote.py:97-99 and JS qdrant-client.js:29 both let the
+// URL's scheme overwrite the `https` arg). We only graft the configured port
+// when the URL doesn't already carry one, which mirrors the same libs'
+// `self._port = parsed_url.port or port`.
+export function buildQdrantUrl(q: QdrantOverrideConfig): string {
+  if (!q.port) return q.url
   try {
     const u = new URL(q.url)
-    if (q.https !== undefined) u.protocol = q.https ? 'https:' : 'http:'
-    if (q.port) u.port = String(q.port)
+    if (!u.port) u.port = String(q.port)
     return u.toString().replace(/\/$/, '')
   } catch {
     return q.url
