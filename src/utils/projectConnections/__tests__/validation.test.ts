@@ -3,10 +3,12 @@ import {
   s3ConfigSchema,
   databaseConfigSchema,
   qdrantConfigSchema,
+  embeddingConfigSchema,
   upsertBodySchema,
   setActiveBodySchema,
   testBodySchema,
   deleteQuerySchema,
+  EMBEDDING_PROVIDERS,
 } from '../validation'
 
 describe('projectConnections/validation — S3', () => {
@@ -112,6 +114,134 @@ describe('projectConnections/validation — Qdrant', () => {
   })
 })
 
+describe('projectConnections/validation — embedding', () => {
+  it('requires provider and model', () => {
+    expect(embeddingConfigSchema.safeParse({}).success).toBe(false)
+    expect(
+      embeddingConfigSchema.safeParse({ provider: 'openai' }).success,
+    ).toBe(false)
+    expect(
+      embeddingConfigSchema.safeParse({
+        provider: 'openai',
+        model: 'text-embedding-3-small',
+      }).success,
+    ).toBe(true)
+  })
+
+  it("rejects providers outside the supported enum (typos can't slip through)", () => {
+    expect(
+      embeddingConfigSchema.safeParse({
+        provider: 'anthropic',
+        model: 'voyage-3',
+      }).success,
+    ).toBe(false)
+  })
+
+  it("requires base_url when provider is 'ollama' and attaches the error to base_url", () => {
+    const missing = embeddingConfigSchema.safeParse({
+      provider: 'ollama',
+      model: 'nomic-embed-text',
+    })
+    expect(missing.success).toBe(false)
+    if (!missing.success) {
+      // The refinement targets base_url so UI forms can attach the error
+      // to the correct field. If a future refactor moves the `.refine`
+      // without updating its `path`, this assertion fails loudly.
+      const paths = missing.error.issues.map((i) => i.path.join('.'))
+      expect(paths).toContain('base_url')
+    }
+    expect(
+      embeddingConfigSchema.safeParse({
+        provider: 'ollama',
+        model: 'nomic-embed-text',
+        base_url: 'https://ollama.example.com',
+      }).success,
+    ).toBe(true)
+  })
+
+  it('accepts optional api_base / api_key / query_instruction', () => {
+    expect(
+      embeddingConfigSchema.safeParse({
+        provider: 'openai',
+        model: 'text-embedding-3-small',
+        api_base: 'https://api.openai.com/v1',
+        api_key: 'k',
+        query_instruction: 'Represent this query for searching: ',
+      }).success,
+    ).toBe(true)
+  })
+
+  it('rejects non-URL base_url / api_base', () => {
+    expect(
+      embeddingConfigSchema.safeParse({
+        provider: 'openai',
+        model: 'text-embedding-3-small',
+        base_url: 'not a url',
+      }).success,
+    ).toBe(false)
+  })
+
+  it('EMBEDDING_PROVIDERS defaults to openai + ollama when env is unset', () => {
+    // No process.env.ALLOWED_EMBEDDING_PROVIDERS is set in the test runner —
+    // the default applies. The runtime tuple must contain both providers.
+    const providers = EMBEDDING_PROVIDERS as readonly string[]
+    expect(providers).toContain('openai')
+    expect(providers).toContain('ollama')
+  })
+})
+
+describe('projectConnections/validation — ALLOWED_EMBEDDING_PROVIDERS env override', () => {
+  // The module reads `process.env.ALLOWED_EMBEDDING_PROVIDERS` at import time,
+  // so we have to set the env var, reset the module registry, and dynamic-import
+  // a fresh copy of the module to observe the effect.
+  it('restricts the Zod enum when env is set to a subset', async () => {
+    const prev = process.env.ALLOWED_EMBEDDING_PROVIDERS
+    process.env.ALLOWED_EMBEDDING_PROVIDERS = 'openai'
+    try {
+      const { vi } = await import('vitest')
+      vi.resetModules()
+      const mod = await import('../validation')
+      // Restricted: ollama is no longer in the enum.
+      expect(
+        mod.embeddingConfigSchema.safeParse({
+          provider: 'ollama',
+          model: 'nomic-embed-text',
+          base_url: 'https://ollama.example.com',
+        }).success,
+      ).toBe(false)
+      // openai still accepted.
+      expect(
+        mod.embeddingConfigSchema.safeParse({
+          provider: 'openai',
+          model: 'text-embedding-3-small',
+        }).success,
+      ).toBe(true)
+    } finally {
+      if (prev === undefined) delete process.env.ALLOWED_EMBEDDING_PROVIDERS
+      else process.env.ALLOWED_EMBEDDING_PROVIDERS = prev
+      const { vi } = await import('vitest')
+      vi.resetModules()
+    }
+  })
+
+  it('throws at module load if the env var parses to an empty list', async () => {
+    const prev = process.env.ALLOWED_EMBEDDING_PROVIDERS
+    process.env.ALLOWED_EMBEDDING_PROVIDERS = ' , , '
+    try {
+      const { vi } = await import('vitest')
+      vi.resetModules()
+      await expect(import('../validation')).rejects.toThrow(
+        /ALLOWED_EMBEDDING_PROVIDERS is set but parses to an empty list/,
+      )
+    } finally {
+      if (prev === undefined) delete process.env.ALLOWED_EMBEDDING_PROVIDERS
+      else process.env.ALLOWED_EMBEDDING_PROVIDERS = prev
+      const { vi } = await import('vitest')
+      vi.resetModules()
+    }
+  })
+})
+
 describe('projectConnections/validation — bodies', () => {
   it('upsertBodySchema discriminates on kind', () => {
     expect(
@@ -150,12 +280,33 @@ describe('projectConnections/validation — bodies', () => {
     ).toBe(true)
   })
 
+  it('upsertBodySchema accepts kind=embedding', () => {
+    expect(
+      upsertBodySchema.safeParse({
+        project_name: 'demo',
+        kind: 'embedding',
+        config: { provider: 'openai', model: 'text-embedding-3-small' },
+      }).success,
+    ).toBe(true)
+    expect(
+      upsertBodySchema.safeParse({
+        project_name: 'demo',
+        kind: 'embedding',
+        config: { provider: 'openai' }, // missing model
+      }).success,
+    ).toBe(false)
+  })
+
   it('deleteQuerySchema allows omitting kind', () => {
     expect(
       deleteQuerySchema.safeParse({ project_name: 'demo' }).success,
     ).toBe(true)
     expect(
       deleteQuerySchema.safeParse({ project_name: 'demo', kind: 's3' }).success,
+    ).toBe(true)
+    expect(
+      deleteQuerySchema.safeParse({ project_name: 'demo', kind: 'embedding' })
+        .success,
     ).toBe(true)
     expect(
       deleteQuerySchema.safeParse({ project_name: 'demo', kind: 'bogus' })

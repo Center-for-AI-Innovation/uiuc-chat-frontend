@@ -11,7 +11,7 @@ import type {
   QdrantOverrideConfig,
 } from '~/utils/connectionManager'
 
-export const CONNECTION_KINDS = ['s3', 'database', 'qdrant'] as const
+export const CONNECTION_KINDS = ['s3', 'database', 'qdrant', 'embedding'] as const
 export type ConnectionKind = (typeof CONNECTION_KINDS)[number]
 
 export const s3ConfigSchema = z.object({
@@ -54,6 +54,57 @@ export const qdrantConfigSchema = z.object({
   }
 >
 
+// Per-project embedding provider override. Consumed by the backend's
+// `_resolve_embedding_client(project_name)`: `ollama` uses the Ollama HTTP
+// client (requires `base_url`); `openai` uses the OpenAI-compatible client
+// with optional `api_key` / `api_base` overrides. `query_instruction` is
+// only applied for Qwen models at query time.
+//
+// The active provider set is driven by the `ALLOWED_EMBEDDING_PROVIDERS` env
+// var (comma-separated, lowercased — same parse shape as `SUPER_ADMIN_EMAILS`
+// in `~/utils/superAdmins.ts`). The default is `['openai','ollama']`, which
+// matches the providers the backend's `_resolve_embedding_client` actually
+// implements. Tightening this env var (e.g. `openai` only) makes the Zod
+// schema reject the other provider — useful for environments that want to
+// disable Ollama at the boundary.
+const DEFAULT_EMBEDDING_PROVIDERS = ['openai', 'ollama'] as const
+
+function parseAllowedProviders(): readonly string[] {
+  const raw = process.env.ALLOWED_EMBEDDING_PROVIDERS
+  if (!raw) return DEFAULT_EMBEDDING_PROVIDERS
+  const parsed = raw
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean)
+  if (parsed.length === 0) {
+    throw new Error(
+      'ALLOWED_EMBEDDING_PROVIDERS is set but parses to an empty list. ' +
+        'Unset it to fall back to the default, or supply at least one provider.',
+    )
+  }
+  return parsed
+}
+
+export const EMBEDDING_PROVIDERS = parseAllowedProviders()
+export type EmbeddingProvider = (typeof EMBEDDING_PROVIDERS)[number]
+
+export const embeddingConfigSchema = z
+  .object({
+    // Runtime tuple is type-narrowed for `z.enum`. `parseAllowedProviders`
+    // already validated non-empty, so the cast is safe.
+    provider: z.enum(EMBEDDING_PROVIDERS as unknown as [string, ...string[]]),
+    model: z.string().min(1),
+    base_url: z.string().url().optional(),
+    api_base: z.string().url().optional(),
+    api_key: z.string().min(1).optional(),
+    query_instruction: z.string().optional(),
+  })
+  .refine((cfg) => cfg.provider !== 'ollama' || !!cfg.base_url, {
+    message: "base_url is required when provider is 'ollama'",
+    path: ['base_url'],
+  })
+export type EmbeddingOverrideConfig = z.infer<typeof embeddingConfigSchema>
+
 // project_id is looked up server-side from the projects table — the caller
 // only needs to supply project_name.
 const upsertBaseSchema = z.object({
@@ -73,6 +124,10 @@ export const upsertBodySchema = z.discriminatedUnion('kind', [
     kind: z.literal('qdrant'),
     config: qdrantConfigSchema,
   }),
+  upsertBaseSchema.extend({
+    kind: z.literal('embedding'),
+    config: embeddingConfigSchema,
+  }),
 ])
 export type UpsertBody = z.infer<typeof upsertBodySchema>
 
@@ -86,6 +141,7 @@ export const testBodySchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('s3'), config: s3ConfigSchema }),
   z.object({ kind: z.literal('database'), config: databaseConfigSchema }),
   z.object({ kind: z.literal('qdrant'), config: qdrantConfigSchema }),
+  z.object({ kind: z.literal('embedding'), config: embeddingConfigSchema }),
 ])
 export type TestBody = z.infer<typeof testBodySchema>
 

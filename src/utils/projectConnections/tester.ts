@@ -34,6 +34,10 @@ import type {
   DatabaseOverrideConfig,
   QdrantOverrideConfig,
 } from '~/utils/connectionManager'
+import {
+  EMBEDDING_PROVIDERS,
+  type EmbeddingOverrideConfig,
+} from '~/utils/projectConnections/validation'
 
 const PROBE_TIMEOUT_MS = 5_000
 
@@ -403,5 +407,97 @@ export async function testDatabase(
         // ignore
       }
     }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Embedding
+// ---------------------------------------------------------------------------
+
+// Live probe for an embedding provider configuration. Same SSRF posture as
+// `testQdrant` (assertPublicHost + 5s timeout). Mirrors the backend HTTP
+// shapes:
+//   - Ollama:  GET ${base_url}/api/tags                 (auth not required)
+//   - OpenAI:  GET ${api_base or default}/models        (Bearer api_key)
+// We deliberately do NOT issue an actual embedding request here — `/models`
+// and `/api/tags` are the cheapest authoritative endpoints to confirm the
+// host is reachable and (for OpenAI) that the api_key is valid.
+export async function testEmbedding(
+  cfg: EmbeddingOverrideConfig,
+): Promise<TestResult> {
+  if (!(EMBEDDING_PROVIDERS as readonly string[]).includes(cfg.provider)) {
+    return {
+      ok: false,
+      code: 'auth',
+      message: `Unsupported embedding provider '${cfg.provider}'. Allowed: ${(EMBEDDING_PROVIDERS as readonly string[]).join(', ')}`,
+    }
+  }
+
+  const controller = new AbortController()
+  try {
+    let probeUrl: string
+    const headers: Record<string, string> = {}
+
+    if (cfg.provider === 'ollama') {
+      if (!cfg.base_url) {
+        return {
+          ok: false,
+          code: 'unknown',
+          message: "base_url is required when provider is 'ollama'",
+        }
+      }
+      const u = new URL(cfg.base_url)
+      if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+        throw new TestError('tls', 'Ollama base_url must use http:// or https://')
+      }
+      await assertPublicHost(u.hostname)
+      probeUrl = new URL('/api/tags', u).toString()
+    } else {
+      // openai (or any future OpenAI-compatible provider)
+      const apiBase =
+        cfg.api_base ||
+        process.env.EMBEDDING_API_BASE ||
+        'https://api.openai.com/v1'
+      const apiKey =
+        cfg.api_key ||
+        process.env.OPENAI_API_KEY ||
+        process.env.NCSA_HOSTED_API_KEY
+      if (!apiKey) {
+        return {
+          ok: false,
+          code: 'auth',
+          message: 'No api_key supplied and OPENAI_API_KEY is not set',
+        }
+      }
+      const u = new URL(apiBase)
+      if (u.protocol !== 'https:' && u.hostname !== 'localhost') {
+        throw new TestError('tls', 'api_base must use https://')
+      }
+      if (u.hostname !== 'localhost') await assertPublicHost(u.hostname)
+      probeUrl = new URL('models', apiBase.endsWith('/') ? apiBase : apiBase + '/').toString()
+      headers['Authorization'] = `Bearer ${apiKey}`
+    }
+
+    const fetchPromise = fetch(probeUrl, {
+      method: 'GET',
+      headers,
+      signal: controller.signal,
+    })
+    const res = await withTimeout(fetchPromise, PROBE_TIMEOUT_MS, () =>
+      controller.abort(),
+    )
+    if (res.status === 401 || res.status === 403) {
+      return { ok: false, code: 'auth', message: 'Authentication rejected' }
+    }
+    if (res.status === 404) {
+      return { ok: false, code: 'not_found', message: 'Probe endpoint not found' }
+    }
+    if (!res.ok) {
+      return { ok: false, code: 'unknown', message: `Probe returned HTTP ${res.status}` }
+    }
+    return { ok: true }
+  } catch (e) {
+    controller.abort()
+    return classifyUnknown(e)
   }
 }

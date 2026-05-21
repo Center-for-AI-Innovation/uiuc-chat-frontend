@@ -11,6 +11,7 @@ import {
   testS3,
   testDatabase,
   testQdrant,
+  testEmbedding,
   type TestResult,
 } from '~/utils/projectConnections/tester'
 import {
@@ -37,7 +38,8 @@ export async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
     if (body.kind === 's3') result = await testS3(body.config)
     else if (body.kind === 'database') result = await testDatabase(body.config)
-    else result = await testQdrant(body.config)
+    else if (body.kind === 'qdrant') result = await testQdrant(body.config)
+    else result = await testEmbedding(body.config)
   } catch (e) {
     result = {
       ok: false,
