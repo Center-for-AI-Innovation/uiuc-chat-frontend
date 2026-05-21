@@ -117,7 +117,7 @@
     "framer-motion": "^11.5.2",
     "i18next": "^22.5.0",
     "input-otp": "^1.4.2",
-    "js-cookie": "^3.0.5",
+    "js-cookie": "^3.0.7",
     "js-tiktoken": "^1.0.15",
     "jsdom": "^22.0.0",
     "jsonwebtoken": "^9.0.2",
