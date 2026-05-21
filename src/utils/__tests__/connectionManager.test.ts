@@ -11,6 +11,7 @@ interface Row {
   s3_config: { encrypted: string } | null
   database_config: { encrypted: string } | null
   qdrant_config: { encrypted: string } | null
+  embedding_config?: { encrypted: string } | null
 }
 
 function makeHostDbStub(rows: Row[]) {
@@ -93,10 +94,9 @@ describe('ConnectionManager — defaults (no row)', () => {
     expect(got.bucket).toBe('default-bucket')
   })
 
-  it('resolveVectorEngine returns pgvector when no row + VECTOR_ENGINE != qdrant', async () => {
+  it('resolveVectorEngine returns pgvector when no row exists', async () => {
     vi.doMock('~/db/dbClient', () => ({ db: makeHostDbStub([]).db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
-    vi.stubEnv('VECTOR_ENGINE', 'pgvector')
     setupRedisFake()
 
     const { connectionManager } = await import('../connectionManager')
@@ -104,7 +104,7 @@ describe('ConnectionManager — defaults (no row)', () => {
     expect(got.kind).toBe('pgvector')
   })
 
-  it('resolveVectorEngine returns qdrant (shared) when VECTOR_ENGINE=qdrant + env set', async () => {
+  it('resolveVectorEngine ignores VECTOR_ENGINE=qdrant (no shared fallback)', async () => {
     vi.doMock('~/db/dbClient', () => ({ db: makeHostDbStub([]).db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
     vi.stubEnv('VECTOR_ENGINE', 'qdrant')
@@ -112,15 +112,10 @@ describe('ConnectionManager — defaults (no row)', () => {
     vi.stubEnv('QDRANT_API_KEY', 'shared-key')
     vi.stubEnv('QDRANT_COLLECTION_NAME', 'shared-coll')
     setupRedisFake()
-    const ctor = vi.fn()
-    vi.doMock('@qdrant/js-client-rest', () => ({ QdrantClient: ctor }))
 
     const { connectionManager } = await import('../connectionManager')
     const got = await connectionManager.resolveVectorEngine('cs101')
-    expect(got.kind).toBe('qdrant')
-    if (got.kind === 'qdrant') {
-      expect(got.collection).toBe('shared-coll')
-    }
+    expect(got.kind).toBe('pgvector')
   })
 
   it('getDocumentsDb returns the host db when no row exists', async () => {
@@ -264,6 +259,38 @@ describe('ConnectionManager — overrides', () => {
     })
   })
 
+  it('resolveVectorEngine returns pgvector when only database_config is set (embeddings follow docs db)', async () => {
+    const dbField = await encryptJson({
+      connection_uri: 'postgres://u:p@host:5432/db',
+    })
+    const hostStub = makeHostDbStub([
+      {
+        is_active: true,
+        s3_config: null,
+        database_config: dbField,
+        qdrant_config: null,
+      },
+    ])
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
+    vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
+    setupRedisFake()
+
+    const pgFn = vi.fn(() => ({ end: vi.fn() }))
+    vi.doMock('postgres', () => ({ default: pgFn }))
+    const perProjectDrizzle = { kind: 'per-project-drizzle' }
+    vi.doMock('drizzle-orm/postgres-js', () => ({
+      drizzle: vi.fn(() => perProjectDrizzle),
+    }))
+
+    const { connectionManager } = await import('../connectionManager')
+    const engine = await connectionManager.resolveVectorEngine('p')
+    expect(engine.kind).toBe('pgvector')
+
+    const docsDb = await connectionManager.getDocumentsDb('p')
+    expect(docsDb).toBe(perProjectDrizzle)
+    expect(docsDb).not.toBe(hostStub.db)
+  })
+
   it('builds a documents drizzle instance from a database_config row', async () => {
     const dbField = await encryptJson({
       connection_uri: 'postgres://u:p@host:5432/db',
@@ -360,6 +387,167 @@ describe('ConnectionManager — caching and invalidation', () => {
     expect(hostStub.select).toHaveBeenCalledTimes(2)
   })
 
+})
+
+describe('ConnectionManager — getEmbeddingClient', () => {
+  it('returns env-default openai client when no row exists', async () => {
+    vi.doMock('~/db/dbClient', () => ({ db: makeHostDbStub([]).db }))
+    vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
+    setupRedisFake()
+    vi.stubEnv('OPENAI_API_KEY', 'sk-env')
+    vi.stubEnv('EMBEDDING_API_BASE', 'https://env.example/v1')
+    vi.stubEnv('EMBEDDING_MODEL', 'text-embedding-3-small')
+
+    const openaiCtor = vi.fn()
+    vi.doMock('openai', () => ({
+      default: class {
+        constructor(opts: unknown) {
+          openaiCtor(opts)
+        }
+      },
+    }))
+
+    const { connectionManager } = await import('../connectionManager')
+    const got = await connectionManager.getEmbeddingClient('cs101')
+    expect(got.kind).toBe('openai')
+    if (got.kind === 'openai') {
+      expect(got.model).toBe('text-embedding-3-small')
+      expect(got.applyQwenInstruction).toBe(false)
+    }
+    expect(openaiCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiKey: 'sk-env',
+        baseURL: 'https://env.example/v1',
+      }),
+    )
+  })
+
+  it('returns an OpenAI client built from the row when embedding_config.provider="openai"', async () => {
+    const embeddingField = await encryptJson({
+      provider: 'openai',
+      model: 'voyage-3',
+      api_key: 'sk-row',
+      api_base: 'https://row.example/v1',
+    })
+    const hostStub = makeHostDbStub([
+      {
+        is_active: true,
+        s3_config: null,
+        database_config: null,
+        qdrant_config: null,
+        embedding_config: embeddingField,
+      },
+    ])
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
+    vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
+    setupRedisFake()
+
+    const openaiCtor = vi.fn()
+    vi.doMock('openai', () => ({
+      default: class {
+        constructor(opts: unknown) {
+          openaiCtor(opts)
+        }
+      },
+    }))
+
+    const { connectionManager } = await import('../connectionManager')
+    const got = await connectionManager.getEmbeddingClient('p')
+    expect(got.kind).toBe('openai')
+    if (got.kind === 'openai') expect(got.model).toBe('voyage-3')
+    expect(openaiCtor).toHaveBeenCalledWith({
+      apiKey: 'sk-row',
+      baseURL: 'https://row.example/v1',
+    })
+  })
+
+  it('returns ollama discriminant when embedding_config.provider="ollama" with base_url', async () => {
+    const embeddingField = await encryptJson({
+      provider: 'ollama',
+      model: 'nomic-embed-text',
+      base_url: 'http://ollama.row',
+    })
+    const hostStub = makeHostDbStub([
+      {
+        is_active: true,
+        s3_config: null,
+        database_config: null,
+        qdrant_config: null,
+        embedding_config: embeddingField,
+      },
+    ])
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
+    vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
+    setupRedisFake()
+    vi.doMock('openai', () => ({ default: class {} }))
+
+    const { connectionManager } = await import('../connectionManager')
+    const got = await connectionManager.getEmbeddingClient('p')
+    expect(got.kind).toBe('ollama')
+    if (got.kind === 'ollama') {
+      expect(got.baseUrl).toBe('http://ollama.row')
+      expect(got.model).toBe('nomic-embed-text')
+    }
+  })
+
+  it('falls back to OLLAMA_SERVER_URL when row.base_url is missing', async () => {
+    const embeddingField = await encryptJson({
+      provider: 'ollama',
+      model: 'nomic-embed-text',
+    })
+    const hostStub = makeHostDbStub([
+      {
+        is_active: true,
+        s3_config: null,
+        database_config: null,
+        qdrant_config: null,
+        embedding_config: embeddingField,
+      },
+    ])
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
+    vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
+    setupRedisFake()
+    vi.doMock('openai', () => ({ default: class {} }))
+    vi.stubEnv('OLLAMA_SERVER_URL', 'http://env-ollama:11434')
+
+    const { connectionManager } = await import('../connectionManager')
+    const got = await connectionManager.getEmbeddingClient('p')
+    expect(got.kind).toBe('ollama')
+    if (got.kind === 'ollama') {
+      expect(got.baseUrl).toBe('http://env-ollama:11434')
+    }
+  })
+
+  it("throws when provider='ollama' has no base_url and no env fallback (same message-shape as backend)", async () => {
+    const embeddingField = await encryptJson({
+      provider: 'ollama',
+      model: 'nomic-embed-text',
+    })
+    const hostStub = makeHostDbStub([
+      {
+        is_active: true,
+        s3_config: null,
+        database_config: null,
+        qdrant_config: null,
+        embedding_config: embeddingField,
+      },
+    ])
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
+    vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
+    setupRedisFake()
+    vi.doMock('openai', () => ({ default: class {} }))
+    // No OLLAMA_BASE_URL / OLLAMA_SERVER_URL — assert vi.stubEnv unset state.
+    vi.stubEnv('OLLAMA_BASE_URL', '')
+    vi.stubEnv('OLLAMA_SERVER_URL', '')
+
+    const { connectionManager } = await import('../connectionManager')
+    await expect(connectionManager.getEmbeddingClient('p')).rejects.toThrow(
+      /provider='ollama' requires base_url/,
+    )
+  })
+})
+
+describe('ConnectionManager — preserved lock test', () => {
   it('coalesces concurrent lookups into a single DB read (lock)', async () => {
     let resolveLimit: (rows: Row[]) => void
     const limitPromise = new Promise<Row[]>((r) => {

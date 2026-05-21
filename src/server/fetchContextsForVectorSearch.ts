@@ -13,11 +13,11 @@ export async function fetchContextsViaDrizzleVectorSearch(
 ): Promise<ContextWithMetadata[]> {
   const [embedding, { disabled_doc_groups, public_doc_groups }] =
     await Promise.all([
-      embedQuery(search_query),
+      embedQuery(search_query, course_name),
       getDocGroupsForVectorSearch(course_name),
     ])
 
-  return vectorSearchWithDrizzle({
+  return vectorSearchWithDrizzle(course_name, {
     queryEmbedding: embedding,
     course_name,
     doc_groups,

@@ -447,6 +447,7 @@ export const projectExternalConnections = pgTable(
     s3_config: jsonb('s3_config'),
     database_config: jsonb('database_config'),
     qdrant_config: jsonb('qdrant_config'),
+    embedding_config: jsonb('embedding_config'),
     is_active: boolean('is_active').default(true),
   },
 )
@@ -467,7 +468,7 @@ export const projectConnectionAuditLog = pgTable(
     actor_email: text('actor_email').notNull(),
     action: text('action').notNull(), // 'upsert' | 'delete' | 'set_active' | 'test'
     project_name: text('project_name'),
-    kind: text('kind'), // 's3' | 'database' | 'qdrant' | null
+    kind: text('kind'), // 's3' | 'database' | 'qdrant' | 'embedding' | null
     outcome: text('outcome').notNull(), // 'success' | 'failure'
     failure_reason: text('failure_reason'),
     changed_fields: text('changed_fields').array(),

@@ -20,27 +20,9 @@ import { db as hostDb } from '~/db/dbClient'
 import { s3Client as defaultS3Client } from '~/utils/s3Client'
 import { decryptProjectConfig, type EncryptedField } from '~/utils/crypto'
 import { ensureRedisConnected } from '~/utils/redisClient'
+import type { EmbeddingOverrideConfig } from '~/utils/projectConnections/validation'
 
-// Shared Qdrant client (lazy) used when a project has no qdrant_config
-// override AND VECTOR_ENGINE=qdrant. The deleted utils/qdrantClient.ts had a
-// module-level singleton; we rebuild it inline here only when needed.
-let _sharedQdrantClient: QdrantClient | null | undefined
-function getSharedQdrantClient(): QdrantClient | null {
-  if (_sharedQdrantClient !== undefined) return _sharedQdrantClient
-  if (
-    process.env.VECTOR_ENGINE !== 'qdrant' ||
-    !process.env.QDRANT_URL ||
-    !process.env.QDRANT_API_KEY
-  ) {
-    _sharedQdrantClient = null
-    return null
-  }
-  _sharedQdrantClient = new QdrantClient({
-    url: process.env.QDRANT_URL,
-    apiKey: process.env.QDRANT_API_KEY,
-  })
-  return _sharedQdrantClient
-}
+import OpenAI from 'openai'
 
 // ---------------------------------------------------------------------------
 // Types — kept local so this module doesn't conflict with the milestone-2
@@ -77,7 +59,24 @@ interface ResolvedRow {
   s3: S3OverrideConfig | null
   database: DatabaseOverrideConfig | null
   qdrant: QdrantOverrideConfig | null
+  embedding: EmbeddingOverrideConfig | null
 }
+
+// Discriminated union returned by `getEmbeddingClient`. Mirrors the backend's
+// `_resolve_embedding_client` (ai_ta_backend/service/retrieval_service.py).
+// The Ollama branch deliberately does NOT use the OpenAI SDK against Ollama's
+// `/v1` compat endpoint — see backend `OllamaEmbeddings`. Both code paths
+// (frontend Drizzle + backend `/getTopContexts`) hit `${baseUrl}/api/embeddings`
+// with the same `{model, prompt}` payload so vectors land in the same space.
+export type ResolvedEmbeddingClient =
+  | {
+      kind: 'openai'
+      client: OpenAI
+      model: string
+      applyQwenInstruction: boolean
+      queryInstruction: string
+    }
+  | { kind: 'ollama'; baseUrl: string; model: string }
 
 // ---------------------------------------------------------------------------
 // Cache TTLs (ms) — match backend
@@ -94,7 +93,11 @@ const NO_OVERRIDES: ResolvedRow = {
   s3: null,
   database: null,
   qdrant: null,
+  embedding: null,
 }
+
+const DEFAULT_QWEN_QUERY_INSTRUCTION =
+  'Given a user search query, retrieve the most relevant passages from the Illinois Chat knowledge base stored in the vector store to answer the query accurately. Prioritize authoritative course materials, syllabi, FAQs, official documentation, web pages, and other relevant sources. Ignore boilerplate/navigation text.'
 
 interface CacheEntry<T> {
   value: T
@@ -117,11 +120,14 @@ interface PgCacheEntry extends CacheEntry<DocumentsDb> {
   raw: ReturnType<typeof postgres>
 }
 
+interface EmbeddingCacheEntry extends CacheEntry<ResolvedEmbeddingClient> {}
+
 class ConnectionManager {
   private configCache = new Map<string, CacheEntry<ResolvedRow>>()
   private s3Clients = new Map<string, S3CacheEntry>()
   private qdrantClients = new Map<string, QdrantCacheEntry>()
   private pgClients = new Map<string, PgCacheEntry>()
+  private embeddingClients = new Map<string, EmbeddingCacheEntry>()
 
   // In-flight locks (one map per resource so different lookups don't queue
   // behind unrelated work for the same project).
@@ -129,6 +135,7 @@ class ConnectionManager {
   private s3Locks = new Map<string, Promise<S3CacheEntry>>()
   private qdrantLocks = new Map<string, Promise<QdrantCacheEntry>>()
   private pgLocks = new Map<string, Promise<PgCacheEntry>>()
+  private embeddingLocks = new Map<string, Promise<EmbeddingCacheEntry>>()
 
   // -------------------------------------------------------------------------
   // Public API
@@ -167,11 +174,12 @@ class ConnectionManager {
    *
    * Order of resolution:
    *   1. Project has an active non-null `qdrant_config`     → external Qdrant
-   *   2. `VECTOR_ENGINE === 'qdrant'` env (shared Qdrant)   → shared Qdrant
-   *   3. Otherwise                                          → host pgvector
+   *   2. Otherwise                                          → pgvector
+   *      (host pgvector by default; per-project external pg when
+   *      `database_config` is set — embeddings follow the documents db.)
    *
    * Use this before deciding whether to call `getQdrantClient` (Qdrant
-   * setPayload path) or fall through to the host-pgvector Drizzle write.
+   * setPayload path) or fall through to the pgvector Drizzle write.
    */
   async resolveVectorEngine(
     projectName: string,
@@ -184,14 +192,6 @@ class ConnectionManager {
       const entry = await this.resolveQdrant(projectName)
       return { kind: 'qdrant', client: entry.value, collection: entry.collection }
     }
-    const shared = getSharedQdrantClient()
-    if (shared && process.env.QDRANT_COLLECTION_NAME) {
-      return {
-        kind: 'qdrant',
-        client: shared,
-        collection: process.env.QDRANT_COLLECTION_NAME,
-      }
-    }
     return { kind: 'pgvector' }
   }
 
@@ -200,10 +200,29 @@ class ConnectionManager {
     return entry.value
   }
 
+  /**
+   * Resolve the embedding client for a project. Mirrors the backend's
+   * `_resolve_embedding_client` (retrieval_service.py): reads the top-level
+   * `embedding_config` column, falls back to env defaults when unset.
+   *
+   * The returned value is a discriminated union so callers (e.g. `embedQuery`)
+   * can dispatch to the right HTTP shape — `openai` via the OpenAI SDK,
+   * `ollama` via a raw `fetch` to `/api/embeddings` (NOT Ollama's `/v1`
+   * OpenAI-compat endpoint — backend uses LangChain `OllamaEmbeddings` which
+   * targets `/api/embeddings`; we mirror it for vector-space parity).
+   */
+  async getEmbeddingClient(
+    projectName: string,
+  ): Promise<ResolvedEmbeddingClient> {
+    const entry = await this.resolveEmbedding(projectName)
+    return entry.value
+  }
+
   async invalidate(projectName: string): Promise<void> {
     this.configCache.delete(projectName)
     this.s3Clients.delete(projectName)
     this.qdrantClients.delete(projectName)
+    this.embeddingClients.delete(projectName)
     const pg = this.pgClients.get(projectName)
     if (pg) {
       this.pgClients.delete(projectName)
@@ -281,7 +300,7 @@ class ConnectionManager {
       resolved = NO_OVERRIDES
     } else {
       const row = rows[0]!
-      const [s3, database, qdrant] = await Promise.all([
+      const [s3, database, qdrant, embedding] = await Promise.all([
         decryptProjectConfig<S3OverrideConfig>(
           row.s3_config as EncryptedField,
         ),
@@ -291,8 +310,25 @@ class ConnectionManager {
         decryptProjectConfig<QdrantOverrideConfig>(
           row.qdrant_config as EncryptedField,
         ),
+        decryptProjectConfig<EmbeddingOverrideConfig>(
+          row.embedding_config as EncryptedField,
+        ),
       ])
-      resolved = { is_active: true, s3, database, qdrant }
+      // Legacy: older rows stored the embedding override under
+      // `qdrant_config.embedding`. Honor it as a fallback so we don't break
+      // existing Qdrant projects until they migrate to the new column.
+      const legacyEmbedding =
+        !embedding && qdrant && typeof qdrant === 'object'
+          ? ((qdrant as unknown as { embedding?: EmbeddingOverrideConfig })
+              .embedding ?? null)
+          : null
+      resolved = {
+        is_active: true,
+        s3,
+        database,
+        qdrant,
+        embedding: embedding ?? legacyEmbedding,
+      }
     }
 
     try {
@@ -396,25 +432,13 @@ class ConnectionManager {
 
   private buildQdrantEntry(q: QdrantOverrideConfig | null): QdrantCacheEntry {
     if (!q) {
-      // No per-project override. Fall back to shared Qdrant only if
-      // VECTOR_ENGINE=qdrant and QDRANT env vars are configured. Otherwise
-      // pgvector is the engine and Qdrant should not be needed — callers
-      // that hit this path mean an upstream bug.
-      const client = getSharedQdrantClient()
-      if (!client) {
-        throw new Error(
-          'No project qdrant_config override and shared Qdrant is not configured (VECTOR_ENGINE != qdrant or QDRANT_URL/API_KEY unset). Use resolveVectorEngine() before requesting a Qdrant client.',
-        )
-      }
-      const collection = process.env.QDRANT_COLLECTION_NAME
-      if (!collection) {
-        throw new Error('QDRANT_COLLECTION_NAME is not set.')
-      }
-      return {
-        value: client,
-        collection,
-        expiresAt: Date.now() + CLIENT_TTL_MS,
-      }
+      // No per-project override and no shared Qdrant fallback — projects
+      // without `qdrant_config` use pgvector. Hitting this path means a
+      // caller skipped `resolveVectorEngine()` and went straight to
+      // `getQdrantClient()`.
+      throw new Error(
+        `No qdrant_config override for project — use resolveVectorEngine() before requesting a Qdrant client.`,
+      )
     }
 
     const collection =
@@ -481,6 +505,96 @@ class ConnectionManager {
 
     this.pgLocks.set(projectName, promise)
     return promise
+  }
+
+  // -------------------------------------------------------------------------
+  // Resolution — embedding
+  // -------------------------------------------------------------------------
+
+  private async resolveEmbedding(
+    projectName: string,
+  ): Promise<EmbeddingCacheEntry> {
+    const now = Date.now()
+    const cached = this.embeddingClients.get(projectName)
+    if (cached && cached.expiresAt > now) return cached
+
+    const inflight = this.embeddingLocks.get(projectName)
+    if (inflight) return inflight
+
+    const promise = (async () => {
+      const config = await this.resolveConfig(projectName)
+      const entry = this.buildEmbeddingEntry(config.embedding)
+      this.embeddingClients.set(projectName, entry)
+      return entry
+    })().finally(() => {
+      this.embeddingLocks.delete(projectName)
+    })
+
+    this.embeddingLocks.set(projectName, promise)
+    return promise
+  }
+
+  private buildEmbeddingEntry(
+    cfg: EmbeddingOverrideConfig | null,
+  ): EmbeddingCacheEntry {
+    const envModel = process.env.EMBEDDING_MODEL || 'text-embedding-ada-002'
+    const envApiKey =
+      process.env.OPENAI_API_KEY || process.env.NCSA_HOSTED_API_KEY || ''
+    const envApiBase =
+      process.env.EMBEDDING_API_BASE || 'https://api.openai.com/v1'
+    const queryInstruction =
+      process.env.QWEN_QUERY_INSTRUCTION || DEFAULT_QWEN_QUERY_INSTRUCTION
+
+    if (!cfg) {
+      // Env-only default — preserves the legacy behaviour of `embedQuery.ts`.
+      return {
+        value: {
+          kind: 'openai',
+          client: new OpenAI({ apiKey: envApiKey, baseURL: envApiBase }),
+          model: envModel,
+          applyQwenInstruction: envModel.toLowerCase().includes('qwen'),
+          queryInstruction,
+        },
+        expiresAt: Date.now() + CLIENT_TTL_MS,
+      }
+    }
+
+    const model = cfg.model || envModel
+    const cfgInstruction = cfg.query_instruction || queryInstruction
+
+    if (cfg.provider === 'ollama') {
+      const baseUrl =
+        cfg.base_url ||
+        process.env.OLLAMA_BASE_URL ||
+        process.env.OLLAMA_SERVER_URL
+      if (!baseUrl) {
+        // Same message-shape as backend `retrieval_service.py:_resolve_embedding_client`
+        // so substring-matching dev tooling works against either runtime.
+        throw new Error(
+          "embedding_config provider='ollama' requires base_url (or set OLLAMA_BASE_URL / OLLAMA_SERVER_URL)",
+        )
+      }
+      return {
+        value: { kind: 'ollama', baseUrl, model },
+        expiresAt: Date.now() + CLIENT_TTL_MS,
+      }
+    }
+
+    // Default to OpenAI-compatible for anything else. The provider value has
+    // already been narrowed by Zod (validation.ts) at the API boundary and by
+    // ALLOWED_EMBEDDING_PROVIDERS on the backend resolver.
+    const apiKey = cfg.api_key || envApiKey
+    const baseURL = cfg.api_base || envApiBase
+    return {
+      value: {
+        kind: 'openai',
+        client: new OpenAI({ apiKey, baseURL }),
+        model,
+        applyQwenInstruction: model.toLowerCase().includes('qwen'),
+        queryInstruction: cfgInstruction,
+      },
+      expiresAt: Date.now() + CLIENT_TTL_MS,
+    }
   }
 }
 
