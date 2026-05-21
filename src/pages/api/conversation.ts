@@ -798,6 +798,27 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       break
 
     case 'GET':
+      // Mock mode: return example data from disk for local testing
+      if (process.env.MOCK_CONVERSATION_API === 'true') {
+        try {
+          const fs = await import('fs')
+          const path = await import('path')
+          const mockPath = path.join(
+            process.cwd(),
+            'src',
+            'public',
+            'conversation-api-example.json',
+          )
+          const mockData = JSON.parse(fs.readFileSync(mockPath, 'utf-8'))
+          return res.status(200).json(mockData)
+        } catch (mockError) {
+          console.error('Error reading mock conversation data:', mockError)
+          return res
+            .status(500)
+            .json({ error: 'Failed to read mock data file' })
+        }
+      }
+
       const searchTerm = req.query.searchTerm as string
       const courseName = req.query.courseName as string
       const pageParam = parseInt(req.query.pageParam as string, 0)
