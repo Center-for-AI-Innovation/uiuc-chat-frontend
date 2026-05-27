@@ -77,31 +77,36 @@ export default function SettingsLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[--background] pt-20">
-      {/* Main Navbar */}
-      <Navbar course_name={course_name} bannerUrl={bannerUrl} isPlain={false} />
-
-      <div className="flex">
-        {/* Navigation Sidebar */}
-        <HierarchicalSidebar
+    <div className="min-h-screen bg-[--background-faded] p-0 md:p-4">
+      {/* Page-level card container */}
+      <div className="min-h-screen overflow-hidden bg-[--background] md:min-h-[calc(100vh-2rem)] md:rounded-xl md:border md:border-[--dashboard-border] md:shadow-sm">
+        {/* Main Navbar */}
+        <Navbar
           course_name={course_name}
-          isOpen={sidebarOpen}
-          onToggle={toggleSidebar}
-          activeLink={activeLink}
-          isCollapsed={sidebarCollapsed}
-          onCollapseToggle={toggleSidebarCollapse}
+          bannerUrl={bannerUrl}
+          isPlain={false}
         />
 
-        {/* Main Content */}
-        <div
-          className={`flex-1 transition-all duration-300
-            ${sidebarOpen && !sidebarCollapsed ? 'md:ml-[296px]' : ''}
-            ${sidebarOpen && sidebarCollapsed ? 'md:ml-[96px]' : ''}
+        <div className="flex pt-20">
+          {/* Navigation Sidebar */}
+          <HierarchicalSidebar
+            course_name={course_name}
+            isOpen={sidebarOpen}
+            onToggle={toggleSidebar}
+            activeLink={activeLink}
+            isCollapsed={sidebarCollapsed}
+            onCollapseToggle={toggleSidebarCollapse}
+          />
+
+          {/* Main Content */}
+          <div
+            className={`flex-1 transition-all duration-300
+            ${sidebarOpen && !sidebarCollapsed ? 'md:ml-[280px]' : ''}
+            ${sidebarOpen && sidebarCollapsed ? 'md:ml-[80px]' : ''}
           `}
-        >
-          {/* <div className="min-h-[calc(100vh-80px)] px-4 py-2 md:px-6 md:py-3 lg:px-8 lg:py-4"> */}
-          {children}
-          {/* </div> */}
+          >
+            {children}
+          </div>
         </div>
       </div>
     </div>

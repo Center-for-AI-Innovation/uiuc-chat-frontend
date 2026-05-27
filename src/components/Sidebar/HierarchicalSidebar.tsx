@@ -145,26 +145,25 @@ function sectionContainsActiveLink(
 const useStyles = createStyles((theme) => ({
   sidebar: {
     position: 'fixed',
-    top: rem(88),
-    left: rem(8),
-    bottom: rem(8),
+    top: rem(80),
+    left: 0,
+    bottom: 0,
     width: rem(280),
     height: 'auto',
+    minHeight: 'calc(100vh - 80px)',
     backgroundColor: 'var(--sidebar-background)',
-    border: '1px solid var(--dashboard-border)',
-    borderRadius: theme.radius.lg,
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
+    borderRight: '1px solid var(--dashboard-border)',
     zIndex: 30,
-    transform: 'translateX(calc(-100% - 8px))',
+    transform: 'translateX(-100%)',
     transition: 'all 0.3s ease-in-out',
-    overflow: 'hidden',
 
     '&.open': {
       transform: 'translateX(0)',
     },
 
     '@media (min-width: 768px)': {
-      height: 'auto',
+      height: 'calc(100vh - 80px)',
+      bottom: 'auto',
       transform: 'translateX(0)',
 
       '&.collapsed': {
