@@ -77,17 +77,13 @@ export default function SettingsLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[--background-faded] p-0 md:p-4">
-      {/* Page-level card container */}
-      <div className="min-h-screen overflow-hidden bg-[--background] md:min-h-[calc(100vh-2rem)] md:rounded-xl md:border md:border-[--dashboard-border] md:shadow-sm">
-        {/* Main Navbar */}
-        <Navbar
-          course_name={course_name}
-          bannerUrl={bannerUrl}
-          isPlain={false}
-        />
+    <div className="min-h-screen bg-[--background] pt-20">
+      {/* Main Navbar — outside the card */}
+      <Navbar course_name={course_name} bannerUrl={bannerUrl} isPlain={false} />
 
-        <div className="flex pt-20">
+      {/* Card container — contains sidebar + content */}
+      <div className="min-h-[calc(100vh-5rem)] md:mx-4 md:mb-4 md:overflow-hidden md:rounded-xl md:border md:border-[--dashboard-border] md:shadow-sm">
+        <div className="flex min-h-[calc(100vh-5rem)]">
           {/* Navigation Sidebar */}
           <HierarchicalSidebar
             course_name={course_name}
@@ -99,14 +95,7 @@ export default function SettingsLayout({
           />
 
           {/* Main Content */}
-          <div
-            className={`flex-1 transition-all duration-300
-            ${sidebarOpen && !sidebarCollapsed ? 'md:ml-[280px]' : ''}
-            ${sidebarOpen && sidebarCollapsed ? 'md:ml-[80px]' : ''}
-          `}
-          >
-            {children}
-          </div>
+          <div className="flex-1 transition-all duration-300">{children}</div>
         </div>
       </div>
     </div>

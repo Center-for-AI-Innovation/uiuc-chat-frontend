@@ -150,7 +150,6 @@ const useStyles = createStyles((theme) => ({
     bottom: 0,
     width: rem(280),
     height: 'auto',
-    minHeight: 'calc(100vh - 80px)',
     backgroundColor: 'var(--sidebar-background)',
     borderRight: '1px solid var(--dashboard-border)',
     zIndex: 30,
@@ -162,9 +161,14 @@ const useStyles = createStyles((theme) => ({
     },
 
     '@media (min-width: 768px)': {
-      height: 'calc(100vh - 80px)',
+      position: 'sticky',
+      top: 0,
+      left: 'auto',
       bottom: 'auto',
-      transform: 'translateX(0)',
+      height: 'auto',
+      minHeight: 'calc(100vh - 5rem - 2rem)',
+      flexShrink: 0,
+      transform: 'none',
 
       '&.collapsed': {
         width: rem(80),
