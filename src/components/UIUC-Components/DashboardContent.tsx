@@ -3,6 +3,7 @@ import {
   IconChartBar,
   IconCloudUpload,
   IconCode,
+  IconCopy,
   IconDatabase,
   IconMessage2,
   IconMessageCircle2,
@@ -347,16 +348,24 @@ export default function DashboardContent({
 
         <div className="w-full px-4 py-4 md:px-6 lg:px-8">
           {/* Breadcrumb */}
-          <Breadcrumb className="mb-4">
-            <BreadcrumbList>
+          <Breadcrumb
+            className={`mb-4 ${montserrat_paragraph.variable} font-montserratParagraph`}
+          >
+            <BreadcrumbList className="text-sm font-normal text-[--foreground-faded]">
               <BreadcrumbItem>
-                <BreadcrumbLink href={`/${course_name}/dashboard`}>
+                <BreadcrumbLink
+                  href={`/${course_name}/dashboard`}
+                  className="flex items-center gap-1.5 text-[--foreground-faded] no-underline"
+                >
+                  <IconCopy size={14} strokeWidth={1.5} />
                   Admin Settings
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                <BreadcrumbPage className="text-[--foreground]">
+                  Dashboard
+                </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
