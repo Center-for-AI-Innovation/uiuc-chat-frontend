@@ -82,7 +82,7 @@ export default function SettingsLayout({
       <Navbar course_name={course_name} bannerUrl={bannerUrl} isPlain={false} />
 
       {/* Card container — contains sidebar + content */}
-      <div className="min-h-[calc(100vh-5rem)] md:mx-4 md:mb-4 md:overflow-hidden md:rounded-xl md:border md:border-[--dashboard-border] md:shadow-sm">
+      <div className="min-h-[calc(100vh-5rem)] md:m-6 md:min-h-[calc(100vh-5rem-3rem)] md:overflow-hidden md:rounded-xl md:border md:border-[--dashboard-border] md:shadow-sm">
         <div className="flex min-h-[calc(100vh-5rem)]">
           {/* Navigation Sidebar */}
           <HierarchicalSidebar
