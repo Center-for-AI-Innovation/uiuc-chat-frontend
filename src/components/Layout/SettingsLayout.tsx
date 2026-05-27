@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
-import NavigationSidebar from '~/components/Sidebar/NavigationSidebar'
+import HierarchicalSidebar from '~/components/Sidebar/HierarchicalSidebar'
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
 interface SettingsLayoutProps {
@@ -83,7 +83,7 @@ export default function SettingsLayout({
 
       <div className="flex">
         {/* Navigation Sidebar */}
-        <NavigationSidebar
+        <HierarchicalSidebar
           course_name={course_name}
           isOpen={sidebarOpen}
           onToggle={toggleSidebar}

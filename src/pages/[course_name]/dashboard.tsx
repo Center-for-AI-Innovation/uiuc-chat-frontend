@@ -1,5 +1,5 @@
 import { type NextPage } from 'next'
-import MakeOldCoursePage from '~/components/UIUC-Components/MakeOldCoursePage'
+import DashboardContent from '~/components/UIUC-Components/DashboardContent'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
@@ -102,13 +102,11 @@ const CourseMain: NextPage = () => {
   }
 
   return (
-    <>
-      <MakeOldCoursePage
-        course_name={courseName as string}
-        metadata={metadata as CourseMetadata}
-        current_email={auth.user?.profile.email as string}
-      />
-    </>
+    <DashboardContent
+      course_name={courseName as string}
+      metadata={metadata as CourseMetadata}
+      current_email={auth.user?.profile.email as string}
+    />
   )
 }
 export default CourseMain
