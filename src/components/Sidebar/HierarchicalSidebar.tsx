@@ -12,7 +12,6 @@ import {
   IconMenu2,
   IconMoon,
   IconPalette,
-  IconSettings,
   IconSun,
   IconUsers,
 } from '@tabler/icons-react'
@@ -255,12 +254,12 @@ const useStyles = createStyles((theme) => ({
 
   chatButton: {
     width: '100%',
-    backgroundColor: 'var(--dashboard-button)',
-    color: 'var(--dashboard-button-foreground)',
-    border: 'none',
+    backgroundColor: 'transparent',
+    color: 'var(--foreground-faded)',
+    border: '1.5px dashed var(--dashboard-border)',
     borderRadius: theme.radius.md,
     padding: `${theme.spacing.sm} ${theme.spacing.md}`,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     display: 'flex',
@@ -271,9 +270,9 @@ const useStyles = createStyles((theme) => ({
     fontWeight: 500,
 
     '&:hover': {
-      backgroundColor: 'var(--dashboard-button-hover)',
-      transform: 'translateY(-1px)',
-      boxShadow: theme.shadows.sm,
+      backgroundColor: 'var(--navbar-hover-background)',
+      borderColor: 'var(--foreground-faded)',
+      color: 'var(--foreground)',
     },
 
     '&.collapsed': {
@@ -285,17 +284,30 @@ const useStyles = createStyles((theme) => ({
     },
   },
 
-  breadcrumb: {
-    padding: theme.spacing.sm,
-    backgroundColor: 'var(--background-faded)',
+  courseSwitcher: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
     borderRadius: theme.radius.md,
-    fontSize: rem(13),
-    marginRight: theme.spacing.md,
-    color: 'var(--foreground)',
+    cursor: 'default',
+    flex: 1,
+    minWidth: 0,
 
     '&.collapsed': {
-      display: 'none',
+      justifyContent: 'center',
     },
+  },
+
+  courseLogo: {
+    width: rem(32),
+    height: rem(32),
+    borderRadius: theme.radius.md,
+    backgroundColor: 'var(--illinois-orange)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
 
   navSection: {
@@ -333,13 +345,13 @@ const useStyles = createStyles((theme) => ({
     },
 
     '&[data-active="true"]': {
-      backgroundColor: 'var(--dashboard-button)',
-      color: 'var(--dashboard-button-foreground)',
+      backgroundColor: 'var(--navbar-active-background, var(--foreground))',
+      color: 'var(--navbar-active-foreground, var(--background))',
       fontWeight: 600,
 
       '&:hover': {
-        backgroundColor: 'var(--dashboard-button-hover)',
-        color: 'var(--dashboard-button-foreground)',
+        backgroundColor: 'var(--navbar-active-background, var(--foreground))',
+        color: 'var(--navbar-active-foreground, var(--background))',
       },
     },
 
@@ -366,19 +378,13 @@ const useStyles = createStyles((theme) => ({
     borderRadius: theme.radius.md,
     marginBottom: '2px',
     fontSize: rem(14),
-    fontWeight: 500,
+    fontWeight: 400,
     cursor: 'pointer',
     transition: 'all 0.2s ease',
 
     '&:hover': {
       backgroundColor: 'var(--navbar-hover-background)',
       color: 'var(--navbar-hover)',
-    },
-
-    '&[data-active="true"]': {
-      backgroundColor: 'var(--dashboard-button)',
-      color: 'var(--dashboard-button-foreground)',
-      fontWeight: 600,
     },
 
     '&.collapsed': {
@@ -388,10 +394,17 @@ const useStyles = createStyles((theme) => ({
     },
   },
 
+  subItemsContainer: {
+    position: 'relative',
+    marginLeft: rem(28),
+    paddingLeft: rem(16),
+    borderLeft: '1px solid var(--dashboard-border)',
+  },
+
   subItem: {
     display: 'flex',
     alignItems: 'center',
-    padding: `6px ${theme.spacing.md} 6px ${rem(48)}`,
+    padding: `6px ${theme.spacing.md} 6px ${theme.spacing.xs}`,
     color: 'var(--navbar-foreground)',
     textDecoration: 'none',
     borderRadius: theme.radius.md,
@@ -532,25 +545,29 @@ export default function HierarchicalSidebar({
             isCollapsed ? 'collapsed' : ''
           }`}
         >
-          {/* Header */}
+          {/* Header — Course Switcher */}
           <div
             className={`${classes.header} ${isCollapsed ? 'collapsed' : ''}`}
           >
             <div
-              className={`${classes.breadcrumb} ${
+              className={`${classes.courseSwitcher} ${
                 isCollapsed ? 'collapsed' : ''
               }`}
             >
-              <div
-                className={`flex items-center gap-2 ${montserrat_heading.variable} font-montserratHeading`}
-              >
-                <IconSettings size={14} />
-                <span>My Chatbot</span>
-                <span>/</span>
-                <span className="line-clamp-3 break-all font-semibold text-[--foreground]">
-                  {course_name}
+              <div className={classes.courseLogo}>
+                <span
+                  className={`text-sm font-bold text-white ${montserrat_heading.variable} font-montserratHeading`}
+                >
+                  I
                 </span>
               </div>
+              {!isCollapsed && (
+                <span
+                  className={`truncate text-sm font-semibold text-[--foreground] ${montserrat_heading.variable} font-montserratHeading`}
+                >
+                  {course_name}
+                </span>
+              )}
             </div>
             <button
               className={`${classes.collapseButton} hidden md:flex`}
@@ -589,6 +606,39 @@ export default function HierarchicalSidebar({
           {/* Navigation */}
           <div className={classes.navSection}>
             {navSections.map((section) => {
+              const isDashboard = section.title === 'Dashboard'
+
+              if (isDashboard) {
+                return (
+                  <div key={section.title}>
+                    <Link
+                      href={section.href!}
+                      prefetch={false}
+                      data-active={isLinkActive(section.href!)}
+                      className={`${classes.navLink} ${
+                        isCollapsed ? 'collapsed' : ''
+                      }`}
+                      onMouseEnter={() => handleLinkHover(section.href!)}
+                      onClick={closeMobileSidebar}
+                    >
+                      {section.icon}
+                      <span
+                        className={`${isCollapsed ? 'hidden' : 'inline'} ${
+                          montserrat_heading.variable
+                        } font-montserratHeading`}
+                      >
+                        {section.title}
+                      </span>
+                    </Link>
+                    {!isCollapsed && (
+                      <div className={classes.sectionLabel}>
+                        Project Settings
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
               if (section.href && !section.children) {
                 return (
                   <Link
@@ -645,10 +695,7 @@ export default function HierarchicalSidebar({
                     onOpenChange={() => toggleSection(section.title)}
                   >
                     <CollapsibleTrigger asChild>
-                      <button
-                        className={classes.sectionTrigger}
-                        data-active={isSectionActive && !isExpanded}
-                      >
+                      <button className={classes.sectionTrigger}>
                         {section.icon}
                         <span
                           className={`flex-1 text-left ${montserrat_heading.variable} font-montserratHeading`}
@@ -659,29 +706,31 @@ export default function HierarchicalSidebar({
                           size={14}
                           strokeWidth={2}
                           className={`transition-transform duration-200 ${
-                            isExpanded ? 'rotate-180' : ''
+                            isExpanded ? '' : '-rotate-90'
                           }`}
                         />
                       </button>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      {section.children.map((child) => (
-                        <Link
-                          key={child.name}
-                          href={child.href}
-                          prefetch={false}
-                          data-active={activeLink === child.href}
-                          className={classes.subItem}
-                          onMouseEnter={() => handleLinkHover(child.href)}
-                          onClick={closeMobileSidebar}
-                        >
-                          <span
-                            className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                      <div className={classes.subItemsContainer}>
+                        {section.children.map((child) => (
+                          <Link
+                            key={child.name}
+                            href={child.href}
+                            prefetch={false}
+                            data-active={activeLink === child.href}
+                            className={classes.subItem}
+                            onMouseEnter={() => handleLinkHover(child.href)}
+                            onClick={closeMobileSidebar}
                           >
-                            {child.name}
-                          </span>
-                        </Link>
-                      ))}
+                            <span
+                              className={`${montserrat_paragraph.variable} font-montserratParagraph`}
+                            >
+                              {child.name}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
                     </CollapsibleContent>
                   </Collapsible>
                 )
