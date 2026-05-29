@@ -1,7 +1,6 @@
 import {
   IconArrowRight,
   IconChartBar,
-  IconCloudUpload,
   IconCode,
   IconCopy,
   IconDatabase,
@@ -35,7 +34,7 @@ import {
   BreadcrumbSeparator,
 } from '../shadcn/ui/breadcrumb'
 import { Card, CardContent, CardHeader, CardTitle } from '../shadcn/ui/card'
-import { Switch } from '../shadcn/ui/switch'
+import CustomSwitch from '../Switches/CustomSwitch'
 import { LargeDropzone } from './LargeDropzone'
 import { type FileUpload } from './UploadNotification'
 
@@ -402,29 +401,20 @@ export default function DashboardContent({
                   </p>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-6">
-                <label className="flex items-center gap-2 text-sm text-[--foreground]">
-                  <span
-                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                  >
-                    Guided Learning
-                  </span>
-                  <Switch
-                    checked={guidedLearning}
-                    onCheckedChange={handleToggleGuidedLearning}
-                  />
-                </label>
-                <label className="flex items-center gap-2 text-sm text-[--foreground]">
-                  <span
-                    className={`${montserrat_paragraph.variable} font-montserratParagraph`}
-                  >
-                    Document-Based References Only
-                  </span>
-                  <Switch
-                    checked={documentsOnly}
-                    onCheckedChange={handleToggleDocumentsOnly}
-                  />
-                </label>
+              <div className="flex flex-wrap items-center">
+                <CustomSwitch
+                  label="Guided Learning"
+                  tooltip="When enabled, the AI will guide students through learning rather than giving direct answers."
+                  checked={guidedLearning}
+                  onChange={handleToggleGuidedLearning}
+                />
+                <div className="mx-4 hidden h-8 w-px bg-[--dashboard-border] md:block" />
+                <CustomSwitch
+                  label="Document-Based References Only"
+                  tooltip="When enabled, the AI will only use uploaded documents as references, not its general knowledge."
+                  checked={documentsOnly}
+                  onChange={handleToggleDocumentsOnly}
+                />
               </div>
             </div>
           </section>
@@ -463,31 +453,16 @@ export default function DashboardContent({
                 >
                   Project Data Quick-add
                 </h3>
-                <div className="flex h-[calc(100%-2rem-16px)] items-center justify-center rounded-xl border-2 border-dashed border-[--dashboard-border] bg-[--background] p-8 transition-colors hover:border-[--dashboard-button]">
-                  <div className="flex flex-col items-center gap-3 text-center">
-                    <IconCloudUpload
-                      size={40}
-                      strokeWidth={1.5}
-                      className="text-[--dashboard-button]"
-                    />
-                    <p
-                      className={`text-base font-semibold text-[--foreground] ${montserrat_heading.variable} font-montserratHeading`}
-                    >
-                      Upload Materials
-                    </p>
-                    <p
-                      className={`text-sm text-[--foreground-faded] ${montserrat_paragraph.variable} font-montserratParagraph`}
-                    >
-                      Drag-and-drop your own files and content
-                    </p>
-                    <Link
-                      href={`/${course_name}/dashboard#document-upload`}
-                      className={`mt-2 text-sm text-[--dashboard-button] underline ${montserrat_paragraph.variable} font-montserratParagraph`}
-                    >
-                      Go to full upload page
-                    </Link>
-                  </div>
-                </div>
+                <LargeDropzone
+                  courseName={course_name}
+                  current_user_email={current_email}
+                  redirect_to_gpt_4={false}
+                  isDisabled={false}
+                  courseMetadata={metadata}
+                  is_new_course={false}
+                  setUploadFiles={setUploadFiles}
+                  auth={auth}
+                />
               </div>
             </div>
           </section>
