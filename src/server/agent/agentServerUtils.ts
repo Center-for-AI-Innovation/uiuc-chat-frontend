@@ -14,7 +14,7 @@ import {
 } from '~/types/chat'
 import { decryptKeyIfNeeded } from '~/utils/crypto'
 import { runN8nFlowBackend } from '~/pages/api/UIUC-api/runN8nFlow'
-import fetchContextsFromBackend from '~/pages/util/fetchContexts'
+import fetchContextsFromBackend from '~/utils/fetchContexts'
 import { getBackendUrl } from '~/utils/apiUtils'
 import { generatePresignedUrl } from '~/pages/api/download'
 // Reuse existing functions instead of duplicating
