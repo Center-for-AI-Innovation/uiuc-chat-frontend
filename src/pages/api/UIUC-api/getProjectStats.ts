@@ -25,7 +25,30 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
 
     const data = await response.json()
-    return res.status(200).json(data)
+
+    // The backend returns only raw counts; derive the averages here so every
+    // consumer (dashboard + analysis page) receives a complete, consistent
+    // stats object. Prefer backend-provided averages when present.
+    const total_conversations = data.total_conversations || 0
+    const total_messages = data.total_messages || 0
+    const unique_users = data.unique_users || 0
+
+    return res.status(200).json({
+      total_conversations,
+      total_messages,
+      unique_users,
+      avg_conversations_per_user:
+        data.avg_conversations_per_user ??
+        (unique_users ? +(total_conversations / unique_users).toFixed(1) : 0),
+      avg_messages_per_user:
+        data.avg_messages_per_user ??
+        (unique_users ? +(total_messages / unique_users).toFixed(1) : 0),
+      avg_messages_per_conversation:
+        data.avg_messages_per_conversation ??
+        (total_conversations
+          ? +(total_messages / total_conversations).toFixed(1)
+          : 0),
+    })
   } catch (error) {
     console.error('Error fetching project stats:', error)
     return res.status(500).json({
