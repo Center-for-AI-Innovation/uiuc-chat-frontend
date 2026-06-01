@@ -127,18 +127,45 @@ function buildNavSections(courseName: string): NavSection[] {
   ]
 }
 
-function sectionContainsActiveLink(
+// Bases owned by a dedicated top-level link (e.g. /dashboard owned by the
+// "Dashboard" item). Group sections that merely scroll to anchors on such a
+// page must not claim "active" unless their specific hash is in the URL.
+function getDirectBases(sections: NavSection[]): Set<string> {
+  return new Set(
+    sections
+      .filter((s) => s.href && !s.children)
+      .map((s) => s.href!.split('#')[0]!),
+  )
+}
+
+function isSectionActive(
   section: NavSection,
   activeLink: string,
+  directBases: Set<string>,
 ): boolean {
-  if (section.href && activeLink.startsWith(section.href.split('#')[0]!)) {
-    return true
+  const activeBase = activeLink.split('#')[0]!
+  const activeHash = activeLink.includes('#') ? activeLink.split('#')[1]! : ''
+
+  // Dedicated link (Dashboard, Usage Analysis, API): active only on its exact
+  // page with no section hash present.
+  if (section.href && !section.children) {
+    return activeBase === section.href.split('#')[0]! && activeHash === ''
   }
+
   if (section.children) {
-    return section.children.some((child) =>
-      activeLink.startsWith(child.href.split('#')[0]!),
-    )
+    return section.children.some((child) => {
+      const childBase = child.href.split('#')[0]!
+      const childHash = child.href.includes('#')
+        ? child.href.split('#')[1]!
+        : ''
+      if (activeBase !== childBase) return false
+      if (activeHash) return activeHash === childHash
+      // No hash in URL: only active if this page has no dedicated link owning
+      // it (so /llms, /prompt highlight their group, but /dashboard does not).
+      return !directBases.has(childBase)
+    })
   }
+
   return false
 }
 
@@ -231,7 +258,9 @@ const useStyles = createStyles((theme) => ({
     borderBottom: '1px solid var(--dashboard-border)',
 
     '&.collapsed': {
+      flexDirection: 'column',
       justifyContent: 'center',
+      gap: theme.spacing.sm,
       marginBottom: theme.spacing.md,
     },
   },
@@ -300,6 +329,8 @@ const useStyles = createStyles((theme) => ({
 
     '&.collapsed': {
       justifyContent: 'center',
+      flex: 'none',
+      padding: 0,
     },
   },
 
@@ -478,11 +509,15 @@ export default function HierarchicalSidebar({
   const { classes } = useStyles()
   const router = useRouter()
   const navSections = buildNavSections(course_name)
+  const directBases = getDirectBases(navSections)
 
   const [openSections, setOpenSections] = useState<Set<string>>(() => {
     const initial = new Set<string>()
     for (const section of navSections) {
-      if (section.children && sectionContainsActiveLink(section, activeLink)) {
+      if (
+        section.children &&
+        isSectionActive(section, activeLink, directBases)
+      ) {
         initial.add(section.title)
       }
     }
@@ -512,11 +547,6 @@ export default function HierarchicalSidebar({
 
   const closeMobileSidebar = () => {
     if (window.innerWidth < 768) onToggle()
-  }
-
-  const isLinkActive = (href: string) => {
-    const basePath = href.split('#')[0]!
-    return activeLink === basePath || activeLink.startsWith(basePath + '#')
   }
 
   return (
@@ -618,7 +648,11 @@ export default function HierarchicalSidebar({
                     <Link
                       href={section.href!}
                       prefetch={false}
-                      data-active={isLinkActive(section.href!)}
+                      data-active={isSectionActive(
+                        section,
+                        activeLink,
+                        directBases,
+                      )}
                       className={`${classes.navLink} ${
                         isCollapsed ? 'collapsed' : ''
                       }`}
@@ -649,7 +683,11 @@ export default function HierarchicalSidebar({
                     key={section.title}
                     href={section.href}
                     prefetch={false}
-                    data-active={isLinkActive(section.href)}
+                    data-active={isSectionActive(
+                      section,
+                      activeLink,
+                      directBases,
+                    )}
                     className={`${classes.navLink} ${
                       isCollapsed ? 'collapsed' : ''
                     }`}
@@ -669,9 +707,10 @@ export default function HierarchicalSidebar({
               }
 
               if (section.children) {
-                const isSectionActive = sectionContainsActiveLink(
+                const sectionActive = isSectionActive(
                   section,
                   activeLink,
+                  directBases,
                 )
                 const isExpanded = openSections.has(section.title)
 
@@ -682,7 +721,7 @@ export default function HierarchicalSidebar({
                       key={section.title}
                       href={firstChildHref ?? '#'}
                       prefetch={false}
-                      data-active={isSectionActive}
+                      data-active={sectionActive}
                       className={`${classes.navLink} collapsed`}
                       onClick={closeMobileSidebar}
                       title={section.title}
