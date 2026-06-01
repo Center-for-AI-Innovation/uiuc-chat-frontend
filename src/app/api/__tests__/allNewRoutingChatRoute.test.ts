@@ -21,7 +21,7 @@ vi.mock('~/app/utils/buildPromptUtils', () => ({
   buildPrompt: hoisted.buildPrompt,
 }))
 
-vi.mock('@/utils/app/conversation', () => ({
+vi.mock('@/hooks/__internal__/conversation', () => ({
   reconstructConversation: hoisted.reconstructConversation,
 }))
 

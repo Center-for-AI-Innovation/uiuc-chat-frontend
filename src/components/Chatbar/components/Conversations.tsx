@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { type Conversation } from '@/types/chat'
 import { ConversationComponent } from './Conversation'
 import { motion } from 'framer-motion'
@@ -10,6 +10,7 @@ interface Props {
 
 export const Conversations = ({ conversations, onLoadMore }: Props) => {
   const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const listRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -20,37 +21,78 @@ export const Conversations = ({ conversations, onLoadMore }: Props) => {
       },
       { threshold: 1.0 },
     )
-    // console.log('IntersectionObserver created')
 
     if (sentinelRef.current) {
       observer.observe(sentinelRef.current)
-      // console.log('IntersectionObserver observing sentinelRef')
     }
 
     return () => {
       if (sentinelRef.current) {
         observer.unobserve(sentinelRef.current)
-        // console.log('IntersectionObserver unobserving sentinelRef')
       }
     }
   }, [onLoadMore])
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+
+      e.preventDefault()
+      const container = listRef.current
+      if (!container) return
+
+      const buttons = Array.from(
+        container.querySelectorAll<HTMLButtonElement>(
+          'button[data-conversation]',
+        ),
+      )
+      if (buttons.length === 0) return
+
+      const currentIndex = buttons.findIndex(
+        (btn) => btn === document.activeElement,
+      )
+
+      let nextIndex: number
+      if (e.key === 'ArrowDown') {
+        nextIndex =
+          currentIndex < 0 ? 0 : Math.min(currentIndex + 1, buttons.length - 1)
+      } else {
+        nextIndex =
+          currentIndex < 0 ? buttons.length - 1 : Math.max(currentIndex - 1, 0)
+      }
+
+      buttons[nextIndex]?.focus()
+    },
+    [],
+  )
+
+  const filteredConversations = conversations.filter(
+    (conversation) => !conversation.folderId,
+  )
+
   return (
-    <div className="flex w-full flex-col gap-1">
-      {conversations
-        .filter((conversation) => !conversation.folderId)
-        .slice()
-        .map((conversation, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-          >
-            <ConversationComponent conversation={conversation} />
-          </motion.div>
-        ))}
+    <div
+      ref={listRef}
+      className="flex w-full flex-col gap-1"
+      role="listbox"
+      aria-label="Chat conversations"
+      onKeyDown={handleKeyDown}
+    >
+      {filteredConversations.slice().map((conversation, index) => (
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          role="presentation"
+        >
+          <ConversationComponent
+            conversation={conversation}
+            isFirstItem={index === 0}
+          />
+        </motion.div>
+      ))}
       <div ref={sentinelRef} className="h-1" />
     </div>
   )

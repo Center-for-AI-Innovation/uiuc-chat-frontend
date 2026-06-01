@@ -49,11 +49,11 @@ describe('ConversationComponent', () => {
       },
     )
 
-    await user.click(screen.getByRole('button', { name: /old name/i }))
+    await user.click(screen.getByRole('option', { name: /old name/i }))
     expect(handleSelectConversation).toHaveBeenCalledWith(conversation)
 
     // rename flow
-    const convoButton = screen.getByRole('button', { name: /old name/i })
+    const convoButton = screen.getByRole('option', { name: /old name/i })
     const actionButtons = Array.from(
       container.querySelectorAll('button'),
     ).filter((b) => b !== convoButton)

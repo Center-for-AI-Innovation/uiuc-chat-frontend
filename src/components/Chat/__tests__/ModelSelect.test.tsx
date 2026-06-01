@@ -51,7 +51,9 @@ describe('ModelSelect', () => {
     expect(() => getModelLogo(ProviderNames.Gemini)).not.toThrow()
     expect(() => getModelLogo(ProviderNames.SambaNova)).not.toThrow()
     expect(() => getModelLogo(ProviderNames.OpenAICompatible)).not.toThrow()
-    expect(() => getModelLogo('UnknownProvider' as any)).toThrow()
+    expect(getModelLogo('UnknownProvider' as any)).toBe(
+      '/media/llm_icons/OpenAI.png',
+    )
 
     const llmProviders: any = {
       [ProviderNames.OpenAI]: {

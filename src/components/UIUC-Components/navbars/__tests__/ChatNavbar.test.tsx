@@ -180,7 +180,7 @@ describe('ChatNavbar', () => {
     )
 
     const img = await screen.findByRole('img', {
-      name: /course creator uploaded a logo/i,
+      name: /CS101 logo/i,
     })
     expect(img).toBeInTheDocument()
     img.dispatchEvent(new Event('error'))

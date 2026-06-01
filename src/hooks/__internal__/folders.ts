@@ -5,12 +5,13 @@ import { createHeaders } from '~/utils/httpHeaders'
 
 export async function fetchFolders(
   course_name: string,
+  searchTerm?: string,
   userEmail?: string,
 ): Promise<FolderWithConversation[]> {
   let fetchedFolders = []
   try {
     const foldersResonse = await fetch(
-      `/api/folder?courseName=${course_name}`,
+      `/api/folder?courseName=${course_name}&searchTerm=${searchTerm}`,
       {
         method: 'GET',
         headers: createHeaders(userEmail),

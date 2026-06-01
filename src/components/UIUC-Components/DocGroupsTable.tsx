@@ -118,9 +118,10 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
       <div className="w-full px-0 py-4 md:px-2">
         <TextInput
           placeholder="Search by Document Group"
+          aria-label="Search by Document Group"
           mb="sm"
           radius="md"
-          icon={<IconSearch />}
+          icon={<IconSearch aria-hidden="true" />}
           value={documentGroupSearch}
           onChange={handleDocumentGroupSearchChange}
           className="sticky top-0 z-10"
@@ -138,6 +139,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
           }}
         >
           <Table
+            aria-label="Document groups"
             className="document_groups_table"
             style={{
               tableLayout: 'fixed',
@@ -169,7 +171,7 @@ export function DocGroupsTable({ course_name }: { course_name: string }) {
                   >
                     <span className="flex items-center justify-center whitespace-nowrap">
                       <span className="hidden sm:inline">Enabled</span>
-                      <IconHelp size={16} className="ml-1" />
+                      <IconHelp size={16} aria-hidden="true" className="ml-1" />
                     </span>
                   </Tooltip>
                 </th>

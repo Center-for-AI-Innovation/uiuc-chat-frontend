@@ -76,6 +76,13 @@ export default function CourseraIngestForm(): JSX.Element {
           className="focus:bg-[--dashboard-background-dark]"
         >
           <Card
+            role="button"
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                ;(e.currentTarget as HTMLElement).click()
+              }
+            }}
             className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[--dashboard-border] bg-transparent px-6 py-4 text-[--dashboard-foreground] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
             style={{ height: '100%' }}
           >
@@ -101,6 +108,7 @@ export default function CourseraIngestForm(): JSX.Element {
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
+                aria-hidden="true"
                 className="ml-2 transition-transform group-hover:translate-x-1"
               />
             </div>
@@ -117,6 +125,9 @@ export default function CourseraIngestForm(): JSX.Element {
             <div className="">
               <div>
                 <div className="break-words text-sm sm:text-base">
+                  <Text className="mb-2 text-sm font-semibold text-[--illinois-orange]">
+                    Coming soon: Coursera ingest is temporarily unavailable.
+                  </Text>
                   <strong>For Coursera</strong>, just enter a URL like{' '}
                   <code className="inline-flex items-center rounded-md bg-[--illinois-orange] px-2 py-1 font-mono text-xs text-[--illinois-white] sm:text-sm">
                     coursera.org/learn/COURSE_NAME
@@ -146,6 +157,7 @@ export default function CourseraIngestForm(): JSX.Element {
                       className="object-contain"
                     />
                   }
+                  aria-label="Coursera course URL"
                   className="mt-4 w-full rounded-full"
                   styles={{
                     input: {
@@ -171,6 +183,7 @@ export default function CourseraIngestForm(): JSX.Element {
                   onChange={(e) => {
                     handleUrlChange(e)
                   }}
+                  disabled
                 />
               </div>
             </div>
@@ -178,7 +191,7 @@ export default function CourseraIngestForm(): JSX.Element {
           <div className="mt-4">
             <Button
               onClick={handleIngest}
-              disabled={!isUrlValid}
+              disabled
               className="h-11 w-full rounded-xl bg-[--dashboard-button] text-[--dashboard-button-foreground] transition-colors hover:bg-[--dashboard-button-hover] disabled:bg-[--background-faded] disabled:text-[--background-dark]"
             >
               Ingest Course

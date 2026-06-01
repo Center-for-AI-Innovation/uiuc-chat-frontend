@@ -115,7 +115,6 @@ const handler = async (
     const userEmail = existingConv[0]?.user_email || user_id
 
     const backendUrl = getBackendUrl()
-    //const backendUrl = 'http://localhost:8000';
 
     const response = await fetch(`${backendUrl}/process-chat-file`, {
       method: 'POST',

@@ -906,6 +906,7 @@ SELECT
                                 'image_description', m.image_description,
                                 'was_query_rewritten', m.was_query_rewritten,
                                 'query_rewrite_text', m.query_rewrite_text,
+                                'processed_content', m.processed_content,
                                 'feedback', (
                                     CASE 
                                         WHEN m.feedback_is_positive IS NOT NULL 

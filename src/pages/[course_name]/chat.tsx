@@ -35,7 +35,7 @@ const ChatPage: NextPage = () => {
   const [urlGuidedLearning, setUrlGuidedLearning] = useState(false)
   const [urlDocumentsOnly, setUrlDocumentsOnly] = useState(false)
   const [urlSystemPromptOnly, setUrlSystemPromptOnly] = useState(false)
-  const [documentCount, setDocumentCount] = useState<number | null>(null)
+  const [documentExists, setDocumentExists] = useState<boolean | null>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
   const [errorType, setErrorType] = useState<401 | 403 | 404 | null>(null)
   const { course_name } = router.query
@@ -109,22 +109,23 @@ const ChatPage: NextPage = () => {
     fetchData()
   }, [courseName, urlGuidedLearning, urlDocumentsOnly, urlSystemPromptOnly])
 
-  // UseEffect to fetch document count in the background
+  // UseEffect to check if documents exist in the background
   useEffect(() => {
     if (!courseName) return
-    const fetchDocumentCount = async () => {
+    const fetchDocumentExists = async () => {
       try {
-        const documentsResponse = await fetch(
-          `/api/materialsTable/fetchProjectMaterials?from=0&to=0&course_name=${courseName}`,
+        const docCountResponse = await fetch(
+          `/api/materialsTable/fetchIfDocumentExists?course_name=${courseName}`,
         )
-        const documentsData = await documentsResponse.json()
-        setDocumentCount(documentsData.total_count || 0)
+
+        const docCountData = await docCountResponse.json()
+        setDocumentExists((docCountData.total_count || 0) > 0)
       } catch (error) {
-        console.error('Error fetching document count:', error)
-        setDocumentCount(0)
+        console.error('Error checking document existence:', error)
+        setDocumentExists(false)
       }
     }
-    fetchDocumentCount()
+    fetchDocumentExists()
   }, [courseName])
 
   // UseEffect to check user permissions and fetch user email
@@ -265,7 +266,7 @@ const ChatPage: NextPage = () => {
             current_email={currentEmail || ''}
             course_metadata={courseMetadata}
             course_name={courseName}
-            document_count={documentCount}
+            document_exists={documentExists}
             link_parameters={{
               guidedLearning: urlGuidedLearning,
               documentsOnly: urlDocumentsOnly,

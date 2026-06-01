@@ -228,7 +228,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -301,7 +301,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -369,7 +369,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -443,7 +443,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -517,7 +517,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -626,7 +626,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -701,7 +701,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -770,7 +770,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -844,7 +844,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -918,7 +918,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -985,7 +985,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {
@@ -1055,7 +1055,7 @@ describe('Chat (query rewrite + tool paths)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={5}
+        documentExists={true}
       />,
       {
         homeState: {

@@ -26,6 +26,7 @@ import posthog from 'posthog-js'
 import { saveConversationToServer } from '@/hooks/__internal__/conversation'
 
 import { type CourseMetadata } from '~/types/courseMetadata'
+import { useFetchFolders } from '~/hooks/queries/useFetchFolders'
 
 interface DownloadResult {
   message: string
@@ -85,6 +86,24 @@ export const Chatbar = ({
     },
     [homeDispatch],
   )
+
+  const {
+    data: foldersData,
+    isFetched: isFoldersFetched,
+    isLoading: isLoadingFolders,
+  } = useFetchFolders(
+    current_email as string,
+    debouncedSearchTerm,
+    courseName as string,
+  )
+
+  useEffect(() => {
+    if (isFoldersFetched && !isLoadingFolders) {
+      // console.log('foldersData: ', foldersData)
+      homeDispatch({ field: 'folders', value: foldersData })
+      // localStorage.setItem('folders', JSON.stringify(foldersData))
+    }
+  }, [foldersData])
 
   const {
     data: conversationHistory,

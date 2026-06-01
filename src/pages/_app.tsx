@@ -90,60 +90,84 @@ const MyApp: AppType = ({ Component, pageProps: { ...pageProps } }) => {
     return <Maintenance />
   } else {
     return (
-      <KeycloakProvider>
-        <QueryClientProvider client={queryClient}>
-          <PostHogProvider client={posthog}>
-            {/* <SpeedInsights /> */}
-            <Analytics />
-            <Notifications position="bottom-center" zIndex={2077} />
-            <ReactQueryDevtools
-              initialIsOpen={false}
-              position="left"
-              buttonPosition="bottom-right"
-            />
-            <MantineProvider
-              withGlobalStyles
-              withNormalizeCSS
-              theme={{
-                colorScheme: 'dark',
-                colors: {
-                  // Using CSS variables for colors
-                  deepBlue: ['var(--illinois-blue)'],
-                  primary: ['var(--illinois-orange)'],
-                  secondary: ['var(--illinois-blue)'],
-                  accent: ['var(--illinois-industrial)'],
-                  background: ['var(--illinois-background-dark)'],
-                  nearlyBlack: ['var(--illinois-background-darker)'],
-                  nearlyWhite: ['var(--illinois-white)'],
-                  disabled: ['var(--illinois-storm-dark)'],
-                  errorBackground: ['var(--illinois-berry)'],
-                  errorBorder: ['var(--illinois-berry)'],
-                },
-                shadows: {
-                  // md: '1px 1px 3px rgba(0, 0, 0, .25)',
-                  // xl: '5px 5px 3px rgba(0, 0, 0, .25)',
-                },
-                headings: {
-                  fontFamily: 'Montserrat, Roboto, sans-serif',
-                  sizes: {
-                    h1: { fontSize: '3rem' },
-                    h2: { fontSize: '2.2rem' },
+      <>
+        <nav aria-label="Skip navigation">
+          <a
+            href="#main-content"
+            className="skip-nav-link"
+            onClick={(e) => {
+              const target = document.getElementById('main-content')
+              if (target) {
+                e.preventDefault()
+                target.focus()
+                target.scrollIntoView()
+              }
+            }}
+          >
+            Skip to main content
+          </a>
+        </nav>
+        <KeycloakProvider>
+          <QueryClientProvider client={queryClient}>
+            <PostHogProvider client={posthog}>
+              {/* <SpeedInsights /> */}
+              <Analytics />
+              <aside
+                aria-label="Notifications"
+                aria-live="assertive"
+                aria-atomic="true"
+              >
+                <Notifications position="bottom-center" zIndex={2077} />
+              </aside>
+              <ReactQueryDevtools
+                initialIsOpen={false}
+                position="left"
+                buttonPosition="bottom-right"
+              />
+              <MantineProvider
+                withGlobalStyles
+                withNormalizeCSS
+                theme={{
+                  colorScheme: 'dark',
+                  colors: {
+                    // Using CSS variables for colors
+                    deepBlue: ['var(--illinois-blue)'],
+                    primary: ['var(--illinois-orange)'],
+                    secondary: ['var(--illinois-blue)'],
+                    accent: ['var(--illinois-industrial)'],
+                    background: ['var(--illinois-background-dark)'],
+                    nearlyBlack: ['var(--illinois-background-darker)'],
+                    nearlyWhite: ['var(--illinois-white)'],
+                    disabled: ['var(--illinois-storm-dark)'],
+                    errorBackground: ['var(--illinois-berry)'],
+                    errorBorder: ['var(--illinois-berry)'],
                   },
-                },
-                defaultGradient: {
-                  from: 'var(--illinois-berry)',
-                  to: 'var(--illinois-earth)',
-                  deg: 80,
-                },
-              }}
-            >
-              <ThemeProvider>
-                <Component {...pageProps} />
-              </ThemeProvider>
-            </MantineProvider>
-          </PostHogProvider>
-        </QueryClientProvider>
-      </KeycloakProvider>
+                  shadows: {
+                    // md: '1px 1px 3px rgba(0, 0, 0, .25)',
+                    // xl: '5px 5px 3px rgba(0, 0, 0, .25)',
+                  },
+                  headings: {
+                    fontFamily: 'Montserrat, Roboto, sans-serif',
+                    sizes: {
+                      h1: { fontSize: '3rem' },
+                      h2: { fontSize: '2.2rem' },
+                    },
+                  },
+                  defaultGradient: {
+                    from: 'var(--illinois-berry)',
+                    to: 'var(--illinois-earth)',
+                    deg: 80,
+                  },
+                }}
+              >
+                <ThemeProvider>
+                  <Component {...pageProps} />
+                </ThemeProvider>
+              </MantineProvider>
+            </PostHogProvider>
+          </QueryClientProvider>
+        </KeycloakProvider>
+      </>
     )
   }
 }

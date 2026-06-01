@@ -1,3 +1,8 @@
+/* -------------------------------------------------------------------------- */
+/*                           WARNING: DEPRECATED!!!                           */
+/* -------------------------------------------------------------------------- */
+// Use components/shadcn/ui/switch instead
+
 import React, { useState } from 'react'
 import { Switch, Tooltip, Text } from '@mantine/core'
 import { IconCheck, IconInfoCircle, IconX } from '@tabler/icons-react'
@@ -20,16 +25,25 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
 }) => {
   const [isContainerHovered, setIsContainerHovered] = useState(false)
 
-  const handleToggle = (event: React.MouseEvent) => {
+  const handleContainerClick = (event: React.MouseEvent) => {
     if (disabled) return
-    // Prevent the event from bubbling up to avoid double triggers
-    event.preventDefault()
+    // Only toggle if clicking outside the switch (label text, container padding, etc.)
+    // Clicks on the switch itself are handled by handleSwitchChange
+    const target = event.target as HTMLElement
+    if (target.closest('.mantine-Switch-root')) return
     onChange(!checked)
+  }
+
+  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return
+    onChange(event.currentTarget.checked)
   }
 
   return (
     <div
-      className={`flex items-center rounded-lg p-2 transition-all duration-200 ease-in-out ${disabled ? 'opacity-60' : 'cursor-pointer'}`}
+      className={`flex items-center rounded-lg p-2 transition-all duration-200 ease-in-out ${
+        disabled ? 'opacity-60' : 'cursor-pointer'
+      }`}
       style={{
         backgroundColor:
           !disabled && isContainerHovered
@@ -38,31 +52,38 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
       }}
       onMouseEnter={() => !disabled && setIsContainerHovered(true)}
       onMouseLeave={() => !disabled && setIsContainerHovered(false)}
-      onClick={handleToggle}
+      onClick={handleContainerClick}
     >
       <Switch
         aria-label={label}
         checked={checked}
-        onClick={handleToggle}
+        onChange={handleSwitchChange}
         size="lg"
         onLabel="ON"
         offLabel="OFF"
         disabled={disabled}
         classNames={{
           root: `flex items-center ${disabled ? '' : 'cursor-pointer'}`,
-          track: `bg-gray-700 ${disabled ? '' : 'hover:bg-gray-600 cursor-pointer'}`,
+          track: `bg-gray-700 ${
+            disabled ? '' : 'hover:bg-gray-600 cursor-pointer'
+          }`,
           thumb: `bg-white ${disabled ? '' : 'cursor-pointer'}`,
-          label: `ml-2 ${montserrat_paragraph.variable} font-montserratParagraph text-md ${disabled ? '' : 'cursor-pointer'}`,
+          label: `ml-2 ${
+            montserrat_paragraph.variable
+          } font-montserratParagraph text-md ${
+            disabled ? '' : 'cursor-pointer'
+          }`,
         }}
         thumbIcon={
           checked ? (
             <IconCheck
               size="0.8rem"
+              aria-hidden="true"
               color={disabled ? 'gray' : 'var(--dashboard-button)'}
               stroke={3}
             />
           ) : (
-            <IconX size="0.8rem" color="grey" stroke={3} />
+            <IconX size="0.8rem" aria-hidden="true" color="grey" stroke={3} />
           )
         }
         styles={{
@@ -71,12 +92,6 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
           },
           input: {
             cursor: disabled ? 'not-allowed' : 'pointer',
-            '&:focus': {
-              outline: 'none',
-            },
-            '&:focus + *': {
-              boxShadow: 'none',
-            },
           },
           track: {
             backgroundColor: checked
@@ -95,10 +110,17 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
             boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
             cursor: disabled ? 'not-allowed' : 'pointer',
           },
+          trackLabel: {
+            color: checked
+              ? 'var(--dashboard-button-foreground)'
+              : 'var(--foreground)',
+          },
         }}
       />
       <span
-        className={`${montserrat_paragraph.variable} text-md ml-3 flex items-center font-montserratParagraph transition-colors duration-200 ease-in-out ${
+        className={`${
+          montserrat_paragraph.variable
+        } text-md ml-3 flex items-center font-montserratParagraph transition-colors duration-200 ease-in-out ${
           !disabled && isContainerHovered
             ? 'text-[--dashboard-foreground]'
             : 'text-[--dashboard-foreground]'
@@ -133,15 +155,11 @@ const CustomSwitch: React.FC<CustomSwitchProps> = ({
         >
           <span
             className="ml-2 cursor-pointer transition-transform duration-200 ease-in-out"
-            style={
-              {
-                /*              transform: !disabled && isContainerHovered ? 'scale(1.1)' : 'scale(1)', */
-              }
-            }
             onClick={(e) => e.stopPropagation()}
           >
             <IconInfoCircle
               size={16}
+              aria-hidden="true"
               className={
                 !disabled && isContainerHovered
                   ? 'text-gray/60'

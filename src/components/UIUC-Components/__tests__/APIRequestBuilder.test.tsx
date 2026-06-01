@@ -35,4 +35,22 @@ describe('APIRequestBuilder', () => {
       '/api/chat-api/chat',
     )
   })
+
+  it('keeps curl snippet valid for apostrophes, quotes, newlines, and backslashes', async () => {
+    const multiLinePrompt = `He said "it's fine"\npath: C:\\temp\\file.txt`
+    renderWithProviders(
+      <APIRequestBuilder
+        course_name="CS101"
+        apiKey="test-key"
+        courseMetadata={{ system_prompt: multiLinePrompt }}
+      />,
+    )
+    const snippet = await screen.findByDisplayValue(/curl -X POST/i)
+    const value = String((snippet as HTMLTextAreaElement).value)
+    expect(value).toContain(`-d '{`)
+    // Apostrophes inside a single-quoted shell string must be escaped as '"'"'
+    expect(value).toContain(
+      `He said \\"it'"'"'s fine\\"\\npath: C:\\\\temp\\\\file.txt`,
+    )
+  })
 })

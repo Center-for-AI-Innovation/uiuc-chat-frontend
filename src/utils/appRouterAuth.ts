@@ -27,6 +27,25 @@ export interface AuthenticatedRequest extends NextRequest {
   user?: AuthenticatedUser
 }
 
+export function getUserIdentifier(req: AuthenticatedRequest): string | null {
+  const userEmail = req.user?.email as string | undefined
+  if (userEmail && userEmail.trim() !== '') {
+    return userEmail
+  }
+
+  const headerEmail = req.headers.get('x-user-email')
+  if (headerEmail && headerEmail.trim() !== '') {
+    return headerEmail
+  }
+
+  const posthogId = req.headers.get('x-posthog-id')
+  if (posthogId && posthogId.trim() !== '') {
+    return posthogId
+  }
+
+  return null
+}
+
 // Authentication wrapper for App Router API routes
 export function withAppRouterAuth(
   handler: (req: AuthenticatedRequest) => Promise<NextResponse> | NextResponse,

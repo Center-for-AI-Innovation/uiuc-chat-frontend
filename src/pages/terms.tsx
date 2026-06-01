@@ -1,4 +1,5 @@
 import { type NextPage } from 'next'
+import Head from 'next/head'
 import { useState } from 'react'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 import ChatUI from '~/utils/modelProviders/WebLLM'
@@ -8,9 +9,21 @@ import { set } from 'zod'
 
 const TermsAndConditionsPage: NextPage = () => {
   return (
-    <MainPageBackground>
-      <p style={{ whiteSpace: 'pre-line' }}>{terms_string}</p>
-    </MainPageBackground>
+    <>
+      <Head>
+        <title>Terms of Use — Illinois Chat</title>
+      </Head>
+      <MainPageBackground>
+        <p
+          style={{
+            whiteSpace: 'pre-line',
+            color: 'var(--foreground, #1a1a1a)',
+          }}
+        >
+          {terms_string}
+        </p>
+      </MainPageBackground>
+    </>
   )
 }
 

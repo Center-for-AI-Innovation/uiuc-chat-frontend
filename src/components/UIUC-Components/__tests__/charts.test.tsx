@@ -185,7 +185,11 @@ describe('UIUC charts', () => {
         }}
       />,
     )
-    expect(screen.getByTestId('heatmap')).toBeInTheDocument()
+    expect(
+      screen.getByRole('table', {
+        name: /conversations by day and hour heatmap/i,
+      }),
+    ).toBeInTheDocument()
 
     // ModelUsageChart: cover grouping into Other + label renderer branches.
     Object.defineProperty(window, 'innerWidth', { value: 600, writable: true })
