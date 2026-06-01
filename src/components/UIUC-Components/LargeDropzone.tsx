@@ -336,6 +336,7 @@ export function LargeDropzone({
         style={{
           display: 'flex',
           flexDirection: 'column',
+          height: '100%',
         }}
       >
         <div
@@ -355,7 +356,7 @@ export function LargeDropzone({
             style={{
               width: '100%',
               minHeight: rem(200),
-              height: 'auto',
+              height: '100%',
               backgroundColor: isDisabled
                 ? 'var(--background-faded)'
                 : 'var(--background)',

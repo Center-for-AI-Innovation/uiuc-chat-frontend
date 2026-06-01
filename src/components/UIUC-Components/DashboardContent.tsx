@@ -446,23 +446,25 @@ export default function DashboardContent({
               {/* Quick Upload */}
               <div
                 id="document-upload"
-                className="w-full shrink-0 lg:w-80 xl:w-96"
+                className="flex w-full shrink-0 flex-col lg:w-80 xl:w-96"
               >
                 <h3
                   className={`mb-4 text-lg font-semibold text-[--foreground] ${montserrat_heading.variable} font-montserratHeading`}
                 >
                   Project Data Quick-add
                 </h3>
-                <LargeDropzone
-                  courseName={course_name}
-                  current_user_email={current_email}
-                  redirect_to_gpt_4={false}
-                  isDisabled={false}
-                  courseMetadata={metadata}
-                  is_new_course={false}
-                  setUploadFiles={setUploadFiles}
-                  auth={auth}
-                />
+                <div className="flex-1">
+                  <LargeDropzone
+                    courseName={course_name}
+                    current_user_email={current_email}
+                    redirect_to_gpt_4={false}
+                    isDisabled={false}
+                    courseMetadata={metadata}
+                    is_new_course={false}
+                    setUploadFiles={setUploadFiles}
+                    auth={auth}
+                  />
+                </div>
               </div>
             </div>
           </section>
