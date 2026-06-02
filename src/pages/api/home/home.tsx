@@ -30,15 +30,11 @@ import { useFetchLastConversation } from '~/hooks/queries/useFetchLastConversati
 import { useUpdateConversation } from '~/hooks/queries/useUpdateConversation'
 import { useCreateFolder } from '~/hooks/queries/useCreateFolder'
 import { useDeleteFolder } from '~/hooks/queries/useDeleteFolder'
-import { useFetchFolders } from '~/hooks/queries/useFetchFolders'
 import { useUpdateFolder } from '~/hooks/queries/useUpdateFolder'
 import { saveConversationToLocalStorage } from '~/hooks/__internal__/conversation'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import { type FolderType, type FolderWithConversation } from '~/types/folder'
-import {
-  selectBestModel,
-  VisionCapableModels,
-} from '~/utils/modelProviders/LLMProvider'
+import { selectBestModel } from '~/utils/modelProviders/LLMProvider'
 
 import Navbar from '~/components/UIUC-Components/navbars/Navbar'
 
@@ -90,12 +86,6 @@ const Home = ({
     queryClient,
     course_name,
   )
-
-  const {
-    data: foldersData,
-    isFetched: isFoldersFetched,
-    isLoading: isLoadingFolders,
-  } = useFetchFolders(current_email as string, course_name as string)
 
   // fetch last conversation to get the temperature
   const {
@@ -227,14 +217,6 @@ const Home = ({
     setOpenaiModel()
     setIsLoading(false)
   }, [course_metadata, apiKey])
-
-  useEffect(() => {
-    if (isFoldersFetched && !isLoadingFolders) {
-      // console.log('foldersData: ', foldersData)
-      dispatch({ field: 'folders', value: foldersData })
-      // localStorage.setItem('folders', JSON.stringify(foldersData))
-    }
-  }, [foldersData])
 
   // FOLDER OPERATIONS  --------------------------------------------
   const handleCreateFolder = (name: string, type: FolderType) => {
@@ -457,6 +439,8 @@ const Home = ({
       fill="none"
       strokeLinecap="round"
       strokeLinejoin="round"
+      role="none"
+      aria-hidden="true"
     >
       <defs>
         <linearGradient id="gradient" x1="100%" y1="100%" x2="0%" y2="0%">
@@ -604,7 +588,6 @@ const Home = ({
           <div
             className={`flex h-screen w-screen flex-col pt-20 text-sm text-white dark:text-white`}
           >
-            <h1 className="sr-only">{course_name} — Illinois Chat</h1>
             <Navbar isPlain={false} />
 
             <main
@@ -612,6 +595,7 @@ const Home = ({
               tabIndex={-1}
               className="flex h-full w-full overflow-y-auto sm:pt-0"
             >
+              <h1 className="sr-only">{course_name} — Illinois Chat</h1>
               <Chatbar
                 current_email={current_email}
                 courseName={course_name}

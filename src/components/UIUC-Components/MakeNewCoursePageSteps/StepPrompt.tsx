@@ -1,5 +1,5 @@
 import HeaderStepNavigation from './HeaderStepNavigation'
-import PromptEditor from '../PromptEditor'
+import PromptEditorEmbed from '../PromptEditorEmbed'
 
 const StepPrompt = ({ project_name }: { project_name: string }) => {
   return (
@@ -12,7 +12,7 @@ const StepPrompt = ({ project_name }: { project_name: string }) => {
         />
 
         <div className="step_content">
-          <PromptEditor
+          <PromptEditorEmbed
             project_name={project_name}
             isEmbedded={true}
             showHeader={false}

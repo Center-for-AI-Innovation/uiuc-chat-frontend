@@ -95,7 +95,7 @@ export default function WebsiteIngestForm({
       }))
     }
   }
-  const icon = <IconWorldDownload size={'50%'} />
+  const icon = <IconWorldDownload size={'50%'} aria-hidden="true" />
   const [scrapeStrategy, setScrapeStrategy] =
     useState<string>('equal-and-below')
   const [open, setOpen] = useState(false)
@@ -368,7 +368,7 @@ export default function WebsiteIngestForm({
         ),
         color: 'red',
         radius: 'lg',
-        icon: <IconAlertCircle />,
+        icon: <IconAlertCircle aria-hidden="true" />,
         className: 'my-notification-class',
         style: {
           backgroundColor: 'rgba(42,42,64,0.3)',
@@ -419,7 +419,7 @@ export default function WebsiteIngestForm({
             <div className="-ml-2 mb-2 flex items-center justify-between">
               <div className="flex items-center space-x-1">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full">
-                  <IconWorldDownload className="h-8 w-8" />
+                  <IconWorldDownload className="h-8 w-8" aria-hidden="true" />
                 </div>
                 <Text className="text-xl font-semibold text-[--dashboard-foreground]">
                   Website
@@ -436,6 +436,7 @@ export default function WebsiteIngestForm({
               <span>Configure import</span>
               <IconArrowRight
                 size={16}
+                aria-hidden="true"
                 className="ml-2 transition-transform group-hover:translate-x-1"
               />
             </div>
@@ -634,6 +635,7 @@ export default function WebsiteIngestForm({
                           <Center style={{ gap: 10 }}>
                             <IconSitemap
                               style={{ width: rem(16), height: rem(16) }}
+                              aria-hidden="true"
                             />
                             <span>Equal and Below</span>
                           </Center>
@@ -645,6 +647,7 @@ export default function WebsiteIngestForm({
                           <Center style={{ gap: 10 }}>
                             <IconSubtask
                               style={{ width: rem(16), height: rem(16) }}
+                              aria-hidden="true"
                             />
                             <span>Subdomain</span>
                           </Center>
@@ -656,6 +659,7 @@ export default function WebsiteIngestForm({
                           <Center style={{ gap: 10 }}>
                             <IconHome
                               style={{ width: rem(16), height: rem(16) }}
+                              aria-hidden="true"
                             />
                             <span>Entire domain</span>
                           </Center>
@@ -667,6 +671,7 @@ export default function WebsiteIngestForm({
                           <Center style={{ gap: 10 }}>
                             <IconWorld
                               style={{ width: rem(16), height: rem(16) }}
+                              aria-hidden="true"
                             />
                             <span>All</span>
                           </Center>

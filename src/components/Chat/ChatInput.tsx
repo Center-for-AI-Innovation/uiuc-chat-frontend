@@ -53,7 +53,6 @@ import React from 'react'
 import { type CSSProperties } from 'react'
 
 import { useMediaQuery } from '@mantine/hooks'
-import { FileDropOverlay } from './FileDropOverlay'
 import { IconChevronRight } from '@tabler/icons-react'
 import { montserrat_heading } from 'fonts'
 import { useRouteChat } from '@/hooks/queries/useRouteChat'
@@ -265,28 +264,14 @@ export const ChatInput = ({
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [showPluginSelect, setShowPluginSelect] = useState(false)
   const [plugin, setPlugin] = useState<Plugin | null>(null)
+  const [isDragging, setIsDragging] = useState<boolean>(false)
   const promptListRef = useRef<HTMLUListElement | null>(null)
   const chatInputContainerRef = useRef<HTMLDivElement>(null)
   const chatInputParentContainerRef = useRef<HTMLDivElement>(null)
-  const [isFocused, setIsFocused] = useState(false)
   const isSmallScreen = useMediaQuery('(max-width: 960px)')
   const modelSelectContainerRef = useRef<HTMLDivElement | null>(null)
   const fileUploadRef = useRef<HTMLInputElement | null>(null)
   const [fileUploads, setFileUploads] = useState<FileUploadStatus[]>([])
-
-  const handleFocus = () => {
-    setIsFocused(true)
-    if (chatInputParentContainerRef.current) {
-      chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
-    }
-  }
-
-  const handleBlur = () => {
-    setIsFocused(false)
-    if (chatInputParentContainerRef.current) {
-      chatInputParentContainerRef.current.style.boxShadow = 'none'
-    }
-  }
 
   const handleTextClick = () => {
     homeDispatch({
@@ -830,29 +815,6 @@ export const ChatInput = ({
   }, [content])
 
   useEffect(() => {
-    const handleFocus = () => {
-      if (chatInputParentContainerRef.current) {
-        chatInputParentContainerRef.current.style.boxShadow = `0 0 2px rgba(42,42,120, 1)`
-      }
-    }
-
-    const handleBlur = () => {
-      if (chatInputParentContainerRef.current) {
-        chatInputParentContainerRef.current.style.boxShadow = 'none'
-      }
-    }
-
-    const textArea = textareaRef.current
-    textArea?.addEventListener('focus', handleFocus)
-    textArea?.addEventListener('blur', handleBlur)
-
-    return () => {
-      textArea?.removeEventListener('focus', handleFocus)
-      textArea?.removeEventListener('blur', handleBlur)
-    }
-  }, [textareaRef, chatInputParentContainerRef, isFocused])
-
-  useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (
         promptListRef.current &&
@@ -870,15 +832,8 @@ export const ChatInput = ({
   }, [])
 
   useEffect(() => {
-    // This will focus the div as soon as the component mounts
-    if (chatInputContainerRef.current) {
-      chatInputContainerRef.current.focus()
-    }
-  }, [])
-
-  useEffect(() => {
     setContent(inputContent)
-    if (textareaRef.current) {
+    if (inputContent && textareaRef.current) {
       textareaRef.current.focus()
     }
   }, [inputContent, textareaRef])
@@ -939,7 +894,8 @@ export const ChatInput = ({
               onClick={handleStopConversation}
               style={{ pointerEvents: 'auto' }}
             >
-              <IconPlayerStop size={16} /> {t('Stop Generating')}
+              <IconPlayerStop size={16} aria-hidden="true" />{' '}
+              {t('Stop Generating')}
             </button>
           )}
 
@@ -951,11 +907,16 @@ export const ChatInput = ({
               selectedConversation.messages.length - 1
             ]?.role === 'user' && (
               <button
-                className={`absolute -top-14 left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--illinois-white] opacity-[.85] hover:opacity-100 md:mb-0 md:mt-2`}
-                style={{ pointerEvents: 'auto' }}
+                className={`absolute -top-14 left-0 right-0 mx-auto mb-12 flex w-fit items-center gap-3 rounded border border-[--primary] bg-[--primary] px-4 py-2 text-[--illinois-white] hover:brightness-110 md:mb-0 md:mt-2`}
+                style={{
+                  backgroundColor:
+                    'color-mix(in srgb, var(--primary), black 15%)',
+                  pointerEvents: 'auto',
+                }}
                 onClick={onRegenerate}
               >
-                <IconRepeat size={16} /> {t('Regenerate Response')}
+                <IconRepeat size={16} aria-hidden="true" />{' '}
+                {t('Regenerate Response')}
               </button>
             )}
 
@@ -963,9 +924,6 @@ export const ChatInput = ({
           <div
             ref={chatInputContainerRef}
             className="chat-input-container rbg-[--message-background] m-0 w-full resize-none p-0"
-            tabIndex={0}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
             onClick={() => textareaRef.current?.focus()}
             style={{
               ...chatInputContainerStyle,
@@ -985,7 +943,7 @@ export const ChatInput = ({
                 {fileUploads.map((fu, index) => {
                   const getFileIcon = (name: string, type?: string) => {
                     const extension = name.split('.').pop()?.toLowerCase()
-                    const iconProps = { size: 20 }
+                    const iconProps = { size: 20, 'aria-hidden': true as const }
 
                     if (type?.includes('pdf') || extension === 'pdf') {
                       return (
@@ -1185,7 +1143,7 @@ export const ChatInput = ({
                           e.currentTarget.style.backgroundColor = 'transparent'
                         }}
                       >
-                        <IconX size={16} />
+                        <IconX size={16} aria-hidden="true" />
                       </button>
                     </div>
                   )
@@ -1203,7 +1161,7 @@ export const ChatInput = ({
                 title="Upload files"
                 style={{ pointerEvents: 'auto' }}
               >
-                <IconPaperclip size={20} />
+                <IconPaperclip size={20} aria-hidden="true" />
               </button>
               <input
                 type="file"
@@ -1224,10 +1182,12 @@ export const ChatInput = ({
                   }
                 }}
               />
+
               {/* Textarea for message input */}
               <textarea
                 ref={textareaRef}
                 aria-label="Message input"
+                autoFocus
                 className="chat-input m-0 h-[24px] max-h-[400px] w-full flex-1 resize-none bg-transparent py-2 pl-2 pr-12 text-white outline-none"
                 style={{
                   resize: 'none',
@@ -1244,8 +1204,6 @@ export const ChatInput = ({
                 onCompositionEnd={() => setIsTyping(false)}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
               />
 
               {/* Send button */}
@@ -1259,7 +1217,7 @@ export const ChatInput = ({
                 {messageIsStreaming ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-t-2 border-neutral-800 opacity-60"></div>
                 ) : (
-                  <IconSend size={18} />
+                  <IconSend size={18} aria-hidden="true" />
                 )}
               </button>
             </div>
@@ -1299,7 +1257,7 @@ export const ChatInput = ({
                   onClick={onScrollDownClick}
                   style={{ pointerEvents: 'auto' }}
                 >
-                  <IconArrowDown size={18} />
+                  <IconArrowDown size={18} aria-hidden="true" />
                 </button>
               </div>
             )}
@@ -1331,8 +1289,6 @@ export const ChatInput = ({
             )}
           </div>
 
-          <FileDropOverlay onFilesDropped={handleFileSelection} />
-
           {/* Model picker and Agent Mode pill container */}
           <div className="absolute bottom-[.35rem] left-5 -ml-2 flex items-center gap-2">
             <Text
@@ -1357,7 +1313,10 @@ export const ChatInput = ({
                 ) &&
                 chat_ui?.isModelLoading() &&
                 '  Please wait while the model is loading...'}
-              <IconChevronRight size={isSmallScreen ? '10px' : '13px'} />
+              <IconChevronRight
+                size={isSmallScreen ? '10px' : '13px'}
+                aria-hidden="true"
+              />
             </Text>
             {/* Agent Mode pill */}
             {agentModeFeatureEnabled &&

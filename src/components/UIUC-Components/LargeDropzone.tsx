@@ -338,6 +338,7 @@ export function LargeDropzone({
           flexDirection: 'column',
         }}
       >
+        {/* TODO: fix large dropzone display across all screens */}
         <div
           className={classes.wrapper}
           style={{
@@ -346,7 +347,6 @@ export function LargeDropzone({
             justifyContent: 'center',
             alignItems: 'center',
             flexDirection: 'column',
-            paddingTop: rem(24),
           }}
         >
           <Dropzone
@@ -433,6 +433,7 @@ export function LargeDropzone({
                     size={isSmallScreen ? rem(30) : rem(50)}
                     color="var(--dashboard-foreground)"
                     stroke={1.5}
+                    aria-hidden="true"
                   />
                 </Dropzone.Accept>
                 <Dropzone.Reject>
@@ -440,6 +441,7 @@ export function LargeDropzone({
                     size={isSmallScreen ? rem(30) : rem(50)}
                     color="var(--error)"
                     stroke={1.5}
+                    aria-hidden="true"
                   />
                 </Dropzone.Reject>
                 {!isDisabled && (
@@ -448,6 +450,7 @@ export function LargeDropzone({
                       size={isSmallScreen ? rem(30) : rem(50)}
                       color="var(--illinois-orange)"
                       stroke={1.5}
+                      aria-hidden="true"
                     />
                   </Dropzone.Idle>
                 )}

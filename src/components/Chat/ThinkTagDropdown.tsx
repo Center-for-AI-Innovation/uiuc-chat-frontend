@@ -1,4 +1,4 @@
-import React, { Fragment, useRef, useState } from 'react'
+import React, { Fragment, useId, useRef, useState } from 'react'
 import { IconBrain, IconChevronDown } from '@tabler/icons-react'
 import { montserrat_paragraph } from 'fonts'
 import { LoadingSpinner } from '../UIUC-Components/LoadingSpinner'
@@ -36,6 +36,8 @@ export const ThinkTagDropdown: React.FC<ThinkTagDropdownProps> = ({
   const [isExpanded, setIsExpanded] = useState(true) // open by default
   const contentRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
+  const id = useId()
+  const contentId = `think-tag-content-${id}`
 
   // Function to process the content and preserve formatting
   const formatContent = (text: string) => {
@@ -68,11 +70,7 @@ export const ThinkTagDropdown: React.FC<ThinkTagDropdownProps> = ({
   }
 
   return (
-    <div
-      className="think-tag-dropdown"
-      role="region"
-      aria-expanded={isExpanded}
-    >
+    <div className="think-tag-dropdown">
       <div
         ref={headerRef}
         className="think-tag-header"
@@ -81,12 +79,15 @@ export const ThinkTagDropdown: React.FC<ThinkTagDropdownProps> = ({
         tabIndex={0}
         onKeyDown={handleKeyDown}
         aria-expanded={isExpanded}
-        aria-controls="think-tag-content"
+        aria-controls={contentId}
       >
         <div className="flex items-center gap-2">
-          <IconBrain size={20} className="think-tag-brain-icon" />
+          <IconBrain
+            size={20}
+            aria-hidden="true"
+            className="think-tag-brain-icon"
+          />
           <span
-            id="ai-thought-process-label"
             className={`text-base font-medium ${montserrat_paragraph.variable} font-montserratParagraph`}
           >
             AI&apos;s Thought Process
@@ -102,11 +103,9 @@ export const ThinkTagDropdown: React.FC<ThinkTagDropdownProps> = ({
         </div>
       </div>
       <div
-        id="think-tag-content"
+        id={contentId}
         className={`think-tag-content ${isExpanded ? 'expanded' : ''}`}
-        role="region"
         aria-hidden={!isExpanded}
-        aria-labelledby="ai-thought-process-label"
       >
         <div
           ref={contentRef}

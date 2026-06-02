@@ -33,6 +33,7 @@ import {
 import { eq } from 'drizzle-orm'
 import {
   convertDBToChatConversation,
+  type DBConversation,
   type DBMessage,
 } from '~/pages/api/conversation'
 import { getModels } from '~/pages/api/models'
@@ -93,7 +94,7 @@ async function getOrCreateConversation(
           .where(eq(messages.conversation_id, conversationId))
 
         return convertDBToChatConversation(
-          dbConv,
+          dbConv as unknown as DBConversation,
           dbMessages as unknown as DBMessage[],
         )
       }

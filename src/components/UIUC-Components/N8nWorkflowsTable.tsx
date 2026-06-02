@@ -138,7 +138,7 @@ export const N8nWorkflowsTable = ({
         ),
         color: 'red',
         radius: 'lg',
-        icon: <IconAlertCircle />,
+        icon: <IconAlertCircle aria-hidden="true" />,
         className: 'my-notification-class',
         styles: notificationStyles(true),
         withBorder: true,
@@ -171,12 +171,22 @@ export const N8nWorkflowsTable = ({
       container
         .querySelectorAll('[aria-expanded]:not(button):not([role="button"])')
         .forEach((el) => el.removeAttribute('aria-expanded'))
-      // Fix "No records found" text contrast
+      // Remove deprecated aria-haspopup from non-interactive elements
       container
-        .querySelectorAll('.mantine-datatable-empty-state')
+        .querySelectorAll('[aria-haspopup]:not(button):not([role="button"])')
+        .forEach((el) => el.removeAttribute('aria-haspopup'))
+      // Fix "No records found" text contrast (including inner spans)
+      container
+        .querySelectorAll(
+          '.mantine-datatable-empty-state, .mantine-datatable-empty-state *',
+        )
         .forEach((el) => {
           ;(el as HTMLElement).style.color = 'var(--foreground)'
         })
+      // Fix SVG role issues - decorative SVGs should be hidden from assistive tech
+      container.querySelectorAll('svg').forEach((svg) => {
+        svg.setAttribute('aria-hidden', 'true')
+      })
     }
     const timer = setTimeout(fixAriaAttrs, 100)
     return () => clearTimeout(timer)

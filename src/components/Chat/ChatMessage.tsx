@@ -119,7 +119,7 @@ const FileCard: React.FC<{
 }> = ({ fileName, fileType, fileUrl, onClick, isPreviewable = true }) => {
   const getFileIcon = (name: string, type?: string) => {
     const extension = name.split('.').pop()?.toLowerCase()
-    const iconProps = { size: 20 }
+    const iconProps = { size: 20, 'aria-hidden': true as const }
 
     if (type?.includes('pdf') || extension === 'pdf') {
       return (
@@ -215,9 +215,17 @@ const FileCard: React.FC<{
         {truncateFileName(fileName)}
       </span>
       {isPreviewable ? (
-        <IconEye size={16} style={{ color: 'var(--illinois-orange)' }} />
+        <IconEye
+          size={16}
+          aria-hidden="true"
+          style={{ color: 'var(--illinois-orange)' }}
+        />
       ) : (
-        <IconFile size={16} style={{ color: 'var(--illinois-orange)' }} />
+        <IconFile
+          size={16}
+          aria-hidden="true"
+          style={{ color: 'var(--illinois-orange)' }}
+        />
       )}
     </div>
   )
@@ -1254,6 +1262,14 @@ export const ChatMessage = memo(
         contentToRender = remainingContent
       }
 
+      // Handle MathJax not supported by remark-math
+      contentToRender = contentToRender
+        .replace(
+          /\\\[([\s\S]*?)\\\]/g,
+          (_, equation) => `$$\n${equation.trim()}\n$$`,
+        )
+        .replace(/\\\(([\s\S]*?)\\\)/g, (_, equation) => `$${equation.trim()}$`)
+
       return (
         <>
           {thoughtsContent && (
@@ -1785,11 +1801,15 @@ export const ChatMessage = memo(
             <div className="min-w-[40px] text-left">
               {message.role === 'assistant' ? (
                 <>
-                  <IconRobot size={30} />
+                  <IconRobot size={30} aria-hidden="true" />
                   <Timer timerVisible={timerVisible} />
                 </>
               ) : (
-                <IconUser size={30} color="var(--chat-user)" />
+                <IconUser
+                  size={30}
+                  aria-hidden="true"
+                  color="var(--chat-user)"
+                />
               )}
             </div>
 
@@ -1821,7 +1841,7 @@ export const ChatMessage = memo(
                             setIsEditing(false)
                           }}
                         >
-                          <IconX size={16} />
+                          <IconX size={16} aria-hidden="true" />
                           {t('Cancel')}
                         </button>
                         <button
@@ -1829,7 +1849,7 @@ export const ChatMessage = memo(
                           onClick={handleEditMessage}
                           disabled={messageContent.trim().length <= 0}
                         >
-                          <IconCheck size={16} />
+                          <IconCheck size={16} aria-hidden="true" />
                           {t('Save & Submit')}
                         </button>
                       </div>
@@ -2333,7 +2353,7 @@ export const ChatMessage = memo(
                             <button
                               type="button"
                               aria-label="Edit message"
-                              className={`invisible text-[--foreground-faded] hover:text-[--foreground] focus:visible group-hover:visible
+                              className={`text-[--foreground-faded] hover:text-[--foreground]
                                 ${
                                   Array.isArray(message.content) &&
                                   message.content.some(
@@ -2346,6 +2366,7 @@ export const ChatMessage = memo(
                             >
                               <IconEdit
                                 size={20}
+                                aria-hidden="true"
                                 className="text-[--button-faded] hover:text-[--button]"
                               />
                             </button>

@@ -120,6 +120,7 @@ const CourseMain: NextPage = () => {
     )
   }
 
+  // Don't edit certain special pages (no context allowed)
   if (
     courseName &&
     (courseName.toLowerCase() == 'gpt4' ||
