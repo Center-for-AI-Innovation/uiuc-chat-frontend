@@ -1792,11 +1792,15 @@ CRITICAL: The optimized prompt must:
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    size="lg"
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Hide citations in chat responses"
                     tooltip="Disables the display of citations and sources on the chat screen."
                     checked={disableCitations}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ disableCitations: value })
                     }
                   />
@@ -2198,11 +2202,14 @@ CRITICAL: The optimized prompt must:
                     }
                   />
 
-                  <CustomSwitch
+                  <Switch
+                    variant="labeled"
+                    showLabels
+                    showThumbIcon
                     label="Hide citations in chat responses"
                     tooltip="Disables the display of citations and sources on the chat screen."
                     checked={disableCitations}
-                    onChange={(value: boolean) =>
+                    onCheckedChange={(value: boolean) =>
                       handleCheckboxChange({ disableCitations: value })
                     }
                   />
