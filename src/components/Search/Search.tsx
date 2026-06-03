@@ -22,19 +22,22 @@ const Search: FC<Props> = ({ placeholder, searchTerm, onSearch }) => {
   return (
     <div className="relative flex items-center">
       <input
-        className="w-full flex-1 rounded-md border border-[--button-border] bg-transparent px-4 py-3 pr-10 text-[14px] leading-3 text-[--foreground] outline-none focus:border-[--button]"
+        className="w-full flex-1 rounded-md border border-[--button-border] bg-transparent px-4 py-3 pr-10 text-[14px] leading-3 text-[--foreground] focus:border-[--button]"
         type="text"
         placeholder={t(placeholder) || ''}
+        aria-label={t(placeholder) || 'Search'}
         value={searchTerm}
         onChange={handleSearchChange}
       />
 
       {searchTerm && (
-        <IconX
-          className="absolute right-4 cursor-pointer text-[--foreground-faded] hover:text-[--foreground]"
-          size={18}
+        <button
+          className="absolute right-4 cursor-pointer border-none bg-transparent p-0 text-[--foreground-faded] hover:text-[--foreground]"
+          aria-label="Clear search"
           onClick={clearSearch}
-        />
+        >
+          <IconX size={18} aria-hidden="true" />
+        </button>
       )}
     </div>
   )

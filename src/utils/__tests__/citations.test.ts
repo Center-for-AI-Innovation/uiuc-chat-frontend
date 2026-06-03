@@ -412,6 +412,85 @@ describe('replaceCitationLinks', () => {
     expect(fetchPresignedUrl).toHaveBeenCalledTimes(1)
   })
 
+  it('leaves cite tags untouched when indices are invalid', async () => {
+    const msg = makeMessage({
+      contexts: [
+        makeContextWithMetadata({
+          readable_filename: 'A.pdf',
+          url: 'https://example.com/a.pdf',
+          s3_path: '',
+        }),
+      ],
+    })
+
+    const out = await replaceCitationLinks(
+      'See <cite>2</cite>.',
+      msg,
+      new Map(),
+      'TEST101',
+    )
+
+    // Still present (but HTML-escaped by sanitization)
+    expect(out).toContain('&lt;cite&gt;2&lt;/cite&gt;')
+  })
+
+  it('leaves cite tags untouched when a context entry is missing', async () => {
+    const msg = makeMessage({ contexts: [undefined as any] })
+    const out = await replaceCitationLinks(
+      'See <cite>1</cite>.',
+      msg,
+      new Map(),
+      'TEST101',
+    )
+    expect(out).toContain('&lt;cite&gt;1&lt;/cite&gt;')
+  })
+
+  it('leaves filename-style citations untouched when context is missing', async () => {
+    const msg = makeMessage({ contexts: [] })
+    const out = await replaceCitationLinks(
+      '1. [Doc 1](#)',
+      msg,
+      new Map(),
+      'TEST101',
+    )
+    expect(out).toContain('1. [Doc 1](#)')
+  })
+
+  it('uses serverPresignedUrlFn when provided for s3_path contexts', async () => {
+    ;(fetchPresignedUrl as any).mockClear()
+    const serverPresignedUrlFn = vi
+      .fn()
+      .mockResolvedValueOnce('https://server-signed.example/doc.pdf')
+
+    const msg = makeMessage({
+      contexts: [
+        makeContextWithMetadata({
+          readable_filename: 'FromS3',
+          url: '',
+          s3_path: 's3://bucket/key',
+          pagenumber: undefined as any,
+        }),
+      ],
+    })
+
+    const out = await replaceCitationLinks(
+      'See <cite>1</cite>.',
+      msg,
+      new Map(),
+      'TEST101',
+      serverPresignedUrlFn,
+    )
+
+    expect(serverPresignedUrlFn).toHaveBeenCalledWith(
+      's3://bucket/key',
+      'TEST101',
+    )
+    expect(fetchPresignedUrl).not.toHaveBeenCalled()
+    expect(out).toContain(
+      '[FromS3](https://server-signed.example/doc.pdf "Citation 1")',
+    )
+  })
+
   it('falls back to plain text when no url or s3_path are available', async () => {
     const msg = makeMessage({
       contexts: [

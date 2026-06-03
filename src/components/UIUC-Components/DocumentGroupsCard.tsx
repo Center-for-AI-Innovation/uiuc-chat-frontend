@@ -53,7 +53,10 @@ function DocumentGroupsCard({
                 className="hover:bg-[--background]"
                 title="More info on document groups"
               >
-                <IconInfoCircle className="text-[--foreground-faded] hover:text-[--foreground]" />
+                <IconInfoCircle
+                  className="text-[--foreground-faded] hover:text-[--foreground]"
+                  aria-hidden="true"
+                />
               </ActionIcon>
             </div>
           </div>

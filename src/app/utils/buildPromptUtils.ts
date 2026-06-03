@@ -80,6 +80,60 @@ const shouldAppendDocumentsOnlyPrompt = (
 
 const encoding = encodingForModel('gpt-4o')
 
+const joinPromptSections = (sections: Array<string | undefined>): string =>
+  sections
+    .map((section) => section?.trim())
+    .filter((section): section is string => Boolean(section))
+    .join('\n\n')
+
+interface PromptComposerOptions {
+  taskContext: string
+  toneContext?: string
+  backgroundData?: string
+  detailedTaskInstructions?: string
+  examples?: string
+  conversationHistory?: string
+  finalRequest?: string
+  chainOfThought?: string
+  outputFormatting?: string
+}
+
+const composePrompt = (opts: PromptComposerOptions): string =>
+  joinPromptSections([
+    opts.taskContext,
+    opts.toneContext,
+    opts.backgroundData,
+    opts.detailedTaskInstructions,
+    opts.examples,
+    opts.conversationHistory,
+    opts.finalRequest,
+    opts.chainOfThought,
+    opts.outputFormatting,
+  ])
+
+const AGENT_SYNTHETIC_TOOL_NAME = 'search_documents'
+
+const getAgentModeSystemPrompt = (): string =>
+  composePrompt({
+    taskContext:
+      "You orchestrate UIUC Chat's Agent Mode, a retrieval-first research assistant. Your job is to produce grounded, citation-rich answers for every user request.",
+    toneContext:
+      'Adopt the voice of a confident senior analyst: proactive, structured, and supportive without being verbose.',
+    backgroundData: `Primary knowledge source: the synthetic "${AGENT_SYNTHETIC_TOOL_NAME}" retrieval tool (call id "synthetic-retrieval-tool"). It delivers curated course passages with citation indices. Additional tools may appear in a session, but treat them as complementary to retrieval, never replacements.`,
+    detailedTaskInstructions: `Operating loop:
+1. Parse the latest user intent or follow-up.
+2. For research tasks, invoke "${AGENT_SYNTHETIC_TOOL_NAME}" multiple times with different queries to comprehensively explore the topic. Each query should target a distinct aspect, angle, or facet of the research question. Use varied terminology and perspectives to ensure thorough coverage.
+3. After each retrieval, analyze the returned passages and identify gaps or areas needing deeper exploration. Continue calling "${AGENT_SYNTHETIC_TOOL_NAME}" with new queries until you have comprehensive information covering all relevant aspects.
+4. Study all retrieved passages, extract the strongest evidence, and decide whether any other available tools are required. Only call additional tools if they add value beyond the retrieved context, and chain them after retrieval.
+5. Synthesize findings from all retrieval steps, plan your response, and keep thinking critically between iterations.`,
+    finalRequest:
+      'Always surface the best evidence, cite sources, and state clearly when information is unavailable. Be transparent about every tool result you leverage.',
+    chainOfThought:
+      'Reflect on your plan before answering. Keep internal reasoning concise, but ensure the final output shows clear, defensible logic.',
+    outputFormatting:
+      'Respond in markdown with well-structured sections. Use <cite>n</cite> tags before periods to attribute statements. Close with a short recap of the key takeaways.',
+  })
+
 export type BuildPromptMode = 'chat' | 'optimize_prompt'
 
 export const buildPrompt = async ({
@@ -502,7 +556,13 @@ const _getSystemPrompt = async ({
       systemPrompt += DOCUMENT_FOCUS_PROMPT
     }
 
-    return systemPrompt
+    const agentPrompt =
+      conversation.agentModeEnabled &&
+      courseMetadata?.agent_mode_enabled === true
+        ? getAgentModeSystemPrompt()
+        : undefined
+
+    return joinPromptSections([systemPrompt, agentPrompt])
   }
 
   // Add guided learning prompt if enabled via conversation but not course-wide
@@ -520,7 +580,6 @@ const _getSystemPrompt = async ({
 
   * Single dollar signs $...$ for inline math
   * Double dollar signs $$...$$ for display/block math
-  * Or \\[...\\] for display math
   
   Here's how the equations should be formatted in the markdown: Schrödinger Equation: $i\\hbar \\frac{\\partial}{\\partial t} \\Psi(\\mathbf{r}, t) = \\hat{H} \\Psi(\\mathbf{r}, t)$`
 
@@ -529,18 +588,21 @@ const _getSystemPrompt = async ({
     (conversation.messages[conversation.messages.length - 1]
       ?.contexts as ContextWithMetadata[]) || []
 
+  const agentPrompt =
+    conversation.agentModeEnabled && courseMetadata?.agent_mode_enabled === true
+      ? getAgentModeSystemPrompt()
+      : undefined
+
   if (!contexts || contexts.length === 0) {
     // No documents retrieved, return only system prompt
-    return systemPrompt.trim()
+    return joinPromptSections([systemPrompt, agentPrompt])
   } else {
     // Documents are present, combine system prompt with system post prompt
     const systemPostPrompt = getSystemPostPrompt({
       conversation: conversation as Conversation,
       courseMetadata: courseMetadata ?? ({} as CourseMetadata),
     })
-    return [systemPrompt, systemPostPrompt]
-      .filter((prompt) => prompt?.trim())
-      .join('\n\n')
+    return joinPromptSections([systemPrompt, agentPrompt, systemPostPrompt])
   }
 }
 

@@ -85,7 +85,7 @@ const ChatComponent = () => {
         >
           Reset Chat
         </button>
-        <label id="chatui-info-label">{runtimeStats}</label>
+        <span id="chatui-info-label">{runtimeStats}</span>
       </div>
     </div>
   )

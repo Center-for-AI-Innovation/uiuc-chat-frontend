@@ -1,7 +1,5 @@
 // src/components/UIUC-Components/ConversationsHeatmapByHourChart.tsx
-import React, { useEffect, useState, useRef, useMemo } from 'react'
-import { HeatMapGrid } from 'react-grid-heatmap'
-import axios from 'axios'
+import React, { useMemo } from 'react'
 import { Text } from '@mantine/core'
 import { LoadingSpinner } from './LoadingSpinner'
 import { montserrat_paragraph } from 'fonts'
@@ -17,9 +15,6 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
   isLoading,
   error,
 }) => {
-  const [containerWidth, setContainerWidth] = useState<number>(0)
-  const containerRef = useRef<HTMLDivElement>(null)
-
   const daysOfWeek = useMemo(
     () => [
       'Sunday',
@@ -32,19 +27,22 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
     ],
     [],
   )
-  const hours = Array.from({ length: 24 }, (_, i) => i.toString())
+  const hours = useMemo(
+    () => Array.from({ length: 24 }, (_, i) => i.toString()),
+    [],
+  )
 
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth)
-      }
-    }
+  const { formattedData, maxValue } = useMemo(() => {
+    if (!data) return { formattedData: [], maxValue: 0 }
 
-    updateWidth()
-    window.addEventListener('resize', updateWidth)
-    return () => window.removeEventListener('resize', updateWidth)
-  }, [])
+    const grid = daysOfWeek.map((day) =>
+      hours.map((hour) => data[day]?.[parseInt(hour)] || 0),
+    )
+
+    const max = Math.max(...grid.flat(), 1)
+
+    return { formattedData: grid, maxValue: max }
+  }, [data, daysOfWeek, hours])
 
   if (isLoading) {
     return (
@@ -62,68 +60,82 @@ const ConversationsHeatmapByHourChart: React.FC<ChartProps> = ({
     return <Text>No data available</Text>
   }
 
-  const formattedData = daysOfWeek.map((day) =>
-    hours.map((hour) => data[day]?.[parseInt(hour)] || 0),
-  )
+  const getCellColor = (value: number) => {
+    const ratio = value / maxValue
+    return `color-mix(in srgb, var(--dashboard-stat), transparent ${100 - ratio * 100}%)`
+  }
 
-  const numColumns = hours.length
-  const padding = 40
-  const availableWidth = containerWidth - padding
-  const cellWidth = availableWidth / numColumns
-
-  const minCellWidth = 30
-  const maxCellWidth = 60
-  const finalCellWidth = Math.max(
-    minCellWidth,
-    Math.min(cellWidth, maxCellWidth),
-  )
-
-  const fontSize = Math.max(10, Math.min(finalCellWidth / 3, 14))
+  const getTextColor = (value: number) => {
+    const ratio = value / maxValue
+    return `color-mix(in srgb, var(--dashboard-button-foreground), var(--foreground) ${ratio < 0.5 ? 100 : 0}%)`
+  }
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: '100%',
-        height: 'auto',
-        boxSizing: 'border-box',
-      }}
-    >
-      <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
-        <HeatMapGrid
-          data={formattedData}
-          xLabels={hours}
-          yLabels={daysOfWeek}
-          cellRender={(x, y, value) => `${value}`}
-          xLabelsStyle={() => ({
-            fontFamily: montserrat_paragraph.style.fontFamily,
-            fontSize: '.75rem',
-            padding: '0 2px',
-            textAlign: 'center',
-          })}
-          yLabelsStyle={() => ({
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            fontFamily: montserrat_paragraph.style.fontFamily,
-            fontSize: '.75rem',
-            padding: '0 5px 0 0',
-            textAlign: 'right',
-            height: `${40}px`, // Match the fixed cellHeight
-          })}
-          cellStyle={(_x, _y, ratio) => ({
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: `color-mix(in srgb, var(--dashboard-button-foreground), var(--foreground) ${ratio < 0.5 ? 100 : 0}%)`,
-            background: `color-mix(in srgb, var(--dashboard-stat), transparent ${100 - ratio * 100}%)` /* rgba(74, 116, 170, ${ratio}) */,
-            border: '1px solid var(--foreground-faded)',
-            fontSize: '.65rem',
-          })}
-          square={false}
-          cellHeight="40px" // Fixed height
-        />
-      </div>
+    <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+      <table
+        aria-label="Conversations by day and hour heatmap"
+        style={{
+          borderCollapse: 'collapse',
+          fontFamily: montserrat_paragraph.style.fontFamily,
+        }}
+      >
+        <thead>
+          <tr>
+            <th scope="col" style={{ padding: '0 5px' }}>
+              <span className="sr-only">Day of week</span>
+            </th>
+            {hours.map((hour) => (
+              <th
+                key={hour}
+                scope="col"
+                style={{
+                  fontSize: '.75rem',
+                  padding: '4px 2px',
+                  textAlign: 'center',
+                  fontWeight: 'normal',
+                }}
+              >
+                {hour}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {daysOfWeek.map((day, dayIndex) => (
+            <tr key={day}>
+              <th
+                scope="row"
+                style={{
+                  fontSize: '.75rem',
+                  padding: '0 5px 0 0',
+                  textAlign: 'right',
+                  fontWeight: 'normal',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {day}
+              </th>
+              {formattedData[dayIndex]?.map((value, hourIndex) => (
+                <td
+                  key={hourIndex}
+                  style={{
+                    fontSize: '.65rem',
+                    textAlign: 'center',
+                    height: '40px',
+                    minWidth: '30px',
+                    background: getCellColor(value),
+                    color: getTextColor(value),
+                    border: '1px solid var(--foreground-faded)',
+                  }}
+                  aria-label={`${day} at ${hours[hourIndex]}:00: ${value} conversations`}
+                >
+                  {value}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }

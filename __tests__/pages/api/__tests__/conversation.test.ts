@@ -242,6 +242,27 @@ describe('conversation API', () => {
     expect(assistant.contexts?.[0]?.pagenumber).toBe('')
   })
 
+  it('convertDBToChatConversation normalizes offset conversation timestamps to ISO strings', () => {
+    const conv = convertDBToChatConversation(
+      {
+        id: 'c1',
+        name: 'Conversation',
+        model: 'gpt-4o',
+        prompt: '',
+        temperature: 0.1,
+        user_email: 'u@example.com',
+        project_name: 'CS101',
+        folder_id: null,
+        created_at: '2026-03-09T17:20:00.000-07:00',
+        updated_at: '2026-03-09T17:28:25.124-07:00',
+      } as any,
+      [],
+    )
+
+    expect(conv.createdAt).toBe('2026-03-10T00:20:00.000Z')
+    expect(conv.updatedAt).toBe('2026-03-10T00:28:25.124Z')
+  })
+
   it('convertDBToChatConversation warns when first message is missing metadata', () => {
     const warnSpy = vi
       .spyOn(console, 'warn')
@@ -687,6 +708,92 @@ describe('conversation API', () => {
     const body = (res.json as any).mock.calls[0]?.[0]
     expect(body.nextCursor).toBe(1)
     expect(body.conversations[0]?.id).toBe('c1')
+  })
+
+  it('GET rehydrates messages from DB when embedded payload is partial', async () => {
+    const msgId = uuidv4()
+    const createdAt = new Date('2024-01-01T00:00:00Z').toISOString()
+    const agentEvent = {
+      id: 'event-1',
+      stepNumber: 1,
+      type: 'initializing',
+      status: 'done',
+      title: 'Initializing',
+      createdAt,
+    }
+
+    hoisted.execute.mockResolvedValueOnce([
+      {
+        search_conversations_v3: JSON.stringify({
+          conversations: [
+            {
+              id: 'c1',
+              name: 'Conversation',
+              model: 'gpt-4o',
+              prompt: '',
+              temperature: 0.1,
+              user_email: 'u@example.com',
+              project_name: 'CS101',
+              folder_id: null,
+              created_at: createdAt,
+              updated_at: createdAt,
+              messages: [
+                {
+                  id: msgId,
+                  role: 'user',
+                  content_text: 'hi',
+                  content_image_url: [],
+                  contexts: [],
+                  tools: [],
+                  created_at: createdAt,
+                },
+              ],
+            },
+          ],
+          total_count: 1,
+        }),
+      },
+    ])
+
+    hoisted.selectWhere.mockResolvedValueOnce([
+      {
+        id: msgId,
+        conversation_id: 'c1',
+        role: 'user',
+        content_text: 'hi',
+        content_image_url: [],
+        image_description: null,
+        contexts: [],
+        tools: [],
+        latest_system_message: null,
+        final_prompt_engineered_message: null,
+        response_time_sec: null,
+        was_query_rewritten: null,
+        query_rewrite_text: null,
+        created_at: createdAt,
+        updated_at: createdAt,
+        processed_content: JSON.stringify({
+          agentEvents: [agentEvent],
+          agentStepNumber: 1,
+        }),
+      },
+    ])
+
+    const res = createMockRes()
+    await handler(
+      createMockReq({
+        method: 'GET',
+        user: { email: 'u@example.com' },
+        query: { searchTerm: '', courseName: 'CS101', pageParam: '0' },
+      }) as any,
+      res as any,
+    )
+
+    expect(res.status).toHaveBeenCalledWith(200)
+    const body = (res.json as any).mock.calls[0]?.[0]
+    expect(body.conversations[0]?.messages[0]?.agentEvents).toEqual([
+      agentEvent,
+    ])
   })
 
   it('GET handles non-string SQL results and returns 200', async () => {

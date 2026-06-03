@@ -186,6 +186,11 @@ describe('pages/api/home/home (shared Home component)', () => {
     await screen.findByTestId('chat')
     await screen.findByTestId('chatbar')
 
+    // WCAG 2.4.1: page must have an H1 element
+    const h1s = screen.getAllByRole('heading', { level: 1 })
+    expect(h1s.length).toBeGreaterThanOrEqual(1)
+    expect(h1s[0]!.textContent).toContain('CS101')
+
     fireEvent.dragEnter(document)
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByText('Drop your image here!')).toBeNull()
@@ -300,8 +305,8 @@ describe('pages/api/home/home (shared Home component)', () => {
         folderId: null,
         userEmail: 'u@example.com',
         projectName: 'CS101',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: '2026-03-10T00:20:00.000Z',
+        updatedAt: '2026-03-10T00:28:25.124Z',
       }),
     )
 

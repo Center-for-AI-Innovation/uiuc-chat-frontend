@@ -99,13 +99,13 @@ const Folder = ({
         {isRenaming ? (
           <div className="flex w-full items-center gap-3 bg-[#343541]/90 p-3">
             {isOpen ? (
-              <IconCaretDown size={18} />
+              <IconCaretDown size={18} aria-hidden="true" />
             ) : (
-              <IconCaretRight size={18} />
+              <IconCaretRight size={18} aria-hidden="true" />
             )}
             <input
               aria-label="Rename Folder Input"
-              className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-neutral-400 bg-transparent text-left text-[12.5px] leading-3 text-white outline-none focus:border-neutral-100"
+              className="mr-12 flex-1 overflow-hidden overflow-ellipsis border-neutral-400 bg-transparent text-left text-[12.5px] leading-3 text-white focus:border-neutral-100"
               type="text"
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
@@ -125,9 +125,9 @@ const Folder = ({
             onDragLeave={removeHighlight}
           >
             {isOpen ? (
-              <IconCaretDown size={18} />
+              <IconCaretDown size={18} aria-hidden="true" />
             ) : (
-              <IconCaretRight size={18} />
+              <IconCaretRight size={18} aria-hidden="true" />
             )}
             <Tooltip
               label={currentFolder.name}
@@ -161,6 +161,7 @@ const Folder = ({
             >
               <IconCheck
                 size={18}
+                aria-hidden="true"
                 className="text-[--foreground-faded] hover:text-[--dashboard-button-foreground]"
               />
             </SidebarActionButton>
@@ -174,6 +175,7 @@ const Folder = ({
             >
               <IconX
                 size={18}
+                aria-hidden="true"
                 className="text-[--foreground-faded] hover:text-[--dashboard-button-foreground]"
               />
             </SidebarActionButton>
@@ -190,7 +192,7 @@ const Folder = ({
                 setRenameValue(currentFolder.name)
               }}
             >
-              <IconPencil size={18} />
+              <IconPencil size={18} aria-hidden="true" />
             </SidebarActionButton>
             <SidebarActionButton
               ariaLabel="Delete Folder"
@@ -199,7 +201,7 @@ const Folder = ({
                 setIsDeleting(true)
               }}
             >
-              <IconTrash size={18} />
+              <IconTrash size={18} aria-hidden="true" />
             </SidebarActionButton>
           </div>
         )}

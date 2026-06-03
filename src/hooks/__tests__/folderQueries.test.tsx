@@ -59,7 +59,7 @@ describe('folderQueries hooks', () => {
     })
     const Wrapper = createWrapper(queryClient)
 
-    renderHook(() => useFetchFolders('', courseName), { wrapper: Wrapper })
+    renderHook(() => useFetchFolders('', '', courseName), { wrapper: Wrapper })
     await Promise.resolve()
 
     expect(fetchFolders).not.toHaveBeenCalled()
@@ -77,7 +77,7 @@ describe('folderQueries hooks', () => {
     const Wrapper = createWrapper(queryClient)
 
     const { result } = renderHook(
-      () => useFetchFolders(userEmail, courseName),
+      () => useFetchFolders(userEmail, '', courseName),
       {
         wrapper: Wrapper,
       },
@@ -85,7 +85,7 @@ describe('folderQueries hooks', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(result.current.data).toEqual(folders)
-    expect(fetchFolders).toHaveBeenCalledWith(courseName, userEmail)
+    expect(fetchFolders).toHaveBeenCalledWith(courseName, '', userEmail)
   })
 
   it('useCreateFolder optimistically adds folder and rolls back on error', async () => {

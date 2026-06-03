@@ -31,6 +31,10 @@ export default defineConfig({
         '**/.next/**',
         '**/.cursor/**',
         '**/scripts/**',
+        // Server-side agent SSE route is exercised via integration tests, not unit tests
+        'src/app/api/agent/**',
+        // Streaming/SSE hook is environment-dependent; keep unit coverage focused on pure hooks
+        'src/hooks/useAgentStream.ts',
         // Deprecated/migration-only routes aren't exercised in tests
         '**/*DEPRECATED.*',
         '**/MIGRATEALLKEYS.*',

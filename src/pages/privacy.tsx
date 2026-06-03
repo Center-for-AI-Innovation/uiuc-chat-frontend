@@ -1,12 +1,25 @@
 import { type NextPage } from 'next'
+import Head from 'next/head'
 import { MainPageBackground } from '~/components/UIUC-Components/MainPageBackground'
 // import { Card, Image, Text, Title, Badge, Button, Group } from '@mantine/core'
 
 const PrivacyStatementPage: NextPage = () => {
   return (
-    <MainPageBackground>
-      <p style={{ whiteSpace: 'pre-line' }}>{terms_string}</p>
-    </MainPageBackground>
+    <>
+      <Head>
+        <title>Privacy Policy — Illinois Chat</title>
+      </Head>
+      <MainPageBackground>
+        <p
+          style={{
+            whiteSpace: 'pre-line',
+            color: 'var(--foreground, #1a1a1a)',
+          }}
+        >
+          {terms_string}
+        </p>
+      </MainPageBackground>
+    </>
   )
 }
 

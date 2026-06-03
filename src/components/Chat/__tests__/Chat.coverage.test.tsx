@@ -271,7 +271,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ banner_image_s3: 'cs101/banner.png' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -311,7 +311,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{} as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -352,7 +352,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{} as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -410,7 +410,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -453,7 +453,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -497,7 +497,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -542,7 +542,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -603,7 +603,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -675,7 +675,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -735,7 +735,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -810,7 +810,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -860,7 +860,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -905,7 +905,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -974,7 +974,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -1023,7 +1023,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{} as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -1091,7 +1091,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -1153,7 +1153,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -1208,7 +1208,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {
@@ -1262,7 +1262,7 @@ describe('Chat (coverage)', () => {
         courseMetadata={{ openai_api_key: 'k' } as any}
         courseName="CS101"
         currentEmail="me@example.com"
-        documentCount={0}
+        documentExists={false}
       />,
       {
         homeState: {

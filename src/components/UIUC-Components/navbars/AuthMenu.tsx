@@ -107,6 +107,7 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
               deg: 135,
             }}
             className={classes.userAvatar}
+            role="button"
             tabIndex={0}
             aria-label="User Menu"
           >
@@ -116,7 +117,6 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
 
         <Menu.Dropdown>
           <Menu.Item
-            role="button"
             tabIndex={0}
             onClick={() => {
               // Fixed URL construction to avoid realm duplication
@@ -128,11 +128,7 @@ export const AuthMenu = ({ size = 34 }: AuthMenuProps) => {
           >
             Manage Account
           </Menu.Item>
-          <Menu.Item
-            onClick={() => auth.signoutRedirect()}
-            role="button"
-            tabIndex={0}
-          >
+          <Menu.Item onClick={() => auth.signoutRedirect()} tabIndex={0}>
             Sign Out
           </Menu.Item>
         </Menu.Dropdown>

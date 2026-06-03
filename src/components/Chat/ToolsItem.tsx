@@ -59,9 +59,12 @@ export const ToolsItem = ({}) => {
             <TextInput
               type="search"
               placeholder="Search Tools"
+              aria-label="Search Tools"
               my="sm"
               radius="md"
-              icon={<IconSearch size={isSmallScreen ? 15 : 20} />}
+              icon={
+                <IconSearch size={isSmallScreen ? 15 : 20} aria-hidden="true" />
+              }
               value={toolSearch}
               onChange={handleToolSearchChange}
               w={'90%'}
@@ -80,6 +83,7 @@ export const ToolsItem = ({}) => {
 
             {/* unable to use this until v7 of mantine since we can't control the hover color              highlightOnHover */}
             <Table
+              aria-label="Tools configuration"
               variant="striped"
               className="text-[--modal-text]"
               style={{
@@ -88,7 +92,11 @@ export const ToolsItem = ({}) => {
             >
               <thead>
                 <tr
-                  className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
+                  className={`${
+                    montserrat_paragraph.variable
+                  } font-montserratParagraph ${
+                    isSmallScreen ? 'text-xs' : 'text-sm'
+                  }`}
                 >
                   <th
                     style={{
@@ -118,7 +126,11 @@ export const ToolsItem = ({}) => {
                   <tr key={index}>
                     <td style={{ wordWrap: 'break-word' }}>
                       <Text
-                        className={`${montserrat_paragraph.variable} font-montserratParagraph ${isSmallScreen ? 'text-xs' : 'text-sm'}`}
+                        className={`${
+                          montserrat_paragraph.variable
+                        } font-montserratParagraph ${
+                          isSmallScreen ? 'text-xs' : 'text-sm'
+                        }`}
                       >
                         {tool_obj.readableName}
                       </Text>

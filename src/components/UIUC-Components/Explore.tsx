@@ -97,17 +97,20 @@ const Dashboard = ({
     <>
       <Navbar isPlain={false} />
       <Head>
-        <title>{project_name}</title>
+        <title>Explore — Illinois Chat</title>
         <meta name="description" content="My projects on UIUC.chat." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main
+        id="main-content"
+        tabIndex={-1}
         className="course-page-main mt-20"
         style={{
           minHeight: '100vh',
           padding: '1rem',
         }}
       >
+        <h1 className="sr-only">Explore Chatbots</h1>
         <Card
           withBorder
           padding="none"

@@ -1,3 +1,7 @@
+import { useId } from 'react'
+
+import { montserrat_heading, montserrat_paragraph } from 'fonts'
+
 const HeaderStepNavigation = ({
   project_name,
   title,
@@ -7,31 +11,36 @@ const HeaderStepNavigation = ({
   title: string
   description: string
 }) => {
+  const descriptionId = useId()
+
   return (
-    <>
-      <div className="step_header">
-        {project_name && (
-          <div className="-mx-8 -mt-8 mb-4">
-            <div className="flex flex-wrap items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap rounded-t-md bg-[--background-faded] px-8 py-1">
-              <div className="text-[--foreground-faded]">CHATBOT:</div>
-              <div>{project_name}</div>
-            </div>
-          </div>
-        )}
+    <div className="step_header mb-6">
+      {project_name && (
+        <p
+          className={`mb-2 text-xs font-medium uppercase tracking-wider text-[--foreground-faded] ${montserrat_paragraph.variable} font-montserratParagraph`}
+        >
+          {project_name}
+        </p>
+      )}
 
-        {title && (
-          <h4 className="overflow-hidden text-ellipsis whitespace-nowrap text-xl font-semibold">
-            {title}
-          </h4>
-        )}
+      {title && (
+        <h2
+          className={`text-2xl font-bold tracking-tight text-[--foreground] sm:text-3xl ${montserrat_heading.variable} font-montserratHeading`}
+          aria-describedby={description ? descriptionId : undefined}
+        >
+          {title}
+        </h2>
+      )}
 
-        {description && (
-          <div className="mt-1 text-sm text-[--foreground-faded]">
-            {description}
-          </div>
-        )}
-      </div>
-    </>
+      {description && (
+        <p
+          id={descriptionId}
+          className={`mt-1.5 text-sm text-[--foreground-faded] sm:text-base ${montserrat_paragraph.variable} font-montserratParagraph`}
+        >
+          {description}
+        </p>
+      )}
+    </div>
   )
 }
 

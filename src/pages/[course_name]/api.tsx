@@ -1,6 +1,7 @@
 // src/pages/[course_name]/api.tsx
 import { Flex } from '@mantine/core'
 import { type NextPage } from 'next'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
@@ -119,7 +120,19 @@ const ApiPage: NextPage = () => {
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}
     >
-      <main className="course-page-main min-w-screen flex min-h-screen flex-col items-center">
+      <Head>
+        <title>
+          {router.query.course_name as string} — API Settings — Illinois Chat
+        </title>
+      </Head>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="course-page-main min-w-screen flex min-h-screen flex-col items-center"
+      >
+        <h1 className="sr-only">
+          {router.query.course_name as string} API Settings
+        </h1>
         <div className="items-left flex w-full flex-col justify-center py-0">
           <Flex direction="column" align="center" w="100%">
             <ApiKeyManagement

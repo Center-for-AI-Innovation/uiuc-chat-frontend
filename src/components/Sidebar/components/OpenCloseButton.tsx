@@ -15,11 +15,17 @@ export const CloseSidebarButton = ({ onClick, side }: Props) => {
           side === 'right' ? 'right-[270px]' : 'left-[270px]'
         } sm:h-8 sm:w-8`}
         onClick={onClick}
+        aria-label={`Close ${side} sidebar`}
       >
-        {side === 'right' ? <IconArrowBarRight /> : <IconArrowBarLeft />}
+        {side === 'right' ? (
+          <IconArrowBarRight aria-hidden="true" />
+        ) : (
+          <IconArrowBarLeft aria-hidden="true" />
+        )}
       </button>
       <div
         onClick={onClick}
+        aria-hidden="true"
         className="absolute left-0 top-0 z-10 h-full w-full bg-black opacity-70 sm:hidden"
       ></div>
     </>
@@ -36,8 +42,13 @@ export const OpenSidebarButton = ({ onClick, side }: Props) => {
         side === 'right' ? 'right-2' : 'left-2'
       } sm:h-8 sm:w-8`}
       onClick={onClick}
+      aria-label={`Open ${side} sidebar`}
     >
-      {side === 'right' ? <IconArrowBarLeft /> : <IconArrowBarRight />}
+      {side === 'right' ? (
+        <IconArrowBarLeft aria-hidden="true" />
+      ) : (
+        <IconArrowBarRight aria-hidden="true" />
+      )}
     </button>
   )
 }

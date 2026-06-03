@@ -18,6 +18,8 @@ const Spinner = ({ size = '1em', className = '' }: Props) => {
       height={size}
       width={size}
       xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-hidden="true"
     >
       <line x1="12" y1="2" x2="12" y2="6"></line>
       <line x1="12" y1="18" x2="12" y2="22"></line>
