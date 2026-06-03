@@ -1,5 +1,5 @@
 {
-  "id": "87c02678-71f7-4ebf-bb27-f8995d27cc16",
+  "id": "5d0cbaff-c8d3-447f-9c07-b467b486fc97",
   "prevId": "95f411a5-3481-44d6-a3b8-52744a47201b",
   "version": "7",
   "dialect": "postgresql",
@@ -452,9 +452,9 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -619,9 +619,9 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -941,10 +941,10 @@
       "uniqueConstraints": {
         "embeddings_qdrant_id_unique": {
           "name": "embeddings_qdrant_id_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "qdrant_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -1225,10 +1225,10 @@
       "uniqueConstraints": {
         "llm-convo-monitor_convo_id_unique": {
           "name": "llm-convo-monitor_convo_id_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "convo_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -1677,6 +1677,114 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.project_connection_audit_log": {
+      "name": "project_connection_audit_log",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "actor_email": {
+          "name": "actor_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action": {
+          "name": "action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "project_name": {
+          "name": "project_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "failure_reason": {
+          "name": "failure_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "changed_fields": {
+          "name": "changed_fields",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_ip": {
+          "name": "source_ip",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "project_connection_audit_log_project_idx": {
+          "name": "project_connection_audit_log_project_idx",
+          "columns": [
+            {
+              "expression": "project_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "\"occurred_at\" DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.project_external_connections": {
       "name": "project_external_connections",
       "schema": "",
@@ -1731,6 +1839,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "embedding_config": {
+          "name": "embedding_config",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
         "is_active": {
           "name": "is_active",
           "type": "boolean",
@@ -1744,32 +1858,32 @@
         "project_external_connections_project_id_projects_id_fk": {
           "name": "project_external_connections_project_id_projects_id_fk",
           "tableFrom": "project_external_connections",
+          "tableTo": "projects",
           "columnsFrom": [
             "project_id"
           ],
-          "tableTo": "projects",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "project_external_connections_project_id_unique": {
           "name": "project_external_connections_project_id_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "project_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "project_external_connections_project_name_unique": {
           "name": "project_external_connections_project_name_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "project_name"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2313,10 +2427,10 @@
   },
   "enums": {},
   "schemas": {},
-  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},
