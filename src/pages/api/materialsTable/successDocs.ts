@@ -1,6 +1,7 @@
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { db, documents } from '~/db/dbClient'
+import { documents } from '~/db/dbClient'
+import { connectionManager } from '~/utils/connectionManager'
 import { eq } from 'drizzle-orm'
 import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 // This is for "Documents" table, completed docs.
@@ -22,6 +23,7 @@ async function successDocs(
   const course_name = req.query.course_name as string
 
   try {
+    const db = await connectionManager.getDocumentsDb(course_name)
     const data = await db
       .select({
         readable_filename: documents.readable_filename,

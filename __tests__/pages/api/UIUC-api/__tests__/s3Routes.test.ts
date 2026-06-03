@@ -20,9 +20,17 @@ vi.mock('@aws-sdk/s3-request-presigner', () => ({
   getSignedUrl: hoisted.getSignedUrl,
 }))
 
-vi.mock('~/utils/s3Client', () => ({
-  s3Client: {},
-  vyriadMinioClient: null,
+const cmHoisted = vi.hoisted(() => ({
+  getS3Client: vi.fn(async () => ({
+    client: {},
+    bucket: 'default-bucket',
+    endpoint: null,
+    region: 'us-east-1',
+  })),
+}))
+
+vi.mock('~/utils/connectionManager', () => ({
+  connectionManager: { getS3Client: cmHoisted.getS3Client },
 }))
 
 import getPresignedUrlHandler from '~/pages/api/UIUC-api/getPresignedUrl'
@@ -32,6 +40,13 @@ describe('UIUC-api S3 routes', () => {
   beforeEach(() => {
     hoisted.createPresignedPost.mockReset()
     hoisted.getSignedUrl.mockReset()
+    cmHoisted.getS3Client.mockClear()
+    cmHoisted.getS3Client.mockImplementation(async () => ({
+      client: {},
+      bucket: 'default-bucket',
+      endpoint: null,
+      region: 'us-east-1',
+    }))
   })
 
   it('uploadToS3 validates chat upload and returns a presigned post for normal courses', async () => {
@@ -94,7 +109,10 @@ describe('UIUC-api S3 routes', () => {
     })
   })
 
-  it('getPresignedUrl returns 500 for vyriad/pubmed when MinIO client is missing', async () => {
+  it('getPresignedUrl returns 500 when ConnectionManager throws', async () => {
+    cmHoisted.getS3Client.mockRejectedValueOnce(
+      new Error('S3 client not configured'),
+    )
     const res = createMockRes()
     await getPresignedUrlHandler(
       createMockReq({

@@ -3,10 +3,14 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { createMockReq, createMockRes } from '~/test-utils/nextApi'
 
-const hoisted = vi.hoisted(() => ({
-  select: vi.fn(),
-  posthogCapture: vi.fn(),
-}))
+const hoisted = vi.hoisted(() => {
+  const select = vi.fn()
+  return {
+    select,
+    posthogCapture: vi.fn(),
+    getDocumentsDb: vi.fn(async () => ({ select })),
+  }
+})
 
 vi.mock('~/pages/api/authorization', () => ({
   withCourseOwnerOrAdminAccess: () => (handler: any) => handler,
@@ -17,6 +21,10 @@ vi.mock('posthog-js', () => ({
   default: {
     capture: hoisted.posthogCapture,
   },
+}))
+
+vi.mock('~/utils/connectionManager', () => ({
+  connectionManager: { getDocumentsDb: hoisted.getDocumentsDb },
 }))
 
 vi.mock('~/db/dbClient', () => ({

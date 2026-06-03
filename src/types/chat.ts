@@ -183,6 +183,8 @@ export interface ContextWithMetadata {
   pagenumber_or_timestamp?: string
   url: string
   base_url: string
+  doc_groups?: string[]
+  conversation_id?: string
 }
 
 // These are only internal

@@ -14,8 +14,13 @@ CREATE TABLE IF NOT EXISTS "user_entity" (
 	"not_before" integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "conversations" ALTER COLUMN "id" SET DATA TYPE uuid;--> statement-breakpoint
-ALTER TABLE "conversations" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();--> statement-breakpoint
+-- conversations.id was serial (integer) in 0000; convert to uuid by
+-- recreating the column. Safe because this migration runs before any
+-- conversations rows exist. Earlier hand-written workaround:
+-- src/db/migrations/convert_conversations_id.sql.
+ALTER TABLE "conversations" DROP CONSTRAINT IF EXISTS "conversations_pkey";--> statement-breakpoint
+ALTER TABLE "conversations" DROP COLUMN "id";--> statement-breakpoint
+ALTER TABLE "conversations" ADD COLUMN "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL;--> statement-breakpoint
 ALTER TABLE "conversations" ALTER COLUMN "user_email" SET DATA TYPE varchar(255);--> statement-breakpoint
 ALTER TABLE "conversations" ALTER COLUMN "project_name" SET DEFAULT '';--> statement-breakpoint
 ALTER TABLE "conversations" ALTER COLUMN "project_name" SET NOT NULL;--> statement-breakpoint
@@ -25,12 +30,18 @@ ALTER TABLE "conversations" ALTER COLUMN "created_at" SET NOT NULL;--> statement
 ALTER TABLE "conversations" ALTER COLUMN "updated_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "conversations" ALTER COLUMN "updated_at" SET DEFAULT now();--> statement-breakpoint
 ALTER TABLE "conversations" ALTER COLUMN "updated_at" SET NOT NULL;--> statement-breakpoint
-ALTER TABLE "email-newsletter" ALTER COLUMN "id" SET DATA TYPE uuid;--> statement-breakpoint
-ALTER TABLE "email-newsletter" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();--> statement-breakpoint
+-- email-newsletter.id was serial (integer) in 0000; recreate as uuid.
+ALTER TABLE "email-newsletter" DROP CONSTRAINT IF EXISTS "email-newsletter_pkey";--> statement-breakpoint
+ALTER TABLE "email-newsletter" DROP COLUMN "id";--> statement-breakpoint
+ALTER TABLE "email-newsletter" ADD COLUMN "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL;--> statement-breakpoint
 ALTER TABLE "email-newsletter" ALTER COLUMN "created_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "email-newsletter" ALTER COLUMN "created_at" SET DEFAULT now();--> statement-breakpoint
 ALTER TABLE "email-newsletter" ALTER COLUMN "created_at" SET NOT NULL;--> statement-breakpoint
-ALTER TABLE "folders" ALTER COLUMN "id" SET DATA TYPE uuid;--> statement-breakpoint
+-- folders.id was serial (integer) in 0000; recreate as uuid. The app
+-- supplies ids explicitly so no DEFAULT is needed (matches schema.ts).
+ALTER TABLE "folders" DROP CONSTRAINT IF EXISTS "folders_pkey";--> statement-breakpoint
+ALTER TABLE "folders" DROP COLUMN "id";--> statement-breakpoint
+ALTER TABLE "folders" ADD COLUMN "id" uuid PRIMARY KEY NOT NULL;--> statement-breakpoint
 ALTER TABLE "folders" ALTER COLUMN "name" SET DATA TYPE varchar(255);--> statement-breakpoint
 ALTER TABLE "folders" ALTER COLUMN "name" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "folders" ALTER COLUMN "user_email" SET DATA TYPE varchar(255);--> statement-breakpoint
@@ -38,8 +49,13 @@ ALTER TABLE "folders" ALTER COLUMN "user_email" SET NOT NULL;--> statement-break
 ALTER TABLE "folders" ALTER COLUMN "created_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
 ALTER TABLE "folders" ALTER COLUMN "created_at" SET DEFAULT now();--> statement-breakpoint
 ALTER TABLE "folders" ALTER COLUMN "created_at" SET NOT NULL;--> statement-breakpoint
-ALTER TABLE "messages" ALTER COLUMN "id" SET DATA TYPE uuid;--> statement-breakpoint
-ALTER TABLE "messages" ALTER COLUMN "conversation_id" SET DATA TYPE uuid;--> statement-breakpoint
+-- messages.id (serial) and messages.conversation_id (integer) were
+-- created in 0000; recreate both as uuid. The app supplies ids.
+ALTER TABLE "messages" DROP CONSTRAINT IF EXISTS "messages_pkey";--> statement-breakpoint
+ALTER TABLE "messages" DROP COLUMN "id";--> statement-breakpoint
+ALTER TABLE "messages" ADD COLUMN "id" uuid PRIMARY KEY NOT NULL;--> statement-breakpoint
+ALTER TABLE "messages" DROP COLUMN "conversation_id";--> statement-breakpoint
+ALTER TABLE "messages" ADD COLUMN "conversation_id" uuid;--> statement-breakpoint
 ALTER TABLE "messages" ALTER COLUMN "role" SET DATA TYPE varchar(50);--> statement-breakpoint
 ALTER TABLE "messages" ALTER COLUMN "role" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "messages" ALTER COLUMN "created_at" SET DATA TYPE timestamp with time zone;--> statement-breakpoint

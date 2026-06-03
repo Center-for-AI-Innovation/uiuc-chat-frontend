@@ -2,18 +2,9 @@ import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { type NextApiResponse } from 'next'
 import { type AuthenticatedRequest } from '~/utils/authMiddleware'
-import { s3Client, vyriadMinioClient } from '~/utils/s3Client'
+import { connectionManager } from '~/utils/connectionManager'
 import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 
-/**
- * Generate a presigned URL for downloading a file from S3/MinIO.
- * This is the core logic - exported for reuse in server-side code.
- * @param filePath - The S3/MinIO path of the file
- * @param courseName - The course name (determines S3 vs MinIO)
- * @param fileName - Optional filename for Content-Disposition header
- * @returns The presigned URL
- * @throws Error if S3/MinIO client is not configured or file doesn't exist
- */
 export async function generatePresignedUrl(
   filePath: string,
   courseName: string,
@@ -27,52 +18,24 @@ export async function generatePresignedUrl(
     ResponseContentType = 'application/png'
   }
 
-  if (courseName === 'vyriad' || courseName === 'pubmed') {
-    if (!vyriadMinioClient) {
-      throw new Error(
-        'MinIO client not configured - missing required environment variables',
-      )
-    }
-
-    const pathParts = filePath.split('/')
-    const bucketName = pathParts[0]
-    const actualKey = pathParts.slice(1).join('/')
-
-    const command = new GetObjectCommand({
-      Bucket: bucketName,
-      Key: actualKey,
-      ResponseContentDisposition: fileName
-        ? `attachment; filename="${fileName}"`
-        : 'inline',
-      ResponseContentType,
-    })
-
-    return await getSignedUrl(vyriadMinioClient, command, {
-      expiresIn: 3600,
-    })
-  } else {
-    if (!s3Client) {
-      throw new Error(
-        'S3 client not configured - missing required environment variables',
-      )
-    }
-
-    const command = new GetObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME!,
-      Key: filePath,
-      ResponseContentDisposition: fileName
-        ? `attachment; filename="${fileName}"`
-        : 'inline',
-      ResponseContentType,
-    })
-
-    return await getSignedUrl(s3Client, command, {
-      expiresIn: 3600,
-    })
+  const { client, bucket } = await connectionManager.getS3Client(courseName)
+  if (!bucket) {
+    throw new Error(
+      `S3 bucket not configured for project '${courseName}' (no s3_config.bucket_name and S3_BUCKET_NAME unset)`,
+    )
   }
-}
 
-export default withCourseAccessFromRequest('any')(handler)
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: filePath,
+    ResponseContentDisposition: fileName
+      ? `attachment; filename="${fileName}"`
+      : 'inline',
+    ResponseContentType,
+  })
+
+  return await getSignedUrl(client, command, { expiresIn: 3600 })
+}
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   try {
@@ -103,3 +66,5 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     }
   }
 }
+
+export default withCourseAccessFromRequest('any')(handler)

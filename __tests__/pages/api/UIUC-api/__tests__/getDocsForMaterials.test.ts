@@ -5,8 +5,9 @@ const hoisted = vi.hoisted(() => {
   const selectWhere = vi.fn()
   const selectFrom = vi.fn(() => ({ where: selectWhere }))
   const select = vi.fn(() => ({ from: selectFrom }))
+  const db = { select }
   return {
-    db: { select },
+    db,
     documents: {
       readable_filename: {},
       url: {},
@@ -16,6 +17,7 @@ const hoisted = vi.hoisted(() => {
       course_name: {},
     },
     selectWhere,
+    getDocumentsDb: vi.fn(async () => db),
   }
 })
 
@@ -23,8 +25,8 @@ vi.mock('~/pages/api/authorization', () => ({
   withCourseAccessFromRequest: () => (h: any) => h,
 }))
 
-vi.mock('~/db/dbClient', () => ({
-  db: hoisted.db,
+vi.mock('~/utils/connectionManager', () => ({
+  connectionManager: { getDocumentsDb: hoisted.getDocumentsDb },
 }))
 
 vi.mock('~/db/schema', () => ({

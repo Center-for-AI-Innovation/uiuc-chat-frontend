@@ -36,7 +36,7 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       })
     }
 
-    const data = await vectorSearchWithDrizzle({
+    const data = await vectorSearchWithDrizzle(course_name, {
       queryEmbedding,
       course_name,
       doc_groups,

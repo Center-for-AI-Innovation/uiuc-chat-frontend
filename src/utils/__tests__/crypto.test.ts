@@ -2,9 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   decrypt,
   decryptKeyIfNeeded,
+  decryptProjectConfig,
   encrypt,
   encryptKeyIfNeeded,
+  encryptProjectConfig,
   isEncrypted,
+  maskConfig,
 } from '../crypto'
 
 describe('crypto utilities', () => {
@@ -94,5 +97,103 @@ describe('crypto utilities', () => {
 
     await expect(encryptKeyIfNeeded('raw')).rejects.toThrow(/boom/i)
     encryptSpy.mockRestore()
+  })
+})
+
+describe('decryptProjectConfig', () => {
+  const MASTER = 'test-master-key-do-not-use-in-prod'
+
+  it('returns null for null/undefined and missing-encrypted field', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', MASTER)
+    expect(await decryptProjectConfig(null)).toBeNull()
+    expect(await decryptProjectConfig(undefined)).toBeNull()
+    expect(await decryptProjectConfig({ encrypted: '' } as any)).toBeNull()
+  })
+
+  it('decrypts and JSON-parses an EncryptedField', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', MASTER)
+    const config = {
+      url: 'https://qdrant.example.com',
+      api_key: 'qdrant-secret',
+      port: 6333,
+      default_collection: 'my-coll',
+    }
+    const ct = (await encrypt(JSON.stringify(config), MASTER)) as string
+    const result = await decryptProjectConfig<typeof config>({ encrypted: ct })
+    expect(result).toEqual(config)
+  })
+
+  it('throws when ENCRYPTION_MASTER_KEY is unset', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', '')
+    await expect(
+      decryptProjectConfig({ encrypted: 'v1.x.y' } as any),
+    ).rejects.toThrow(/ENCRYPTION_MASTER_KEY/)
+  })
+
+  it('throws when the decrypted plaintext is not valid JSON', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', MASTER)
+    const ct = (await encrypt('not json', MASTER)) as string
+    await expect(decryptProjectConfig({ encrypted: ct })).rejects.toThrow(
+      /JSON-parse/,
+    )
+  })
+})
+
+describe('encryptProjectConfig', () => {
+  const MASTER = 'test-master-key-do-not-use-in-prod'
+
+  it('round-trips through decryptProjectConfig', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', MASTER)
+    const config = {
+      aws_access_key_id: 'AKIAEXAMPLE',
+      aws_secret_access_key: 'super-secret',
+      bucket_name: 'my-bucket',
+      region: 'us-east-2',
+    }
+    const blob = await encryptProjectConfig(config)
+    expect(blob.encrypted).toMatch(/^v1\..+\..+$/)
+    const back = await decryptProjectConfig<typeof config>(blob)
+    expect(back).toEqual(config)
+  })
+
+  it('throws when ENCRYPTION_MASTER_KEY is unset', async () => {
+    vi.stubEnv('ENCRYPTION_MASTER_KEY', '')
+    await expect(encryptProjectConfig({ a: 1 })).rejects.toThrow(
+      /ENCRYPTION_MASTER_KEY/,
+    )
+  })
+})
+
+describe('maskConfig', () => {
+  it('masks secret-bearing fields and leaves identifiers untouched', () => {
+    const masked = maskConfig({
+      aws_access_key_id: 'AKIAEXAMPLE1234',
+      aws_secret_access_key: 'super-long-secret-ending-in-CAFE',
+      bucket_name: 'cropwizard-prod',
+      endpoint_url: 'https://s3.example.com',
+      region: 'us-east-2',
+    })
+    expect(masked.aws_access_key_id).toBe('****1234')
+    expect(masked.aws_secret_access_key).toBe('****CAFE')
+    expect(masked.bucket_name).toBe('cropwizard-prod')
+    expect(masked.endpoint_url).toBe('https://s3.example.com')
+    expect(masked.region).toBe('us-east-2')
+  })
+
+  it('returns null/undefined unchanged', () => {
+    expect(maskConfig(null)).toBeNull()
+    expect(maskConfig(undefined)).toBeUndefined()
+  })
+
+  it('masks short secrets to ****', () => {
+    const masked = maskConfig({ api_key: 'ab' })
+    expect(masked.api_key).toBe('****')
+  })
+
+  it('treats connection_uri as a secret', () => {
+    const masked = maskConfig({
+      connection_uri: 'postgres://user:pw@host:5432/db',
+    })
+    expect(masked.connection_uri).toMatch(/^\*\*\*\*/)
   })
 })
