@@ -1,5 +1,4 @@
 import Link from 'next/link'
-/* eslint-disable @next/next/no-img-element */
 import { ThemeToggle } from './ThemeToggle'
 
 export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
@@ -67,21 +66,6 @@ export default function Footer({ isNavbar = false }: { isNavbar?: boolean }) {
           </Link>{' '}
           code.
         </span>
-        <div>
-          <Link
-            tabIndex={0}
-            href="https://status.uiuc.chat"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img
-              src="https://status.uiuc.chat/api/badge/1/uptime/24?label=Uptime%2024%20hours"
-              alt="Service Uptime Badge"
-              width={110}
-              height={50}
-            />
-          </Link>
-        </div>
       </div>
     </footer>
   )
