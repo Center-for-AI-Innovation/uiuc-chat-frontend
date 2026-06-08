@@ -5,7 +5,6 @@ import fetchContextsFromBackend from '~/utils/fetchContexts'
 import { fetchContextsViaDrizzleVectorSearch } from '~/server/fetchContextsForVectorSearch'
 import { connectionManager } from '~/utils/connectionManager'
 
-
 export default withCourseAccessFromRequest('any')(handler)
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -39,7 +38,8 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
     // local Drizzle path with a warning rather than 500-ing the request.
     let engineKind: 'qdrant' | 'pgvector' = 'pgvector'
     try {
-      engineKind = (await connectionManager.resolveVectorEngine(course_name)).kind
+      engineKind = (await connectionManager.resolveVectorEngine(course_name))
+        .kind
     } catch (err) {
       console.warn(
         `[getContexts] resolveVectorEngine failed for ${course_name}; defaulting to pgvector:`,

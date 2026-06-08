@@ -942,9 +942,7 @@
         "embeddings_qdrant_id_unique": {
           "name": "embeddings_qdrant_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "qdrant_id"
-          ]
+          "columns": ["qdrant_id"]
         }
       },
       "policies": {},
@@ -1226,9 +1224,7 @@
         "llm-convo-monitor_convo_id_unique": {
           "name": "llm-convo-monitor_convo_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "convo_id"
-          ]
+          "columns": ["convo_id"]
         }
       },
       "policies": {},
@@ -1745,12 +1741,8 @@
           "name": "project_external_connections_project_id_projects_id_fk",
           "tableFrom": "project_external_connections",
           "tableTo": "projects",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["project_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1760,16 +1752,12 @@
         "project_external_connections_project_id_unique": {
           "name": "project_external_connections_project_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "project_id"
-          ]
+          "columns": ["project_id"]
         },
         "project_external_connections_project_name_unique": {
           "name": "project_external_connections_project_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "project_name"
-          ]
+          "columns": ["project_name"]
         }
       },
       "policies": {},

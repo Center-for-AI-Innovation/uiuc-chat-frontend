@@ -93,8 +93,10 @@ describe('projectConnections/validation — Qdrant', () => {
 
   it('rejects collections as an array of bare strings', () => {
     expect(
-      qdrantConfigSchema.safeParse({ ...base, collections: ['pubmed', 'patents'] })
-        .success,
+      qdrantConfigSchema.safeParse({
+        ...base,
+        collections: ['pubmed', 'patents'],
+      }).success,
     ).toBe(false)
   })
 
@@ -298,9 +300,9 @@ describe('projectConnections/validation — bodies', () => {
   })
 
   it('deleteQuerySchema allows omitting kind', () => {
-    expect(
-      deleteQuerySchema.safeParse({ project_name: 'demo' }).success,
-    ).toBe(true)
+    expect(deleteQuerySchema.safeParse({ project_name: 'demo' }).success).toBe(
+      true,
+    )
     expect(
       deleteQuerySchema.safeParse({ project_name: 'demo', kind: 's3' }).success,
     ).toBe(true)

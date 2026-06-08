@@ -15,9 +15,7 @@ import type { ConnectionKind } from '~/utils/projectConnections/validation'
 
 // Look up a project's primary-key id by its `course_name`. Returns null if
 // the project does not exist — the route handler turns that into a 404.
-export async function getProjectIdByName(
-  projectName: string,
-): Promise<number | null> {
+export async function getProjectIdByName(projectName: string): Promise {
   const rows = await hostDb
     .select({ id: projects.id })
     .from(projects)
@@ -26,19 +24,14 @@ export async function getProjectIdByName(
   return rows[0]?.id ?? null
 }
 
-const KIND_TO_COLUMN: Record<
-  ConnectionKind,
-  's3_config' | 'database_config' | 'qdrant_config' | 'embedding_config'
-> = {
+const KIND_TO_COLUMN: Record = {
   s3: 's3_config',
   database: 'database_config',
   qdrant: 'qdrant_config',
   embedding: 'embedding_config',
 }
 
-export async function getConnectionByProject(
-  projectName: string,
-): Promise<ProjectExternalConnections | null> {
+export async function getConnectionByProject(projectName: string): Promise {
   const rows = await hostDb
     .select()
     .from(projectExternalConnections)
@@ -52,12 +45,12 @@ export async function upsertConnectionField(args: {
   projectId: number
   kind: ConnectionKind
   encryptedBlob: { encrypted: string }
-}): Promise<ProjectExternalConnections> {
+}): Promise {
   const { projectName, projectId, kind, encryptedBlob } = args
   const column = KIND_TO_COLUMN[kind]
 
   // Build the field-set we want for both INSERT and the UPDATE branch.
-  const fieldUpdate: Record<string, unknown> = {
+  const fieldUpdate: Record = {
     [column]: encryptedBlob,
     is_active: true,
     updated_at: new Date(),
@@ -90,7 +83,7 @@ export async function upsertConnectionField(args: {
 export async function deleteConnection(args: {
   projectName: string
   kind?: ConnectionKind
-}): Promise<{ deleted: boolean; found: boolean; cleared: ConnectionKind | null }> {
+}): Promise {
   const { projectName, kind } = args
 
   if (!kind) {
@@ -117,7 +110,7 @@ export async function deleteConnection(args: {
 export async function setActive(args: {
   projectName: string
   isActive: boolean
-}): Promise<{ found: boolean; is_active: boolean | null }> {
+}): Promise {
   const { projectName, isActive } = args
   const result = await hostDb
     .update(projectExternalConnections)
@@ -129,9 +122,7 @@ export async function setActive(args: {
   return { found: true, is_active: row.is_active }
 }
 
-export async function writeAuditEntry(
-  entry: Omit<NewProjectConnectionAuditLog, 'id' | 'occurred_at'>,
-): Promise<void> {
+export async function writeAuditEntry(entry: Omit): Promise {
   try {
     await hostDb.insert(projectConnectionAuditLog).values(entry)
   } catch (e) {

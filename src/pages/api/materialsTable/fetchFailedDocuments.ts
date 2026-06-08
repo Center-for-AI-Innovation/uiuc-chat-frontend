@@ -9,7 +9,7 @@ import { withCourseOwnerOrAdminAccess } from '~/pages/api/authorization'
 
 type FetchFailedDocumentsResponse =
   | {
-      final_docs: InferSelectModel<typeof documentsFailed>[] | null
+      final_docs: InferSelectModel[] | null
       total_count: number
       recent_fail_count: number
     }
@@ -17,7 +17,7 @@ type FetchFailedDocumentsResponse =
 
 async function fetchFailedDocuments(
   req: AuthenticatedRequest,
-  res: NextApiResponse<FetchFailedDocumentsResponse>,
+  res: NextApiResponse,
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -81,7 +81,7 @@ async function fetchFailedDocuments(
           .limit(to - from + 1)
           .offset(from)
 
-        failedDocs = data as InferSelectModel<typeof documentsFailed>[]
+        failedDocs = data as InferSelectModel[]
         finalError = null
       } catch (err) {
         failedDocs = null
@@ -100,7 +100,7 @@ async function fetchFailedDocuments(
           .limit(to - from + 1)
           .offset(from)
 
-        failedDocs = data as InferSelectModel<typeof documentsFailed>[]
+        failedDocs = data as InferSelectModel[]
         finalError = null
       } catch (err) {
         failedDocs = null
@@ -118,7 +118,7 @@ async function fetchFailedDocuments(
     if (search_key && search_value) {
       try {
         const countResult = await db
-          .select({ count: sql<number>`count(*)` })
+          .select({ count: sql`count(*)` })
           .from(documentsFailed)
           .where(
             and(
@@ -138,7 +138,7 @@ async function fetchFailedDocuments(
       // Fetch the total count of documents for the selected course
       try {
         const countResult = await db
-          .select({ count: sql<number>`count(*)` })
+          .select({ count: sql`count(*)` })
           .from(documentsFailed)
           .where(eq(documentsFailed.course_name, course_name as string))
 
@@ -157,7 +157,7 @@ async function fetchFailedDocuments(
     const oneDayAgo = new Date(new Date().getTime() - 24 * 60 * 60 * 1000)
     try {
       const recentFailCountResult = await db
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql`count(*)` })
         .from(documentsFailed)
         .where(
           and(

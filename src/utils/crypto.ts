@@ -74,7 +74,7 @@ export function isEncrypted(str: string) {
   return base64Regex.test(encryptedBase64!) && base64Regex.test(ivBase64!)
 }
 
-export const decryptKeyIfNeeded = async (key: string): Promise<string> => {
+export const decryptKeyIfNeeded = async (key: string): Promise => {
   if (key && isEncrypted(key)) {
     try {
       const decryptedText = await decrypt(
@@ -125,7 +125,7 @@ function getMasterKey(): string {
 
 export async function decryptProjectConfig<T = unknown>(
   field: EncryptedField,
-): Promise<T | null> {
+): Promise {
   if (!field || typeof field !== 'object' || !field.encrypted) {
     return null
   }
@@ -142,9 +142,7 @@ export async function decryptProjectConfig<T = unknown>(
   }
 }
 
-export async function encryptProjectConfig<T = unknown>(
-  plain: T,
-): Promise<{ encrypted: string }> {
+export async function encryptProjectConfig<T = unknown>(plain: T): Promise {
   const envelope = await encrypt(JSON.stringify(plain), getMasterKey())
   if (!envelope) {
     throw new Error('encrypt() returned no value for project config')
@@ -173,11 +171,9 @@ function isSecretField(name: string): boolean {
 // responses. Non-secret identifiers (bucket_name, endpoint_url, region,
 // url, port, default_collection, ...) pass through unchanged. Masked
 // values show only the last 4 characters.
-export function maskConfig<T extends Record<string, unknown> | null | undefined>(
-  config: T,
-): T {
+export function maskConfig<T extends Record | null | undefined>(config: T): T {
   if (!config) return config
-  const masked: Record<string, unknown> = {}
+  const masked: Record = {}
   for (const [key, value] of Object.entries(config)) {
     if (typeof value === 'string' && isSecretField(key)) {
       masked[key] = value.length > 4 ? '****' + value.slice(-4) : '****'

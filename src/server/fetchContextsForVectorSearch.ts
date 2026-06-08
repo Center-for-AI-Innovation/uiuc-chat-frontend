@@ -10,7 +10,7 @@ export async function fetchContextsViaDrizzleVectorSearch(
   doc_groups: string[] = [],
   conversation_id?: string,
   top_n = 100,
-): Promise<ContextWithMetadata[]> {
+): Promise {
   const [embedding, { disabled_doc_groups, public_doc_groups }] =
     await Promise.all([
       embedQuery(search_query, course_name),

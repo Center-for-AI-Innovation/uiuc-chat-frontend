@@ -31,7 +31,7 @@ export interface VectorSearchParams {
 export async function vectorSearchWithDrizzle(
   projectName: string,
   params: VectorSearchParams,
-): Promise<ContextWithMetadata[]> {
+): Promise {
   const db = await connectionManager.getDocumentsDb(projectName)
   const {
     queryEmbedding,
@@ -45,7 +45,7 @@ export async function vectorSearchWithDrizzle(
 
   const vectorLiteral =
     '[' + queryEmbedding.slice(0, EMBEDDING_SEARCH_DIM).join(',') + ']'
-  const scoreExpr = sql<number>`(1 - (subvector(${embeddings.embedding}::vector(4096), 1, 1536)::vector(1536) <=> ${vectorLiteral}::vector(1536)))`
+  const scoreExpr = sql`(1 - (subvector(${embeddings.embedding}::vector(4096), 1, 1536)::vector(1536) <=> ${vectorLiteral}::vector(1536)))`
   const orderByDistance = sql`subvector(${embeddings.embedding}::vector(4096), 1, 1536)::vector(1536) <=> ${vectorLiteral}::vector(1536)`
 
   return db.transaction(async (tx) => {

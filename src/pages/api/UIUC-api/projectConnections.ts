@@ -78,10 +78,10 @@ async function handleGet(req: AuthenticatedRequest, res: NextApiResponse) {
   }
 
   const [s3, database, qdrant, embedding] = await Promise.all([
-    decryptProjectConfig<Record<string, unknown>>(row.s3_config as EncryptedField),
-    decryptProjectConfig<Record<string, unknown>>(row.database_config as EncryptedField),
-    decryptProjectConfig<Record<string, unknown>>(row.qdrant_config as EncryptedField),
-    decryptProjectConfig<Record<string, unknown>>(row.embedding_config as EncryptedField),
+    decryptProjectConfig(row.s3_config as EncryptedField),
+    decryptProjectConfig(row.database_config as EncryptedField),
+    decryptProjectConfig(row.qdrant_config as EncryptedField),
+    decryptProjectConfig(row.embedding_config as EncryptedField),
   ])
 
   return res.status(200).json({
@@ -105,7 +105,7 @@ async function handlePost(
   req: AuthenticatedRequest,
   res: NextApiResponse,
   actorEmail: string,
-  meta: ReturnType<typeof extractRequestMeta>,
+  meta: ReturnType,
 ) {
   const parsed = upsertBodySchema.safeParse(req.body)
   if (!parsed.success) {
@@ -150,7 +150,7 @@ async function handlePost(
       outcome: 'success',
       failure_reason: null,
       // Field NAMES only — never the values.
-      changed_fields: Object.keys(body.config as Record<string, unknown>),
+      changed_fields: Object.keys(body.config as Record),
       ...meta,
     })
 
@@ -184,7 +184,7 @@ async function handleDelete(
   req: AuthenticatedRequest,
   res: NextApiResponse,
   actorEmail: string,
-  meta: ReturnType<typeof extractRequestMeta>,
+  meta: ReturnType,
 ) {
   const rawKind = req.query.kind ?? req.query.type
   const parsed = deleteQuerySchema.safeParse({

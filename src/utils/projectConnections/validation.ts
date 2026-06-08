@@ -11,7 +11,12 @@ import type {
   QdrantOverrideConfig,
 } from '~/utils/connectionManager'
 
-export const CONNECTION_KINDS = ['s3', 'database', 'qdrant', 'embedding'] as const
+export const CONNECTION_KINDS = [
+  's3',
+  'database',
+  'qdrant',
+  'embedding',
+] as const
 export type ConnectionKind = (typeof CONNECTION_KINDS)[number]
 
 export const s3ConfigSchema = z.object({
@@ -20,11 +25,11 @@ export const s3ConfigSchema = z.object({
   bucket_name: z.string().min(1).optional(),
   endpoint_url: z.string().url().optional(),
   region: z.string().min(1).optional(),
-}) satisfies z.ZodType<S3OverrideConfig>
+}) satisfies z.ZodType
 
 export const databaseConfigSchema = z.object({
   connection_uri: z.string().min(1),
-}) satisfies z.ZodType<DatabaseOverrideConfig>
+}) satisfies z.ZodType
 
 // Entry in `qdrant_config.collections` for read-side multi-collection fan-out.
 // Backend consumer: ai_ta_backend/database/vector.py `_multi_collection_search`.
@@ -34,7 +39,7 @@ export const qdrantCollectionEntrySchema = z.object({
   use_filter: z.boolean().optional(),
   processor: z.string().min(1).optional(),
 })
-export type QdrantCollectionEntry = z.infer<typeof qdrantCollectionEntrySchema>
+export type QdrantCollectionEntry = z.infer
 
 export const qdrantConfigSchema = z.object({
   // URL is the source of truth — its scheme picks http vs https. Both
@@ -53,12 +58,7 @@ export const qdrantConfigSchema = z.object({
   collections: z.array(qdrantCollectionEntrySchema).optional(),
   // Top-level parallelism knob also read by the backend's vector module.
   parallel: z.boolean().optional(),
-}) satisfies z.ZodType<
-  QdrantOverrideConfig & {
-    collections?: QdrantCollectionEntry[]
-    parallel?: boolean
-  }
->
+}) satisfies z.ZodType
 
 // Per-project embedding provider override. Consumed by the backend's
 // `_resolve_embedding_client(project_name)`: `ollama` uses the Ollama HTTP
@@ -109,7 +109,7 @@ export const embeddingConfigSchema = z
     message: "base_url is required when provider is 'ollama'",
     path: ['base_url'],
   })
-export type EmbeddingOverrideConfig = z.infer<typeof embeddingConfigSchema>
+export type EmbeddingOverrideConfig = z.infer
 
 // project_id is looked up server-side from the projects table — the caller
 // only needs to supply project_name.
@@ -135,13 +135,13 @@ export const upsertBodySchema = z.discriminatedUnion('kind', [
     config: embeddingConfigSchema,
   }),
 ])
-export type UpsertBody = z.infer<typeof upsertBodySchema>
+export type UpsertBody = z.infer
 
 export const setActiveBodySchema = z.object({
   project_name: z.string().min(1),
   is_active: z.boolean(),
 })
-export type SetActiveBody = z.infer<typeof setActiveBodySchema>
+export type SetActiveBody = z.infer
 
 export const testBodySchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('s3'), config: s3ConfigSchema }),
@@ -149,7 +149,7 @@ export const testBodySchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('qdrant'), config: qdrantConfigSchema }),
   z.object({ kind: z.literal('embedding'), config: embeddingConfigSchema }),
 ])
-export type TestBody = z.infer<typeof testBodySchema>
+export type TestBody = z.infer
 
 export const deleteQuerySchema = z.object({
   project_name: z.string().min(1),

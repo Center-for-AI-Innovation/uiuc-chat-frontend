@@ -113,7 +113,7 @@ function isPrivateAddress(addr: string, family: number): boolean {
   return false
 }
 
-async function assertPublicHost(host: string): Promise<dns.LookupAddress[]> {
+async function assertPublicHost(host: string): Promise {
   if (!host) throw new TestError('network', 'Empty hostname')
   // If the host is already an IP literal, check it directly.
   const ipFamily = net.isIP(host)
@@ -154,7 +154,10 @@ async function assertPublicHost(host: string): Promise<dns.LookupAddress[]> {
 }
 
 class TestError extends Error {
-  constructor(public code: TestErrorCode, message: string) {
+  constructor(
+    public code: TestErrorCode,
+    message: string,
+  ) {
     super(message)
   }
 }
@@ -166,7 +169,7 @@ class TestError extends Error {
 function makePinnedLookup(
   expectedHost: string,
   vetted: dns.LookupAddress[],
-): NonNullable<https.AgentOptions['lookup']> {
+): NonNullable {
   return (hostname, _opts, callback) => {
     if (hostname !== expectedHost) {
       callback(
@@ -197,7 +200,11 @@ function makePinnedLookup(
 
 // Replace the host portion of a URL with a literal IP, leaving everything
 // else (scheme, port, path, auth) untouched. Used to pin Postgres URIs.
-function substituteHostInUrl(urlStr: string, ip: string, family: number): string {
+function substituteHostInUrl(
+  urlStr: string,
+  ip: string,
+  family: number,
+): string {
   const u = new URL(urlStr)
   u.hostname = family === 6 ? `[${ip}]` : ip
   return u.toString()
@@ -209,11 +216,11 @@ function substituteHostInUrl(urlStr: string, ip: string, family: number): string
 // etc.) — without it, the work continues to run in the background after we
 // return.
 function withTimeout<T>(
-  promise: Promise<T>,
+  promise: Promise,
   ms: number,
   onTimeout?: () => void,
-): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
+): Promise {
+  return new Promise((resolve, reject) => {
     const t = setTimeout(() => {
       try {
         onTimeout?.()
@@ -246,7 +253,8 @@ function classifyUnknown(e: unknown): TestResult {
   }
   const rawMsg = e instanceof Error ? e.message : String(e)
   const errName = e instanceof Error ? e.name : 'non-Error'
-  const cause = e instanceof Error ? (e as Error & { cause?: unknown }).cause : undefined
+  const cause =
+    e instanceof Error ? (e as Error & { cause?: unknown }).cause : undefined
   const causeMsg =
     cause instanceof Error
       ? cause.message
@@ -265,7 +273,11 @@ function classifyUnknown(e: unknown): TestResult {
   // throws `QdrantClientTimeoutError` with the bland message "This operation
   // was aborted", which on its own matches none of the patterns below.
   const lower = `${errName} ${rawMsg} ${causeMsg} ${errno ?? ''}`.toLowerCase()
-  if (lower.includes('cert') || lower.includes('tls') || lower.includes('ssl')) {
+  if (
+    lower.includes('cert') ||
+    lower.includes('tls') ||
+    lower.includes('ssl')
+  ) {
     return { ok: false, code: 'tls', message: 'TLS/certificate error' }
   }
   if (
@@ -310,7 +322,7 @@ function classifyUnknown(e: unknown): TestResult {
 // S3
 // ---------------------------------------------------------------------------
 
-export async function testS3(cfg: S3OverrideConfig): Promise<TestResult> {
+export async function testS3(cfg: S3OverrideConfig): Promise {
   const controller = new AbortController()
   try {
     let requestHandler: NodeHttpHandler | undefined
@@ -368,9 +380,7 @@ export async function testS3(cfg: S3OverrideConfig): Promise<TestResult> {
 // Qdrant
 // ---------------------------------------------------------------------------
 
-export async function testQdrant(
-  cfg: QdrantOverrideConfig,
-): Promise<TestResult> {
+export async function testQdrant(cfg: QdrantOverrideConfig): Promise {
   try {
     // The URL's scheme is the source of truth — see `buildQdrantUrl` for
     // the rationale. We previously rejected `http://` unless an `https:
@@ -412,10 +422,8 @@ export async function testQdrant(
 // Postgres
 // ---------------------------------------------------------------------------
 
-export async function testDatabase(
-  cfg: DatabaseOverrideConfig,
-): Promise<TestResult> {
-  let sql: ReturnType<typeof postgres> | null = null
+export async function testDatabase(cfg: DatabaseOverrideConfig): Promise {
+  let sql: ReturnType | null = null
   try {
     const u = new URL(cfg.connection_uri)
     if (u.protocol !== 'postgres:' && u.protocol !== 'postgresql:') {
@@ -441,7 +449,7 @@ export async function testDatabase(
     })
     // On timeout, slam the pool shut so the pending `select 1` rejects and
     // any open socket is closed immediately rather than draining at idle.
-    const queryPromise = sql`select 1` as unknown as Promise<unknown>
+    const queryPromise = sql`select 1` as unknown as Promise
     await withTimeout(queryPromise, PROBE_TIMEOUT_MS, () => {
       sql?.end({ timeout: 0 }).catch(() => {})
     })
@@ -471,9 +479,7 @@ export async function testDatabase(
 // We deliberately do NOT issue an actual embedding request here — `/models`
 // and `/api/tags` are the cheapest authoritative endpoints to confirm the
 // host is reachable and (for OpenAI) that the api_key is valid.
-export async function testEmbedding(
-  cfg: EmbeddingOverrideConfig,
-): Promise<TestResult> {
+export async function testEmbedding(cfg: EmbeddingOverrideConfig): Promise {
   if (!(EMBEDDING_PROVIDERS as readonly string[]).includes(cfg.provider)) {
     return {
       ok: false,
@@ -485,7 +491,7 @@ export async function testEmbedding(
   const controller = new AbortController()
   try {
     let probeUrl: string
-    const headers: Record<string, string> = {}
+    const headers: Record = {}
 
     if (cfg.provider === 'ollama') {
       if (!cfg.base_url) {
@@ -497,7 +503,10 @@ export async function testEmbedding(
       }
       const u = new URL(cfg.base_url)
       if (u.protocol !== 'http:' && u.protocol !== 'https:') {
-        throw new TestError('tls', 'Ollama base_url must use http:// or https://')
+        throw new TestError(
+          'tls',
+          'Ollama base_url must use http:// or https://',
+        )
       }
       await assertPublicHost(u.hostname)
       probeUrl = new URL('/api/tags', u).toString()
@@ -523,7 +532,10 @@ export async function testEmbedding(
         throw new TestError('tls', 'api_base must use https://')
       }
       if (u.hostname !== 'localhost') await assertPublicHost(u.hostname)
-      probeUrl = new URL('models', apiBase.endsWith('/') ? apiBase : apiBase + '/').toString()
+      probeUrl = new URL(
+        'models',
+        apiBase.endsWith('/') ? apiBase : apiBase + '/',
+      ).toString()
       headers['Authorization'] = `Bearer ${apiKey}`
     }
 
@@ -539,10 +551,18 @@ export async function testEmbedding(
       return { ok: false, code: 'auth', message: 'Authentication rejected' }
     }
     if (res.status === 404) {
-      return { ok: false, code: 'not_found', message: 'Probe endpoint not found' }
+      return {
+        ok: false,
+        code: 'not_found',
+        message: 'Probe endpoint not found',
+      }
     }
     if (!res.ok) {
-      return { ok: false, code: 'unknown', message: `Probe returned HTTP ${res.status}` }
+      return {
+        ok: false,
+        code: 'unknown',
+        message: `Probe returned HTTP ${res.status}`,
+      }
     }
     return { ok: true }
   } catch (e) {

@@ -9,7 +9,7 @@ import { isSuperAdmin } from '~/utils/superAdmins'
 type ApiHandler = (
   req: AuthenticatedRequest,
   res: NextApiResponse,
-) => Promise<void> | void
+) => Promise | void
 
 export function withSuperAdminOnly(handler: ApiHandler): ApiHandler {
   return withAuth(async (req, res) => {

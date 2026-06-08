@@ -39,7 +39,7 @@ export function formatZodError(err: ZodError): {
   }
 }
 
-export async function invalidateForProject(projectName: string): Promise<void> {
+export async function invalidateForProject(projectName: string): Promise {
   try {
     await connectionManager.invalidate(projectName)
   } catch (e) {

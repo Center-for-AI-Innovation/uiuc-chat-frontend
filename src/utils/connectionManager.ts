@@ -113,36 +113,36 @@ interface CacheEntry<T> {
 
 type DocumentsDb = typeof hostDb
 
-interface S3CacheEntry extends CacheEntry<S3Client> {
+interface S3CacheEntry extends CacheEntry {
   bucket: string | null
   endpoint: string | null
   region: string | null
 }
 
-interface QdrantCacheEntry extends CacheEntry<QdrantClient> {
+interface QdrantCacheEntry extends CacheEntry {
   collection: string
 }
 
-interface PgCacheEntry extends CacheEntry<DocumentsDb> {
-  raw: ReturnType<typeof postgres>
+interface PgCacheEntry extends CacheEntry {
+  raw: ReturnType
 }
 
-interface EmbeddingCacheEntry extends CacheEntry<ResolvedEmbeddingClient> {}
+interface EmbeddingCacheEntry extends CacheEntry {}
 
 class ConnectionManager {
-  private configCache = new Map<string, CacheEntry<ResolvedRow>>()
-  private s3Clients = new Map<string, S3CacheEntry>()
-  private qdrantClients = new Map<string, QdrantCacheEntry>()
-  private pgClients = new Map<string, PgCacheEntry>()
-  private embeddingClients = new Map<string, EmbeddingCacheEntry>()
+  private configCache = new Map()
+  private s3Clients = new Map()
+  private qdrantClients = new Map()
+  private pgClients = new Map()
+  private embeddingClients = new Map()
 
   // In-flight locks (one map per resource so different lookups don't queue
   // behind unrelated work for the same project).
-  private configLocks = new Map<string, Promise<ResolvedRow>>()
-  private s3Locks = new Map<string, Promise<S3CacheEntry>>()
-  private qdrantLocks = new Map<string, Promise<QdrantCacheEntry>>()
-  private pgLocks = new Map<string, Promise<PgCacheEntry>>()
-  private embeddingLocks = new Map<string, Promise<EmbeddingCacheEntry>>()
+  private configLocks = new Map()
+  private s3Locks = new Map()
+  private qdrantLocks = new Map()
+  private pgLocks = new Map()
+  private embeddingLocks = new Map()
 
   // -------------------------------------------------------------------------
   // Public API
@@ -152,14 +152,7 @@ class ConnectionManager {
     return hostDb
   }
 
-  async getS3Client(
-    projectName: string,
-  ): Promise<{
-    client: S3Client
-    bucket: string | null
-    endpoint: string | null
-    region: string | null
-  }> {
+  async getS3Client(projectName: string): Promise {
     const entry = await this.resolveS3(projectName)
     return {
       client: entry.value,
@@ -169,9 +162,7 @@ class ConnectionManager {
     }
   }
 
-  async getQdrantClient(
-    projectName: string,
-  ): Promise<{ client: QdrantClient; collection: string }> {
+  async getQdrantClient(projectName: string): Promise {
     const entry = await this.resolveQdrant(projectName)
     return { client: entry.value, collection: entry.collection }
   }
@@ -188,21 +179,20 @@ class ConnectionManager {
    * Use this before deciding whether to call `getQdrantClient` (Qdrant
    * setPayload path) or fall through to the pgvector Drizzle write.
    */
-  async resolveVectorEngine(
-    projectName: string,
-  ): Promise<
-    | { kind: 'qdrant'; client: QdrantClient; collection: string }
-    | { kind: 'pgvector' }
-  > {
+  async resolveVectorEngine(projectName: string): Promise {
     const config = await this.resolveConfig(projectName)
     if (config.qdrant) {
       const entry = await this.resolveQdrant(projectName)
-      return { kind: 'qdrant', client: entry.value, collection: entry.collection }
+      return {
+        kind: 'qdrant',
+        client: entry.value,
+        collection: entry.collection,
+      }
     }
     return { kind: 'pgvector' }
   }
 
-  async getDocumentsDb(projectName: string): Promise<DocumentsDb> {
+  async getDocumentsDb(projectName: string): Promise {
     const entry = await this.resolvePg(projectName)
     return entry.value
   }
@@ -218,14 +208,12 @@ class ConnectionManager {
    * OpenAI-compat endpoint — backend uses LangChain `OllamaEmbeddings` which
    * targets `/api/embeddings`; we mirror it for vector-space parity).
    */
-  async getEmbeddingClient(
-    projectName: string,
-  ): Promise<ResolvedEmbeddingClient> {
+  async getEmbeddingClient(projectName: string): Promise {
     const entry = await this.resolveEmbedding(projectName)
     return entry.value
   }
 
-  async invalidate(projectName: string): Promise<void> {
+  async invalidate(projectName: string): Promise {
     this.configCache.delete(projectName)
     this.s3Clients.delete(projectName)
     this.qdrantClients.delete(projectName)
@@ -259,7 +247,7 @@ class ConnectionManager {
   // Resolution — config layer
   // -------------------------------------------------------------------------
 
-  private async resolveConfig(projectName: string): Promise<ResolvedRow> {
+  private async resolveConfig(projectName: string): Promise {
     const now = Date.now()
     const cached = this.configCache.get(projectName)
     if (cached && cached.expiresAt > now) return cached.value
@@ -283,7 +271,7 @@ class ConnectionManager {
     return promise
   }
 
-  private async fetchConfig(projectName: string): Promise<ResolvedRow> {
+  private async fetchConfig(projectName: string): Promise {
     // Tier 1 — Redis
     try {
       const redis = await ensureRedisConnected()
@@ -308,18 +296,10 @@ class ConnectionManager {
     } else {
       const row = rows[0]!
       const [s3, database, qdrant, embedding] = await Promise.all([
-        decryptProjectConfig<S3OverrideConfig>(
-          row.s3_config as EncryptedField,
-        ),
-        decryptProjectConfig<DatabaseOverrideConfig>(
-          row.database_config as EncryptedField,
-        ),
-        decryptProjectConfig<QdrantOverrideConfig>(
-          row.qdrant_config as EncryptedField,
-        ),
-        decryptProjectConfig<EmbeddingOverrideConfig>(
-          row.embedding_config as EncryptedField,
-        ),
+        decryptProjectConfig(row.s3_config as EncryptedField),
+        decryptProjectConfig(row.database_config as EncryptedField),
+        decryptProjectConfig(row.qdrant_config as EncryptedField),
+        decryptProjectConfig(row.embedding_config as EncryptedField),
       ])
       // Legacy: older rows stored the embedding override under
       // `qdrant_config.embedding`. Honor it as a fallback so we don't break
@@ -354,7 +334,7 @@ class ConnectionManager {
   // Resolution — S3
   // -------------------------------------------------------------------------
 
-  private async resolveS3(projectName: string): Promise<S3CacheEntry> {
+  private async resolveS3(projectName: string): Promise {
     const now = Date.now()
     const cached = this.s3Clients.get(projectName)
     if (cached && cached.expiresAt > now) return cached
@@ -416,7 +396,7 @@ class ConnectionManager {
   // Resolution — Qdrant
   // -------------------------------------------------------------------------
 
-  private async resolveQdrant(projectName: string): Promise<QdrantCacheEntry> {
+  private async resolveQdrant(projectName: string): Promise {
     const now = Date.now()
     const cached = this.qdrantClients.get(projectName)
     if (cached && cached.expiresAt > now) return cached
@@ -472,7 +452,7 @@ class ConnectionManager {
   // Resolution — documents Postgres
   // -------------------------------------------------------------------------
 
-  private async resolvePg(projectName: string): Promise<PgCacheEntry> {
+  private async resolvePg(projectName: string): Promise {
     const now = Date.now()
     const cached = this.pgClients.get(projectName)
     if (cached && cached.expiresAt > now) return cached
@@ -487,7 +467,7 @@ class ConnectionManager {
         // own its lifecycle so `raw` is a no-op end().
         const entry: PgCacheEntry = {
           value: hostDb,
-          raw: { end: async () => {} } as unknown as ReturnType<typeof postgres>,
+          raw: { end: async () => {} } as unknown as ReturnType,
           expiresAt: Date.now() + CLIENT_TTL_MS,
         }
         this.pgClients.set(projectName, entry)
@@ -518,9 +498,7 @@ class ConnectionManager {
   // Resolution — embedding
   // -------------------------------------------------------------------------
 
-  private async resolveEmbedding(
-    projectName: string,
-  ): Promise<EmbeddingCacheEntry> {
+  private async resolveEmbedding(projectName: string): Promise {
     const now = Date.now()
     const cached = this.embeddingClients.get(projectName)
     if (cached && cached.expiresAt > now) return cached

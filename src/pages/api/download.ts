@@ -9,7 +9,7 @@ export async function generatePresignedUrl(
   filePath: string,
   courseName: string,
   fileName?: string,
-): Promise<string> {
+): Promise {
   let ResponseContentType: string | undefined = undefined
 
   if (filePath.endsWith('.pdf')) {

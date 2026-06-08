@@ -36,7 +36,7 @@ async function encryptJson(obj: unknown) {
 }
 
 function setupRedisFake() {
-  const store = new Map<string, string>()
+  const store = new Map()
   const redisFake = {
     get: vi.fn(async (k: string) => store.get(k) ?? null),
     set: vi.fn(async (k: string, v: string) => {
@@ -120,7 +120,7 @@ describe('ConnectionManager — defaults (no row)', () => {
 
   it('getDocumentsDb returns the host db when no row exists', async () => {
     const hostStub = makeHostDbStub([])
-    vi.doMock("~/db/dbClient", () => ({ db: hostStub.db }))
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
     vi.doMock('~/utils/qdrantClient', () => ({ qdrant: {} }))
     setupRedisFake()
@@ -144,7 +144,7 @@ describe('ConnectionManager — defaults (no row)', () => {
         qdrant_config: null,
       },
     ])
-    vi.doMock("~/db/dbClient", () => ({ db: hostStub.db }))
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
     const defaultS3 = { kind: 'default-s3' }
     vi.doMock('~/utils/s3Client', () => ({ s3Client: defaultS3 }))
     vi.doMock('~/utils/qdrantClient', () => ({ qdrant: {} }))
@@ -174,7 +174,7 @@ describe('ConnectionManager — overrides', () => {
         qdrant_config: null,
       },
     ])
-    vi.doMock("~/db/dbClient", () => ({ db: hostStub.db }))
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
     vi.doMock('~/utils/qdrantClient', () => ({ qdrant: {} }))
     setupRedisFake()
@@ -214,7 +214,7 @@ describe('ConnectionManager — overrides', () => {
         qdrant_config: null,
       },
     ])
-    vi.doMock("~/db/dbClient", () => ({ db: hostStub.db }))
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
     vi.doMock('~/utils/qdrantClient', () => ({ qdrant: {} }))
     setupRedisFake()
@@ -243,7 +243,7 @@ describe('ConnectionManager — overrides', () => {
         qdrant_config: qField,
       },
     ])
-    vi.doMock("~/db/dbClient", () => ({ db: hostStub.db }))
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
     vi.doMock('~/utils/qdrantClient', () => ({ qdrant: {} }))
     setupRedisFake()
@@ -303,7 +303,7 @@ describe('ConnectionManager — overrides', () => {
         qdrant_config: null,
       },
     ])
-    vi.doMock("~/db/dbClient", () => ({ db: hostStub.db }))
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
     vi.doMock('~/utils/qdrantClient', () => ({ qdrant: {} }))
     setupRedisFake()
@@ -327,7 +327,7 @@ describe('ConnectionManager — overrides', () => {
 describe('ConnectionManager — caching and invalidation', () => {
   it('caches the resolved config after the first lookup', async () => {
     const hostStub = makeHostDbStub([])
-    vi.doMock("~/db/dbClient", () => ({ db: hostStub.db }))
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
     vi.doMock('~/utils/qdrantClient', () => ({ qdrant: {} }))
     setupRedisFake()
@@ -341,7 +341,7 @@ describe('ConnectionManager — caching and invalidation', () => {
 
   it('serves the second project independently', async () => {
     const hostStub = makeHostDbStub([])
-    vi.doMock("~/db/dbClient", () => ({ db: hostStub.db }))
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
     vi.doMock('~/utils/qdrantClient', () => ({ qdrant: {} }))
     setupRedisFake()
@@ -364,7 +364,7 @@ describe('ConnectionManager — caching and invalidation', () => {
         qdrant_config: null,
       },
     ])
-    vi.doMock("~/db/dbClient", () => ({ db: hostStub.db }))
+    vi.doMock('~/db/dbClient', () => ({ db: hostStub.db }))
     vi.doMock('~/utils/s3Client', () => ({ s3Client: {} }))
     vi.doMock('~/utils/qdrantClient', () => ({ qdrant: {} }))
     const { redisFake } = setupRedisFake()
@@ -386,7 +386,6 @@ describe('ConnectionManager — caching and invalidation', () => {
     await connectionManager.getDocumentsDb('p')
     expect(hostStub.select).toHaveBeenCalledTimes(2)
   })
-
 })
 
 describe('ConnectionManager — getEmbeddingClient', () => {
@@ -550,7 +549,7 @@ describe('ConnectionManager — getEmbeddingClient', () => {
 describe('ConnectionManager — preserved lock test', () => {
   it('coalesces concurrent lookups into a single DB read (lock)', async () => {
     let resolveLimit: (rows: Row[]) => void
-    const limitPromise = new Promise<Row[]>((r) => {
+    const limitPromise = new Promise((r) => {
       resolveLimit = r
     })
     const limit = vi.fn().mockReturnValue(limitPromise)

@@ -65,7 +65,9 @@ describe('projectConnections handler — auth gate', () => {
   it('default export rejects non-super-admin with 403', async () => {
     mockRepoAndManager()
     vi.doMock('~/utils/superAdmins', () => ({
-      isSuperAdmin: vi.fn((email: string | null) => email === 'admin@example.com'),
+      isSuperAdmin: vi.fn(
+        (email: string | null) => email === 'admin@example.com',
+      ),
     }))
     vi.doMock('~/utils/authMiddleware', () => ({
       withAuth: (h: any) => async (req: any, res: any) => {
@@ -76,7 +78,10 @@ describe('projectConnections handler — auth gate', () => {
 
     const mod = await import('../projectConnections')
     const res = makeRes()
-    await mod.default({ method: 'GET', query: { project_name: 'demo' }, headers: {} } as any, res)
+    await mod.default(
+      { method: 'GET', query: { project_name: 'demo' }, headers: {} } as any,
+      res,
+    )
     expect(res.statusCode).toBe(403)
   })
 

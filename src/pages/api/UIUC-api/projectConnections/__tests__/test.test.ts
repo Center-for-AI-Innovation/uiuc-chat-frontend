@@ -114,7 +114,11 @@ describe('projectConnections/test handler', () => {
 
   it('failure path: probe returns ok:false → audit failure with code', async () => {
     mockTesterAndRepo({
-      qdrant: () => ({ ok: false, code: 'auth', message: 'Authentication rejected' }),
+      qdrant: () => ({
+        ok: false,
+        code: 'auth',
+        message: 'Authentication rejected',
+      }),
     })
     const { handler } = await import('../test')
     const res = makeRes()

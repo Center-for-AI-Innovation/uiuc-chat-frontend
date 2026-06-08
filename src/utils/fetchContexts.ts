@@ -10,10 +10,10 @@ export default async function fetchContextsFromBackend(
   conversation_id?: string,
   top_n?: number,
   signal?: AbortSignal,
-): Promise<ContextWithMetadata[]> {
+): Promise {
   const backendUrl = getBackendUrl()
 
-  const requestBody: Record<string, unknown> = {
+  const requestBody: Record = {
     course_name: course_name,
     search_query: search_query,
     token_limit: token_limit,
@@ -46,7 +46,7 @@ export const fetchContexts = async (
   token_limit = 4000,
   doc_groups: string[] = [],
   conversation_id?: string,
-): Promise<ContextWithMetadata[]> => {
+): Promise => {
   // Check if we're running on client-side (browser) or server-side
   const isClientSide = typeof window !== 'undefined'
 
@@ -100,7 +100,7 @@ export const fetchMQRContexts = async (
   token_limit = 6000,
   doc_groups: string[] = [],
   conversation_id: string,
-): Promise<ContextWithMetadata[]> => {
+): Promise => {
   try {
     const params = new URLSearchParams({
       course_name,

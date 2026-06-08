@@ -16,7 +16,7 @@ export interface UpdateDocGroupsResponse {
 export async function updateDocGroupsInVectorStore(
   courseName: string,
   doc: CourseDocument,
-): Promise<UpdateDocGroupsResponse> {
+): Promise {
   try {
     const engine = await connectionManager.resolveVectorEngine(courseName)
     if (engine.kind === 'qdrant') {
@@ -49,11 +49,11 @@ export async function updateDocGroupsInVectorStore(
 }
 
 async function setQdrantDocGroupsPayload(
-  client: { setPayload: (collection: string, body: any) => Promise<unknown> },
+  client: { setPayload: (collection: string, body: any) => Promise },
   collection: string,
   courseName: string,
   doc: CourseDocument,
-): Promise<void> {
+): Promise {
   const searchFilter = {
     must: [
       { key: 'course_name', match: { value: courseName } },
@@ -70,7 +70,7 @@ async function setQdrantDocGroupsPayload(
 async function setPgvectorDocGroups(
   courseName: string,
   doc: CourseDocument,
-): Promise<void> {
+): Promise {
   // Drizzle UPDATE on the project's documents Postgres (per-project pg
   // if `database_config` is set; otherwise host).
   // Match backend logic: WHERE course_name AND s3_path AND (url = $url or url IS NULL/empty).

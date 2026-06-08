@@ -99,9 +99,9 @@ export type AgentEventType =
 export interface AgentEventMetadata {
   toolName?: string
   readableToolName?: string
-  arguments?: Record<string, unknown>
+  arguments?: Record
   outputText?: string
-  outputData?: Record<string, unknown>
+  outputData?: Record
   outputImageUrls?: string[]
   contextQuery?: string
   contextsRetrieved?: number
@@ -130,10 +130,10 @@ export interface UIUCTool {
   description: string
   inputParameters?: {
     type: 'object'
-    properties: Record<string, N8NParameter>
+    properties: Record
     required: string[]
   }
-  aiGeneratedArgumentValues?: Record<string, string>
+  aiGeneratedArgumentValues?: Record
   courseName?: string
   enabled?: boolean
   createdAt?: string
@@ -148,7 +148,7 @@ export interface ToolOutput {
   text?: string // For plain text outputs
   imageUrls?: string[] // For image URLs
   s3Paths?: string[] // For S3 paths of uploaded files
-  data?: Record<string, unknown> // For any other structured data
+  data?: Record // For any other structured data
 }
 
 // tool_image_url is for images returned by tools

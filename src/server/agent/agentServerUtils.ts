@@ -93,7 +93,7 @@ export interface SelectToolsServerResult {
  */
 export async function selectToolsServer(
   params: SelectToolsServerParams,
-): Promise<SelectToolsServerResult> {
+): Promise {
   const {
     conversation,
     availableTools,
@@ -245,7 +245,7 @@ export interface ExecuteToolServerParams {
  */
 export async function executeToolServer(
   params: ExecuteToolServerParams,
-): Promise<UIUCTool> {
+): Promise {
   const { tool, projectName, n8nApiKey, signal } = params
   const toolCopy = { ...tool }
 
@@ -337,7 +337,7 @@ export async function executeToolsServer(
   projectName: string,
   n8nApiKey?: string,
   signal?: AbortSignal,
-): Promise<UIUCTool[]> {
+): Promise {
   const results = await Promise.all(
     tools.map((tool) =>
       executeToolServer({ tool, projectName, n8nApiKey, signal }),
@@ -361,7 +361,7 @@ export interface FetchContextsServerParams {
  */
 export async function fetchContextsServer(
   params: FetchContextsServerParams,
-): Promise<ContextWithMetadata[]> {
+): Promise {
   const {
     courseName,
     searchQuery,
@@ -372,7 +372,7 @@ export async function fetchContextsServer(
   } = params
 
   const sleep = (ms: number) =>
-    new Promise<void>((resolve) => setTimeout(resolve, ms))
+    new Promise((resolve) => setTimeout(resolve, ms))
   const delaysMs = [0, 500, 1000, 2000]
   let lastError: string | null = null
   const isAbortError = (error: unknown) => {
@@ -442,9 +442,7 @@ export async function fetchContextsServer(
 /**
  * Get N8N API key for a project directly from database (server-side only)
  */
-async function getN8nApiKeyFromProject(
-  courseName: string,
-): Promise<string | undefined> {
+async function getN8nApiKeyFromProject(courseName: string): Promise {
   try {
     const data = await db
       .select({ n8n_api_key: projects.n8n_api_key })
@@ -475,7 +473,7 @@ export async function fetchToolsServer(
   n8nApiKey?: string,
   limit = 20,
   signal?: AbortSignal,
-): Promise<UIUCTool[]> {
+): Promise {
   // Get N8N API key if not provided
   let apiKey = n8nApiKey
   if (!apiKey) {
@@ -531,9 +529,7 @@ export async function fetchToolsServer(
 /**
  * Get OpenAI key from LLM providers for a course
  */
-export async function getOpenAIKeyForCourse(
-  courseName: string,
-): Promise<string | null> {
+export async function getOpenAIKeyForCourse(courseName: string): Promise {
   try {
     // This would typically call the models API to get providers
     // For now, fall back to env variable
@@ -551,7 +547,7 @@ export async function getOpenAIKeyForCourse(
 export async function generatePresignedUrlServer(
   filePath: string,
   courseName: string,
-): Promise<string | null> {
+): Promise {
   try {
     return await generatePresignedUrl(filePath, courseName)
   } catch (error) {

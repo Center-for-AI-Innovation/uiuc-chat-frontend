@@ -29,7 +29,10 @@ export async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
   const actorEmail = req.user?.email ?? 'unknown'
 
   try {
-    const result = await setActive({ projectName: project_name, isActive: is_active })
+    const result = await setActive({
+      projectName: project_name,
+      isActive: is_active,
+    })
     if (!result.found) {
       await writeAuditEntry({
         actor_email: actorEmail,

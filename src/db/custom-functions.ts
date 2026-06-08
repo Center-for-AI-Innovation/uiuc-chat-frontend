@@ -11,7 +11,7 @@ const sqlFiles = [
   path.join(process.cwd(), 'src/db/migrations/0001_custom_functions.sql'),
 ]
 
-async function runPsqlFile(filePath: string): Promise<void> {
+async function runPsqlFile(filePath: string): Promise {
   return new Promise((resolve, reject) => {
     const psql = spawn(
       'psql',

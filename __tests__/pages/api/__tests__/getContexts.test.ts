@@ -8,9 +8,7 @@ const hoisted = vi.hoisted(() => ({
 }))
 
 vi.mock('~/pages/api/authorization', () => ({
-  withCourseAccessFromRequest:
-    () => (h: (req: any, res: any) => Promise<void>) =>
-      h,
+  withCourseAccessFromRequest: () => (h: (req: any, res: any) => Promise) => h,
 }))
 
 vi.mock('~/server/fetchContextsForVectorSearch', () => ({

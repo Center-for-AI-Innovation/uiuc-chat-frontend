@@ -40,9 +40,7 @@ interface CourseDocuments {
   base_url: string
 }
 
-export const getCourseDocuments = async (
-  course_name: string,
-): Promise<CourseDocuments[] | null> => {
+export const getCourseDocuments = async (course_name: string): Promise => {
   if (!course_name) {
     console.error('Course name is missing')
     return null

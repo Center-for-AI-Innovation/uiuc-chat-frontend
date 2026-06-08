@@ -21,10 +21,7 @@ type FetchDocumentsResponse = {
  * @param {NextApiResponse} res - The outgoing HTTP response.
  * @returns A JSON response indicating the result of the delete operation.
  */
-async function fetchDocuments(
-  req: AuthenticatedRequest,
-  res: NextApiResponse<FetchDocumentsResponse>,
-) {
+async function fetchDocuments(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -65,7 +62,7 @@ async function fetchDocuments(
     // Helper function to get the sort column
     const getSortColumn = () => {
       if (typeof sort_column === 'string' && sort_column in documents) {
-        return documents[sort_column as keyof typeof documents] as PgColumn<any>
+        return documents[sort_column as keyof typeof documents] as PgColumn
       }
       return documents.id
     }
@@ -77,9 +74,7 @@ async function fetchDocuments(
       s3_path: documents.s3_path,
       url: documents.url,
       created_at: documents.created_at,
-      doc_groups: sql<
-        string[]
-      >`array_remove(array_agg(${docGroups.name}), null)`,
+      doc_groups: sql`array_remove(array_agg(${docGroups.name}), null)`,
     }
 
     if (
@@ -90,7 +85,7 @@ async function fetchDocuments(
     ) {
       const searchColumn = documents[
         search_key as keyof typeof documents
-      ] as PgColumn<any>
+      ] as PgColumn
 
       try {
         foundDocs = await db
@@ -163,12 +158,12 @@ async function fetchDocuments(
       // Fetch the total count of documents for the selected course
       try {
         const countQuery = await db
-          .select({ count: sql<number>`count(distinct ${documents.id})` })
+          .select({ count: sql`count(distinct ${documents.id})` })
           .from(documents)
           .where(
             and(
               eq(documents.course_name, course_name as string),
-              sql`${documents[search_key as keyof typeof documents] as PgColumn<any>} ILIKE ${`%${search_value}%`}`,
+              sql`${documents[search_key as keyof typeof documents] as PgColumn} ILIKE ${`%${search_value}%`}`,
             ),
           )
 
@@ -182,7 +177,7 @@ async function fetchDocuments(
       // Fetch the total count of documents for the selected course
       try {
         const countQuery = await db
-          .select({ count: sql<number>`count(distinct ${documents.id})` })
+          .select({ count: sql`count(distinct ${documents.id})` })
           .from(documents)
           .where(eq(documents.course_name, course_name as string)) // No filter
 

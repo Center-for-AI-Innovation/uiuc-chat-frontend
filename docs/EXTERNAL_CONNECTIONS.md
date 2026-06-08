@@ -138,18 +138,18 @@ endpoints are intentionally **separate** from the existing
 
 ### Table — `project_external_connections`
 
-| column            | type        | notes                                                                 |
-| ----------------- | ----------- | --------------------------------------------------------------------- |
-| `id`              | bigserial   | PK                                                                    |
-| `project_id`      | bigint      | FK → `projects(id)` ON DELETE CASCADE, unique                         |
-| `project_name`    | text        | unique                                                                |
-| `created_at`      | timestamptz | defaultNow()                                                          |
-| `updated_at`      | timestamptz | bumped on every write                                                 |
-| `s3_config`       | jsonb       | encrypted envelope or NULL                                            |
-| `database_config` | jsonb       | encrypted envelope or NULL                                            |
-| `qdrant_config`   | jsonb       | encrypted envelope or NULL — when present, embeddings live in Qdrant  |
-| `embedding_config`| jsonb       | encrypted envelope or NULL — per-project embedding-model override     |
-| `is_active`       | boolean     | when false, the backend ignores overrides and falls back to defaults  |
+| column             | type        | notes                                                                |
+| ------------------ | ----------- | -------------------------------------------------------------------- |
+| `id`               | bigserial   | PK                                                                   |
+| `project_id`       | bigint      | FK → `projects(id)` ON DELETE CASCADE, unique                        |
+| `project_name`     | text        | unique                                                               |
+| `created_at`       | timestamptz | defaultNow()                                                         |
+| `updated_at`       | timestamptz | bumped on every write                                                |
+| `s3_config`        | jsonb       | encrypted envelope or NULL                                           |
+| `database_config`  | jsonb       | encrypted envelope or NULL                                           |
+| `qdrant_config`    | jsonb       | encrypted envelope or NULL — when present, embeddings live in Qdrant |
+| `embedding_config` | jsonb       | encrypted envelope or NULL — per-project embedding-model override    |
+| `is_active`        | boolean     | when false, the backend ignores overrides and falls back to defaults |
 
 ### Vector / docs routing precedence
 
@@ -217,12 +217,7 @@ type QdrantOverrideConfig = {
   // Optional read-side fan-out. Each entry is an object — the backend
   // consumes `name`, `top_n?`, `use_filter?`, `processor?`. See
   // ai_ta_backend/database/vector.py `_multi_collection_search`.
-  collections?: Array<{
-    name: string
-    top_n?: number
-    use_filter?: boolean
-    processor?: string
-  }>
+  collections?: Array
   parallel?: boolean
 }
 ```
@@ -235,19 +230,19 @@ Zod validators are in `src/utils/projectConnections/validation.ts`.
 
 Every mutation writes a row to `project_connection_audit_log`:
 
-| field            | meaning                                                                      |
-| ---------------- | ---------------------------------------------------------------------------- |
-| `occurred_at`    | timestamptz, defaults to `now()`                                             |
-| `actor_email`    | from the verified JWT                                                        |
-| `action`         | `upsert` \| `delete` \| `set_active` \| `test`                               |
+| field            | meaning                                                                                |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `occurred_at`    | timestamptz, defaults to `now()`                                                       |
+| `actor_email`    | from the verified JWT                                                                  |
+| `action`         | `upsert` \| `delete` \| `set_active` \| `test`                                         |
 | `project_name`   | target project, or NULL for `/test` probes (which happen before a project is selected) |
-| `kind`           | `s3` \| `database` \| `qdrant` \| NULL                                       |
-| `outcome`        | `success` \| `failure`                                                       |
-| `failure_reason` | short reason code; never an upstream error body                              |
-| `changed_fields` | **field NAMES only** — never values. Helpful for "who rotated what when?"   |
-| `source_ip`      | `X-Forwarded-For` first hop, else socket peer                                |
-| `user_agent`     | request header                                                               |
-| `request_id`     | `X-Request-Id` or `X-Correlation-Id` if present                              |
+| `kind`           | `s3` \| `database` \| `qdrant` \| NULL                                                 |
+| `outcome`        | `success` \| `failure`                                                                 |
+| `failure_reason` | short reason code; never an upstream error body                                        |
+| `changed_fields` | **field NAMES only** — never values. Helpful for "who rotated what when?"              |
+| `source_ip`      | `X-Forwarded-For` first hop, else socket peer                                          |
+| `user_agent`     | request header                                                                         |
+| `request_id`     | `X-Request-Id` or `X-Correlation-Id` if present                                        |
 
 Operational rule: **do not grant `UPDATE` or `DELETE` to the application
 role on this table.** Treat it as append-only.

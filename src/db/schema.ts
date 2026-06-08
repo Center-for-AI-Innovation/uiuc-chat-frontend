@@ -30,7 +30,7 @@ export const embeddings = pgTable('embeddings', {
   readable_filename: text('readable_filename'),
   url: text('url'),
   base_url: text('base_url'),
-  doc_groups: jsonb('doc_groups').default([]).$type<string[]>(),
+  doc_groups: jsonb('doc_groups').default([]).$type(),
   chunk_index: integer('chunk_index'),
   pagenumber: text('pagenumber'),
   timestamp: text('timestamp'),

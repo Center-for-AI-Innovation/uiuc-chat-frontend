@@ -57,9 +57,7 @@ export interface DocGroupsForVectorSearch {
  * Get disabled and public doc groups for a course for use in vector search.
  * Replaces backend getDisabledDocGroups / getPublicDocGroups.
  */
-export async function getDocGroupsForVectorSearch(
-  courseName: string,
-): Promise<DocGroupsForVectorSearch> {
+export async function getDocGroupsForVectorSearch(courseName: string): Promise {
   const rows = await fetchDocumentGroups(courseName)
   const disabled_doc_groups = rows
     .filter((r) => r.enabled === false)

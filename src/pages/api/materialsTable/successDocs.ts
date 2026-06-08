@@ -12,10 +12,7 @@ type SuccessDocsResponse = {
   error?: string
 }
 
-async function successDocs(
-  req: AuthenticatedRequest,
-  res: NextApiResponse<SuccessDocsResponse>,
-) {
+async function successDocs(req: AuthenticatedRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }

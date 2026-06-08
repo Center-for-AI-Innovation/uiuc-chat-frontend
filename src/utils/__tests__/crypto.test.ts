@@ -119,7 +119,7 @@ describe('decryptProjectConfig', () => {
       default_collection: 'my-coll',
     }
     const ct = (await encrypt(JSON.stringify(config), MASTER)) as string
-    const result = await decryptProjectConfig<typeof config>({ encrypted: ct })
+    const result = await decryptProjectConfig({ encrypted: ct })
     expect(result).toEqual(config)
   })
 
@@ -152,7 +152,7 @@ describe('encryptProjectConfig', () => {
     }
     const blob = await encryptProjectConfig(config)
     expect(blob.encrypted).toMatch(/^v1\..+\..+$/)
-    const back = await decryptProjectConfig<typeof config>(blob)
+    const back = await decryptProjectConfig(blob)
     expect(back).toEqual(config)
   })
 

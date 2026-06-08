@@ -26,7 +26,9 @@ describe('superAdmins', () => {
     expect(superAdmins).toContain('foo@example.com')
     expect(superAdmins).toContain('bar@example.com')
     // duplicate of the hardcoded entry, post-lowercase
-    expect(superAdmins.filter((e) => e === 'rohan13@illinois.edu')).toHaveLength(1)
+    expect(
+      superAdmins.filter((e) => e === 'rohan13@illinois.edu'),
+    ).toHaveLength(1)
   })
 
   it('isSuperAdmin matches case-insensitively and rejects empties', async () => {

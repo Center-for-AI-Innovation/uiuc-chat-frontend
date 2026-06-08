@@ -27,7 +27,7 @@ import { connectionManager } from '~/utils/connectionManager'
 export async function embedQuery(
   searchQuery: string,
   projectName: string,
-): Promise<number[]> {
+): Promise {
   const resolved = await connectionManager.getEmbeddingClient(projectName)
 
   if (resolved.kind === 'ollama') {

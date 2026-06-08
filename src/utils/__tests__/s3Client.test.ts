@@ -56,5 +56,4 @@ describe('s3Client', () => {
     await import('../s3Client')
     expect(ctor).toHaveBeenCalledWith({ region: 'us-east-1' })
   })
-
 })
