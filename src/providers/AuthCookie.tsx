@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 
 import { CookieStorage } from '~/providers/CookieStorage'
@@ -9,6 +9,7 @@ export function AuthCookie({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [cookieWritten, setCookieWritten] = useState(false)
   const cookieStore = new CookieStorage()
+  const retriedLogin = useRef(false)
 
   useEffect(() => {
     try {
@@ -27,13 +28,21 @@ export function AuthCookie({ children }: { children: React.ReactNode }) {
     }
   }, [auth, cookieStore, router])
 
-  // TODO make full pages with styling
-  // switch (auth.activeNavigator) {
-  //   case "signinSilent":
-  //     return <div>Signing you in...</div>;
-  //   case "signoutRedirect":
-  //     return <div>Signing you out...</div>;
-  // }
+  // Silent renew failures should re-trigger login instead of bricking the page
+  useEffect(() => {
+    if (!auth.error || retriedLogin.current || auth.activeNavigator) return
+    retriedLogin.current = true
+    console.warn('Auth error, redirecting to login:', auth.error.message)
+    void auth.signinRedirect()
+  }, [auth.error, auth.activeNavigator, auth])
+
+  if (auth.activeNavigator === 'signinSilent') {
+    return null
+  }
+
+  if (auth.activeNavigator === 'signoutRedirect') {
+    return <div>Signing you out...</div>
+  }
 
   // Don't render children until auth is loaded AND cookie is written
   if (auth.isAuthenticated && !cookieWritten) {
@@ -41,7 +50,7 @@ export function AuthCookie({ children }: { children: React.ReactNode }) {
   }
 
   if (auth.error) {
-    return <div>Oops... {auth.error.message}</div>
+    return <div>Session expired, redirecting to login...</div>
   }
 
   // At this point, cookieWritten is guaranteed to be true
