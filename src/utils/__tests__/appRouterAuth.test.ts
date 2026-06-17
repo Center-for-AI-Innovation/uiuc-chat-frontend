@@ -51,6 +51,31 @@ describe('withAppRouterAuth', () => {
     await expect(res.json()).resolves.toMatchObject({ user: { sub: 'u1' } })
   })
 
+  it('extracts the token despite empty, valueless, and malformed-encoded cookie segments', async () => {
+    const verifyTokenAsync = vi.fn().mockResolvedValue({ sub: 'u1' })
+    const getKeycloakBaseFromHost = vi.fn(() => 'https://kc/')
+    vi.doMock('../keycloakClient', () => ({ verifyTokenAsync }))
+    vi.doMock('~/utils/authHelpers', () => ({ getKeycloakBaseFromHost }))
+
+    vi.resetModules()
+    const { withAppRouterAuth } = await import('../appRouterAuth')
+
+    const handler = vi.fn((req: any) => NextResponse.json({ user: req.user }))
+    const wrapped = withAppRouterAuth(handler as any)
+
+    const req: any = {
+      // '' (empty) → skipped; 'novalue' (no '=') → skipped; 'bad=%E0%A4%A'
+      // (malformed percent-encoding) → falls back to the raw value via catch.
+      headers: new Headers({
+        cookie: 'access_token=t; ; novalue; bad=%E0%A4%A',
+      }),
+    }
+
+    const res = await wrapped(req)
+    expect(verifyTokenAsync).toHaveBeenCalledWith('t', 'https://kc/')
+    await expect(res.json()).resolves.toMatchObject({ user: { sub: 'u1' } })
+  })
+
   it('returns 401 TokenExpiredError when token is expired', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     const verifyTokenAsync = vi
