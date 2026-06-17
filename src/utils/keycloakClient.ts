@@ -135,6 +135,9 @@ export function createTokenVerifier(keycloakBaseUrl?: string) {
     options: {
       issuer: `${keycloakBaseUrl}realms/${KEYCLOAK_REALM}`,
       algorithms: ['RS256'] as jwt.Algorithm[],
+      // Tolerate small client/server clock differences near `exp` so a token
+      // the client still considers valid isn't rejected as expired.
+      clockTolerance: 30,
     },
   }
 }

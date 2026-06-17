@@ -5,22 +5,28 @@ import { getKeycloakBaseFromHost } from '~/utils/authHelpers'
 import { verifyTokenAsync } from './keycloakClient'
 
 function getTokenFromCookies(req: NextRequest): string | null {
-  // Find oidc.user* cookie
   const cookieHeader = req.headers.get('cookie')
   if (!cookieHeader) return null
 
-  const cookies = cookieHeader.split(';').reduce(
-    (acc, cookie) => {
-      const [name, value] = cookie.trim().split('=')
-      if (name) acc[name] = value ?? ''
-      return acc
-    },
-    {} as Record<string, string>,
-  )
+  // Parse the cookie header into a decoded map. Split on the FIRST '=' only
+  // (cookie values may contain '=') and decode each value so it matches the
+  // semantics of Next's `req.cookies` used by the Pages gate.
+  const cookies: Record<string, string> = {}
+  for (const part of cookieHeader.split(';')) {
+    const trimmed = part.trim()
+    if (!trimmed) continue
+    const eq = trimmed.indexOf('=')
+    if (eq === -1) continue
+    const name = trimmed.slice(0, eq)
+    const rawValue = trimmed.slice(eq + 1)
+    try {
+      cookies[name] = decodeURIComponent(rawValue)
+    } catch {
+      cookies[name] = rawValue
+    }
+  }
 
-  const raw = cookies['access_token']
-  if (!raw) return null
-  return raw
+  return cookies['access_token'] ?? null
 }
 
 export interface AuthenticatedRequest extends NextRequest {
@@ -61,8 +67,6 @@ export function withAppRouterAuth(
       const rawHost =
         req.headers.get('x-forwarded-host') ?? req.headers.get('host')
       const hostValue = Array.isArray(rawHost) ? rawHost[0] : rawHost
-
-      console.log('Host value:', hostValue)
 
       // Fallback to 'localhost' if undefined
       const hostname = (hostValue ?? 'localhost').split(':')[0]

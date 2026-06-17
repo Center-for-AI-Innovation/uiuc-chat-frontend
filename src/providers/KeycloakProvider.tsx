@@ -1,7 +1,12 @@
-import { AuthProvider, useAuth } from 'react-oidc-context'
-import React, { type ReactNode, useEffect, useState } from 'react'
-import { WebStorageStateStore } from 'oidc-client-ts'
-import { getKeycloakBaseUrl } from '~/utils/authHelpers'
+import { AuthProvider } from 'react-oidc-context'
+import React, {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { buildOidcSettings } from '~/config/oidcConfig'
 import Link from 'next/link'
 import { montserrat_heading } from '../../fonts'
 import { Flex, Title } from '@mantine/core'
@@ -28,11 +33,6 @@ const isValidRedirectPath = (path: string): boolean => {
 }
 // ---------------------------------------
 
-const getBaseUrl = () => {
-  if (typeof window === 'undefined') return ''
-  return window.location.origin
-}
-
 // Function to save the current path before login
 const saveCurrentPath = () => {
   if (typeof window !== 'undefined') {
@@ -52,75 +52,51 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
   const [isMounted, setIsMounted] = useState(false)
   const [isAuthCallback, setIsAuthCallback] = useState(false)
 
-  const [oidcConfig, setOidcConfig] = useState({
-    authority: `${getKeycloakBaseUrl()}realms/${
-      process.env.NEXT_PUBLIC_KEYCLOAK_REALM
-    }`,
-    client_id: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'uiucchat',
-    redirect_uri: '',
-    silent_redirect_uri: '',
-    post_logout_redirect_uri: '',
-    scope: 'openid profile email',
-    response_type: 'code',
-    loadUserInfo: true,
-    onSigninCallback: async () => {
-      if (typeof window !== 'undefined') {
-        let redirectPath = sessionStorage.getItem('auth_redirect_path') || '/'
+  // Stable signin-callback: restore the pre-login path and hand off.
+  const handleSigninCallback = useCallback(async () => {
+    if (typeof window === 'undefined') return
 
-        if (!isValidRedirectPath(redirectPath)) {
-          redirectPath = '/'
-        }
+    let redirectPath = sessionStorage.getItem('auth_redirect_path') || '/'
+    if (!isValidRedirectPath(redirectPath)) {
+      redirectPath = '/'
+    }
 
-        // Extra logic: if root path and Illinois Chat config enabled → go to /chat
-        if (
-          redirectPath === '/' &&
-          process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
-        ) {
-          redirectPath = '/chat'
-        }
+    // Extra logic: if root path and Illinois Chat config enabled → go to /chat
+    if (
+      redirectPath === '/' &&
+      process.env.NEXT_PUBLIC_USE_ILLINOIS_CHAT_CONFIG === 'True'
+    ) {
+      redirectPath = '/chat'
+    }
 
-        sessionStorage.removeItem('auth_redirect_path')
-        window.location.replace(redirectPath)
-        // TODO: This doesn't work even though it's recommended in the react-oidc-context docs
-        // window.history.replaceState({}, document.title, redirectPath)
-      }
-    },
-  })
+    sessionStorage.removeItem('auth_redirect_path')
+    window.location.replace(redirectPath)
+  }, [])
+
+  // Build the COMPLETE OIDC settings once, on the client, before <AuthProvider>
+  // mounts. react-oidc-context constructs the UserManager from these props a
+  // single time and does NOT rebuild it when props change later, so they must
+  // be complete on first render (incl. automaticSilentRenew + userStore).
+  const oidcSettings = useMemo(
+    () =>
+      isMounted && typeof window !== 'undefined' ? buildOidcSettings() : null,
+    [isMounted],
+  )
 
   // Set up client-side values after mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const baseUrl = getBaseUrl()
-      const searchParams = new URLSearchParams(window.location.search)
-      setIsAuthCallback(searchParams.has('code') && searchParams.has('state'))
-      setIsMounted(true)
+    if (typeof window === 'undefined') return
 
-      // const cookieStore = new CookieStorage({
-      //   prefix: '',
-      //   expiresDays: 1,
-      //   sameSite: 'lax', // if your IdP is on another domain AND you use iframe silent renew, use "none"
-      //   secure: window.location.protocol === 'https:',
-      // })
-      // const cookieStore = new CookieStorage()
+    const searchParams = new URLSearchParams(window.location.search)
+    setIsAuthCallback(searchParams.has('code') && searchParams.has('state'))
+    setIsMounted(true)
 
-      setOidcConfig((prev) => ({
-        ...prev,
-        redirect_uri: baseUrl,
-        silent_redirect_uri: `${baseUrl}/silent-renew`,
-        post_logout_redirect_uri: baseUrl,
-        userStore: new WebStorageStateStore({
-          store: window.localStorage,
-        }),
-        automaticSilentRenew: true,
-      }))
-
-      // Only save the path when component mounts if we're not on the callback URL
-      if (
-        !window.location.search.includes('state=') &&
-        !window.location.search.includes('code=')
-      ) {
-        saveCurrentPath()
-      }
+    // Only save the path when component mounts if we're not on the callback URL
+    if (
+      !window.location.search.includes('state=') &&
+      !window.location.search.includes('code=')
+    ) {
+      saveCurrentPath()
     }
   }, [])
 
@@ -192,12 +168,12 @@ export const KeycloakProvider = ({ children }: AuthProviderProps) => {
     }
   }, [isMounted])
 
-  if (typeof window === 'undefined' || !isMounted) return null
+  if (typeof window === 'undefined' || !isMounted || !oidcSettings) return null
 
   return (
-    <AuthProvider {...oidcConfig}>
+    <AuthProvider {...oidcSettings} onSigninCallback={handleSigninCallback}>
       <AuthCookie>
-        {/*If we’re on the callback URL, render a handoff screen instead of the app.*/}
+        {/*If we're on the callback URL, render a handoff screen instead of the app.*/}
         {isAuthCallback ? (
           <>
             <main
