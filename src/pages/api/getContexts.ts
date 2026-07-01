@@ -4,7 +4,6 @@ import { withCourseAccessFromRequest } from '~/pages/api/authorization'
 import fetchContextsFromBackend from '~/utils/fetchContexts'
 import { fetchContextsViaDrizzleVectorSearch } from '~/server/fetchContextsForVectorSearch'
 
-
 export default withCourseAccessFromRequest('any')(handler)
 
 async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
@@ -30,22 +29,23 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
       })
     }
 
-    const data = (process.env.VECTOR_ENGINE === 'qdrant' ?
-        await fetchContextsFromBackend(
-        course_name,
-        search_query,
-        doc_groups,
-        conversation_id,
-        top_n,
-      )
-     : await fetchContextsViaDrizzleVectorSearch(
-        course_name,
-        search_query,
-        doc_groups,
-        conversation_id,
-        top_n,
-      )
-    )
+    const data =
+      process.env.VECTOR_ENGINE === 'qdrant'
+        ? await fetchContextsFromBackend(
+            course_name,
+            search_query,
+            token_limit,
+            doc_groups,
+            conversation_id,
+            top_n,
+          )
+        : await fetchContextsViaDrizzleVectorSearch(
+            course_name,
+            search_query,
+            doc_groups,
+            conversation_id,
+            top_n,
+          )
 
     return res.status(200).json(data)
   } catch (error) {
