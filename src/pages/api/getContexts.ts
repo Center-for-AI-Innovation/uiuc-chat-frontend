@@ -37,7 +37,6 @@ async function handler(req: AuthenticatedRequest, res: NextApiResponse) {
             token_limit,
             doc_groups,
             conversation_id,
-            top_n,
           )
         : await fetchContextsViaDrizzleVectorSearch(
             course_name,
