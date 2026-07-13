@@ -1,6 +1,11 @@
 import { type ContextWithMetadata } from '~/types/chat'
 import { getBackendUrl } from '~/utils/apiUtils'
 
+/** True when VECTOR_ENGINE is explicitly set to qdrant; otherwise use pgvector (Drizzle). */
+export function useQdrantVectorEngine(): boolean {
+  return process.env.VECTOR_ENGINE === 'qdrant'
+}
+
 // Common function to fetch contexts from backend - can be used anywhere
 export default async function fetchContextsFromBackend(
   course_name: string,
@@ -37,6 +42,45 @@ export default async function fetchContextsFromBackend(
   return data
 }
 
+/**
+ * Server-side retrieval routed by VECTOR_ENGINE.
+ * - VECTOR_ENGINE=qdrant → Python /getTopContexts (Qdrant)
+ * - unset / anything else → frontend Drizzle + pgvector
+ *
+ * Used by /api/getContexts, chat-api (via fetchContexts), and agent mode.
+ */
+export async function fetchContextsByVectorEngine(
+  course_name: string,
+  search_query: string,
+  token_limit = 4000,
+  doc_groups: string[] = [],
+  conversation_id?: string,
+  top_n = 100,
+  signal?: AbortSignal,
+): Promise<ContextWithMetadata[]> {
+  if (useQdrantVectorEngine()) {
+    return fetchContextsFromBackend(
+      course_name,
+      search_query,
+      token_limit,
+      doc_groups,
+      conversation_id,
+      signal,
+    )
+  }
+
+  const { fetchContextsViaDrizzleVectorSearch } = await import(
+    '~/server/fetchContextsForVectorSearch'
+  )
+  return fetchContextsViaDrizzleVectorSearch(
+    course_name,
+    search_query,
+    doc_groups,
+    conversation_id,
+    top_n,
+  )
+}
+
 // Helper function for use in components/utilities
 export const fetchContexts = async (
   course_name: string,
@@ -50,7 +94,7 @@ export const fetchContexts = async (
 
   try {
     if (isClientSide) {
-      // Client-side: use our API route
+      // Client-side: use our API route (which also respects VECTOR_ENGINE)
       const response = await fetch(
         `${window.location.origin}/api/getContexts`,
         {
@@ -76,8 +120,8 @@ export const fetchContexts = async (
       const data: ContextWithMetadata[] = await response.json()
       return data
     } else {
-      // Server-side: use the common function directly
-      return await fetchContextsFromBackend(
+      // Server-side (e.g. chat-api): same VECTOR_ENGINE routing as /api/getContexts
+      return await fetchContextsByVectorEngine(
         course_name,
         search_query,
         token_limit,

@@ -1,10 +1,10 @@
 /* @vitest-environment node */
 
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createMockReq, createMockRes } from '~/test-utils/nextApi'
 
 const hoisted = vi.hoisted(() => ({
-  fetchContextsViaDrizzleVectorSearch: vi.fn(),
+  fetchContextsByVectorEngine: vi.fn(),
 }))
 
 vi.mock('~/pages/api/authorization', () => ({
@@ -13,14 +13,17 @@ vi.mock('~/pages/api/authorization', () => ({
       h,
 }))
 
-vi.mock('~/server/fetchContextsForVectorSearch', () => ({
-  fetchContextsViaDrizzleVectorSearch:
-    hoisted.fetchContextsViaDrizzleVectorSearch,
+vi.mock('~/utils/fetchContexts', () => ({
+  fetchContextsByVectorEngine: hoisted.fetchContextsByVectorEngine,
 }))
 
 import getContextsHandler from '~/pages/api/getContexts'
 
 describe('getContexts API', () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('returns 405 for non-POST methods', async () => {
     const res = createMockRes()
     await getContextsHandler(
@@ -44,7 +47,7 @@ describe('getContexts API', () => {
     expect(res.json).toHaveBeenCalledWith({
       error: 'course_name and search_query are required',
     })
-    expect(hoisted.fetchContextsViaDrizzleVectorSearch).not.toHaveBeenCalled()
+    expect(hoisted.fetchContextsByVectorEngine).not.toHaveBeenCalled()
   })
 
   it('returns 400 when search_query is missing', async () => {
@@ -60,15 +63,15 @@ describe('getContexts API', () => {
     expect(res.json).toHaveBeenCalledWith({
       error: 'course_name and search_query are required',
     })
-    expect(hoisted.fetchContextsViaDrizzleVectorSearch).not.toHaveBeenCalled()
+    expect(hoisted.fetchContextsByVectorEngine).not.toHaveBeenCalled()
   })
 
-  it('returns 200 with contexts when fetchContextsViaDrizzleVectorSearch succeeds', async () => {
+  it('returns 200 with contexts when fetchContextsByVectorEngine succeeds', async () => {
     const data = [
       { id: '1', text: 'context 1', metadata: {} },
       { id: '2', text: 'context 2', metadata: {} },
     ]
-    hoisted.fetchContextsViaDrizzleVectorSearch.mockResolvedValueOnce(data)
+    hoisted.fetchContextsByVectorEngine.mockResolvedValueOnce(data)
 
     const res = createMockRes()
     await getContextsHandler(
@@ -77,6 +80,7 @@ describe('getContexts API', () => {
         body: {
           course_name: 'CS225',
           search_query: 'binary trees',
+          token_limit: 2000,
           doc_groups: ['lectures'],
           conversation_id: 'conv-1',
           top_n: 50,
@@ -85,9 +89,10 @@ describe('getContexts API', () => {
       res as any,
     )
 
-    expect(hoisted.fetchContextsViaDrizzleVectorSearch).toHaveBeenCalledWith(
+    expect(hoisted.fetchContextsByVectorEngine).toHaveBeenCalledWith(
       'CS225',
       'binary trees',
+      2000,
       ['lectures'],
       'conv-1',
       50,
@@ -96,8 +101,8 @@ describe('getContexts API', () => {
     expect(res.json).toHaveBeenCalledWith(data)
   })
 
-  it('passes default doc_groups and top_n when omitted from body', async () => {
-    hoisted.fetchContextsViaDrizzleVectorSearch.mockResolvedValueOnce([])
+  it('passes default token_limit, doc_groups and top_n when omitted from body', async () => {
+    hoisted.fetchContextsByVectorEngine.mockResolvedValueOnce([])
 
     const res = createMockRes()
     await getContextsHandler(
@@ -108,9 +113,10 @@ describe('getContexts API', () => {
       res as any,
     )
 
-    expect(hoisted.fetchContextsViaDrizzleVectorSearch).toHaveBeenCalledWith(
+    expect(hoisted.fetchContextsByVectorEngine).toHaveBeenCalledWith(
       'CS101',
       'hello',
+      4000,
       [],
       undefined,
       100,
@@ -118,9 +124,9 @@ describe('getContexts API', () => {
     expect(res.status).toHaveBeenCalledWith(200)
   })
 
-  it('returns 500 when fetchContextsViaDrizzleVectorSearch throws', async () => {
+  it('returns 500 when fetchContextsByVectorEngine throws', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
-    hoisted.fetchContextsViaDrizzleVectorSearch.mockRejectedValueOnce(
+    hoisted.fetchContextsByVectorEngine.mockRejectedValueOnce(
       new Error('db error'),
     )
 
