@@ -19,7 +19,7 @@ vi.mock('~/utils/apiUtils', () => ({
 import {
   fetchContexts,
   fetchContextsByVectorEngine,
-  useQdrantVectorEngine,
+  isQdrantVectorEngine,
 } from '~/utils/fetchContexts'
 
 describe('fetchContextsByVectorEngine / VECTOR_ENGINE routing', () => {
@@ -38,13 +38,13 @@ describe('fetchContextsByVectorEngine / VECTOR_ENGINE routing', () => {
     }
   })
 
-  it('useQdrantVectorEngine is false when VECTOR_ENGINE is unset', () => {
-    expect(useQdrantVectorEngine()).toBe(false)
+  it('isQdrantVectorEngine is false when VECTOR_ENGINE is unset', () => {
+    expect(isQdrantVectorEngine()).toBe(false)
   })
 
-  it('useQdrantVectorEngine is true only when VECTOR_ENGINE=qdrant', () => {
+  it('isQdrantVectorEngine is true only when VECTOR_ENGINE=qdrant', () => {
     process.env.VECTOR_ENGINE = 'qdrant'
-    expect(useQdrantVectorEngine()).toBe(true)
+    expect(isQdrantVectorEngine()).toBe(true)
   })
 
   it('defaults to Drizzle/pgvector when VECTOR_ENGINE is unset', async () => {

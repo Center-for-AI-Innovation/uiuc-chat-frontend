@@ -2,7 +2,7 @@ import { type ContextWithMetadata } from '~/types/chat'
 import { getBackendUrl } from '~/utils/apiUtils'
 
 /** True when VECTOR_ENGINE is explicitly set to qdrant; otherwise use pgvector (Drizzle). */
-export function useQdrantVectorEngine(): boolean {
+export function isQdrantVectorEngine(): boolean {
   return process.env.VECTOR_ENGINE === 'qdrant'
 }
 
@@ -58,7 +58,7 @@ export async function fetchContextsByVectorEngine(
   top_n = 100,
   signal?: AbortSignal,
 ): Promise<ContextWithMetadata[]> {
-  if (useQdrantVectorEngine()) {
+  if (isQdrantVectorEngine()) {
     return fetchContextsFromBackend(
       course_name,
       search_query,
