@@ -162,17 +162,45 @@ Routing decisions, in order:
 
 There is no `VECTOR_ENGINE` environment switch — the row alone decides.
 
-### Migration journal — important caveat
+### Migration journal — hand-written SQL vs. generated snapshots
 
-Several migrations in this repo are **hand-written and intentionally not
-tracked in `meta/_journal.json`**: `0001_custom_functions`,
-`0006_pgvector_extension`, `0007_embeddings_table`,
-`0009_add_project_connection_audit_log`, and `0010_add_embedding_config`.
-The journal stops at `0008` because the team applies these out-of-band
-(via `psql` against the target database) rather than through `drizzle-kit
-migrate`. This is the established convention; do not run `drizzle-kit
-generate` against this schema unless you intend to regenerate snapshots
-for the entire chain and reconcile any diffs.
+**Every migration IS tracked in `meta/_journal.json`** — currently `0000`
+through `0010`, with no gaps. (An earlier version of this document claimed
+`0001`/`0006`/`0007`/`0009` were untracked and that "the journal stops at
+`0008`". That was wrong, and it led to an applied migration being hand-edited.
+Corrected 2026-07-17.)
+
+The real distinction is **snapshots**, not the journal. Three migrations are
+hand-written SQL added to the journal without a generated snapshot file:
+
+| Migration                 | Journal | Snapshot | Contents                                   |
+| ------------------------- | ------- | -------- | ------------------------------------------ |
+| `0001_custom_functions`   | ✅      | ❌       | plpgsql functions                          |
+| `0006_pgvector_extension` | ✅      | ❌       | `CREATE EXTENSION vector`                  |
+| `0007_embeddings_table`   | ✅      | ❌       | `embeddings` table + its btree/gin indexes |
+
+The snapshot chain resumes at `0008`, and because `embeddings` is declared in
+`src/db/schema.ts`, it **is** captured in the `0008`/`0009`/`0010` snapshots.
+
+**Consequences — read before changing the schema:**
+
+- For anything declared in `schema.ts` (including `embeddings`), change
+  `schema.ts` and run `npx drizzle-kit generate --name <desc>`. It diffs against
+  the newest snapshot and emits the migration, snapshot, and journal entry
+  together. `0010_embeddings_hnsw_index` was produced this way.
+- **Never hand-edit an already-applied migration.** Drizzle records applied
+  migrations by file hash, so an edit is silently skipped on any database that
+  already ran it — the change never lands, and history stops describing reality.
+  Add a new migration instead.
+- Objects that exist in the database but not in `schema.ts` — the plpgsql
+  functions, triggers, the `vector` extension, and the btree/gin indexes on
+  `embeddings` — are invisible to `generate` (it diffs against the snapshot, not
+  the live database, so it will never try to drop them). But if you later declare
+  one of them in `schema.ts`, `generate` will emit a `CREATE` for an object that
+  already exists; add `IF NOT EXISTS` to that generated statement before applying.
+- The same applies when an index was built out-of-band (e.g. `CREATE INDEX
+CONCURRENTLY` on a large table, or via the external provisioning script).
+  `0010` carries a hand-added `IF NOT EXISTS` for exactly this reason.
 
 When provisioning a new database (host OR per-project external pg),
 apply ALL `*.sql` files under `src/db/migrations/` in numeric order

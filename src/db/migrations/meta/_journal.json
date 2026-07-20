@@ -71,6 +71,13 @@
       "when": 1780505471572,
       "tag": "0009_add_project_connection_audit_log_and_embedding_config",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784571911641,
+      "tag": "0010_embeddings_hnsw_index",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,11 @@
+-- IF NOT EXISTS added by hand to the generated statement: this index may already
+-- have been created out-of-band, either by infra/provision_external_pgvector_store.sql
+-- or by a manual build on a large existing table (see note below). Without it the
+-- migration errors with "relation already exists" and blocks the whole chain.
+--
+-- NOTE for large, already-populated tables: this builds a plain (non-CONCURRENT)
+-- index and holds a write lock for the duration — hours on millions of rows. Prefer
+-- building it manually with CREATE INDEX CONCURRENTLY (outside a transaction, with a
+-- large maintenance_work_mem and max_parallel_maintenance_workers = 0), then let this
+-- migration no-op.
+CREATE INDEX IF NOT EXISTS "embeddings_embedding_1536_hnsw_idx" ON "embeddings" USING hnsw ((subvector("embedding", 1, 1536)::vector(1536)) vector_cosine_ops) WITH (m=16,ef_construction=64);

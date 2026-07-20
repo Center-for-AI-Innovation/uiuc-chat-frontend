@@ -20,25 +20,41 @@ import {
 } from 'drizzle-orm/pg-core'
 
 // Embeddings table (pgvector) — see migrations 0006_pgvector_extension.sql, 0007_embeddings_table.sql. Used for frontend vector search via Drizzle.
-export const embeddings = pgTable('embeddings', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  qdrant_id: uuid('qdrant_id').unique(),
-  embedding: vector('embedding', { dimensions: 4096 }).notNull(),
-  page_content: text('page_content'),
-  course_name: text('course_name'),
-  s3_path: text('s3_path'),
-  readable_filename: text('readable_filename'),
-  url: text('url'),
-  base_url: text('base_url'),
-  doc_groups: jsonb('doc_groups').default([]).$type(),
-  chunk_index: integer('chunk_index'),
-  pagenumber: text('pagenumber'),
-  timestamp: text('timestamp'),
-  conversation_id: text('conversation_id'),
-  metadata: jsonb('metadata').default({}),
-  created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-})
+export const embeddings = pgTable(
+  'embeddings',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    qdrant_id: uuid('qdrant_id').unique(),
+    embedding: vector('embedding', { dimensions: 4096 }).notNull(),
+    page_content: text('page_content'),
+    course_name: text('course_name'),
+    s3_path: text('s3_path'),
+    readable_filename: text('readable_filename'),
+    url: text('url'),
+    base_url: text('base_url'),
+    doc_groups: jsonb('doc_groups').default([]).$type(),
+    chunk_index: integer('chunk_index'),
+    pagenumber: text('pagenumber'),
+    timestamp: text('timestamp'),
+    conversation_id: text('conversation_id'),
+    metadata: jsonb('metadata').default({}),
+    created_at: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    // ANN index for vector search. pgvector cannot index `vector` columns above
+    // 2000 dims, so we index the leading 1536 dims (Qwen3-Embedding is
+    // Matryoshka-trained, so truncation preserves ranking quality). The
+    // expression MUST stay identical to the ORDER BY in vectorSearch.ts
+    // (EMBEDDING_SEARCH_DIM) or the planner falls back to a sequential scan.
+    index('embeddings_embedding_1536_hnsw_idx')
+      .using(
+        'hnsw',
+        sql`(subvector(${table.embedding}, 1, 1536)::vector(1536)) vector_cosine_ops`,
+      )
+      .with({ m: 16, ef_construction: 64 }),
+  ],
+)
 
 // API keys table
 export const apiKeys = pgTable('api_keys', {
