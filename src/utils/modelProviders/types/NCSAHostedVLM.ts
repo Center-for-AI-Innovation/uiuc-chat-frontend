@@ -17,6 +17,7 @@ export enum NCSAHostedVLMModelID {
   QWEN2_5VL_32B_INSTRUCT = 'Qwen/Qwen2.5-VL-32B-Instruct',
   QWEN3_5_27B = 'Qwen/Qwen3.5-27B',
   QWEN3_6_27B = 'Qwen/Qwen3.6-27B',
+  GEMMA4_27B = 'gemma4:27b',
 }
 
 export const NCSAHostedVLMModels: Record<
@@ -63,6 +64,12 @@ export const NCSAHostedVLMModels: Record<
     id: NCSAHostedVLMModelID.QWEN3_6_27B,
     name: 'Qwen 3.6 27B',
     tokenLimit: 262144,
+    enabled: true,
+  },
+  [NCSAHostedVLMModelID.GEMMA4_27B]: {
+    id: NCSAHostedVLMModelID.GEMMA4_27B,
+    name: 'Gemma 4 27B',
+    tokenLimit: 8192,
     enabled: true,
   },
 }
