@@ -12,7 +12,7 @@ import APIKeyInputForm from '../api-inputs/LLMsApiKeyInputForm'
 
 /**
  * For new projects, disable all providers except NCSAHosted/NCSAHostedVLM
- * and set Qwen 2.5 VL 72B as the default model.
+ * and set Gemma 4 27B as the default model.
  */
 function applyNCSAOnlyDefaults(providers: AllLLMProviders): AllLLMProviders {
   const modified = { ...providers }
@@ -33,7 +33,7 @@ function applyNCSAOnlyDefaults(providers: AllLLMProviders): AllLLMProviders {
     ;(modified as any)[providerName] = { ...provider, enabled: false }
   }
 
-  // Clear all default flags, then set Qwen 2.5 VL 72B as the default model
+  // Clear all default flags, then set Gemma 4 27B as the default model
   for (const key of Object.keys(modified)) {
     const provider = modified[key as ProviderNames]
     if (provider?.models) {
@@ -41,7 +41,7 @@ function applyNCSAOnlyDefaults(providers: AllLLMProviders): AllLLMProviders {
         ...m,
         default:
           key === ProviderNames.NCSAHostedVLM &&
-          m.id === NCSAHostedVLMModelID.QWEN2_5VL_72B_INSTRUCT,
+          m.id === NCSAHostedVLMModelID.GEMMA4_27B,
       }))
     }
   }

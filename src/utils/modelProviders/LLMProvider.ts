@@ -605,6 +605,6 @@ export const selectBestModel = (
     return allModels[0]
   }
 
-  // If no enabled models are available, fallback to the static Qwen 3.5 27B descriptor.
-  return NCSAHostedVLMModels[NCSAHostedVLMModelID.QWEN3_5_27B]
+  // If no preferred models are available, fallback to Gemma 4 27B
+  return NCSAHostedVLMModels[NCSAHostedVLMModelID.GEMMA4_27B]
 }
