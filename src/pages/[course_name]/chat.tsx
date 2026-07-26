@@ -71,7 +71,9 @@ const ChatPage: NextPage = () => {
       // Fetch course metadata
       try {
         const metadataResponse = await fetch(
-          `/api/UIUC-api/getCourseMetadata?course_name=${courseName}`,
+          `/api/UIUC-api/getCourseMetadata?course_name=${encodeURIComponent(
+            courseName,
+          )}`,
         )
 
         if (!metadataResponse.ok) {
@@ -116,7 +118,9 @@ const ChatPage: NextPage = () => {
     const fetchDocumentExists = async () => {
       try {
         const docCountResponse = await fetch(
-          `/api/materialsTable/fetchIfDocumentExists?course_name=${courseName}`,
+          `/api/materialsTable/fetchIfDocumentExists?course_name=${encodeURIComponent(
+            courseName,
+          )}`,
         )
 
         const docCountData = await docCountResponse.json()

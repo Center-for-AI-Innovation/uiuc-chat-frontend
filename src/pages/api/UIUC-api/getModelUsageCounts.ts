@@ -21,7 +21,9 @@ async function handler(req: any, res: any) {
 
   try {
     const response = await fetch(
-      `${getBackendUrl()}/getModelUsageCounts?project_name=${project_name}`,
+      `${getBackendUrl()}/getModelUsageCounts?project_name=${encodeURIComponent(
+        project_name,
+      )}`,
     )
 
     if (!response.ok) {
@@ -48,7 +50,9 @@ export async function getModelUsageCounts(project_name: string) {
   try {
     console.log('Fetching model usage counts for project:', project_name)
     const response = await fetch(
-      `/api/UIUC-api/getModelUsageCounts?project_name=${project_name}`,
+      `/api/UIUC-api/getModelUsageCounts?project_name=${encodeURIComponent(
+        project_name,
+      )}`,
     )
 
     if (!response.ok) {

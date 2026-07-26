@@ -15,7 +15,9 @@ async function handler(req: any, res: any) {
 
   try {
     const response = await fetch(
-      `${getBackendUrl()}/getAll?course_name=${course_name}`,
+      `${getBackendUrl()}/getAll?course_name=${encodeURIComponent(
+        course_name,
+      )}`,
     )
 
     if (!response.ok) {

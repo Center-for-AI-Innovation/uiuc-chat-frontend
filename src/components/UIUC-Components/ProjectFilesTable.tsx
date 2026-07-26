@@ -187,7 +187,11 @@ export function ProjectFilesTable({
       const to = from + PAGE_SIZE - 1
 
       const response = await fetch(
-        `/api/materialsTable/fetchProjectMaterials?from=${from}&to=${to}&course_name=${course_name}&filter_key=${filterKey}&filter_value=${filterValue}&sort_column=${sortStatus.columnAccessor}&sort_direction=${sortStatus.direction}`,
+        `/api/materialsTable/fetchProjectMaterials?from=${from}&to=${to}&course_name=${encodeURIComponent(
+          course_name,
+        )}&filter_key=${filterKey}&filter_value=${filterValue}&sort_column=${
+          sortStatus.columnAccessor
+        }&sort_direction=${sortStatus.direction}`,
       )
       if (!response.ok) {
         throw new Error('Failed to fetch document groups')
@@ -218,7 +222,11 @@ export function ProjectFilesTable({
       const from = (page - 1) * PAGE_SIZE
       const to = from + PAGE_SIZE - 1
       const response = await fetch(
-        `/api/materialsTable/fetchFailedDocuments?from=${from}&to=${to}&course_name=${course_name}&filter_key=${filterKey}&filter_value=${filterValue}&sort_column=${sortStatus.columnAccessor}&sort_direction=${sortStatus.direction}`,
+        `/api/materialsTable/fetchFailedDocuments?from=${from}&to=${to}&course_name=${encodeURIComponent(
+          course_name,
+        )}&filter_key=${filterKey}&filter_value=${filterValue}&sort_column=${
+          sortStatus.columnAccessor
+        }&sort_direction=${sortStatus.direction}`,
       )
       if (!response.ok) {
         throw new Error('Failed to fetch failed documents')

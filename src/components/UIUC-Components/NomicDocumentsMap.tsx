@@ -15,7 +15,7 @@ function NomicDocumentMap({ course_name }: { course_name: string }) {
     const fetchNomicMapData = async () => {
       try {
         const response = await fetch(
-          `/api/getNomicMapForQueries?course_name=${course_name}&map_type=conversation`,
+          `/api/getNomicMapForQueries?course_name=${encodeURIComponent(course_name)}&map_type=conversation`,
         )
 
         const responseText = await response.text()

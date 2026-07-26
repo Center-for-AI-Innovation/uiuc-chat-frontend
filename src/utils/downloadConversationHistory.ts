@@ -8,7 +8,9 @@ export const downloadConversationHistory = async (
 ): Promise<DownloadResult> => {
   try {
     const response = await fetch(
-      `/api/UIUC-api/downloadConvoHistory?course_name=${courseName}`,
+      `/api/UIUC-api/downloadConvoHistory?course_name=${encodeURIComponent(
+        courseName,
+      )}`,
       { method: 'GET' },
     )
 

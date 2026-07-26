@@ -7,8 +7,8 @@ import { Button } from '@/components/shadcn/ui/button'
 import { LoaderCircle } from 'lucide-react'
 import { useDebouncedValue } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { createProject } from '~/utils/apiUtils'
+import { useQueryClient } from '@tanstack/react-query'
+import { checkCourseNameValid, createProject } from '~/utils/apiUtils'
 import { fetchCourseMetadata } from '~/utils/apiUtils'
 import { type CourseMetadata } from '~/types/courseMetadata'
 import Navbar from './navbars/Navbar'
@@ -23,6 +23,7 @@ import StepSuccess from './MakeNewCoursePageSteps/StepSuccess'
 import { useAuth } from 'react-oidc-context'
 import { montserrat_heading, montserrat_paragraph } from 'fonts'
 import GlobalFooter from './GlobalFooter'
+import { useFetchCourseExists } from '~/hooks/queries/useFetchCourseExists'
 
 /**
  * Build a safe relative URL for navigating to a project's chat page.
@@ -82,37 +83,22 @@ const MakeNewCoursePage = ({
   // Debounce project name input to avoid excessive API calls
   const [debouncedProjectName] = useDebouncedValue(projectName, 1000)
 
+  const isCourseNameValid =
+    debouncedProjectName.length > 0 &&
+    checkCourseNameValid(debouncedProjectName)
+
   // Check project name availability using React Query
-  const { data: courseExists, isFetching: isCheckingAvailability } =
-    useQuery<boolean>({
-      queryKey: ['projectNameAvailability', debouncedProjectName],
-      queryFn: async () => {
-        if (!debouncedProjectName || debouncedProjectName.length === 0) {
-          return false
-        }
-        const response = await fetch(
-          `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(
-            debouncedProjectName,
-          )}`,
-        )
-        if (!response.ok) {
-          throw new Error('Failed to check project name availability')
-        }
-        return response.json() as Promise<boolean>
-      },
-      enabled: debouncedProjectName.length > 0 && is_new_course,
-      retry: 1,
+  const { data: courseExists = false, isFetching: isCheckingAvailability } =
+    useFetchCourseExists({
+      courseName: debouncedProjectName.toLowerCase(), // Normalize to lowercase for consistency
+      enabled: isCourseNameValid && is_new_course,
     })
 
   // Calculate availability: course exists = not available
   const isCourseAvailable =
     debouncedProjectName.length === 0
       ? undefined
-      : courseExists === false
-        ? true
-        : courseExists === true
-          ? false
-          : undefined
+      : isCourseNameValid && !courseExists
 
   // Check if we're waiting for debounce or API response
   const isWaitingForAvailabilityCheck =
@@ -145,6 +131,7 @@ const MakeNewCoursePage = ({
       project_description={projectDescription}
       is_new_course={!hasCreatedProject}
       isCourseAvailable={isCourseAvailable}
+      isCourseNameValid={isCourseNameValid}
       isCheckingAvailability={isWaitingForAvailabilityCheck}
       onUpdateName={setProjectName}
       onUpdateDescription={setProjectDescription}
@@ -218,7 +205,7 @@ const MakeNewCoursePage = ({
     setIsLoading(true)
     try {
       const result = await createProject(
-        project_name,
+        project_name.toLowerCase(), // Normalize to lowercase for consistency
         project_description,
         current_user_email,
         is_private,

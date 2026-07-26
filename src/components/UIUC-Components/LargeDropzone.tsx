@@ -258,12 +258,12 @@ export function LargeDropzone({
 
     const checkIngestStatus = async () => {
       const response = await fetch(
-        `/api/materialsTable/docsInProgress?course_name=${courseName}`,
+        `/api/materialsTable/docsInProgress?course_name=${encodeURIComponent(courseName)}`,
       )
       const data = await response.json()
 
       const docsResponse = await fetch(
-        `/api/materialsTable/successDocs?course_name=${courseName}`,
+        `/api/materialsTable/successDocs?course_name=${encodeURIComponent(courseName)}`,
       )
       const docsData = await docsResponse.json()
       // Adjust polling interval based on activity

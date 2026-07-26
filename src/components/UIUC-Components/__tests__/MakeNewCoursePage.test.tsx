@@ -460,7 +460,7 @@ describe('MakeNewCoursePage', () => {
 
       await waitFor(() => {
         expect(apiUtils.createProject).toHaveBeenCalledWith(
-          'NewBot',
+          'newbot',
           '',
           'owner@example.com',
           true, // useIllinoisChatConfig = true
@@ -1242,7 +1242,7 @@ describe('MakeNewCoursePage', () => {
 
       await waitFor(() => {
         expect(apiUtils.createProject).toHaveBeenCalledWith(
-          'DescTest',
+          'desctest',
           'A test project',
           'owner@example.com',
           true,
@@ -1302,7 +1302,7 @@ describe('MakeNewCoursePage', () => {
 
       await waitFor(() => {
         expect(apiUtils.createProject).toHaveBeenCalledWith(
-          'DescTest',
+          'desctest',
           'My new description',
           'owner@example.com',
           true,

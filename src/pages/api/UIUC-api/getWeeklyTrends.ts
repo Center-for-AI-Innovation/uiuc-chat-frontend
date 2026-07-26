@@ -13,7 +13,9 @@ async function handler(req: any, res: any) {
 
   try {
     const response = await fetch(
-      `${getBackendUrl()}/getWeeklyTrends?project_name=${project_name}`,
+      `${getBackendUrl()}/getWeeklyTrends?project_name=${encodeURIComponent(
+        project_name,
+      )}`,
     )
 
     if (!response.ok) {
@@ -45,7 +47,9 @@ interface WeeklyTrend {
 export async function getWeeklyTrends(project_name: string) {
   try {
     const response = await fetch(
-      `/api/UIUC-api/getWeeklyTrends?project_name=${project_name}`,
+      `/api/UIUC-api/getWeeklyTrends?project_name=${encodeURIComponent(
+        project_name,
+      )}`,
     )
 
     if (!response.ok) {

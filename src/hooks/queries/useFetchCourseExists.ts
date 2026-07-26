@@ -16,7 +16,9 @@ async function fetchCourseExists({
   courseName,
 }: FetchCourseExistsVariables): Promise<boolean> {
   const response = await fetch(
-    `/api/UIUC-api/getCourseExists?course_name=${courseName}`,
+    `/api/UIUC-api/getCourseExists?course_name=${encodeURIComponent(
+      courseName,
+    )}`,
   )
 
   if (!response.ok) {
@@ -24,7 +26,7 @@ async function fetchCourseExists({
   }
 
   const data: CourseExistsResponse = await response.json()
-  return Boolean(data.exists)
+  return Boolean(data)
 }
 
 export function useFetchCourseExists({

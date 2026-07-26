@@ -13,12 +13,16 @@ interface UseFetchCourseMetadataOptions extends FetchCourseMetadataVariables {
 async function fetchCourseMetadata({
   courseName,
 }: FetchCourseMetadataVariables): Promise<CourseMetadata> {
-  const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${courseName}`
+  const endpoint = `${getBaseUrl()}/api/UIUC-api/getCourseMetadata?course_name=${encodeURIComponent(
+    courseName,
+  )}`
   const response = await fetch(endpoint)
 
   if (!response.ok) {
     throw new Error(
-      `Error fetching course metadata: ${response.statusText || response.status}`,
+      `Error fetching course metadata: ${
+        response.statusText || response.status
+      }`,
     )
   }
 

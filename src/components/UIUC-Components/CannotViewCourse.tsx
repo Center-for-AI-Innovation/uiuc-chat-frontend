@@ -9,6 +9,7 @@ import { useAuth } from 'react-oidc-context'
 import { CannotEditCourse } from './CannotEditCourse'
 import GlobalFooter from './GlobalFooter'
 import { montserrat_heading } from 'fonts'
+import { useFetchCourseMetadata } from '~/hooks/queries/useFetchCourseMetadata'
 
 export const GetCurrentPageName = () => {
   // /CS-125/dashboard --> CS-125
@@ -27,38 +28,9 @@ export const CannotViewCourse = ({
   const auth = useAuth()
   const curr_user_email = auth.user?.profile.email
 
-  const [courseMetadata, setCourseMetadata] = useState<CourseMetadata | null>(
-    null,
-  )
-
-  useEffect(() => {
-    async function fetchCourseMetadata(course_name: string) {
-      try {
-        const response = await fetch(
-          `/api/UIUC-api/getCourseMetadata?course_name=${course_name}`,
-        )
-
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success === false) {
-            console.error('An error occurred while fetching course metadata')
-            return null
-          }
-          return data.course_metadata
-        } else {
-          console.error(`Error fetching course metadata: ${response.status}`)
-          return null
-        }
-      } catch (error) {
-        console.error('Error fetching course metadata:', error)
-        return null
-      }
-    }
-
-    fetchCourseMetadata(course_name).then((metadata) => {
-      setCourseMetadata(metadata)
-    })
-  }, [course_name])
+  const { data: courseMetadata = null } = useFetchCourseMetadata({
+    courseName: course_name,
+  })
 
   // if user is not signed in or is not the creator or an admin, then they cannot view the course
 

@@ -190,7 +190,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
         return
       }
       const response = await fetch(
-        `/api/chat-api/keys/fetch?course_name=${course_name}`,
+        `/api/chat-api/keys/fetch?course_name=${encodeURIComponent(
+          course_name,
+        )}`,
       )
 
       if (response.ok) {
@@ -211,7 +213,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
   const handleGenerate = async () => {
     const response = await fetch(
-      `/api/chat-api/keys/generate?course_name=${course_name}`,
+      `/api/chat-api/keys/generate?course_name=${encodeURIComponent(
+        course_name,
+      )}`,
       {
         method: 'POST',
         headers: {
@@ -238,7 +242,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
   const handleRotate = async () => {
     const response = await fetch(
-      `/api/chat-api/keys/rotate?course_name=${course_name}`,
+      `/api/chat-api/keys/rotate?course_name=${encodeURIComponent(
+        course_name,
+      )}`,
       {
         method: 'PUT',
       },
@@ -262,7 +268,9 @@ axios.post('${baseUrl}/api/chat-api/chat', data, {
 
   const handleDelete = async () => {
     const response = await fetch(
-      `/api/chat-api/keys/delete?course_name=${course_name}`,
+      `/api/chat-api/keys/delete?course_name=${encodeURIComponent(
+        course_name,
+      )}`,
       {
         method: 'DELETE',
       },

@@ -20,6 +20,7 @@ const StepCreate = ({
   is_new_course = true,
   project_description,
   isCourseAvailable,
+  isCourseNameValid,
   isCheckingAvailability,
 
   onUpdateName,
@@ -29,6 +30,7 @@ const StepCreate = ({
   is_new_course?: boolean
   project_description?: string
   isCourseAvailable?: boolean
+  isCourseNameValid?: boolean
   isCheckingAvailability?: boolean
 
   onUpdateName: (name: string) => void
@@ -94,6 +96,14 @@ const StepCreate = ({
                         Checking name availability...
                       </span>
                     </span>
+                  ) : !isCourseNameValid && projectName ? (
+                    <span role="status">
+                      <XCircle
+                        className="size-4 text-red-500"
+                        aria-hidden="true"
+                      />
+                      <span className="sr-only">Name is invalid</span>
+                    </span>
                   ) : isCourseAvailable && projectName ? (
                     <span role="status">
                       <CheckCircle
@@ -123,7 +133,10 @@ const StepCreate = ({
               side="right"
               className="border-red-500 bg-red-500 text-white"
             >
-              This name is already taken. Please choose a different name.
+              {isCourseNameValid
+                ? 'This name is already taken.'
+                : 'This name is invalid.'}{' '}
+              Please choose a different name.
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
